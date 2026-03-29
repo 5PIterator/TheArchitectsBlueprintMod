@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+
+	<!-- General -->
+	<PropertyGroup>
+		<NoWarn>$(NoWarn);CS8632;CS8604;CS0169;CS0649</NoWarn>
+	</PropertyGroup>
+
+	<!-- References -->
+	<ItemGroup>
+
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="Content\Templates\SourceMaps\Custom.itr" />
+		<EmbeddedResource Include="Content\Templates\SourceMaps\BiomeConfig.itr" />
+		<EmbeddedResource Include="Content\Templates\SourceMaps\BaseContext.itr" />
+		<EmbeddedResource Include="Content\Config\LayerOrder.json" LogicalName="ArchitectsStencilMod.LayerOrder.json" />
+	</ItemGroup>
+
+</Project>

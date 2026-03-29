@@ -1,0 +1,325 @@
+Items: {
+	AddStick: {
+		DisplayName: Add Stick
+		Tooltip:
+			'''
+			Refine a selection.
+			Left: drag a rectangle to add tiles
+			Right: cancel the current gesture
+			'''
+	}
+
+	ArchitectsSoul: {
+		DisplayName: Architect's Soul
+		Tooltip:
+			'''
+			Late-game upgrade.
+			(Work in progress)
+			'''
+	}
+
+	ArchitectsStencil: {
+		DisplayName: Architect's Stencil
+		Tooltip:
+			'''
+			All-in-one building tool.
+			(Work in progress)
+			'''
+	}
+
+	BlueprintWand: {
+		DisplayName: Blueprint Wand
+		Tooltip:
+			'''
+			Edit Blueprint bounds.
+			Left: grab/drag pins, edges, corners, or inside
+			Right: reset the Blueprint
+			'''
+	}
+
+	CopyStick: {
+		DisplayName: Copy Stick
+		Tooltip:
+			'''
+			Create a Copy projection.
+			Left: drag to place/move
+			Right: remove the projection
+			'''
+	}
+
+	DebugStick: {
+		DisplayName: Debug Stick
+		Tooltip: When held during discovery: left-click to step, right-click to cancel.
+	}
+
+	CutStick: {
+		DisplayName: Cut Stick
+		Tooltip:
+			'''
+			Create a Cut projection.
+			Left: drag to place/move
+			Right: remove the projection
+			'''
+	}
+
+	PasteStick: {
+		DisplayName: Paste Stick
+		Tooltip:
+			'''
+			Paste a projection.
+			Left: start pasting
+			Right: cancel
+			'''
+	}
+
+	PinStick: {
+		DisplayName: Pin Stick
+		Tooltip:
+			'''
+			Start a new Blueprint.
+			Left: place & drag bounds
+			Right: reset
+			'''
+	}
+
+	ProjectionWand: {
+		DisplayName: Projection Wand
+		Tooltip:
+			'''
+			Manage projections.
+			Left: use current mode
+			Inventory right-click: cycle Copy/Cut/Paste
+			Right: cancel / remove
+			'''
+	}
+
+	RemoveStick: {
+		DisplayName: Remove Stick
+		Tooltip:
+			'''
+			Refine a selection.
+			Left: drag a rectangle to remove tiles
+			Right: cancel the current gesture
+			'''
+	}
+
+	StencilWand: {
+		DisplayName: Stencil Wand
+		Tooltip:
+			'''
+			Select tiles.
+			Left: use current mode
+			Inventory right-click: swap Add/Remove
+			Right: cancel the current gesture
+			'''
+	}
+}
+
+Configs: {
+	DebugConfig.DisplayName: Debug
+
+	PastingConfig: {
+		DisplayName: Pasting
+
+		Headers: {
+			General: General
+			LayerIdentification: Layers
+		}
+
+		LayerIdentification: {
+			DisplayName: Layer Identification
+			Tooltip: Enable or disable task identification per layer. Disabled layers queue no clear or place tasks.
+
+			Wall: {
+				Label: Wall
+				Tooltip: Wall placement and removal.
+			}
+
+			Block: {
+				Label: Block
+				Tooltip: Standard placed tiles that are not falling, anchored, tree, or unknown tiles.
+			}
+
+			FallBlock: {
+				Label: Falling Block
+				Tooltip: Falling tiles such as sand, silt, slush, and similar blocks.
+			}
+
+			TileAnchored: {
+				Label: Tile Anchored
+				Tooltip: Multi-tiles anchored to solid tiles.
+			}
+
+			WallAnchored: {
+				Label: Wall Anchored
+				Tooltip: Multi-tiles anchored to walls.
+			}
+
+			OtherAnchored: {
+				Label: Other Anchored
+				Tooltip: Multi-tiles that use other anchor rules such as plants or alternate supports.
+			}
+
+			Tree: {
+				Label: Tree
+				Tooltip: Trees and similar custom tile families handled by the tree layer.
+			}
+
+			Paint: {
+				Label: Paint
+				Tooltip: Tile and wall paint state.
+			}
+
+			Wiring: {
+				Label: Wiring
+				Tooltip: Wires and actuators.
+			}
+
+			Detail: {
+				Label: Detail
+				Tooltip: Slopes, half-blocks, and actuation state.
+			}
+
+			Sweep: {
+				Label: Sweep
+				Tooltip: Final exact-state sweep layer.
+			}
+
+			Fluid: {
+				Label: Fluid
+				Tooltip: Water, lava, honey, and shimmer.
+			}
+
+			Unknown: {
+				Label: Unknown
+				Tooltip: Unknown tile ids, usually from missing or unloaded content.
+			}
+
+			Label: Layer Identification
+		}
+
+		NeedsItems: {
+			Label: Require Items
+			Tooltip: Consume required items from inventory while pasting.
+		}
+
+		PasteDelayMs: {
+			Label: Step Delay (ms)
+			Tooltip: Delay between paste steps in milliseconds.
+		}
+
+		PasteStepSize: {
+			Label: Tiles Per Step
+			Tooltip: Number of tiles attempted each paste step.
+		}
+
+		CheatSweep: {
+			Label: Cheat Sweep
+			Tooltip: When enabled, the sweep layer may use forced placement where the game supports it. Off by default.
+		}
+
+		ForceTiles: {
+			Label: Force Tiles
+			Tooltip: When enabled (default), tile tasks are only queued if the required items are available. When disabled, identifications missing items may still enqueue tasks.
+		}
+	}
+
+	TileMappingConfig: {
+		DisplayName: Tile Mapping
+		Headers.TileMapping: Sources
+
+		ShowDebugLogs: {
+			Label: Debug Logs
+			Tooltip: Write verbose compile logs to TileMapCompile_Debug.txt.
+		}
+
+		EnablePlacementDiscovery: {
+			Label: Placement
+			Tooltip: Include Placement.itr in compile.
+		}
+
+		EnableCustomInteractionMap: {
+			Label: Custom
+			Tooltip: Include Custom.itr in compile.
+		}
+
+		EnableBiomeConversions: {
+			Label: Biome
+			Tooltip: Include Biome.itr in compile.
+		}
+
+		EnableShimmerTransforms: {
+			Label: Shimmer
+			Tooltip: Include Shimmer.itr in compile.
+		}
+	}
+
+	LayerIdentificationSettings: {
+		Tooltip: ""
+
+		Wall: {
+			Label: Wall
+			Tooltip: ""
+		}
+
+		Block: {
+			Label: Block
+			Tooltip: ""
+		}
+
+		FallBlock: {
+			Label: Fall Block
+			Tooltip: ""
+		}
+
+		TileAnchored: {
+			Label: Tile Anchored
+			Tooltip: ""
+		}
+
+		WallAnchored: {
+			Label: Wall Anchored
+			Tooltip: ""
+		}
+
+		OtherAnchored: {
+			Label: Other Anchored
+			Tooltip: ""
+		}
+
+		Tree: {
+			Label: Tree
+			Tooltip: ""
+		}
+
+		Paint: {
+			Label: Paint
+			Tooltip: ""
+		}
+
+		Wiring: {
+			Label: Wiring
+			Tooltip: ""
+		}
+
+		Detail: {
+			Label: Detail
+			Tooltip: ""
+		}
+
+		Sweep: {
+			Label: Sweep
+			Tooltip: ""
+		}
+
+		Fluid: {
+			Label: Fluid
+			Tooltip: ""
+		}
+
+		Unknown: {
+			Label: Unknown
+			Tooltip: ""
+		}
+	}
+}

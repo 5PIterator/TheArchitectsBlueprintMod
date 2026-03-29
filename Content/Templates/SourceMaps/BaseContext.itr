@@ -1,0 +1,13 @@
+{
+  "metadata": {
+    "format": "item-first",
+    "mapType": "baseContext"
+  },
+  "data": [
+    "Dirt",
+    "Mud",
+    "Stone",
+    "Ash",
+    "GrayBrick"
+  ]
+}

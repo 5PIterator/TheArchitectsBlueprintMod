@@ -1,0 +1,46 @@
+{
+  "placeOrder": [
+    "Wall",
+    "Block",
+    "FallBlock",
+    "TileAnchored",
+    "WallAnchored",
+    "OtherAnchored",
+    "Tree",
+    "Unknown",
+    "Fluid",
+    "Paint",
+    "Wiring",
+    "Detail",
+    "Sweep"
+  ],
+  "clearOrder": [
+    "Fluid",
+    "Detail",
+    "Wiring",
+    "Paint",
+    "Unknown",
+    "Tree",
+    "OtherAnchored",
+    "WallAnchored",
+    "TileAnchored",
+    "FallBlock",
+    "Block",
+    "Wall"
+  ],
+  "identifyOrder": [
+    "Wall",
+    "Unknown",
+    "Tree",
+    "OtherAnchored",
+    "WallAnchored",
+    "TileAnchored",
+    "FallBlock",
+    "Block",
+    "Fluid",
+    "Paint",
+    "Wiring",
+    "Detail",
+    "Sweep"
+  ]
+}

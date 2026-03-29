@@ -1,0 +1,1296 @@
+{
+  "metadata": {
+    "format": "item-first",
+    "mapType": "custom"
+  },
+  "data": {
+    "WaterBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Water",
+          "yield": 1
+        }
+      ]
+    },
+    "LavaBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Lava",
+          "yield": 1
+        }
+      ]
+    },
+    "StaffofRegrowth": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "base": "Dirt",
+          "main": "Grass",
+          "yield": -1
+        },
+        {
+          "layer": "Tile",
+          "base": "Mud",
+          "main": "JungleGrass",
+          "yield": -1
+        }
+      ]
+    },
+    "Wrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Red",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "LivingWoodWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "LivingWood",
+          "yield": 1,
+          "ammo": "Wood"
+        }
+      ]
+    },
+    "Actuator": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Actuator",
+          "yield": 1,
+          "ammo": "Actuator"
+        }
+      ]
+    },
+    "BlueWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Blue",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "GreenWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Green",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "BoneWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "BoneBlock",
+          "yield": 1,
+          "ammo": "Bone"
+        }
+      ]
+    },
+    "LeafWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "LeafBlock",
+          "yield": 1,
+          "ammo": "Wood"
+        }
+      ]
+    },
+    "Paintbrush": {
+      "interactions": [
+        {
+          "layer": "Paint",
+          "main": "RedPaint",
+          "yield": 1,
+          "ammo": "RedPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "OrangePaint",
+          "yield": 1,
+          "ammo": "OrangePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "YellowPaint",
+          "yield": 1,
+          "ammo": "YellowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "LimePaint",
+          "yield": 1,
+          "ammo": "LimePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "GreenPaint",
+          "yield": 1,
+          "ammo": "GreenPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "TealPaint",
+          "yield": 1,
+          "ammo": "TealPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "CyanPaint",
+          "yield": 1,
+          "ammo": "CyanPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "SkyBluePaint",
+          "yield": 1,
+          "ammo": "SkyBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BluePaint",
+          "yield": 1,
+          "ammo": "BluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "PurplePaint",
+          "yield": 1,
+          "ammo": "PurplePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "VioletPaint",
+          "yield": 1,
+          "ammo": "VioletPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "PinkPaint",
+          "yield": 1,
+          "ammo": "PinkPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepRedPaint",
+          "yield": 1,
+          "ammo": "DeepRedPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepOrangePaint",
+          "yield": 1,
+          "ammo": "DeepOrangePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepYellowPaint",
+          "yield": 1,
+          "ammo": "DeepYellowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepLimePaint",
+          "yield": 1,
+          "ammo": "DeepLimePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepGreenPaint",
+          "yield": 1,
+          "ammo": "DeepGreenPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepTealPaint",
+          "yield": 1,
+          "ammo": "DeepTealPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepCyanPaint",
+          "yield": 1,
+          "ammo": "DeepCyanPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepSkyBluePaint",
+          "yield": 1,
+          "ammo": "DeepSkyBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepBluePaint",
+          "yield": 1,
+          "ammo": "DeepBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepPurplePaint",
+          "yield": 1,
+          "ammo": "DeepPurplePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepVioletPaint",
+          "yield": 1,
+          "ammo": "DeepVioletPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepPinkPaint",
+          "yield": 1,
+          "ammo": "DeepPinkPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BlackPaint",
+          "yield": 1,
+          "ammo": "BlackPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "WhitePaint",
+          "yield": 1,
+          "ammo": "WhitePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "GrayPaint",
+          "yield": 1,
+          "ammo": "GrayPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BrownPaint",
+          "yield": 1,
+          "ammo": "BrownPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "ShadowPaint",
+          "yield": 1,
+          "ammo": "ShadowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "NegativePaint",
+          "yield": 1,
+          "ammo": "NegativePaint"
+        }
+      ]
+    },
+    "PaintRoller": {
+      "interactions": [
+        {
+          "layer": "Paint",
+          "main": "RedPaint",
+          "yield": 4,
+          "ammo": "RedPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "OrangePaint",
+          "yield": 4,
+          "ammo": "OrangePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "YellowPaint",
+          "yield": 4,
+          "ammo": "YellowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "LimePaint",
+          "yield": 4,
+          "ammo": "LimePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "GreenPaint",
+          "yield": 4,
+          "ammo": "GreenPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "TealPaint",
+          "yield": 4,
+          "ammo": "TealPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "CyanPaint",
+          "yield": 4,
+          "ammo": "CyanPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "SkyBluePaint",
+          "yield": 4,
+          "ammo": "SkyBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BluePaint",
+          "yield": 4,
+          "ammo": "BluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "PurplePaint",
+          "yield": 4,
+          "ammo": "PurplePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "VioletPaint",
+          "yield": 4,
+          "ammo": "VioletPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "PinkPaint",
+          "yield": 4,
+          "ammo": "PinkPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepRedPaint",
+          "yield": 4,
+          "ammo": "DeepRedPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepOrangePaint",
+          "yield": 4,
+          "ammo": "DeepOrangePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepYellowPaint",
+          "yield": 4,
+          "ammo": "DeepYellowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepLimePaint",
+          "yield": 4,
+          "ammo": "DeepLimePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepGreenPaint",
+          "yield": 4,
+          "ammo": "DeepGreenPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepTealPaint",
+          "yield": 4,
+          "ammo": "DeepTealPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepCyanPaint",
+          "yield": 4,
+          "ammo": "DeepCyanPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepSkyBluePaint",
+          "yield": 4,
+          "ammo": "DeepSkyBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepBluePaint",
+          "yield": 4,
+          "ammo": "DeepBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepPurplePaint",
+          "yield": 4,
+          "ammo": "DeepPurplePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepVioletPaint",
+          "yield": 4,
+          "ammo": "DeepVioletPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepPinkPaint",
+          "yield": 4,
+          "ammo": "DeepPinkPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BlackPaint",
+          "yield": 4,
+          "ammo": "BlackPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "WhitePaint",
+          "yield": 4,
+          "ammo": "WhitePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "GrayPaint",
+          "yield": 4,
+          "ammo": "GrayPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BrownPaint",
+          "yield": 4,
+          "ammo": "BrownPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "ShadowPaint",
+          "yield": 4,
+          "ammo": "ShadowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "NegativePaint",
+          "yield": 4,
+          "ammo": "NegativePaint"
+        }
+      ]
+    },
+    "HoneyBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Honey",
+          "yield": 1
+        }
+      ]
+    },
+    "HiveWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "Hive",
+          "yield": 1,
+          "ammo": "HoneyBlock"
+        }
+      ]
+    },
+    "SpectrePaintbrush": {
+      "interactions": [
+        {
+          "layer": "Paint",
+          "main": "RedPaint",
+          "yield": -1,
+          "ammo": "RedPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "OrangePaint",
+          "yield": -1,
+          "ammo": "OrangePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "YellowPaint",
+          "yield": -1,
+          "ammo": "YellowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "LimePaint",
+          "yield": -1,
+          "ammo": "LimePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "GreenPaint",
+          "yield": -1,
+          "ammo": "GreenPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "TealPaint",
+          "yield": -1,
+          "ammo": "TealPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "CyanPaint",
+          "yield": -1,
+          "ammo": "CyanPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "SkyBluePaint",
+          "yield": -1,
+          "ammo": "SkyBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BluePaint",
+          "yield": -1,
+          "ammo": "BluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "PurplePaint",
+          "yield": -1,
+          "ammo": "PurplePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "VioletPaint",
+          "yield": -1,
+          "ammo": "VioletPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "PinkPaint",
+          "yield": -1,
+          "ammo": "PinkPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepRedPaint",
+          "yield": -1,
+          "ammo": "DeepRedPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepOrangePaint",
+          "yield": -1,
+          "ammo": "DeepOrangePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepYellowPaint",
+          "yield": -1,
+          "ammo": "DeepYellowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepLimePaint",
+          "yield": -1,
+          "ammo": "DeepLimePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepGreenPaint",
+          "yield": -1,
+          "ammo": "DeepGreenPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepTealPaint",
+          "yield": -1,
+          "ammo": "DeepTealPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepCyanPaint",
+          "yield": -1,
+          "ammo": "DeepCyanPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepSkyBluePaint",
+          "yield": -1,
+          "ammo": "DeepSkyBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepBluePaint",
+          "yield": -1,
+          "ammo": "DeepBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepPurplePaint",
+          "yield": -1,
+          "ammo": "DeepPurplePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepVioletPaint",
+          "yield": -1,
+          "ammo": "DeepVioletPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepPinkPaint",
+          "yield": -1,
+          "ammo": "DeepPinkPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BlackPaint",
+          "yield": -1,
+          "ammo": "BlackPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "WhitePaint",
+          "yield": -1,
+          "ammo": "WhitePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "GrayPaint",
+          "yield": -1,
+          "ammo": "GrayPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BrownPaint",
+          "yield": -1,
+          "ammo": "BrownPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "ShadowPaint",
+          "yield": -1,
+          "ammo": "ShadowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "NegativePaint",
+          "yield": -1,
+          "ammo": "NegativePaint"
+        }
+      ]
+    },
+    "SpectrePaintRoller": {
+      "interactions": [
+        {
+          "layer": "Paint",
+          "main": "RedPaint",
+          "yield": -1,
+          "ammo": "RedPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "OrangePaint",
+          "yield": -1,
+          "ammo": "OrangePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "YellowPaint",
+          "yield": -1,
+          "ammo": "YellowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "LimePaint",
+          "yield": -1,
+          "ammo": "LimePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "GreenPaint",
+          "yield": -1,
+          "ammo": "GreenPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "TealPaint",
+          "yield": -1,
+          "ammo": "TealPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "CyanPaint",
+          "yield": -1,
+          "ammo": "CyanPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "SkyBluePaint",
+          "yield": -1,
+          "ammo": "SkyBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BluePaint",
+          "yield": -1,
+          "ammo": "BluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "PurplePaint",
+          "yield": -1,
+          "ammo": "PurplePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "VioletPaint",
+          "yield": -1,
+          "ammo": "VioletPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "PinkPaint",
+          "yield": -1,
+          "ammo": "PinkPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepRedPaint",
+          "yield": -1,
+          "ammo": "DeepRedPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepOrangePaint",
+          "yield": -1,
+          "ammo": "DeepOrangePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepYellowPaint",
+          "yield": -1,
+          "ammo": "DeepYellowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepLimePaint",
+          "yield": -1,
+          "ammo": "DeepLimePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepGreenPaint",
+          "yield": -1,
+          "ammo": "DeepGreenPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepTealPaint",
+          "yield": -1,
+          "ammo": "DeepTealPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepCyanPaint",
+          "yield": -1,
+          "ammo": "DeepCyanPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepSkyBluePaint",
+          "yield": -1,
+          "ammo": "DeepSkyBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepBluePaint",
+          "yield": -1,
+          "ammo": "DeepBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepPurplePaint",
+          "yield": -1,
+          "ammo": "DeepPurplePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepVioletPaint",
+          "yield": -1,
+          "ammo": "DeepVioletPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepPinkPaint",
+          "yield": -1,
+          "ammo": "DeepPinkPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BlackPaint",
+          "yield": -1,
+          "ammo": "BlackPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "WhitePaint",
+          "yield": -1,
+          "ammo": "WhitePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "GrayPaint",
+          "yield": -1,
+          "ammo": "GrayPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BrownPaint",
+          "yield": -1,
+          "ammo": "BrownPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "ShadowPaint",
+          "yield": -1,
+          "ammo": "ShadowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "NegativePaint",
+          "yield": -1,
+          "ammo": "NegativePaint"
+        }
+      ]
+    },
+    "PaintSprayer": {
+      "interactions": [
+        {
+          "layer": "Paint",
+          "main": "RedPaint",
+          "yield": 10,
+          "ammo": "RedPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "OrangePaint",
+          "yield": 10,
+          "ammo": "OrangePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "YellowPaint",
+          "yield": 10,
+          "ammo": "YellowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "LimePaint",
+          "yield": 10,
+          "ammo": "LimePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "GreenPaint",
+          "yield": 10,
+          "ammo": "GreenPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "TealPaint",
+          "yield": 10,
+          "ammo": "TealPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "CyanPaint",
+          "yield": 10,
+          "ammo": "CyanPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "SkyBluePaint",
+          "yield": 10,
+          "ammo": "SkyBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BluePaint",
+          "yield": 10,
+          "ammo": "BluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "PurplePaint",
+          "yield": 10,
+          "ammo": "PurplePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "VioletPaint",
+          "yield": 10,
+          "ammo": "VioletPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "PinkPaint",
+          "yield": 10,
+          "ammo": "PinkPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepRedPaint",
+          "yield": 10,
+          "ammo": "DeepRedPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepOrangePaint",
+          "yield": 10,
+          "ammo": "DeepOrangePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepYellowPaint",
+          "yield": 10,
+          "ammo": "DeepYellowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepLimePaint",
+          "yield": 10,
+          "ammo": "DeepLimePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepGreenPaint",
+          "yield": 10,
+          "ammo": "DeepGreenPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepTealPaint",
+          "yield": 10,
+          "ammo": "DeepTealPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepCyanPaint",
+          "yield": 10,
+          "ammo": "DeepCyanPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepSkyBluePaint",
+          "yield": 10,
+          "ammo": "DeepSkyBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepBluePaint",
+          "yield": 10,
+          "ammo": "DeepBluePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepPurplePaint",
+          "yield": 10,
+          "ammo": "DeepPurplePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepVioletPaint",
+          "yield": 10,
+          "ammo": "DeepVioletPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "DeepPinkPaint",
+          "yield": 10,
+          "ammo": "DeepPinkPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BlackPaint",
+          "yield": 10,
+          "ammo": "BlackPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "WhitePaint",
+          "yield": 10,
+          "ammo": "WhitePaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "GrayPaint",
+          "yield": 10,
+          "ammo": "GrayPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "BrownPaint",
+          "yield": 10,
+          "ammo": "BrownPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "ShadowPaint",
+          "yield": 10,
+          "ammo": "ShadowPaint"
+        },
+        {
+          "layer": "Paint",
+          "main": "NegativePaint",
+          "yield": 10,
+          "ammo": "NegativePaint"
+        }
+      ]
+    },
+    "CorruptSeeds": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "base": "Dirt",
+          "main": "CorruptGrass",
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "base": "Grass",
+          "main": "CorruptGrass",
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "base": "Mud",
+          "main": "CorruptJungleGrass",
+          "yield": 1
+        }
+      ]
+    },
+    "CrimsonSeeds": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "base": "Dirt",
+          "main": "CrimsonGrass",
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "base": "Grass",
+          "main": "CrimsonGrass",
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "base": "Mud",
+          "main": "CrimsonJungleGrass",
+          "yield": 1
+        }
+      ]
+    },
+    "BottomlessBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Water",
+          "yield": -1
+        }
+      ]
+    },
+    "LivingMahoganyWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "LivingMahogany",
+          "yield": 1,
+          "ammo": "RichMahogany"
+        }
+      ]
+    },
+    "LivingMahoganyLeafWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "MahoganyLeaf",
+          "yield": 1,
+          "ammo": "RichMahogany"
+        }
+      ]
+    },
+    "WireKite": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Red",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Green",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Blue",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "resultWireKind": 3,
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Actuator",
+          "yield": 1,
+          "ammo": "Actuator"
+        }
+      ]
+    },
+    "YellowWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "resultWireKind": 3,
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "MulticolorWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Red",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Green",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Blue",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "resultWireKind": 3,
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "CombatWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Red",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Green",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Blue",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "resultWireKind": 3,
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "BottomlessLavaBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Lava",
+          "yield": -1
+        }
+      ]
+    },
+    "WetBomb": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Water",
+          "yield": 15
+        }
+      ]
+    },
+    "LavaBomb": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Lava",
+          "yield": 15
+        }
+      ]
+    },
+    "HoneyBomb": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Honey",
+          "yield": 15
+        }
+      ]
+    },
+    "DirtBomb": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "Dirt",
+          "yield": 25
+        }
+      ]
+    },
+    "DirtStickyBomb": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "Dirt",
+          "yield": 25
+        }
+      ]
+    },
+    "BottomlessHoneyBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Honey",
+          "yield": -1
+        }
+      ]
+    },
+    "BottomlessShimmerBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Shimmer",
+          "yield": -1
+        }
+      ]
+    }
+  }
+}
