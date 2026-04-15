@@ -1,4 +1,5 @@
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using ArchitectsStencilMod.Core.TileMapping;
 
@@ -20,6 +21,12 @@ namespace ArchitectsStencilMod.Core
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                caller.Reply("This command is server-only in multiplayer.");
+                return;
+            }
+
             int plr = caller.Player?.whoAmI ?? Main.myPlayer;
             BiomeDiscovery.Run(Mod, Main.player[plr], msg => caller.Reply(msg));
         }

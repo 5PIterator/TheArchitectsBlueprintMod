@@ -22,8 +22,10 @@ Items: {
 		DisplayName: Architect's Stencil
 		Tooltip:
 			'''
-			All-in-one building tool.
-			(Work in progress)
+			All-in-one: Blueprint, stencil, projection, paste.
+			Right: action wheel — PIN, SET, ADD, REMOVE, COPY, PASTE, RESET
+			Left: use the selected mode (RESET clears only what is under the cursor when it hits a Blueprint or projection)
+			While adding/removing tiles, right also cancels the rectangle preview.
 			'''
 	}
 
@@ -31,9 +33,9 @@ Items: {
 		DisplayName: Blueprint Wand
 		Tooltip:
 			'''
-			Edit Blueprint bounds.
-			Left: grab/drag pins, edges, corners, or inside
-			Right: reset the Blueprint
+			Blueprint bounds editing.
+			Right: action wheel — PIN, SET, RESET
+			Left: PIN (new pins) or SET (edit handles) depending on wheel; RESET clears only when the cursor is on the Blueprint area
 			'''
 	}
 
@@ -41,24 +43,20 @@ Items: {
 		DisplayName: Copy Stick
 		Tooltip:
 			'''
-			Create a Copy projection.
+			Create and move a projection.
 			Left: drag to place/move
-			Right: remove the projection
+			Right: cancel move while dragging; otherwise remove projection or clear Blueprint only if the cursor hits one
 			'''
 	}
 
 	DebugStick: {
 		DisplayName: Debug Stick
-		Tooltip: When held during discovery: left-click to step, right-click to cancel.
-	}
-
-	CutStick: {
-		DisplayName: Cut Stick
 		Tooltip:
 			'''
-			Create a Cut projection.
-			Left: drag to place/move
-			Right: remove the projection
+			Alt-click: debug action wheel. Left-click: apply the selected action (or advance an active step session first).
+			CUT: toggle CutSource on the projection under the cursor.
+			STP: start single-player stepped paste on the projection under the cursor; further left-clicks advance the paste or any discovery step session.
+			Right-click: cancel step session.
 			'''
 	}
 
@@ -78,7 +76,7 @@ Items: {
 			'''
 			Start a new Blueprint.
 			Left: place & drag bounds
-			Right: reset
+			Right: cancel in-progress pin gesture; clear Blueprint only if the cursor is inside its bounds
 			'''
 	}
 
@@ -87,9 +85,9 @@ Items: {
 		Tooltip:
 			'''
 			Manage projections.
-			Left: use current mode
-			Inventory right-click: cycle Copy/Cut/Paste
-			Right: cancel / remove
+			Right: action wheel — COPY, PASTE, RESET
+			Left: place/move projection, start paste, or RESET hit (cursor must be on target)
+			Source-clear (CUT) is toggled on the projection in-world, not on this wand.
 			'''
 	}
 
@@ -108,21 +106,74 @@ Items: {
 		Tooltip:
 			'''
 			Select tiles.
-			Left: use current mode
-			Inventory right-click: swap Add/Remove
-			Right: cancel the current gesture
+			Right: cancel active rectangle preview, or open action wheel — ADD, REMOVE
+			Left: use the mode selected on the wheel
 			'''
 	}
 }
 
 Configs: {
-	DebugConfig.DisplayName: Debug
+	ClientLogConfig: {
+		DisplayName: Client diagnostics
+		Tooltip: These options apply only on your machine. They are not sent to the server and do not change host paste rules or map compilation.
+		Headers.Logging: Logging
+
+		ShowDebugLogs: {
+			Label: Verbose log & paste HUD
+			Tooltip:
+				'''
+				When enabled, paste/tile-map debug messages go to the mod log; some also echo to chat while the Debug Stick is equipped.
+				Client only — other players are unaffected.
+				'''
+		}
+	}
+
+	ClientPasteConfig: {
+		DisplayName: Client paste
+		Tooltip:
+			'''
+			How your game plans each paste: transparency, forcing placeable tiles only, and desired tiles-per-step.
+			Sent with the paste request when you are the multiplayer host; the server still enforces its maximum step size and all area/volume limits.
+			'''
+		Headers.PastePlanning: Paste planning
+
+		ForceTiles: {
+			Label: Force tiles
+			Tooltip:
+				'''
+				When enabled (default), placement tasks are only queued where the tile can actually be placed.
+				Client preference — carried with your paste on the host client.
+				'''
+		}
+
+		TransparentPaste: {
+			Label: Transparent paste
+			Tooltip:
+				'''
+				When enabled (default), target tiles are cleared only where the paste also plans placement (selected source cells).
+				Deselected / empty source cells under the projection are not cleared.
+				When disabled, clears are planned for the entire projection footprint so holes and overlap are wiped before placement.
+				Client preference — carried with your paste on the host client.
+				'''
+		}
+
+		PasteStepSize: {
+			Label: Tiles per step
+			Tooltip: How many tiles to process in each paste step. The server (or single-player rules) caps this with Max paste step size in Pasting config.
+		}
+	}
 
 	PastingConfig: {
-		DisplayName: Pasting
+		DisplayName: Pasting (server / host)
+		Tooltip:
+			'''
+			In multiplayer, the host or dedicated server owns these values; joining clients see them but usually cannot change them.
+			Affects paste timing, maximum step size, limits, layer identification, and whether source tiles are cleared during a paste.
+			'''
 
 		Headers: {
 			General: General
+			Debug: Debug
 			LayerIdentification: Layers
 		}
 
@@ -208,9 +259,9 @@ Configs: {
 			Tooltip: Delay between paste steps in milliseconds.
 		}
 
-		PasteStepSize: {
-			Label: Tiles Per Step
-			Tooltip: Number of tiles attempted each paste step.
+		MaxPasteStepSize: {
+			Label: Max paste step size
+			Tooltip: Upper bound for tiles per paste step. Each client's chosen step size is clamped to this value on the server.
 		}
 
 		CheatSweep: {
@@ -218,39 +269,68 @@ Configs: {
 			Tooltip: When enabled, the sweep layer may use forced placement where the game supports it. Off by default.
 		}
 
-		ForceTiles: {
-			Label: Force Tiles
-			Tooltip: When enabled (default), tile tasks are only queued if the required items are available. When disabled, identifications missing items may still enqueue tasks.
+		EnableCutPasteProcess: {
+			Label: Force source clear during paste
+			Tooltip:
+				'''
+				When enabled, paste always plans source-area clear tasks even if the projection source-clear flag is off.
+				Server / host only in multiplayer — clients cannot force this from their own config.
+				'''
+		}
+
+		MaxPasteWidth: {
+			Label: Max Paste Width
+			Tooltip: ""
+		}
+
+		MaxPasteHeight: {
+			Label: Max Paste Height
+			Tooltip: ""
+		}
+
+		VolumeLimit: {
+			Label: Volume Limit
+			Tooltip: ""
+		}
+
+		PlayerOperationLimit: {
+			Label: Player Operation Limit
+			Tooltip: ""
+		}
+
+		ServerOperationLimit: {
+			Label: Server Operation Limit
+			Tooltip: ""
 		}
 	}
 
 	TileMappingConfig: {
-		DisplayName: Tile Mapping
-		Headers.TileMapping: Sources
-
-		ShowDebugLogs: {
-			Label: Debug Logs
-			Tooltip: Write verbose compile logs to TileMapCompile_Debug.txt.
-		}
+		DisplayName: Tile mapping compile (server / host)
+		Tooltip:
+			'''
+			Controls which SourceMaps layers are merged when compiling interaction maps. In multiplayer, the host or dedicated server owns these toggles.
+			Use Client diagnostics and Client paste for per-machine log and planning preferences.
+			'''
+		Headers.TileMapping: Compile layers
 
 		EnablePlacementDiscovery: {
 			Label: Placement
-			Tooltip: Include Placement.itr in compile.
+			Tooltip: When enabled, Placement.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
 		EnableCustomInteractionMap: {
 			Label: Custom
-			Tooltip: Include Custom.itr in compile.
+			Tooltip: When enabled, Custom.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
 		EnableBiomeConversions: {
 			Label: Biome
-			Tooltip: Include Biome.itr in compile.
+			Tooltip: When enabled, Biome.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
 		EnableShimmerTransforms: {
 			Label: Shimmer
-			Tooltip: Include Shimmer.itr in compile.
+			Tooltip: When enabled, Shimmer.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 	}
 

@@ -11,22 +11,18 @@ using ArchitectsStencilMod.Utils;
 namespace ArchitectsStencilMod.Content.Items
 {
 	/// <summary>
-	/// PROJECTION WAND: bundles Copy, Cut, and Paste actions.
-	/// Uses an on-screen action wheel to swap the current mode.
-	/// RESET is a center toggle in the wheel and modifies what left click does.
+	/// PROJECTION WAND: COPY / PASTE / RESET via action wheel. Hold/release only for COPY.
 	/// </summary>
 	public class ProjectionWand : ModItem
 	{
 		private ToolAction _mode = ToolAction.COPY;
-		private bool _resetArmed;
 
-		private bool _wasLeftDown;
-		private bool _gestureActive;
-		private ToolAction _gestureAction;
 
-		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.ArchitectsStencilMod.hjson' file.
+		/// <summary>Sets channeling wand defaults suited to dragging copy projections.</summary>
 		public override void SetDefaults()
 		{
+			// --- Configure a channeled hold-up wand with audio and direction snap on use.
+
 			Item.width = 30;
 			Item.height = 30;
 			Item.useStyle = ItemUseStyleID.HoldUp;
@@ -37,143 +33,94 @@ namespace ArchitectsStencilMod.Content.Items
 			Item.channel = true;
 			Item.shootSpeed = 10f;
 			Item.UseSound = SoundID.Item64;
-			Item.ChangePlayerDirectionOnShoot = true;// Added by tML
+			Item.ChangePlayerDirectionOnShoot = true;
 		}
 
-		public override bool ConsumeItem(Player player) => false;
-
-		public override bool AltFunctionUse(Player player) => true;
-
+		/// <summary>Copies persisted wheel mode when the item stack is cloned.</summary>
 		public override ModItem Clone(Item newEntity)
 		{
+			// --- Clone base state, then copy the selected projection action mode.
+
 			var clone = (ProjectionWand)base.Clone(newEntity);
 			clone._mode = _mode;
-			clone._resetArmed = _resetArmed;
 			return clone;
 		}
 
-		public override void SaveData(TagCompound tag)
-		{
-			tag["mode"] = (int)_mode;
-		}
+		/// <summary>Persists COPY/PASTE/RESET wheel selection.</summary>
+		public override void SaveData(TagCompound tag) => tag["mode"] = (int)_mode;
 
+		/// <summary>Restores wheel mode when the stored value is a defined <see cref="ToolAction"/>.</summary>
 		public override void LoadData(TagCompound tag)
 		{
-			if (tag.ContainsKey("mode"))
-			{
-				int raw = tag.GetInt("mode");
-				// Legacy compatibility: RESET used to be a standalone ToolAction mode (raw=3).
-				// ProjectionWand now models RESET as a modifier, so fall back to COPY.
-				_mode = raw == 3 ? ToolAction.COPY : (ToolAction)raw;
-			}
+			// --- Ignore missing or invalid enum values to avoid corrupt mode state.
+
+			if (!tag.ContainsKey("mode"))
+				return;
+			int raw = tag.GetInt("mode");
+			if (System.Enum.IsDefined(typeof(ToolAction), raw))
+				_mode = (ToolAction)raw;
 		}
 
-		public override bool CanUseItem(Player player)
-		{
-			return !ActionWheel.IsActive && !ActionWheel.IsPendingOpen;
-		}
+		/// <summary>Enables alternate use to open or dismiss the projection action wheel.</summary>
+		public override bool AltFunctionUse(Player player) => true;
 
+		/// <summary>Blocks use while the shared action wheel is open or opening.</summary>
+		public override bool CanUseItem(Player player) => !ActionWheel.IsActive && !ActionWheel.IsPendingOpen;
+
+		/// <summary>Opens the mode wheel on alt-use, or dispatches the chosen COPY/PASTE/RESET action on primary use.</summary>
 		public override bool? UseItem(Player player)
 		{
+			// --- Alt-use toggles wheel or cancels owned wheel; primary use runs current mode.
+
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
 			var actionManager = ModContent.GetInstance<ToolActionManager>();
-
-			if (player.altFunctionUse == 2)
-			{
-				var entries = new List<ActionWheelEntry>(3)
-				{
-					new(
-						GetActionId(ToolAction.COPY),
-						() => _resetArmed ? "CLEAR COPY" : GetActionLabel(ToolAction.COPY),
-						onSelect: () => _mode = ToolAction.COPY,
-						isSelected: () => _mode == ToolAction.COPY
-					),
-					new(
-						GetActionId(ToolAction.CUT),
-						() => _resetArmed ? "CLEAR CUT" : GetActionLabel(ToolAction.CUT),
-						onSelect: () => _mode = ToolAction.CUT,
-						isSelected: () => _mode == ToolAction.CUT
-					),
-					new(
-						GetActionId(ToolAction.PASTE),
-						() => _resetArmed ? "STOP PASTE" : GetActionLabel(ToolAction.PASTE),
-						onSelect: () => _mode = ToolAction.PASTE,
-						isSelected: () => _mode == ToolAction.PASTE
-					)
-				};
-
-				var center = new ActionWheelEntry(
-					id: "reset",
-					labelGetter: () => "RESET",
-					onSelect: () => _resetArmed = !_resetArmed,
-					isSelected: () => _resetArmed
-				);
-
-				ActionWheel.OpenNew(
-					ownerPlayer: Main.myPlayer,
-					ownerHeldItemType: Item.type,
-					entries: entries,
-					centerEntry: center
-				);
-				return true;
-			}
-
-			// Only execute on the click edge.
-			// HoldItem() can run before UseItem() in the same tick, so _wasLeftDown is not reliable here.
-			if (!Main.mouseLeftRelease)
-			{
-				return null;
-			}
-
-			_gestureActive = false;
-
-			if (_resetArmed)
-			{
-				actionManager.Handle(_mode, ToolActionKey.LeftClick, player, cursorTile, ToolActionModifier.Reset);
-				return null;
-			}
-
-			actionManager.Handle(_mode, ToolActionKey.LeftClick, player, cursorTile);
-			if (_mode == ToolAction.COPY || _mode == ToolAction.CUT)
-			{
-				_gestureActive = true;
-				_gestureAction = _mode;
-			}
-
-			return null;
-		}
-
-		public override void HoldItem(Player player)
-		{
-			if (player.whoAmI != Main.myPlayer)
-				return;
-
-			if (ActionWheel.IsActive || ActionWheel.IsPendingOpen)
-			{
-				_wasLeftDown = Main.mouseLeft;
-				_gestureActive = false;
-				return;
-			}
-
-			bool leftDown = Main.mouseLeft;
 			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
-			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
-			if (_gestureActive && (_gestureAction == ToolAction.COPY || _gestureAction == ToolAction.CUT))
+			if (player.altFunctionUse == 0)
 			{
-				if (leftDown && _wasLeftDown)
-					actionManager.Handle(_gestureAction, ToolActionKey.LeftHold, player, cursorTile);
-				else if (!leftDown && _wasLeftDown)
+				actionManager.Handle(_mode, ToolActionKey.LeftClick, player, cursorTile);
+			}
+			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
+			{
+				if (ActionWheel.IsOwnedBy(Main.myPlayer, Item.type))
+					ActionWheel.CancelActive();
+				else
 				{
-					actionManager.Handle(_gestureAction, ToolActionKey.LeftRelease, player, cursorTile);
-					_gestureActive = false;
+					var entries = new List<ActionWheelEntry>(3)
+					{
+						new(GetActionId(ToolAction.COPY), GetActionLabel(ToolAction.COPY), onSelect: () => _mode = ToolAction.COPY,
+							isSelected: () => _mode == ToolAction.COPY),
+						new(GetActionId(ToolAction.PASTE), GetActionLabel(ToolAction.PASTE), onSelect: () => _mode = ToolAction.PASTE,
+							isSelected: () => _mode == ToolAction.PASTE),
+						new(GetActionId(ToolAction.RESET), GetActionLabel(ToolAction.RESET), onSelect: () => _mode = ToolAction.RESET,
+							isSelected: () => _mode == ToolAction.RESET)
+					};
+					ActionWheel.OpenNew(Main.myPlayer, Item.type, entries);
 				}
 			}
 
-			_wasLeftDown = leftDown;
+			return true;
+		}
+
+		/// <summary>Forwards left drag and release for the current mode; both buttons emit right-cancel like the blueprint wand.</summary>
+		public override void HoldItem(Player player)
+		{
+			// --- Mirror blueprint wand: dual-button cancel, then left hold vs release edge handling.
+
+			if (player.whoAmI != Main.myPlayer || ActionWheel.IsActive || ActionWheel.IsPendingOpen)
+				return;
+
+			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
+
+			if (Main.mouseLeft && Main.mouseRight)
+				actionManager.Handle(_mode, ToolActionKey.RightClick, player, cursorTile);
+			if (Main.mouseLeft && !Main.mouseLeftRelease)
+				actionManager.Handle(_mode, ToolActionKey.LeftHold, player, cursorTile);
+			else if (!Main.mouseLeft && Main.mouseLeftRelease)
+				actionManager.Handle(_mode, ToolActionKey.LeftRelease, player, cursorTile);
 		}
 	}
 }

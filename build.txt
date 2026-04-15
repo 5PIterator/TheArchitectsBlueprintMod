@@ -1,3 +1,3 @@
-displayName = Architect&#39;s Stencil Mod
+displayName = Architect's Stencil Mod
 author = The Iterator
 version = 0.1

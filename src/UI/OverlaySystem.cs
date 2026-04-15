@@ -1,155 +1,16 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsStencilMod.Core;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
-using Microsoft.Xna.Framework.Graphics;
 using ArchitectsStencilMod.Utils;
 
 namespace ArchitectsStencilMod.UI
 {
     /// <summary>
-    /// Channel-based overlay API. Call DrawPoint, DrawTile, DrawTileBounds to register content;
-    /// call EraseChannel to clear. Content persists for the given duration (frames).
-    /// </summary>
-    public static class Overlay
-    {
-        /// <summary>
-        /// Draws point handles at the given tile coordinates. Hover state is computed at draw time.
-        /// </summary>
-        public static void DrawPoint(IReadOnlyList<Point> points, Color color, string channel, int durationFrames = 1)
-        {
-            if (points is null || points.Count == 0 || string.IsNullOrEmpty(channel)) return;
-            var list = GetOrCreateChannel(channel);
-            var copy = new Point[points.Count];
-            for (int i = 0; i < points.Count; i++) copy[i] = points[i];
-            list.Add(new OverlayEntry(OverlayKind.Point, copy, color, durationFrames));
-        }
-
-        /// <summary>
-        /// Draws filled tiles at the given world coordinates.
-        /// </summary>
-        public static void DrawTile(IReadOnlyList<Point> tiles, Color fill, string channel, int durationFrames = 1)
-        {
-            if (tiles is null || tiles.Count == 0 || string.IsNullOrEmpty(channel)) return;
-            var list = GetOrCreateChannel(channel);
-            var copy = new Point[tiles.Count];
-            for (int i = 0; i < tiles.Count; i++) copy[i] = tiles[i];
-            list.Add(new OverlayEntry(OverlayKind.TileFill, copy, fill, durationFrames));
-        }
-
-        /// <summary>
-        /// Draws a bordered rectangle in tile-space.
-        /// </summary>
-        public static void DrawTileBounds(Rectangle tileBounds, Color color, int borderWidth, string channel, int durationFrames = 1)
-        {
-            if (tileBounds.IsEmpty || string.IsNullOrEmpty(channel)) return;
-            var list = GetOrCreateChannel(channel);
-            list.Add(new OverlayEntry(OverlayKind.TileBounds, tileBounds, color, durationFrames, borderWidth));
-        }
-
-        /// <summary>
-        /// Draws custom screen-space content (e.g. inventory label).
-        /// </summary>
-        public static void DrawScreen(Action draw, string channel, int durationFrames = 1)
-        {
-            if (draw is null || string.IsNullOrEmpty(channel)) return;
-            var list = GetOrCreateChannel(channel);
-            list.Add(new OverlayEntry(OverlayKind.Screen, draw, default, durationFrames));
-        }
-
-        /// <summary>
-        /// Clears all content in the given channel.
-        /// </summary>
-        public static void EraseChannel(string channel)
-        {
-            if (string.IsNullOrEmpty(channel)) return;
-            _channels.Remove(channel);
-        }
-
-        /// <summary>
-        /// Clears all channels.
-        /// </summary>
-        public static void EraseAll()
-        {
-            _channels.Clear();
-        }
-
-        private static readonly Dictionary<string, List<OverlayEntry>> _channels = new();
-        private static readonly string[] _channelOrder = ["blueprint", "projection", "selection", "pasting"];
-
-        private static List<OverlayEntry> GetOrCreateChannel(string channel)
-        {
-            if (!_channels.TryGetValue(channel, out var list))
-            {
-                list = [];
-                _channels[channel] = list;
-            }
-            return list;
-        }
-
-        internal static void DrawAll()
-        {
-            for (int c = 0; c < _channelOrder.Length; c++)
-            {
-                if (!_channels.TryGetValue(_channelOrder[c], out var list)) continue;
-                for (int i = list.Count - 1; i >= 0; i--)
-                {
-                    var e = list[i];
-                    e.Draw();
-                    e.RemainingFrames--;
-                    if (e.RemainingFrames <= 0)
-                        list.RemoveAt(i);
-                }
-                if (list.Count == 0)
-                    _channels.Remove(_channelOrder[c]);
-            }
-        }
-
-        private enum OverlayKind { Point, TileFill, TileBounds, Screen }
-
-        private class OverlayEntry
-        {
-            public int RemainingFrames;
-            private readonly OverlayKind _kind;
-            private readonly object _data;
-            private readonly Color _color;
-            private readonly int _borderWidth;
-
-            public OverlayEntry(OverlayKind kind, object data, Color color, int duration, int borderWidth = 0)
-            {
-                _kind = kind;
-                _data = data;
-                _color = color;
-                RemainingFrames = duration;
-                _borderWidth = borderWidth;
-            }
-
-            public void Draw()
-            {
-                switch (_kind)
-                {
-                    case OverlayKind.Point:
-                        OverlaySystem.DrawPoints((Point[])_data, _color);
-                        break;
-                    case OverlayKind.TileFill:
-                        OverlaySystem.DrawTileFill((Point[])_data, _color);
-                        break;
-                    case OverlayKind.TileBounds:
-                        OverlaySystem.DrawTileBounds((Rectangle)_data, _color, _borderWidth);
-                        break;
-                    case OverlayKind.Screen:
-                        ((Action)_data)();
-                        break;
-                }
-            }
-        }
-    }
-
-    /// <summary>
-    /// Context computed at draw time. OverlaySystem uses this to adapt (e.g. skip when map is open).
+    /// Context computed at draw time. <see cref="OverlaySystem"/> uses this to adapt (e.g. skip when map is open).
     /// </summary>
     public readonly struct OverlayContext
     {
@@ -159,7 +20,122 @@ namespace ArchitectsStencilMod.UI
     }
 
     /// <summary>
-    /// Draws overlay content for the mod. Pushes overlay data each frame, then draws during the interface layer phase.
+    /// Payload stored in the <see cref="OverlayCatalog"/> for one registered overlay primitive.
+    /// </summary>
+    internal readonly struct OverlayDrawable(OverlayDrawableKind kind, object data, Color color, int borderWidth)
+    {
+        private readonly OverlayDrawableKind _kind = kind;
+        private readonly object _data = data;
+        private readonly Color _color = color;
+        private readonly int _borderWidth = borderWidth;
+
+        public void Draw()
+        {
+            switch (_kind)
+            {
+                case OverlayDrawableKind.Point:
+                    OverlaySystem.DrawPoints((Point[])_data, _color);
+                    break;
+                case OverlayDrawableKind.TileFill:
+                    OverlaySystem.DrawTileFill((Point[])_data, _color);
+                    break;
+                case OverlayDrawableKind.TileBounds:
+                    OverlaySystem.DrawTileBounds((Rectangle)_data, _color, _borderWidth);
+                    break;
+                case OverlayDrawableKind.TileBorder:
+                    OverlaySystem.DrawTileBorder((Rectangle)_data, _color, _borderWidth);
+                    break;
+                case OverlayDrawableKind.Screen:
+                    ((Action)_data)();
+                    break;
+            }
+        }
+    }
+
+    internal enum OverlayDrawableKind
+    {
+        Point,
+        TileFill,
+        TileBounds,
+        TileBorder,
+        Screen,
+    }
+
+    /// <summary>
+    /// Client-side registry of world overlays. Items are keyed by <c>(family, id)</c>; draw order follows first registration per key.
+    /// </summary>
+    internal sealed class OverlayCatalog
+    {
+        private const char FamilyKeySeparator = '\u001f';
+
+        private readonly Dictionary<string, CatalogItem> _items = new(StringComparer.Ordinal);
+        private readonly List<string> _drawOrder = [];
+
+        private readonly struct CatalogItem(string? family, OverlayDrawable drawable)
+        {
+            public string? Family { get; } = family;
+            public OverlayDrawable Drawable { get; } = drawable;
+        }
+
+        private static string MakeKey(string? family, string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                throw new ArgumentException("Catalog id cannot be null or empty.", nameof(id));
+            return string.IsNullOrEmpty(family) ? id : family + FamilyKeySeparator + id;
+        }
+
+        /// <summary>
+        /// <paramref name="family"/> null or empty: <paramref name="id"/> is globally unique. Otherwise ids are unique per family.
+        /// </summary>
+        public void Register(string? family, string id, OverlayDrawable drawable)
+        {
+            string key = MakeKey(family, id);
+            if (!_items.ContainsKey(key))
+                _drawOrder.Add(key);
+            _items[key] = new CatalogItem(family, drawable);
+        }
+
+        public void Unregister(string? family, string id)
+        {
+            string key = MakeKey(family, id);
+            if (!_items.Remove(key))
+                return;
+            _drawOrder.Remove(key);
+        }
+
+        /// <summary>Removes every catalog item whose family matches <paramref name="family"/>.</summary>
+        public void UnregisterFamily(string family)
+        {
+            if (string.IsNullOrEmpty(family))
+                return;
+
+            for (int i = _drawOrder.Count - 1; i >= 0; i--)
+            {
+                string key = _drawOrder[i];
+                if (_items.TryGetValue(key, out var item) &&
+                    string.Equals(item.Family, family, StringComparison.Ordinal))
+                {
+                    _items.Remove(key);
+                    _drawOrder.RemoveAt(i);
+                }
+            }
+        }
+
+        public void Clear()
+        {
+            _items.Clear();
+            _drawOrder.Clear();
+        }
+
+        public void Draw()
+        {
+            for (int i = 0; i < _drawOrder.Count; i++)
+                _items[_drawOrder[i]].Drawable.Draw();
+        }
+    }
+
+    /// <summary>
+    /// Hooks the overlay <see cref="OverlayCatalog"/> into the game interface layer. Feature code registers drawables via the static catalog API.
     /// </summary>
     public sealed class OverlaySystem : ModSystem
     {
@@ -168,71 +144,114 @@ namespace ArchitectsStencilMod.UI
         private const int PointHandleHoverSizePx = 16;
         private static readonly Rectangle PixelSource = new(0, 0, 1, 1);
 
+        private readonly OverlayCatalog _catalog = new();
+
+        private static OverlaySystem Instance => ModContent.GetInstance<OverlaySystem>();
+
+        /// <summary>Throws if new registrations are not allowed in the current context or <paramref name="id"/> is invalid.</summary>
+        private static void ValidateRegistration(string id)
+        {
+            if (Main.dedServ)
+                throw new InvalidOperationException("Overlay registration is not allowed on dedicated server.");
+            if (string.IsNullOrEmpty(id))
+                throw new ArgumentException("Id cannot be null or empty.", nameof(id));
+        }
+
+        /// <summary>Throws on dedicated server or empty key; unregister is allowed while the menu or map is open.</summary>
+        private static void ValidateUnregisterKey(string key)
+        {
+            if (Main.dedServ)
+                throw new InvalidOperationException("Overlay catalog cannot be modified on dedicated server.");
+            if (string.IsNullOrEmpty(key))
+                throw new ArgumentException("Key cannot be null or empty.", nameof(key));
+        }
+
+        /// <inheritdoc cref="ValidateRegistration(string)"/>
+        private static void ValidateRegistration(string id, Point[]? points)
+        {
+            ValidateRegistration(id);
+            if (points is null)
+                throw new ArgumentNullException(nameof(points));
+            if (points.Length == 0)
+                throw new ArgumentException("At least one point is required.", nameof(points));
+        }
+
+        /// <inheritdoc cref="ValidateRegistration(string)"/>
+        private static void ValidateRegistration(string id, Rectangle tileBounds)
+        {
+            ValidateRegistration(id);
+            if (tileBounds.IsEmpty)
+                throw new ArgumentException("Tile bounds cannot be empty.", nameof(tileBounds));
+        }
+
+        /// <inheritdoc cref="ValidateRegistration(string)"/>
+        private static void ValidateRegistration(string id, Action? draw)
+        {
+            ValidateRegistration(id);
+            if (draw is null)
+                throw new ArgumentNullException(nameof(draw));
+        }
+
+        /// <param name="family">Optional; when set, <paramref name="id"/> only needs to be unique within this family.</param>
+        public static void RegPoints(string id, Point[] points, Color color, string? family = null)
+        {
+            ValidateRegistration(id, points);
+            var copy = new Point[points.Length];
+            Array.Copy(points, copy, points.Length);
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.Point, copy, color, 0));
+        }
+
+        /// <inheritdoc cref="RegPoints"/>
+        public static void RegTileFill(string id, Point[] tiles, Color fill, string? family = null)
+        {
+            ValidateRegistration(id, tiles);
+            var copy = new Point[tiles.Length];
+            Array.Copy(tiles, copy, tiles.Length);
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileFill, copy, fill, 0));
+        }
+
+        /// <inheritdoc cref="RegPoints"/>
+        public static void RegTileBounds(string id, Rectangle tileBounds, Color color, int borderWidth, string? family = null)
+        {
+            ValidateRegistration(id, tileBounds);
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileBounds, tileBounds, color, borderWidth));
+        }
+
+        /// <summary>Registers a tile rectangle outline only (no interior fill).</summary>
+        /// <inheritdoc cref="RegPoints"/>
+        public static void RegTileBorder(string id, Rectangle tileBounds, Color color, int borderWidth, string? family = null)
+        {
+            ValidateRegistration(id, tileBounds);
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileBorder, tileBounds, color, borderWidth));
+        }
+
+        /// <inheritdoc cref="RegPoints"/>
+        public static void RegScreen(string id, Action draw, string? family = null)
+        {
+            ValidateRegistration(id, draw);
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.Screen, draw, default, 0));
+        }
+
+        public static void Unregister(string id, string? family = null)
+        {
+            ValidateUnregisterKey(id);
+            Instance._catalog.Unregister(family, id);
+        }
+
+        public static void UnregisterFamily(string family)
+        {
+            ValidateUnregisterKey(family);
+            Instance._catalog.UnregisterFamily(family);
+        }
+
         /// <summary>
         /// Size in pixels used for point handle hit-testing (hover detection).
         /// </summary>
         public const int PointHandleHitTestSizePx = PointHandleSizePx;
 
-        public override void PostUpdatePlayers()
+        public override void OnWorldUnload()
         {
-            if (Main.gameMenu) return;
-            PushAllOverlays(Main.LocalPlayer);
-        }
-
-        private static void PushAllOverlays(Player player)
-        {
-            Overlay.EraseAll();
-
-            var blueprintSystem = ModContent.GetInstance<BlueprintSystem>();
-            Blueprint blueprint = blueprintSystem.GetActiveBlueprint(player);
-            if (blueprint.IsDefined)
-            {
-                Overlay.DrawTileBounds(blueprint.Bounds, Color.White, 2, "blueprint");
-                PushUnselectedTiles(blueprint.Tiles, blueprint.Bounds.Location, Color.Black * 0.35f, "blueprint");
-                if (blueprintSystem.TryGetPoints(player, out var a, out var b))
-                {
-                    Overlay.DrawPoint([a], Color.Cyan, "blueprint");
-                    Overlay.DrawPoint([b], Color.Orange, "blueprint");
-                }
-            }
-
-            var projectionSystem = ModContent.GetInstance<ProjectionSystem>();
-            var projections = projectionSystem.GetProjections(player);
-            for (int i = 0; i < projections.Count; i++)
-            {
-                var p = projections[i];
-                if (!p.Bounds.IsEmpty)
-                {
-                    Color c = p.IsLocked ? Color.Gold : (p.Kind == ProjectionKind.Copy ? Color.LimeGreen : Color.Red);
-                    Overlay.DrawTileBounds(p.Bounds, c, 2, "projection");
-                }
-                PushUnselectedTiles(p.Tiles, p.Bounds.Location, Color.Black * 0.25f, "projection");
-            }
-
-            var pastingSystem = ModContent.GetInstance<PastingSystem>();
-            pastingSystem.PushOverlay(player);
-
-            var selectionSystem = ModContent.GetInstance<SelectionSystem>();
-            if (selectionSystem.TryGetPreview(player, out var action, out var rect, out var targetBounds))
-            {
-                Color c = action == ToolActionManager.ToolAction.ADD ? Color.LimeGreen : Color.Red;
-                Rectangle clamped = Rectangle.Intersect(targetBounds, rect);
-                Overlay.DrawTileBounds(clamped, c, 2, "selection");
-            }
-        }
-
-        private static void PushUnselectedTiles(IReadOnlyList<Blueprint.BoundedTile> tiles, Point boundsOrigin, Color fill, string channel)
-        {
-            if (tiles is null || tiles.Count == 0) return;
-            var points = new List<Point>(tiles.Count);
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                var t = tiles[i];
-                if (t.Selected) continue;
-                points.Add(new Point(boundsOrigin.X + t.Relative.X, boundsOrigin.Y + t.Relative.Y));
-            }
-            if (points.Count > 0)
-                Overlay.DrawTile(points, fill, channel);
+            _catalog.Clear();
         }
 
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
@@ -255,12 +274,9 @@ namespace ArchitectsStencilMod.UI
                 IsMapFullscreen = Main.mapFullscreen
             };
             if (!ctx.ShouldDrawWorldOverlay)
-            {
-                Overlay.EraseAll();
                 return;
-            }
 
-            Overlay.DrawAll();
+            Instance._catalog.Draw();
         }
 
         internal static void DrawPoints(Point[] points, Color color)
@@ -296,6 +312,13 @@ namespace ArchitectsStencilMod.UI
             var pos = new Vector2(tileBounds.X, tileBounds.Y);
             var size = new Vector2(tileBounds.Width, tileBounds.Height);
             ModUtils.DrawBorderedRect(Main.spriteBatch, color, pos, size, borderWidth);
+        }
+
+        public static void DrawTileBorder(Rectangle tileBounds, Color color, int borderWidth)
+        {
+            var pos = new Vector2(tileBounds.X, tileBounds.Y);
+            var size = new Vector2(tileBounds.Width, tileBounds.Height);
+            ModUtils.DrawBorderedRect(Main.spriteBatch, Color.Transparent, color, pos, size, borderWidth);
         }
 
         /// <summary>

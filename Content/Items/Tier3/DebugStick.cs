@@ -1,0 +1,147 @@
+using System;
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
+using ArchitectsStencilMod.Core;
+using ArchitectsStencilMod.Debug;
+using ArchitectsStencilMod.Utils;
+
+namespace ArchitectsStencilMod.Content.Items
+{
+	/// <summary>
+	/// DEBUG STICK: action wheel plus stepped sessions via <see cref="DebugStepper"/> (discovery, stepped paste).
+	/// </summary>
+	public class DebugStick : ModItem
+	{
+		private enum DebugStickAction
+		{
+			ToggleProjectionCutSource = 0,
+			StepPaste = 1,
+		}
+
+		private DebugStickAction _mode = DebugStickAction.ToggleProjectionCutSource;
+
+		public override void SetDefaults()
+		{
+			Item.width = 28;
+			Item.height = 28;
+			Item.useStyle = ItemUseStyleID.HoldUp;
+			Item.useTime = 8;
+			Item.useAnimation = 8;
+			Item.rare = ItemRarityID.Orange;
+			Item.value = Item.buyPrice(silver: 10);
+			Item.autoReuse = false;
+		}
+
+		public override ModItem Clone(Item newEntity)
+		{
+			var clone = (DebugStick)base.Clone(newEntity);
+			clone._mode = _mode;
+			return clone;
+		}
+
+		public override void SaveData(TagCompound tag) => tag["debugMode"] = (int)_mode;
+
+		public override void LoadData(TagCompound tag)
+		{
+			if (!tag.ContainsKey("debugMode"))
+				return;
+			int raw = tag.GetInt("debugMode");
+			if (Enum.IsDefined(typeof(DebugStickAction), raw))
+				_mode = (DebugStickAction)raw;
+		}
+
+		public override bool AltFunctionUse(Player player) => true;
+
+		public override bool CanUseItem(Player player) => !ActionWheel.IsActive && !ActionWheel.IsPendingOpen;
+
+		public override bool? UseItem(Player player)
+		{
+			if (player.whoAmI != Main.myPlayer)
+				return null;
+
+			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+
+			if (player.altFunctionUse == 0)
+			{
+				if (DebugStepper.TryAdvanceSession(player))
+					return true;
+				ApplyDebugMode(player, cursorTile);
+			}
+			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
+			{
+				if (ActionWheel.IsOwnedBy(Main.myPlayer, Item.type))
+					ActionWheel.CancelActive();
+				else
+					ActionWheel.OpenNew(Main.myPlayer, Item.type, CreateWheelEntries());
+			}
+
+			return true;
+		}
+
+		/// <summary>Builds wheel slices. Add a <see cref="DebugStickAction"/> value, then append a matching entry here.</summary>
+		private List<ActionWheelEntry> CreateWheelEntries()
+		{
+			return
+			[
+				new ActionWheelEntry(
+					"toggle_projection_cut",
+					"CUT",
+					onSelect: () => _mode = DebugStickAction.ToggleProjectionCutSource,
+					isSelected: () => _mode == DebugStickAction.ToggleProjectionCutSource),
+				new ActionWheelEntry(
+					"step_paste",
+					"STP",
+					onSelect: () => _mode = DebugStickAction.StepPaste,
+					isSelected: () => _mode == DebugStickAction.StepPaste),
+			];
+		}
+
+		private void ApplyDebugMode(Player player, Point cursorTile)
+		{
+			switch (_mode)
+			{
+				case DebugStickAction.ToggleProjectionCutSource:
+					TryToggleCutSource(player, cursorTile);
+					return;
+				case DebugStickAction.StepPaste:
+					TryBeginPasteStepSession(player, cursorTile);
+					return;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(_mode), _mode, "Unknown debug stick action.");
+			}
+		}
+
+		private static void TryToggleCutSource(Player player, Point cursorTile)
+		{
+			var projections = ModContent.GetInstance<ProjectionSystem>();
+			if (!projections.ToggleCutSource(player, cursorTile, out Projection projection))
+			{
+				Main.NewText("Debug: no projection at cursor, or it is locked by an active paste.", Color.OrangeRed);
+				return;
+			}
+
+			Main.NewText(
+				projection.CutSource
+					? "Debug: CutSource ON for projection (paste will clear source area)."
+					: "Debug: CutSource OFF for projection.",
+				Color.Cyan);
+		}
+
+		private static void TryBeginPasteStepSession(Player player, Point cursorTile)
+		{
+			if (!ModContent.GetInstance<ProjectionSystem>().TryGetProjectionAt(player, cursorTile, out Projection projection) ||
+			    projection is null ||
+			    !projection.IsDefined)
+			{
+				Main.NewText("Debug: no projection at cursor.", Color.OrangeRed);
+				return;
+			}
+
+			ModContent.GetInstance<PastingSystem>().BeginDebugStepSession(player, projection);
+		}
+	}
+}

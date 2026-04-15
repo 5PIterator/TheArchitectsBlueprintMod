@@ -1,0 +1,5 @@
+- Action cancel does not work in tools, and also interferes with hold release. (fixed)
+- Also, Pasting action cannot be cancelled as action wheel is opened first. (fixed)
+- ADD/REMOVE wands are relying on their own preview system. This should be migrated to the main ToolActionManager
+- Pastin operations do not work. It seems that the new preparation system does not correctly create tasks.
+- Overhaul the Overlay system to work as a general purpose managing scheduled entries by other systems.
