@@ -13,8 +13,8 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _)
         {
-            Tile subjectTile = tile.IdentifyFace;
-            bool hasDetail = subjectTile.IsActuated || subjectTile.BlockType != Terraria.ID.BlockType.Solid;
+            Tile subjectTile = tile.Subject;
+            bool hasDetail = subjectTile.IsActuated || subjectTile.BlockType != BlockType.Solid;
             return hasDetail ? [new Blueprint.BoundedTile(tile.Relative, selected: true)] : [];
         }
 
@@ -62,7 +62,7 @@ namespace ArchitectsStencilMod.Core.Layers
         {
             if (tiles.Count == 0) return LayerResult.Ok();
             var tile = tiles[0];
-            Tile src = tile.Payload;
+            var src = tile.PayloadCell.Detail;
             int wx = tile.World.X, wy = tile.World.Y;
             ref var dest = ref ModifierOperations.GetState(wx, wy);
 

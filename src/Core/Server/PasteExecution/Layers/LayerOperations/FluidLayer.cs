@@ -13,7 +13,7 @@ namespace ArchitectsStencilMod.Core.Layers
         private FluidLayer() : base("Fluid", LayerType.Liquid) { }
 
         public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
-            tile.IdentifyFace.LiquidAmount > 0 ? [new Blueprint.BoundedTile(tile.Relative, selected: true)] : [];
+            tile.Subject.LiquidAmount > 0 ? [new Blueprint.BoundedTile(tile.Relative, selected: true)] : [];
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             tile.Target.LiquidAmount > 0;
@@ -48,11 +48,11 @@ namespace ArchitectsStencilMod.Core.Layers
             if (tiles.Count == 0) return LayerResult.Ok();
             var tile = tiles[0];
             int x = tile.World.X, y = tile.World.Y;
-            Tile src = tile.Payload;
+            var src = tile.PayloadCell.Liquid;
             int idx = x + y * (int)Main.tile.Width;
             var liquids = Main.tile.GetData<LiquidData>();
-            liquids[idx].Amount = src.LiquidAmount;
-            liquids[idx].LiquidType = src.LiquidType;
+            liquids[idx].Amount = (byte)src.Amount;
+            liquids[idx].LiquidType = (byte)src.Type;
 
             if (Main.netMode == NetmodeID.Server)
                 NetMessage.SendData(MessageID.LiquidUpdate, -1, -1, null, x, y);

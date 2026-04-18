@@ -6,8 +6,6 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.ObjectData;
-
 namespace ArchitectsStencilMod.Core.Layers
 {
     [CustomPasteLayer]
@@ -61,24 +59,23 @@ namespace ArchitectsStencilMod.Core.Layers
         public override bool CanPlace(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context)
         {
             if (!context.NeedsItems || context.Slots is null || context.CheatSweep) return true;
-            if (!tile.Payload.HasTile) return true;
-            int style = TileObjectData.GetTileStyle(tile.Payload);
-            return context.Slots.FindTileSlot(tile.Payload.TileType, style) >= 0;
+            if (!tile.PayloadCell.HasTile()) return true;
+            int style = tile.PayloadCell.Detail.Style;
+            return context.Slots.FindTileSlot((ushort)tile.PayloadCell.Block.Type, style) >= 0;
         }
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
-            if (!tile.Payload.HasTile || !context.NeedsItems || context.Slots is null) return true;
-            int style = TileObjectData.GetTileStyle(tile.Payload);
-            return context.Slots.FindTileSlot(tile.Payload.TileType, style) >= 0;
+            if (!tile.PayloadCell.HasTile() || !context.NeedsItems || context.Slots is null) return true;
+            int style = tile.PayloadCell.Detail.Style;
+            return context.Slots.FindTileSlot((ushort)tile.PayloadCell.Block.Type, style) >= 0;
         }
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile)
         {
-            Tile blueprint = tile.Payload;
-            if (!blueprint.HasTile) return null;
-            int style = TileObjectData.GetTileStyle(blueprint);
-            return InteractionMapProvider.GetTileItemIds(blueprint.TileType, style);
+            if (!tile.PayloadCell.HasTile()) return null;
+            int style = tile.PayloadCell.Detail.Style;
+            return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
         }
 
         public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context)
@@ -124,7 +121,7 @@ namespace ArchitectsStencilMod.Core.Layers
         {
             outPoints.Clear();
             if (!lookup.TryGetPasteTile(startRel, out PasteTile seed)) return;
-            Tile seedView = PasteTile.Face(classify, in seed);
+            Tile seedView = seed.Subject;
             if (!seedView.HasTile || seedView.TileType >= TileLoader.TileCount || !IsTreeType(seedView.TileType)) return;
 
             var visited = new HashSet<Point>();
@@ -143,7 +140,7 @@ namespace ArchitectsStencilMod.Core.Layers
                     Point n = new(cur.X + d.X, cur.Y + d.Y);
                     if (visited.Contains(n)) continue;
                     if (!lookup.TryGetPasteTile(n, out PasteTile neighbor)) continue;
-                    Tile view = PasteTile.Face(classify, in neighbor);
+                    Tile view = neighbor.Subject;
                     if (!view.HasTile || view.TileType >= TileLoader.TileCount) continue;
                     if (!IsTreeType(view.TileType)) continue;
 
@@ -187,7 +184,7 @@ namespace ArchitectsStencilMod.Core.Layers
             {
                 PasteTile t = tiles[i];
                 int x = t.World.X, y = t.World.Y;
-                ApplyPayloadTileBlockOnly(x, y, t.Payload);
+                ApplyPayloadCellBlockOnly(x, y, in t.PayloadCell);
                 LayerSync.SyncTileSquare(x, y);
             }
 
@@ -196,21 +193,22 @@ namespace ArchitectsStencilMod.Core.Layers
         }
 
         /// <summary>
-        /// Applies only solid-tile identity + framing from the blueprint payload. Leaves wall, liquid, wiring,
+        /// Applies only solid-tile identity + framing from <paramref name="payload"/>. Leaves wall, liquid, wiring,
         /// paint, and detail (actuation/slope) to their own layers so <see cref="Tile.CopyFrom"/> does not clobber them.
         /// </summary>
-        private static void ApplyPayloadTileBlockOnly(int x, int y, Tile payload)
+        private static void ApplyPayloadCellBlockOnly(int x, int y, in PayloadCell payload)
         {
-            if (!payload.HasTile || payload.TileType >= TileLoader.TileCount) return;
+            if (payload.IsEmpty || !payload.Detail.HasTile || payload.Block.Type >= TileLoader.TileCount) return;
 
             Tile dest = Main.tile[x, y];
             dest.HasTile = true;
-            dest.TileType = payload.TileType;
+            dest.TileType = (ushort)payload.Block.Type;
 
             ref TileWallWireStateData state = ref ModifierOperations.GetState(x, y);
-            state.TileFrameX = payload.TileFrameX;
-            state.TileFrameY = payload.TileFrameY;
-            state.BlockType = payload.BlockType;
+            var b = payload.Block;
+            state.TileFrameX = (short)b.FrameX;
+            state.TileFrameY = (short)b.FrameY;
+            state.BlockType = payload.Detail.BlockType;
         }
 
         private static void PlayTreePasteFx(IReadOnlyList<PasteTile> tiles, Point trunkWorld)

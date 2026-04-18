@@ -13,7 +13,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _)
         {
-            Tile subjectTile = tile.IdentifyFace;
+            Tile subjectTile = tile.Subject;
             if (subjectTile.TileColor == PaintID.None && subjectTile.WallColor == PaintID.None)
                 return [];
 
@@ -64,7 +64,7 @@ namespace ArchitectsStencilMod.Core.Layers
         {
             if (tiles.Count == 0) return LayerResult.Ok();
             var tile = tiles[0];
-            Tile src = tile.Payload;
+            var src = tile.PayloadCell.Paint;
             int wx = tile.World.X, wy = tile.World.Y;
             ref var dest = ref ModifierOperations.GetState(wx, wy);
 

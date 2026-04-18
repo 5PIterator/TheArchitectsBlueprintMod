@@ -61,26 +61,47 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         public Projection NewProjection(Player player, Point cursorTile)
         {
+
+            // Get the blueprint from the blueprint system
             var blueprintSystem = ModContent.GetInstance<BlueprintSystem>();
             Blueprint blueprint = blueprintSystem.GetBlueprint(player);
+
+            // Validate the blueprint
             if (!blueprint.IsDefined || !blueprint.Bounds.Contains(cursorTile))
             {
                 return null;
             }
-
             var config = ModContent.GetInstance<PastingConfig>();
             if (blueprint.Bounds.Width > config.MaxPasteWidth || blueprint.Bounds.Height > config.MaxPasteHeight)
             {
                 return null;
             }
 
+            // Gather Blueprint rel, origin and source tiles.
             Point rel = new(cursorTile.X - blueprint.Bounds.X, cursorTile.Y - blueprint.Bounds.Y);
             Point origin = new(cursorTile.X - rel.X, cursorTile.Y - rel.Y);
+            IReadOnlyList<Blueprint.BoundedTile> sourceTiles = blueprint.SnapshotTiles(rel =>
+            {
+                Point world = blueprint.RelativeToWorld(rel);
+                if (!WorldGen.InWorld(world.X, world.Y))
+                {
+                    return null;
+                }
 
-            var projection = new Projection(cutSource: false);
-            projection.OwnerPlayerIndex = player.whoAmI;
+                return Main.tile[world.X, world.Y];
+            });
+
+            // Create the projection
+            var projection = new Projection(
+                cutSource: false,
+                sourceArea: blueprint.Bounds,
+                sourceTiles: sourceTiles)
+            {
+                OwnerPlayerIndex = player.whoAmI,
+            };
             projection.Define(new Rectangle(origin.X, origin.Y, blueprint.Bounds.Width, blueprint.Bounds.Height));
 
+            // Synchronize the selected tiles with the blueprint
             for (int i = 0; i < blueprint.Tiles.Count; i++)
             {
                 var t = blueprint.Tiles[i];
@@ -90,12 +111,10 @@ namespace ArchitectsStencilMod.Core
                 }
             }
 
-            projection.LoadPayloadFromWorld(blueprint.Bounds);
-            var snapshot = Blueprint.SnapshotSelectedTiles(blueprint, r =>
-                projection.TryGetPayloadTile(r, out var tile) ? tile : (Tile?)null);
-            projection.SetSourceTiles(snapshot);
-            projection.RefreshTargetTiles();
+            // Load the payload from the world
+            projection.LoadPayloadFromWorld();
 
+            // Add the projection to the player's list and set the active projection
             var state = GetState(player);
             state.Projections.Add(projection);
             state.ActiveProjection = projection;

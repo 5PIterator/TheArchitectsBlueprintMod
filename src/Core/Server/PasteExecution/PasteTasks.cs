@@ -115,6 +115,11 @@ namespace ArchitectsStencilMod.Core
             if (!WorldGen.InWorld(_tiles[0].World.X, _tiles[0].World.Y))
                 return true;
 
+            var head = _tiles[0];
+            ASMLog.Debug(
+                $"Place begin layer={_layer.Id} batch={_tiles.Count} rel=({head.Relative.X},{head.Relative.Y}) world=({head.World.X},{head.World.Y}) payload[hasTile={head.PayloadCell.HasTile()} type={head.PayloadCell.Block.Type} frame=({head.PayloadCell.Block.FrameX},{head.PayloadCell.Block.FrameY})] source[hasTile={head.Source.HasTile} type={head.Source.TileType}] target[hasTile={head.Target.HasTile} type={head.Target.TileType}]",
+                "Paste");
+
             var res = _layer.Place(_tiles, in context);
             ASMLog.Debug($"Place execute layer={_layer.Id} world=({_tiles[0].World.X},{_tiles[0].World.Y}) success={res.Success} remaining={res.RemainingTiles.Count}", "Paste");
             if (!res.Success)

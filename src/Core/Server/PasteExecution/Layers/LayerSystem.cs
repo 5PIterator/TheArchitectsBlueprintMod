@@ -101,13 +101,21 @@ namespace ArchitectsStencilMod.Core.Layers
             Unknown,
         ];
 
+        /// <summary>
+        /// Composes a layer pipeline from the built-in layers and custom layers.
+        /// </summary>
+        /// <returns></returns>
         public static LayerPipeline ComposePipeline()
         {
+            /// Resolves various layer order and identification configurations.
+            // Discover custom layers.
             IReadOnlyList<Layer> customLayers = CustomLayer.DiscoverAttributedLayers();
+            // Create a registry of all layers.
             var registry = new List<Layer>(BuiltInLayers.Count + customLayers.Count);
             registry.AddRange(BuiltInLayers);
             registry.AddRange(customLayers);
 
+            // Create a dictionary of layers by ID.
             var layerById = new Dictionary<string, Layer>(StringComparer.Ordinal);
             for (int i = 0; i < registry.Count; i++)
             {
@@ -116,11 +124,14 @@ namespace ArchitectsStencilMod.Core.Layers
                     ASMLog.Warn($"Duplicate layer id '{layer.Id}' was registered. Later registrations are ignored.", "Layers");
             }
 
+            // Load the layer order definition.
             LayerOrderDefinition definition = LayerOrderDefinition.Load();
+            // Resolve the layer order for each phase.
             var placeOrder = ResolveOrder(definition.PlaceOrder, layerById, registry);
             var clearOrder = ResolveOrder(definition.ClearOrder, layerById, registry);
             var identifyOrder = ResolveOrder(definition.IdentifyOrder, layerById, registry);
 
+            // Create a new layer pipeline.
             return new LayerPipeline(
                 placeOrder,
                 clearOrder,

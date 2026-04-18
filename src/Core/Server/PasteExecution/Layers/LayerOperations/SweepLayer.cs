@@ -76,7 +76,7 @@ namespace ArchitectsStencilMod.Core.Layers
             {
                 var pt = tiles[i];
                 int wx = pt.World.X, wy = pt.World.Y;
-                Main.tile[wx, wy].CopyFrom(pt.Payload);
+                Main.tile[wx, wy].CopyFrom(pt.PayloadCell.ToTile());
                 LayerSync.SyncTileSquare(wx, wy);
             }
 

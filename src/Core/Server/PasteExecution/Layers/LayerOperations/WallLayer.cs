@@ -13,14 +13,14 @@ namespace ArchitectsStencilMod.Core.Layers
         private WallLayer() : base("Wall", LayerType.Wall) { }
 
         public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
-            tile.IdentifyFace.WallType == WallID.None ? [] : [new Blueprint.BoundedTile(tile.Relative, selected: true)];
+            tile.Subject.WallType == WallID.None ? [] : [new Blueprint.BoundedTile(tile.Relative, selected: true)];
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].WallType != WallID.None;
 
         public override bool CanPlace(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
-            ushort wallType = tile.Payload.WallType;
+            ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
             if (wallType == WallID.None) return true;
             if (!context.NeedsItems || context.Slots is null) return true;
             return context.Slots.FindWallSlot(wallType) >= 0;
@@ -28,7 +28,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
-            ushort wallType = tile.Payload.WallType;
+            ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
             if (wallType == WallID.None || !context.NeedsItems || context.Slots is null) return true;
             return context.Slots.FindWallSlot(wallType) >= 0;
         }
@@ -38,7 +38,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile)
         {
-            ushort wallType = tile.Payload.WallType;
+            ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
             if (wallType == WallID.None) return null;
             return InteractionMapProvider.GetWallItemIds(wallType);
         }
@@ -61,7 +61,7 @@ namespace ArchitectsStencilMod.Core.Layers
             if (tiles.Count == 0) return LayerResult.Ok();
             var tile = tiles[0];
             int x = tile.World.X, y = tile.World.Y;
-            ushort wallType = tile.Payload.WallType;
+            ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
             if (Main.tile[x, y].WallType == wallType) return LayerResult.Ok(tile.World);
 
             if (context.NeedsItems && context.Slots != null && context.Slots.FindWallSlot(wallType) < 0)
@@ -75,7 +75,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool Consume(in PasteTile tile, in PasteContext context)
         {
-            ushort wallType = tile.Payload.WallType;
+            ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
             if (wallType == WallID.None || !context.NeedsItems || context.Slots is null) return true;
             int slotHandle = context.Slots.FindWallSlot(wallType);
             if (slotHandle < 0) return false;

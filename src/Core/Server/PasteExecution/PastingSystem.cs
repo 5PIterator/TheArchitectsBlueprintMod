@@ -23,36 +23,72 @@ namespace ArchitectsStencilMod.Core
 
         internal IReadOnlyList<PastingOperation> ActiveOperations => _operations;
 
+        /// <summary>
+        /// Starts a paste operation for the given projection.
+        /// </summary>
+        /// <param name="projection"></param>
+        /// <param name="preferences"></param>
+        /// <param name="rejectReason"></param>
+        /// <returns></returns>
         internal bool StartPaste(Projection projection, ClientPreferences preferences, out PasteRejectReason rejectReason)
         {
             // --- Ignore invalid or already-running projections, then prepare storage and register a new operation.
 
+            /// Validate the projection
             if (!ValidateProjection(projection, out rejectReason))
                 return false;
 
+            // For each projection in each running operation, collect the tile and wall IDs and unify them into a single set.
             var config = ModContent.GetInstance<PastingConfig>();
             var (tileIds, wallIds) = CollectTileAndWallIds(projection);
-            for (int i = 0; i < _operations.Count; i++)
+            foreach (PastingOperation operation in _operations)
             {
-                var (opTiles, opWalls) = CollectTileAndWallIds(_operations[i].Projection);
+                var (opTiles, opWalls) = CollectTileAndWallIds(operation.Projection);
                 tileIds.UnionWith(opTiles);
                 wallIds.UnionWith(opWalls);
             }
-
+            // Use the unified set of tile and wall IDs to prepare the storage for the paste.
             ItrStorage.PrepareForPaste(tileIds, wallIds);
 
+            // Create a new operation for the paste.
             var op = new PastingOperation(projection, config, preferences)
             {
                 OverlayId = ++_nextPasteOverlayInstanceId
             };
+            // If the cheat sweep is enabled, write the task map for the paste.
             if (config.CheatSweep)
                 PasteTaskMapDebug.WriteTaskMap(projection, op.ApplySourceClear, op.Pipeline, op.ClearTasks, op.PlaceTasks);
 
-            // Task queues for normal paste are built incrementally in <see cref="PastingOperation.Step"/> (preparation phase).
-            // No work after preparation (e.g. world already matches blueprint): remove on first tick when <see cref="PastingOperation.IsCompleted"/>.
+            // Lock the projection to prevent it from being modified while the paste is in progress.
             projection.Lock();
+            // Add the new operation to the list of running operations.
             _operations.Add(op);
+            // Return true to indicate that the paste was started successfully.
             return true;
+        }
+
+        /// <summary>
+        /// Stops the paste operation for the given projection, if any.
+        /// </summary>
+        public void StopPaste(Projection projection)
+        {
+            /// Find the matching operation and teardown it.
+
+            ArgumentNullException.ThrowIfNull(projection);
+
+            // Iterate over the list of running operations and find the matching operation.
+            foreach (PastingOperation operation in _operations)
+            {
+                if (ReferenceEquals(operation.Projection, projection))
+                {
+                    // Teardown the operation.
+                    operation.Teardown();
+
+                    // Remove the operation from the list of running operations.
+                    _operations.Remove(operation);
+                    break;
+                }
+            }
         }
 
         /// <summary>
@@ -99,24 +135,6 @@ namespace ArchitectsStencilMod.Core
             DebugStepper.StartSession(player, PasteStepEnumerator(), onComplete: null, onCancel: OnCancel, log: _ => { });
         }
 
-        /// <summary>
-        /// Stops the paste operation for the given projection, if any.
-        /// </summary>
-        public void StopPaste(Projection projection)
-        {
-            // --- Find the matching operation and terminate it through the shared teardown path.
-
-            ArgumentNullException.ThrowIfNull(projection);
-
-            for (int i = _operations.Count - 1; i >= 0; i--)
-            {
-                if (ReferenceEquals(_operations[i].Projection, projection))
-                {
-                    RemoveOperationAt(i);
-                    break;
-                }
-            }
-        }
 
         /// <summary>
         /// Performs one tick of all active paste operations.
@@ -272,26 +290,32 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         private static (HashSet<int> TileIds, HashSet<int> WallIds) CollectTileAndWallIds(Projection projection)
         {
-            // --- Walk source payload tiles and gather the material IDs needed by interaction-map loading.
+            /// Walk payload cells and gather the material IDs needed by interaction-map loading.
 
             var tileIds = new HashSet<int>();
             var wallIds = new HashSet<int>();
 
+            // If the projection is null or doesn't have a payload, return an empty set of tile and wall IDs.
             if (projection is null || !projection.HasPayload)
                 return (tileIds, wallIds);
 
-            for (int i = 0; i < projection.SourceTiles.Count; i++)
+            // Walk payload cells and gather the material IDs needed by interaction-map loading.
+            foreach (PayloadCell cell in projection.Payload.Cells)
             {
-                var rel = projection.SourceTiles[i].Relative;
-                if (!projection.TryGetPayloadTile(rel, out var tile))
+                // If the cell is empty, skip it.
+                if (cell.IsEmpty)
                     continue;
 
-                if (tile.HasTile)
-                    tileIds.Add(tile.TileType);
-                if (tile.WallType != WallID.None)
-                    wallIds.Add(tile.WallType);
+                // If the cell has a tile, add the tile type to the tile IDs.
+                if (cell.Detail.HasTile)
+                    tileIds.Add(cell.Block.Type);
+
+                // If the cell has a wall, add the wall type to the wall IDs.
+                if (cell.Wall.Type != WallID.None)
+                    wallIds.Add(cell.Wall.Type);
             }
 
+            // Return the collected tile and wall IDs.
             return (tileIds, wallIds);
         }
 

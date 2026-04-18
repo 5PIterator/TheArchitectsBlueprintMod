@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using ArchitectsStencilMod.Core;
 using ArchitectsStencilMod.Core.TileMapping;
 using Terraria;
-using Terraria.ObjectData;
-
 namespace ArchitectsStencilMod.Core.Layers
 {
     internal sealed class OtherAnchoredLayer : Layer
@@ -16,7 +14,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
         {
-            Tile subjectTile = tile.IdentifyFace;
+            Tile subjectTile = tile.Subject;
             if (!FrameOperations.HasOtherAnchor(subjectTile))
                 return [];
 
@@ -30,24 +28,23 @@ namespace ArchitectsStencilMod.Core.Layers
         public override bool CanPlace(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
             if (!context.NeedsItems || context.Slots is null || context.CheatSweep) return true;
-            if (!tile.Payload.HasTile) return true;
-            int style = TileObjectData.GetTileStyle(tile.Payload);
-            return context.Slots.FindTileSlot(tile.Payload.TileType, style) >= 0;
+            if (!tile.PayloadCell.HasTile()) return true;
+            int style = tile.PayloadCell.Detail.Style;
+            return context.Slots.FindTileSlot((ushort)tile.PayloadCell.Block.Type, style) >= 0;
         }
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
-            if (!tile.Payload.HasTile || !context.NeedsItems || context.Slots is null) return true;
-            int style = TileObjectData.GetTileStyle(tile.Payload);
-            return context.Slots.FindTileSlot(tile.Payload.TileType, style) >= 0;
+            if (!tile.PayloadCell.HasTile() || !context.NeedsItems || context.Slots is null) return true;
+            int style = tile.PayloadCell.Detail.Style;
+            return context.Slots.FindTileSlot((ushort)tile.PayloadCell.Block.Type, style) >= 0;
         }
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile)
         {
-            Tile blueprint = tile.Payload;
-            if (!blueprint.HasTile) return null;
-            int style = TileObjectData.GetTileStyle(blueprint);
-            return InteractionMapProvider.GetTileItemIds(blueprint.TileType, style);
+            if (!tile.PayloadCell.HasTile()) return null;
+            int style = tile.PayloadCell.Detail.Style;
+            return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
         }
 
         public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context) =>

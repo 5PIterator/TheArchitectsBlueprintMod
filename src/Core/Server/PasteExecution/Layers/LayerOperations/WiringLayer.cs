@@ -12,7 +12,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _)
         {
-            Tile subjectTile = tile.IdentifyFace;
+            Tile subjectTile = tile.Subject;
             bool hasWiring = subjectTile.RedWire || subjectTile.BlueWire || subjectTile.GreenWire || subjectTile.YellowWire || subjectTile.HasActuator;
             return hasWiring ? [new Blueprint.BoundedTile(tile.Relative, selected: true)] : [];
         }
@@ -32,14 +32,14 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
-            if (!tile.Payload.HasTile || !ModifierOperations.IsMechanismTileType(tile.Payload.TileType))
+            if (!tile.PayloadCell.HasTile() || !ModifierOperations.IsMechanismTileType((ushort)tile.PayloadCell.Block.Type))
                 return true;
 
             if (!context.NeedsItems || context.Slots is null)
                 return true;
 
-            int style = Terraria.ObjectData.TileObjectData.GetTileStyle(tile.Payload);
-            return context.Slots.FindTileSlot(tile.Payload.TileType, style) >= 0;
+            int style = tile.PayloadCell.Detail.Style;
+            return context.Slots.FindTileSlot((ushort)tile.PayloadCell.Block.Type, style) >= 0;
         }
 
         public override bool Match(in PasteTile tile) =>
@@ -50,7 +50,7 @@ namespace ArchitectsStencilMod.Core.Layers
             && tile.Source.HasActuator == tile.Target.HasActuator;
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile) =>
-            ModifierOperations.GetMechanismItems(in tile.Payload);
+            ModifierOperations.GetMechanismItems(in tile.PayloadCell);
 
         public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context)
         {
@@ -75,14 +75,14 @@ namespace ArchitectsStencilMod.Core.Layers
         {
             if (tiles.Count == 0) return LayerResult.Ok();
             var tile = tiles[0];
-            if (tile.Payload.HasTile && ModifierOperations.IsMechanismTileType(tile.Payload.TileType))
+            if (tile.PayloadCell.HasTile() && ModifierOperations.IsMechanismTileType((ushort)tile.PayloadCell.Block.Type))
             {
                 var placeResult = TileOperations.Place([tile], in context);
                 if (!placeResult.Success)
                     return placeResult;
             }
 
-            Tile src = tile.Payload;
+            var src = tile.PayloadCell.Wire;
             ref var dest = ref ModifierOperations.GetState(tile.World.X, tile.World.Y);
             bool changed = false;
 
@@ -100,7 +100,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool Consume(in PasteTile tile, in PasteContext context)
         {
-            if (!tile.Payload.HasTile || !ModifierOperations.IsMechanismTileType(tile.Payload.TileType))
+            if (!tile.PayloadCell.HasTile() || !ModifierOperations.IsMechanismTileType((ushort)tile.PayloadCell.Block.Type))
                 return true;
 
             return TileOperations.Consume(in tile, in context);

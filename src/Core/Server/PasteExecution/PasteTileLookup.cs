@@ -18,7 +18,7 @@ namespace ArchitectsStencilMod.Core
     /// <see cref="SubjectType"/> selects which face <see cref="Layer.Identify"/> uses (source intent vs world to clear).
     /// </summary>
     internal readonly struct PasteTile(
-        Tile payload,
+        PayloadCell payloadCell,
         InteractionEntry interaction,
         Tile source,
         Tile target,
@@ -26,11 +26,11 @@ namespace ArchitectsStencilMod.Core
         Point world,
         PasteSubject subjectType = PasteSubject.Source)
     {
-        /// <summary>Frozen blueprint at <see cref="Relative"/>; all placement and post-place consume use this, not live map.</summary>
-        public readonly Tile Payload = payload;
+        /// <summary>Payload cell from the projection: not a real tile, just a data structure.</summary>
+        public readonly PayloadCell PayloadCell = payloadCell;
         /// <summary>What is required to place <see cref="Target"/> (items, wiring, etc.) for the active layer.</summary>
         public readonly InteractionEntry Interaction = interaction;
-        /// <summary>Match/clear “intent” vs <see cref="Target"/> (empty after cut on source clears). Placement uses <see cref="Payload"/>.</summary>
+        /// <summary>Match/clear “intent” vs <see cref="Target"/> (empty after cut on source clears). Prefer <see cref="PayloadCell"/> for blueprint fields; materialize via <see cref="PasteTile.PayloadTile"/> only when an API needs <see cref="Tile"/>.</summary>
         public readonly Tile Source = source;
         /// <summary>Target tile: live world tile in the target area at <see cref="World"/> (<see cref="Projection.TryGetTargetTile"/>).</summary>
         public readonly Tile Target = target;
@@ -40,6 +40,8 @@ namespace ArchitectsStencilMod.Core
         public readonly Point World = world;
         /// <summary>Which tile view <see cref="Layer.Identify"/> should classify (placement vs clear planning).</summary>
         public readonly PasteSubject SubjectType = subjectType;
+        /// <summary>Materializes <see cref="PayloadCell"/> as a scratch <see cref="Tile"/> (allocates/overwrites tModLoader’s <see cref="PayloadCell.ToTile"/> buffer). Prefer <see cref="PayloadCell"/> at call sites.</summary>
+        public readonly Tile PayloadTile => PayloadCell.ToTile();
         /// <summary>Shorthand for <see cref="Relative"/>.X (not world; use <see cref="World"/> for <see cref="Main.tile"/>).</summary>
         public int X => Relative.X;
         /// <summary>Shorthand for <see cref="Relative"/>.Y (not world; use <see cref="World"/> for <see cref="Main.tile"/>).</summary>
@@ -48,22 +50,9 @@ namespace ArchitectsStencilMod.Core
         /// <summary>Resolved subject tile for identification: payload-side vs destination world.</summary>
         public Tile Subject => SubjectType == PasteSubject.Source ? Source : Target;
 
-        /// <summary>
-        /// Tile classified by <see cref="Layer.Identify"/>: live <see cref="Target"/> when planning clears,
-        /// frozen <see cref="Payload"/> when planning places (never the mutable <see cref="Source"/> “intent” slot used in <see cref="Layer.Match"/>).
-        /// </summary>
-        public Tile IdentifyFace => SubjectType == PasteSubject.Target ? Target : Payload;
-
         /// <summary>Returns a copy with a different <see cref="SubjectType"/> (lookup entries default to <see cref="PasteSubject.Source"/>).</summary>
         public PasteTile WithSubject(PasteSubject subject) =>
-            new(Payload, Interaction, Source, Target, Relative, World, subject);
-
-        /// <summary>
-        /// Neighbor/read helper: world <see cref="Target"/> when <paramref name="subject"/> is <see cref="PasteSubject.Target"/>,
-        /// else blueprint <see cref="Payload"/> for placement-style classification.
-        /// </summary>
-        public static Tile Face(PasteSubject subject, in PasteTile pasteTile) =>
-            subject == PasteSubject.Target ? pasteTile.Target : pasteTile.Payload;
+            new(PayloadCell, Interaction, Source, Target, Relative, World, subject);
     }
 
     /// <summary>
@@ -85,11 +74,11 @@ namespace ArchitectsStencilMod.Core
 
             for (int i = 0; i < n; i++)
             {
-                PasteTile t = pasteTiles[i];
-                if (!_byRelative.TryAdd(t.Relative, t))
-                    throw new InvalidOperationException($"Duplicate paste Relative ({t.Relative.X},{t.Relative.Y}); each cell must appear once.");
-                if (!_byWorld.TryAdd(t.World, t))
-                    throw new InvalidOperationException($"Duplicate paste World ({t.World.X},{t.World.Y}); each target cell must appear once.");
+                PasteTile pasteTile = pasteTiles[i];
+                if (!_byRelative.TryAdd(pasteTile.Relative, pasteTile))
+                    throw new InvalidOperationException($"Duplicate paste Relative ({pasteTile.Relative.X},{pasteTile.Relative.Y}); each cell must appear once.");
+                if (!_byWorld.TryAdd(pasteTile.World, pasteTile))
+                    throw new InvalidOperationException($"Duplicate paste World ({pasteTile.World.X},{pasteTile.World.Y}); each target cell must appear once.");
             }
         }
 
@@ -100,22 +89,22 @@ namespace ArchitectsStencilMod.Core
         /// <summary>True if <paramref name="relative"/> is part of this paste.</summary>
         public bool IsInPasteScope(Point relative) => _byRelative.ContainsKey(relative);
 
-        public bool TryGetPasteTile(Point relative, out PasteTile tile) => _byRelative.TryGetValue(relative, out tile);
+        public bool TryGetPasteTile(Point relative, out PasteTile pasteTile) => _byRelative.TryGetValue(relative, out pasteTile);
 
-        public bool TryGetPasteTileByWorld(Point world, out PasteTile tile) => _byWorld.TryGetValue(world, out tile);
+        public bool TryGetPasteTileByWorld(Point world, out PasteTile pasteTile) => _byWorld.TryGetValue(world, out pasteTile);
 
         /// <summary>Gets a paste tile by relative coordinate.</summary>
         /// <exception cref="KeyNotFoundException">No tile at <paramref name="relative"/>.</exception>
         public PasteTile GetPasteTile(Point relative) =>
-            TryGetPasteTile(relative, out PasteTile tile)
-                ? tile
+            TryGetPasteTile(relative, out PasteTile pasteTile)
+                ? pasteTile
                 : throw new KeyNotFoundException($"Paste tile not found for relative coordinate: ({relative.X},{relative.Y})");
 
         /// <summary>Gets a paste tile by target world position.</summary>
         /// <exception cref="KeyNotFoundException">No tile at <paramref name="world"/>.</exception>
         public PasteTile GetPasteTileByWorld(Point world) =>
-            TryGetPasteTileByWorld(world, out PasteTile tile)
-                ? tile
+            TryGetPasteTileByWorld(world, out PasteTile pasteTile)
+                ? pasteTile
                 : throw new KeyNotFoundException($"Paste tile not found for world coordinate: ({world.X},{world.Y})");
 
         /// <summary>Resolves each relative in order. Fails on the first missing key.</summary>
@@ -155,10 +144,10 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// For each entry <c>delta</c> in <paramref name="offsetMap"/>, resolves <c><paramref name="relative"/> + delta</c>.
+        /// For each entry <c>delta</c> in <paramref name="offsetMap"/>, resolves <c><paramref name="anchorRelative"/> + delta</c>.
         /// </summary>
         /// <exception cref="KeyNotFoundException">Any computed relative is not in the paste.</exception>
-        public IReadOnlyList<PasteTile> GetPasteTileByOffsetMap(Point relative, IReadOnlyList<Point> offsetMap)
+        public IReadOnlyList<PasteTile> GetPasteTileByOffsetMap(Point anchorRelative, IReadOnlyList<Point> offsetMap)
         {
             if (offsetMap is null) throw new ArgumentNullException(nameof(offsetMap));
             if (offsetMap.Count == 0) return Array.Empty<PasteTile>();
@@ -166,11 +155,11 @@ namespace ArchitectsStencilMod.Core
             var result = new PasteTile[offsetMap.Count];
             for (int i = 0; i < offsetMap.Count; i++)
             {
-                Point d = offsetMap[i];
-                Point key = new(relative.X + d.X, relative.Y + d.Y);
-                if (!_byRelative.TryGetValue(key, out result[i]))
+                Point offsetDelta = offsetMap[i];
+                Point neighborRelative = new(anchorRelative.X + offsetDelta.X, anchorRelative.Y + offsetDelta.Y);
+                if (!_byRelative.TryGetValue(neighborRelative, out result[i]))
                     throw new KeyNotFoundException(
-                        $"Paste tile not found for relative ({key.X},{key.Y}) = anchor ({relative.X},{relative.Y}) + offset ({d.X},{d.Y}) (index {i}).");
+                        $"Paste tile not found for relative ({neighborRelative.X},{neighborRelative.Y}) = anchor ({anchorRelative.X},{anchorRelative.Y}) + offset ({offsetDelta.X},{offsetDelta.Y}) (index {i}).");
             }
 
             return result;

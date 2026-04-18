@@ -4,12 +4,13 @@ namespace ArchitectsStencilMod.Core
     {
         None = 0,
         InvalidProjection = 1,
-        InvalidPacket = 2,
-        NotHost = 3,
-        AreaLimit = 4,
-        VolumeLimit = 5,
-        PlayerOperationLimit = 6,
-        ServerOperationLimit = 7,
-        AlreadyActive = 8,
+        InvalidPayload = 2,
+        InvalidPacket = 3,
+        NotHost = 4,
+        AreaLimit = 5,
+        VolumeLimit = 6,
+        PlayerOperationLimit = 7,
+        ServerOperationLimit = 8,
+        AlreadyActive = 9,
     }
 }

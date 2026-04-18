@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsStencilMod.Core.Client.PayloadImport;
 using ArchitectsStencilMod.Debug;
 using ArchitectsStencilMod.UI;
 using Microsoft.Xna.Framework;
@@ -10,26 +9,42 @@ using Terraria.ModLoader;
 namespace ArchitectsStencilMod.Core
 {
     /// <summary>
-    /// A movable ghost of a <see cref="Blueprint"/>: carries the <see cref="Payload">payload</see>
-    /// (layer facets per cell), aligned with <see cref="SourceArea"/> / <see cref="TargetArea"/>,
+    /// A movable ghost of a <see cref="Blueprint"/>: carries the <see cref="Core.Payload">payload</see>
+    /// (detached <c>TileData</c> snapshots per cell), aligned with <see cref="SourceArea"/> / <see cref="TargetArea"/>,
     /// and <see cref="SourceTiles"/> / <see cref="TargetTiles"/> selection masks.
+    /// <see cref="SourceArea"/> and <see cref="SourceTiles"/> are fixed when the projection is constructed;
+    /// fill <see cref="Payload"/> afterward via <see cref="LoadPayloadFromWorld"/> or <see cref="SetPayload"/>.
     /// </summary>
-    public sealed class Projection(bool cutSource = false) : Blueprint
+    /// <param name="cutSource">Initial cut-from-source flag (still clamped when there is no payload or no source area).</param>
+    /// <param name="sourceArea">World rectangle for world capture / source clear; omit or empty when not tied to a capture region (e.g. JSON-only).</param>
+    /// <param name="sourceTiles">Selection mask in payload-relative coordinates; typically from <see cref="Blueprint.SnapshotTiles"/> or an import document.</param>
+    public sealed class Projection(
+        bool cutSource = false,
+        Rectangle? sourceArea = null,
+        IReadOnlyList<Blueprint.BoundedTile>? sourceTiles = null) : Blueprint
     {
-        /// <summary>
-        /// One sparse cell in the payload grid: relative index and optional payload data (null = empty cell).
-        /// </summary>
-        internal readonly struct PayloadEntry(Point relative, PayloadFacets? payloadData)
-        {
-            public Point Relative { get; } = relative;
-            public PayloadFacets? PayloadData { get; } = payloadData;
-        }
+        private readonly Rectangle _sourceArea = sourceArea ?? Rectangle.Empty;
+        private readonly List<BoundedTile> _sourceTiles = CloneSourceTiles(sourceTiles);
 
-        private PayloadFacets?[] _payloadData = [];
-        private int _payloadWidth;
-        private int _payloadHeight;
-        private IReadOnlyList<BoundedTile> _sourceTiles = [];
+        private Payload _payload = Payload.Empty;
         private readonly List<BoundedTile> _targetTiles = [];
+
+        private static List<BoundedTile> CloneSourceTiles(IReadOnlyList<BoundedTile>? sourceTiles)
+        {
+            if (sourceTiles is null || sourceTiles.Count == 0)
+            {
+                return [];
+            }
+
+            var list = new List<BoundedTile>(sourceTiles.Count);
+            for (int i = 0; i < sourceTiles.Count; i++)
+            {
+                var sourceTile = sourceTiles[i];
+                list.Add(new BoundedTile(sourceTile.Relative, sourceTile.Selected));
+            }
+
+            return list;
+        }
 
         /// <summary>
         /// Optional id tying this projection to an in-flight paste request (e.g. awaiting ack).
@@ -58,7 +73,7 @@ namespace ArchitectsStencilMod.Core
         /// World rectangle that was captured into the payload (live <c>Main.tile</c> under this region
         /// for cut / source-clear). Distinct from <see cref="TargetArea"/>.
         /// </summary>
-        public Rectangle SourceArea { get; private set; } = Rectangle.Empty;
+        public Rectangle SourceArea => _sourceArea;
 
         /// <summary>
         /// World rectangle where the ghost is placed — same as <see cref="Blueprint.Bounds"/>.
@@ -69,12 +84,15 @@ namespace ArchitectsStencilMod.Core
         /// <summary>
         /// True when a payload grid is allocated (width/height &gt; 0).
         /// </summary>
-        public bool HasPayload => _payloadData is not null && _payloadData.Length > 0 && _payloadWidth > 0 && _payloadHeight > 0;
+        public bool HasPayload => _payload.IsDefined;
 
-        public Point PayloadSize => HasPayload ? new Point(_payloadWidth, _payloadHeight) : Point.Zero;
+        public Point PayloadSize => _payload.Size;
+
+        /// <summary>Tile snapshot grid and document/world conversion helpers.</summary>
+        public Payload Payload => _payload;
 
         /// <summary>
-        /// Selection mask in payload-relative coordinates: which cells participate, aligned with <see cref="SourceArea"/>.
+        /// Selection mask in payload-relative coordinates (same grid as <see cref="Blueprint.Bounds"/>).
         /// </summary>
         public IReadOnlyList<BoundedTile> SourceTiles => _sourceTiles;
 
@@ -152,214 +170,116 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Loads the payload from live world tiles in <paramref name="sourceBounds"/> as payload data.
+        /// Fills <see cref="Payload"/> from live <c>Main.tile</c> under <see cref="SourceArea"/>.
         /// Relative indices (0..width-1, 0..height-1) are stable when the projection moves.
         /// </summary>
-        public void LoadPayloadFromWorld(Rectangle sourceBounds)
+        public void LoadPayloadFromWorld()
         {
-            SourceArea = sourceBounds;
-            if (sourceBounds.IsEmpty)
+            if (_sourceArea.IsEmpty)
             {
-                _payloadData = [];
-                _payloadWidth = 0;
-                _payloadHeight = 0;
-                return;
-            }
-
-            _payloadWidth = sourceBounds.Width;
-            _payloadHeight = sourceBounds.Height;
-            _payloadData = new PayloadFacets?[_payloadWidth * _payloadHeight];
-
-            for (int x = 0; x < _payloadWidth; x++)
-            {
-                for (int y = 0; y < _payloadHeight; y++)
-                {
-                    int wx = sourceBounds.X + x;
-                    int wy = sourceBounds.Y + y;
-                    if (!WorldGen.InWorld(wx, wy))
-                    {
-                        continue;
-                    }
-
-                    Tile live = Main.tile[wx, wy];
-                    PayloadFacets? split = PayloadToTile.SplitFromTile(live);
-                    _payloadData[y * _payloadWidth + x] = split;
-
-                    // #region agent log
-                    if (_payloadWidth * _payloadHeight <= 64)
-                    {
-                        AgentNdjsonLog.Write(
-                            "H1",
-                            "Projection.LoadPayloadFromWorld",
-                            "capture_cell",
-                            new
-                            {
-                                rx = x,
-                                ry = y,
-                                wx,
-                                wy,
-                                liveHas = live.HasTile,
-                                liveType = live.HasTile ? live.TileType : (ushort?)null,
-                                facetBlockType = split?.Block?.TileType,
-                                facetHasTile = split?.Block?.HasTile,
-                            });
-                    }
-                    // #endregion
-                }
-            }
-        }
-
-        /// <summary>
-        /// Loads the payload from imported data (JSON, network, etc.): sparse payload data cells and selection mask.
-        /// <paramref name="sourceArea"/> is only used when <paramref name="cutSource"/> is true: world
-        /// rectangle to clear when cutting from source. Omit for JSON and other imports with no capture region.
-        /// </summary>
-        internal void LoadPayloadFromImport(
-            IReadOnlyList<PayloadEntry>? payload,
-            int payloadWidth,
-            int payloadHeight,
-            IReadOnlyList<BoundedTile>? selectedTiles,
-            bool cutSource = false,
-            Rectangle? sourceArea = null)
-        {
-            SourceArea = cutSource && sourceArea is { IsEmpty: false } area ? area : Rectangle.Empty;
-
-            if (payloadWidth <= 0 || payloadHeight <= 0)
-            {
-                _payloadData = [];
-                _payloadWidth = 0;
-                _payloadHeight = 0;
-                _sourceTiles = [];
-                SourceArea = Rectangle.Empty;
+                _payload = Payload.Empty;
                 CutSource = false;
                 RefreshTargetTiles();
                 UpdateOverlay();
+                if (ASMLog.IsDebugEnabled)
+                    ASMLog.Debug(
+                        $"Projection payload cleared [LoadPayloadFromWorld: empty SourceArea] id={Id} owner={OwnerPlayerIndex}",
+                        "Projection");
                 return;
             }
 
-            _payloadWidth = payloadWidth;
-            _payloadHeight = payloadHeight;
-            _payloadData = new PayloadFacets?[payloadWidth * payloadHeight];
-
-            if (payload is not null)
-            {
-                for (int i = 0; i < payload.Count; i++)
-                {
-                    var entry = payload[i];
-                    Point relative = entry.Relative;
-                    if ((uint)relative.X >= (uint)_payloadWidth || (uint)relative.Y >= (uint)_payloadHeight)
-                    {
-                        continue;
-                    }
-
-                    _payloadData[relative.Y * _payloadWidth + relative.X] = entry.PayloadData;
-                }
-            }
-
-            if (selectedTiles is null || selectedTiles.Count == 0)
-            {
-                _sourceTiles = [];
-            }
-            else
-            {
-                var snapshot = new List<BoundedTile>(selectedTiles.Count);
-                for (int i = 0; i < selectedTiles.Count; i++)
-                {
-                    var t = selectedTiles[i];
-                    snapshot.Add(new BoundedTile(t.Relative, t.Selected));
-                }
-                _sourceTiles = snapshot;
-            }
-
-            CutSource = cutSource && !SourceArea.IsEmpty && HasPayload;
+            _payload = Payload.FromWorld(_sourceArea);
+            //LogPayloadSnapshot("LoadPayloadFromWorld", _sourceArea);
             RefreshTargetTiles();
             UpdateOverlay();
         }
 
         /// <summary>
-        /// Payload data at <paramref name="relative"/> in the payload grid (not live world tiles).
+        /// Replaces the payload grid from a prepared <see cref="Core.Payload"/> (stores an independent copy).
+        /// Does not change <see cref="SourceArea"/> or <see cref="SourceTiles"/>.
         /// </summary>
-        public bool TryGetPayloadData(Point relative, out PayloadFacets? payloadData)
+        internal void SetPayload(Payload source)
         {
-            if (!HasPayload)
+            ArgumentNullException.ThrowIfNull(source);
+
+            if (!source.IsDefined)
             {
-                payloadData = null;
-                return false;
+                _payload = Payload.Empty;
+                CutSource = false;
+                RefreshTargetTiles();
+                UpdateOverlay();
+                if (ASMLog.IsDebugEnabled)
+                    ASMLog.Debug(
+                        $"Projection payload cleared [SetPayload: empty source] id={Id} owner={OwnerPlayerIndex}",
+                        "Projection");
+                return;
             }
 
-            if ((uint)relative.X >= (uint)_payloadWidth || (uint)relative.Y >= (uint)_payloadHeight)
-            {
-                payloadData = null;
-                return false;
-            }
-
-            payloadData = _payloadData[relative.Y * _payloadWidth + relative.X];
-            return true;
+            _payload = Payload.FromClone(source);
+            CutSource = CutSource && !_sourceArea.IsEmpty && HasPayload;
+            RefreshTargetTiles();
+            UpdateOverlay();
+            //LogPayloadSnapshot("SetPayload", _sourceArea, importEntryCount: null, selectedCount: SourceTiles.Count);
         }
 
-        /// <summary>
-        /// <see cref="PayloadToTile.MergeToTile"/> for the cell at <paramref name="relative"/> — a
-        /// <see cref="Tile"/> with no map position until pasted.
-        /// </summary>
-        public bool TryGetPayloadTile(Point relative, out Tile payloadTile)
-        {
-            if (!TryGetPayloadData(relative, out PayloadFacets? payloadData))
-            {
-                payloadTile = PayloadToTile.MergeToTile(null);
-                return false;
-            }
+        /// <summary>Debug: non-null / block-tile counts and bounds when a payload grid is first populated.</summary>
+        //private void LogPayloadSnapshot(string origin, Rectangle sourceRect, int? importEntryCount = null, int? selectedCount = null)
+        //{
+        //    if (!ASMLog.IsDebugEnabled)
+        //        return;
 
-            payloadTile = PayloadToTile.MergeToTile(payloadData);
-            return true;
-        }
+        //    (int nonNull, int blockTiles) = _payload.GetCellStatistics();
+
+        //    string extra = importEntryCount.HasValue
+        //        ? $" importEntries={importEntryCount} selectedTiles={selectedCount ?? 0}"
+        //        : selectedCount.HasValue
+        //            ? $" selectedTiles={selectedCount.Value}"
+        //            : string.Empty;
+
+        //    ASMLog.Debug(
+        //        $"Projection payload created [{origin}] id={Id} owner={OwnerPlayerIndex} grid={_payload.Width}x{_payload.Height} nonNull={nonNull} blockTiles={blockTiles} sourceRect=({sourceRect.X},{sourceRect.Y},{sourceRect.Width},{sourceRect.Height}) targetBounds=({Bounds.X},{Bounds.Y},{Bounds.Width},{Bounds.Height}){extra}",
+        //        "Projection");
+        //}
 
         /// <summary>
         /// Live <c>Main.tile</c> under <see cref="TargetArea"/> at <paramref name="relative"/>.
         /// </summary>
-        public bool TryGetTargetTile(Point relative, out Tile tile)
+        public bool TryGetTargetTile(Point relative, out Tile targetTile)
         {
-            if ((uint)relative.X >= (uint)_payloadWidth || (uint)relative.Y >= (uint)_payloadHeight)
+            if ((uint)relative.X >= (uint)_payload.Width || (uint)relative.Y >= (uint)_payload.Height)
             {
-                tile = default;
+                targetTile = default;
                 return false;
             }
 
             Point world = RelativeToWorld(relative);
             if (!WorldGen.InWorld(world.X, world.Y))
             {
-                tile = default;
+                targetTile = default;
                 return false;
             }
-            tile = Main.tile[world.X, world.Y];
+            targetTile = Main.tile[world.X, world.Y];
             return true;
         }
 
         /// <summary>
         /// Live <c>Main.tile</c> under <see cref="SourceArea"/> at <paramref name="relative"/> (original capture region).
         /// </summary>
-        public bool TryGetSourceTile(Point relative, out Tile tile)
+        public bool TryGetSourceTile(Point relative, out Tile sourceTile)
         {
             if (SourceArea.IsEmpty)
             {
-                tile = default;
+                sourceTile = default;
                 return false;
             }
             Point world = new(SourceArea.X + relative.X, SourceArea.Y + relative.Y);
             if (!WorldGen.InWorld(world.X, world.Y))
             {
-                tile = default;
+                sourceTile = default;
                 return false;
             }
-            tile = Main.tile[world.X, world.Y];
+            sourceTile = Main.tile[world.X, world.Y];
             return true;
-        }
-
-        /// <summary>
-        /// Sets <see cref="SourceTiles"/> from a static snapshot after capture / blueprint selection copy.
-        /// </summary>
-        internal void SetSourceTiles(IReadOnlyList<BoundedTile> snapshot)
-        {
-            _sourceTiles = snapshot ?? [];
         }
 
         /// <summary>
@@ -376,26 +296,27 @@ namespace ArchitectsStencilMod.Core
 
             for (int i = 0; i < _sourceTiles.Count; i++)
             {
-                var src = _sourceTiles[i];
-                Point world = RelativeToWorld(src.Relative);
+                var sourceBoundedTile = _sourceTiles[i];
+                Point world = RelativeToWorld(sourceBoundedTile.Relative);
                 if (!WorldGen.InWorld(world.X, world.Y))
                 {
                     continue;
                 }
 
-                var bt = new BoundedTile(src.Relative, src.Selected);
-                _targetTiles.Add(bt);
+                var targetBoundedTile = new BoundedTile(sourceBoundedTile.Relative, sourceBoundedTile.Selected);
+                _targetTiles.Add(targetBoundedTile);
             }
         }
 
-        public void MoveTo(Point origin)
+        /// <summary>Moves the ghost so <see cref="TargetArea"/> top-left is <paramref name="targetAreaOrigin"/>.</summary>
+        public void MoveTo(Point targetAreaOrigin)
         {
             if (!IsDefined)
             {
                 return;
             }
 
-            var delta = new Point(origin.X - Bounds.X, origin.Y - Bounds.Y);
+            var delta = new Point(targetAreaOrigin.X - Bounds.X, targetAreaOrigin.Y - Bounds.Y);
             Translate(delta);
             RefreshTargetTiles();
 

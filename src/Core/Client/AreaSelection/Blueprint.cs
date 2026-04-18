@@ -42,7 +42,6 @@ namespace ArchitectsStencilMod.Core
         public IReadOnlyList<BoundedTile> Tiles => _tiles;
 
         private readonly List<BoundedTile> _tiles = [];
-        private readonly Dictionary<Point, BoundedTile> _tileMap = [];
 
         /// <summary>
         /// Top-left of the blueprint in tile coordinates.
@@ -56,12 +55,13 @@ namespace ArchitectsStencilMod.Core
 
         public void Define(Rectangle bounds)
         {
-            var previousMap = new Dictionary<Point, BoundedTile>(_tileMap);
+            int oldWidth = Bounds.Width;
+            int oldHeight = Bounds.Height;
+            BoundedTile[]? previous = _tiles.Count > 0 ? _tiles.ToArray() : null;
 
             Bounds = bounds;
 
             _tiles.Clear();
-            _tileMap.Clear();
 
             if (Bounds.IsEmpty)
             {
@@ -73,16 +73,17 @@ namespace ArchitectsStencilMod.Core
             {
                 for (int x = 0; x < Bounds.Width; x++)
                 {
-                    var rel = new Point(x, y);
                     bool selected = true;
-                    if (previousMap.TryGetValue(rel, out var oldTile))
+                    if (previous is not null
+                        && oldWidth > 0
+                        && oldHeight > 0
+                        && (uint)x < (uint)oldWidth
+                        && (uint)y < (uint)oldHeight)
                     {
-                        selected = oldTile.Selected;
+                        selected = previous[y * oldWidth + x].Selected;
                     }
 
-                    var tile = new BoundedTile(rel, selected);
-                    _tiles.Add(tile);
-                    _tileMap[rel] = tile;
+                    _tiles.Add(new BoundedTile(new Point(x, y), selected));
                 }
             }
         }
@@ -91,12 +92,11 @@ namespace ArchitectsStencilMod.Core
         {
             Bounds = Rectangle.Empty;
             _tiles.Clear();
-            _tileMap.Clear();
         }
 
         public bool IsTileSelected(Point world)
         {
-            return TryWorldToRelative(world, out var rel) && _tileMap.TryGetValue(rel, out var t) && t.Selected;
+            return TryWorldToRelative(world, out var rel) && TryGetTileByRelative(rel, out var t) && t.Selected;
         }
 
         public bool TryGetTile(Point world, out BoundedTile boundedTile)
@@ -106,12 +106,33 @@ namespace ArchitectsStencilMod.Core
                 boundedTile = null!;
                 return false;
             }
-            return _tileMap.TryGetValue(rel, out boundedTile!);
+            return TryGetTileByRelative(rel, out boundedTile);
         }
 
         public bool TryGetTileByRelative(Point relative, out BoundedTile boundedTile)
         {
-            return _tileMap.TryGetValue(relative, out boundedTile!);
+            if (!TryGetTileIndex(relative, out int index))
+            {
+                boundedTile = null!;
+                return false;
+            }
+
+            boundedTile = _tiles[index];
+            return true;
+        }
+
+        private bool TryGetTileIndex(Point relative, out int index)
+        {
+            if (!IsDefined
+                || (uint)relative.X >= (uint)Bounds.Width
+                || (uint)relative.Y >= (uint)Bounds.Height)
+            {
+                index = 0;
+                return false;
+            }
+
+            index = relative.Y * Bounds.Width + relative.X;
+            return true;
         }
 
         /// <summary>
@@ -198,7 +219,7 @@ namespace ArchitectsStencilMod.Core
             {
                 for (int y = r.Top; y < r.Bottom; y++)
                 {
-                    if (TryWorldToRelative(new Point(x, y), out var rel) && _tileMap.TryGetValue(rel, out var t))
+                    if (TryGetTileByRelative(new Point(x - Bounds.X, y - Bounds.Y), out var t))
                     {
                         t.Selected = true;
                     }
@@ -226,7 +247,7 @@ namespace ArchitectsStencilMod.Core
             {
                 for (int y = r.Top; y < r.Bottom; y++)
                 {
-                    if (TryWorldToRelative(new Point(x, y), out var rel) && _tileMap.TryGetValue(rel, out var t))
+                    if (TryGetTileByRelative(new Point(x - Bounds.X, y - Bounds.Y), out var t))
                     {
                         t.Selected = false;
                     }
@@ -235,24 +256,23 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Creates a static snapshot of selected tile coordinates from the blueprint.
+        /// Snapshot of selected tile coordinates from this blueprint.
         /// Only includes tiles where getSourceTile returns a value (filters by source availability).
-        /// Call once at Projection initialization, after <see cref="Projection.LoadPayloadFromWorld"/>.
+        /// Used when constructing a <see cref="Projection"/> from a live blueprint (before <see cref="Projection.LoadPayloadFromWorld"/>).
         /// </summary>
-        public static IReadOnlyList<BoundedTile> SnapshotSelectedTiles(Blueprint blueprint, Func<Point, Tile?> getSourceTile)
+        public IReadOnlyList<BoundedTile> SnapshotTiles(Func<Point, Tile?> getSourceTile)
         {
-            ArgumentNullException.ThrowIfNull(blueprint);
             ArgumentNullException.ThrowIfNull(getSourceTile);
 
             var result = new List<BoundedTile>();
-            if (!blueprint.IsDefined)
+            if (!IsDefined)
             {
                 return result;
             }
 
-            for (int i = 0; i < blueprint.Tiles.Count; i++)
+            for (int i = 0; i < Tiles.Count; i++)
             {
-                var t = blueprint.Tiles[i];
+                var t = Tiles[i];
                 if (!t.Selected)
                 {
                     continue;

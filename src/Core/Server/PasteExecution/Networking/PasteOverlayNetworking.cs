@@ -14,7 +14,7 @@ namespace ArchitectsStencilMod.Core.Server
 {
     /// <summary>
     /// Syncs in-progress paste highlight tiles (world coordinates only). Tile data for a paste is sent via
-    /// <see cref="PasteRequestV1"/> as compact <see cref="ArchitectsStencilMod.Core.Client.PayloadImport.PayloadDocument"/> JSON.
+    /// <see cref="PasteRequest"/> as compact <see cref="ArchitectsStencilMod.Core.Client.PayloadImport.PayloadDocument"/> JSON.
     /// </summary>
     internal static class PasteOverlayNetworking
     {

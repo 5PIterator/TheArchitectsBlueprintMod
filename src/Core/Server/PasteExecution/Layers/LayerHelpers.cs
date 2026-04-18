@@ -14,11 +14,12 @@ using Terraria.ObjectData;
 
 namespace ArchitectsStencilMod.Core.Layers
 {
+
     internal static class TileComparison
     {
         public static bool MatchTileType(in PasteTile tile)
         {
-            if (tile.Source.HasTile != tile.Target.HasTile) return false;
+            if (tile.PayloadCell.HasTile() != tile.Target.HasTile) return false;
             if (!tile.Source.HasTile) return true;
             return tile.Source.TileType == tile.Target.TileType;
         }
@@ -40,7 +41,8 @@ namespace ArchitectsStencilMod.Core.Layers
             if (!sourceTile.HasTile || sourceTile.TileType >= TileLoader.TileCount)
                 return null;
 
-            int style = TileObjectData.GetTileStyle(sourceTile);
+            int style = 0, alternate = 0;
+            TileObjectData.GetTileInfo(sourceTile, ref style, ref alternate);
             if (style < 0)
                 return [originRel];
 
@@ -87,7 +89,8 @@ namespace ArchitectsStencilMod.Core.Layers
             if (!sourceTile.HasTile || sourceTile.TileType >= TileLoader.TileCount)
                 return null;
 
-            int style = TileObjectData.GetTileStyle(sourceTile);
+            int style = 0, alternate = 0;
+            TileObjectData.GetTileInfo(sourceTile, ref style, ref alternate);
             if (style < 0)
                 return [new Blueprint.BoundedTile(originRel, selected: true)];
 
@@ -203,12 +206,15 @@ namespace ArchitectsStencilMod.Core.Layers
         }
 
         public static PasteTile GetPlacementOriginTile(IReadOnlyList<PasteTile> tiles) =>
-            GetOriginTile(tiles, static tile => tile.Payload);
+            GetOriginTile(tiles, static tile => tile.PayloadCell.HasTile(), static tile => tile.PayloadCell.ToTile());
 
         public static PasteTile GetClearingOriginTile(IReadOnlyList<PasteTile> tiles) =>
-            GetOriginTile(tiles, static tile => tile.Target);
+            GetOriginTile(tiles, static tile => tile.Target.HasTile, static tile => tile.Target);
 
-        private static PasteTile GetOriginTile(IReadOnlyList<PasteTile> tiles, Func<PasteTile, Tile> tileSelector)
+        private static PasteTile GetOriginTile(
+            IReadOnlyList<PasteTile> tiles,
+            Func<PasteTile, bool> hasTile,
+            Func<PasteTile, Tile> getFramingTile)
         {
             if (tiles.Count <= 1)
                 return tiles[0];
@@ -216,7 +222,7 @@ namespace ArchitectsStencilMod.Core.Layers
             int sampleIndex = -1;
             for (int i = 0; i < tiles.Count; i++)
             {
-                if (tileSelector(tiles[i]).HasTile)
+                if (hasTile(tiles[i]))
                 {
                     sampleIndex = i;
                     break;
@@ -227,7 +233,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 return tiles[0];
 
             var samplePasteTile = tiles[sampleIndex];
-            Tile sampleTile = tileSelector(samplePasteTile);
+            Tile sampleTile = getFramingTile(samplePasteTile);
 
             var data = TileObjectData.GetTileData(sampleTile);
             if (data is null)
@@ -259,12 +265,13 @@ namespace ArchitectsStencilMod.Core.Layers
             {
                 var t = tiles[i];
                 int wx = t.World.X, wy = t.World.Y;
-                if (t.Payload.HasTile && Main.tile[wx, wy].HasTile)
+                if (t.PayloadCell.HasTile() && Main.tile[wx, wy].HasTile)
                 {
                     int idx = wx + wy * (int)Main.tile.Width;
                     var state = Main.tile.GetData<TileWallWireStateData>();
-                    state[idx].TileFrameX = t.Payload.TileFrameX;
-                    state[idx].TileFrameY = t.Payload.TileFrameY;
+                    var b = t.PayloadCell.Block;
+                    state[idx].TileFrameX = (short)b.FrameX;
+                    state[idx].TileFrameY = (short)b.FrameY;
                 }
             }
 
@@ -308,18 +315,17 @@ namespace ArchitectsStencilMod.Core.Layers
 
             var origin = GetPlacementOriginTile(tiles);
             int x = origin.World.X, y = origin.World.Y;
-            if (!origin.Payload.HasTile) return LayerResult.Ok();
+            if (!origin.PayloadCell.HasTile()) return LayerResult.Ok();
 
-            ushort tileType = origin.Payload.TileType;
+            ushort tileType = (ushort)origin.PayloadCell.Block.Type;
             if (tileType >= TileLoader.TileCount)
             {
                 PastingDebug.LogPlacement(tileType, 0, null, x, y, false, "PlaceObject");
                 return LayerResult.Fail(origin.World);
             }
 
-            int style = 0;
-            int alternate = 0;
-            TileObjectData.GetTileInfo(origin.Payload, ref style, ref alternate);
+            int style = origin.PayloadCell.Detail.Style;
+            int alternate = origin.PayloadCell.Detail.Alternate;
             Tile dest = Main.tile[x, y];
 
             if (dest.HasTile && dest.TileType == tileType)
@@ -356,10 +362,10 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public static bool Consume(in PasteTile tile, in PasteContext context)
         {
-            if (!tile.Payload.HasTile || !context.NeedsItems || context.Slots is null) return true;
+            if (!tile.PayloadCell.HasTile() || !context.NeedsItems || context.Slots is null) return true;
 
-            ushort tileType = tile.Payload.TileType;
-            int style = TileObjectData.GetTileStyle(tile.Payload);
+            ushort tileType = (ushort)tile.PayloadCell.Block.Type;
+            int style = tile.PayloadCell.Detail.Style;
             ushort placedType = (ushort)Main.tile[tile.World.X, tile.World.Y].TileType;
 
             int lookupStyle = placedType == tileType ? (style >= 0 ? style : 0) : 0;
@@ -388,16 +394,16 @@ namespace ArchitectsStencilMod.Core.Layers
 
             var origin = FrameOperations.GetPlacementOriginTile(tiles);
             int x = origin.World.X, y = origin.World.Y;
-            if (!origin.Payload.HasTile) return LayerResult.Ok();
+            if (!origin.PayloadCell.HasTile()) return LayerResult.Ok();
 
-            ushort tileType = origin.Payload.TileType;
+            ushort tileType = (ushort)origin.PayloadCell.Block.Type;
             if (tileType >= TileLoader.TileCount)
             {
                 PastingDebug.LogPlacement(tileType, 0, null, x, y, false, "PlaceTile");
                 return LayerResult.Fail(origin.World);
             }
 
-            int style = TileObjectData.GetTileStyle(origin.Payload);
+            int style = origin.PayloadCell.Detail.Style;
             var baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
             PastingDebug.LogInteractionLookup(tileType, style, baseTileId, null);
 
@@ -414,30 +420,8 @@ namespace ArchitectsStencilMod.Core.Layers
         private static LayerResult PlaceWithTile(in PasteTile origin, IReadOnlyList<PasteTile> tiles, int style, int? baseTileId, in PasteContext context)
         {
             int x = origin.World.X, y = origin.World.Y;
-            ushort tileType = origin.Payload.TileType;
+            ushort tileType = (ushort)origin.PayloadCell.Block.Type;
             Tile dest = Main.tile[x, y];
-
-            // #region agent log
-            AgentNdjsonLog.Write(
-                "H3",
-                "TileOperations.PlaceWithTile",
-                "entry",
-                new
-                {
-                    relX = origin.Relative.X,
-                    relY = origin.Relative.Y,
-                    worldX = x,
-                    worldY = y,
-                    tileType,
-                    style,
-                    baseTileId,
-                    destHas = dest.HasTile,
-                    destType = dest.HasTile ? dest.TileType : (ushort?)null,
-                    needsItems = context.NeedsItems,
-                    cheat = context.CheatSweep,
-                    batch = tiles.Count,
-                });
-            // #endregion
 
             if (baseTileId.HasValue)
             {
@@ -505,10 +489,10 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public static bool Consume(in PasteTile tile, in PasteContext context)
         {
-            if (!tile.Payload.HasTile || !context.NeedsItems || context.Slots is null) return true;
+            if (!tile.PayloadCell.HasTile() || !context.NeedsItems || context.Slots is null) return true;
 
-            ushort tileType = tile.Payload.TileType;
-            int style = TileObjectData.GetTileStyle(tile.Payload);
+            ushort tileType = (ushort)tile.PayloadCell.Block.Type;
+            int style = tile.PayloadCell.Detail.Style;
             ushort placedType = (ushort)Main.tile[tile.World.X, tile.World.Y].TileType;
 
             int lookupStyle = placedType == tileType ? (style >= 0 ? style : 0) : 0;
@@ -530,13 +514,23 @@ namespace ArchitectsStencilMod.Core.Layers
             return TileID.Sets.IsAMechanism[tileType] || TileID.Sets.IsATrigger[tileType];
         }
 
-        public static IReadOnlyList<int>? GetMechanismItems(in Tile sourceTile)
+        public static IReadOnlyList<int>? GetMechanismItems(in Tile payloadTile)
         {
-            if (!sourceTile.HasTile || !IsMechanismTileType(sourceTile.TileType))
+            if (!payloadTile.HasTile || !IsMechanismTileType(payloadTile.TileType))
                 return null;
 
-            int style = TileObjectData.GetTileStyle(sourceTile);
-            return InteractionMapProvider.GetTileItemIds(sourceTile.TileType, style);
+            int style = 0, alternate = 0;
+            TileObjectData.GetTileInfo(payloadTile, ref style, ref alternate);
+            return InteractionMapProvider.GetTileItemIds(payloadTile.TileType, style);
+        }
+
+        public static IReadOnlyList<int>? GetMechanismItems(in PayloadCell payloadCell)
+        {
+            if (!payloadCell.HasTile() || !IsMechanismTileType((ushort)payloadCell.Block.Type))
+                return null;
+
+            int style = payloadCell.Detail.Style;
+            return InteractionMapProvider.GetTileItemIds((ushort)payloadCell.Block.Type, style);
         }
 
         public static ref TileWallWireStateData GetState(int x, int y)

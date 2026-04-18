@@ -11,7 +11,7 @@ using Terraria.ModLoader;
 
 namespace ArchitectsStencilMod.Core.Server
 {
-    /// <summary>Multipaste control packets; paste payload uses <see cref="PasteRequestV1"/> (JSON <see cref="ArchitectsStencilMod.Core.Client.PayloadImport.PayloadDocument"/>).</summary>
+    /// <summary>Multipaste control packets; paste payload uses <see cref="PasteRequest"/> (JSON <see cref="ArchitectsStencilMod.Core.Client.PayloadImport.PayloadDocument"/>).</summary>
     internal static class PasteNetworking
     {
         private static int _nextRequestId = 1;
@@ -30,7 +30,7 @@ namespace ArchitectsStencilMod.Core.Server
             var packetType = (PasteNetPacketType)reader.ReadByte();
             switch (packetType)
             {
-                case PasteNetPacketType.PasteRequestV1:
+                case PasteNetPacketType.PasteRequest:
                     HandlePasteRequest(mod, reader, whoAmI);
                     return;
                 case PasteNetPacketType.PasteAck:
@@ -58,13 +58,13 @@ namespace ArchitectsStencilMod.Core.Server
             }
 
             int requestId = _nextRequestId++;
-            if (!PasteRequestV1.TryCreate(projection, requestId, out var request, out reason))
+            if (!PasteRequest.TryCreate(projection, requestId, out var request, out reason))
             {
                 return false;
             }
 
             ModPacket packet = mod.GetPacket();
-            packet.Write((byte)PasteNetPacketType.PasteRequestV1);
+            packet.Write((byte)PasteNetPacketType.PasteRequest);
             request.Write(packet);
             packet.Send();
 
@@ -92,10 +92,10 @@ namespace ArchitectsStencilMod.Core.Server
             if (!TileMappingAuthority.IsAuthoritativePastePacketSide())
                 return;
 
-            PasteRequestV1 request;
+            PasteRequest request;
             try
             {
-                request = PasteRequestV1.Read(reader);
+                request = PasteRequest.Read(reader);
             }
             catch (Exception ex)
             {

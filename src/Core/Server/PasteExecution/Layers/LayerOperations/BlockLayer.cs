@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ArchitectsStencilMod.Core;
 using ArchitectsStencilMod.Core.TileMapping;
+using ArchitectsStencilMod.Debug;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -19,18 +20,18 @@ namespace ArchitectsStencilMod.Core.Layers
 
         /// <summary>At most one <see cref="Blueprint.BoundedTile"/> (this relative only). No multi-cell frame expansion.</summary>
         public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
-            IsBlock(tile.IdentifyFace) ? [new Blueprint.BoundedTile(tile.Relative, selected: true)] : [];
+            IsBlock(tile.Subject) ? [new Blueprint.BoundedTile(tile.Relative, selected: true)] : [];
 
-        /// <summary>Classifies <paramref name="view"/> (source payload or target world per <see cref="PasteTile.SubjectType"/>).</summary>
-        private static bool IsBlock(Tile view)
+        /// <summary>Classifies <paramref name="subjectTile"/> (source-side intent vs target world per <see cref="PasteTile.SubjectType"/>).</summary>
+        private static bool IsBlock(Tile subjectTile)
         {
-            if (!view.HasTile) return false;
-            if (view.TileType >= TileLoader.TileCount) return false;
-            if (TileID.Sets.Falling[view.TileType]) return false;
-            if (FrameOperations.HasTileAnchor(view)) return false;
-            if (FrameOperations.HasWallAnchor(view)) return false;
-            if (FrameOperations.HasOtherAnchor(view)) return false;
-            return !CustomLayer.TileTypeIsClaimedByAttributedLayer(view.TileType);
+            if (!subjectTile.HasTile) return false;
+            if (subjectTile.TileType >= TileLoader.TileCount) return false;
+            if (TileID.Sets.Falling[subjectTile.TileType]) return false;
+            if (FrameOperations.HasTileAnchor(subjectTile)) return false;
+            if (FrameOperations.HasWallAnchor(subjectTile)) return false;
+            if (FrameOperations.HasOtherAnchor(subjectTile)) return false;
+            return !CustomLayer.TileTypeIsClaimedByAttributedLayer(subjectTile.TileType);
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
@@ -39,16 +40,16 @@ namespace ArchitectsStencilMod.Core.Layers
         public override bool CanPlace(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
             if (!context.NeedsItems || context.Slots is null || context.CheatSweep) return true;
-            if (!IsBlock(tile.Blueprint)) return true;
+            if (!IsBlock(tile.Source)) return true;
             return CanPlaceSingleTile(in tile, in context);
         }
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
-            if (!tile.Blueprint.HasTile || !context.NeedsItems || context.Slots is null) return true;
+            if (!tile.Source.HasTile || !context.NeedsItems || context.Slots is null) return true;
 
-            ushort tileType = tile.Blueprint.TileType;
-            int style = TileObjectData.GetTileStyle(tile.Blueprint);
+            ushort tileType = tile.Source.TileType;
+            int style = tile.PayloadCell.Detail.Style;
             ushort placedType = (ushort)Main.tile[tile.World.X, tile.World.Y].TileType;
             int lookupStyle = placedType == tileType ? (style >= 0 ? style : 0) : 0;
             return context.Slots.FindTileSlot(placedType, lookupStyle) >= 0;
@@ -56,17 +57,31 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile)
         {
-            Tile blueprint = tile.Blueprint;
-            if (!blueprint.HasTile) return null;
-            int style = TileObjectData.GetTileStyle(blueprint);
-            return InteractionMapProvider.GetTileItemIds(blueprint.TileType, style);
+            Tile sourceTile = tile.Source;
+            if (!sourceTile.HasTile) return null;
+            int style = tile.PayloadCell.Detail.Style;
+            return InteractionMapProvider.GetTileItemIds(sourceTile.TileType, style);
         }
 
         public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context) =>
             FrameOperations.Clear(tiles, in context);
 
-        public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context) =>
-            TileOperations.Place(tiles, in context);
+        public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        {
+            if (ASMLog.IsDebugEnabled && tiles.Count > 0)
+            {
+                var samplePasteTile = tiles[0];
+                ASMLog.Debug(
+                    $"BlockLayer.Place batch={tiles.Count}"+
+                    $"rel=({samplePasteTile.Relative.X},{samplePasteTile.Relative.Y}) "+
+                    $"world=({samplePasteTile.World.X},{samplePasteTile.World.Y}) "+
+                    $"payload[hasTile={samplePasteTile.PayloadCell.HasTile()} type={samplePasteTile.PayloadCell.Block.Type} "+
+                    $"frame=({samplePasteTile.PayloadCell.Block.FrameX},{samplePasteTile.PayloadCell.Block.FrameY})]",
+                    "Paste");
+            }
+
+            return TileOperations.Place(tiles, in context);
+        }
 
         public override bool Consume(in PasteTile tile, in PasteContext context) =>
             TileOperations.Consume(in tile, in context);
@@ -74,27 +89,28 @@ namespace ArchitectsStencilMod.Core.Layers
         private static bool CanPlaceSingleTile(in PasteTile tile, in PasteContext context)
         {
             int x = tile.World.X, y = tile.World.Y;
-            if (!tile.Blueprint.HasTile) return true;
+            if (!tile.Source.HasTile) return true;
 
-            ushort tileType = tile.Blueprint.TileType;
+            ushort tileType = tile.Source.TileType;
             if (tileType >= TileLoader.TileCount) return false;
 
-            int style = TileObjectData.GetTileStyle(tile.Blueprint);
+            int style = 0, alternate = 0;
+            TileObjectData.GetTileInfo(tile.Source, ref style, ref alternate);
             int? baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
-            Tile dest = Main.tile[x, y];
+            Tile targetTile = Main.tile[x, y];
 
-            if (dest.HasTile && dest.TileType == tileType) return true;
+            if (targetTile.HasTile && targetTile.TileType == tileType) return true;
 
             if (baseTileId.HasValue)
             {
                 ushort baseType = (ushort)baseTileId.Value;
-                if (!dest.HasTile || dest.TileType != baseType)
+                if (!targetTile.HasTile || targetTile.TileType != baseType)
                 {
                     if (context.Slots.FindTileSlot(baseType, 0) < 0) return false;
                     return context.Slots.FindTileSlot(tileType, style) >= 0;
                 }
             }
-            else if (dest.HasTile && !context.CheatSweep)
+            else if (targetTile.HasTile && !context.CheatSweep)
             {
                 return false;
             }
