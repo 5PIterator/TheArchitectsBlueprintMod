@@ -68,18 +68,18 @@ TAS is a Terraria mod that allows players to copy and paste structures using the
 ## Current items by tier (code)
 
 - **Tier 1** (`Content/Items/Tier1/`): `PinStick`, `AddStick`, `RemoveStick`, `CopyStick`, `PasteStick`.
-- **Tier 2** (`Content/Items/Tier2/`): `BlueprintWand`, `StencilWand` (Add/Remove; right click opens action wheel or cancels active selection preview), `ProjectionWand` (action wheel: Copy, CUT, Paste)
+- **Tier 2** (`Content/Items/Tier2/`): `SelectionWand`, `InclusionWand` (Add/Remove; right click opens action wheel or cancels active selection preview), `ProjectionWand` (action wheel: Copy, CUT, Paste)
 - **Tier 3** (`Content/Items/Tier3/`): `ArchitectsStencil` (placeholder)
 - **Tier 4** (`Content/Items/Tier4/`): `ArchitectsSoul` (placeholder)
 
-- **BLUEPRINT WAND:** PIN / SET / RESET
+- **SELECTION WAND:** PIN / SET / RESET
   - Left click: Execute the action selected in the action wheel.
   - Right click: Open the action wheel.
   - Action wheel:
     - 1: PIN (place pin B and drag to define bounds)
     - 2: PIN behavior if no Blueprint exists, otherwise SET (grab/drag pins, edges, corners, inside)
     - 3: RESET (clear the Blueprint that is clicked)
-- **STENCIL WAND:** ADD / REMOVE
+- **INCLUSION WAND:** ADD / REMOVE
   - Left click: Execute the action selected in the action wheel.
   - Right click: Open the action wheel.
   - Action wheel:

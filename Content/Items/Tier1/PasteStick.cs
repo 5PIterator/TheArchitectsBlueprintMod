@@ -70,5 +70,15 @@ namespace ArchitectsStencilMod.Content.Items
 				actionManager.Handle(ToolAction.PASTE, ToolActionKey.RightClick, player, cursorTile);
 			}
 		}
+
+		public override void AddRecipes()
+		{
+			CreateRecipe()
+				.AddIngredient(ItemID.Emerald, 1)
+				.AddIngredient(ItemID.Wood, 5)
+				//.AddIngredient(5710, 5) // Feywood (not in 1.4.9 ItemID)
+				.AddTile(TileID.LivingLoom)
+				.Register();
+		}
 	}
 }

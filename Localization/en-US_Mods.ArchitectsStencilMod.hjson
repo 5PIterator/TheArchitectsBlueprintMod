@@ -9,8 +9,17 @@ Items: {
 			'''
 	}
 
-	ArchitectsSoul: {
-		DisplayName: Architect's Soul
+	ArchitectsHand: {
+		DisplayName: Architect's Hand
+		Tooltip:
+			'''
+			Late-game accessory.
+			Throw into Shimmer to obtain Architect's Blueprint.
+			'''
+	}
+
+	ArchitectsBlueprint: {
+		DisplayName: Architect's Blueprint
 		Tooltip:
 			'''
 			Late-game upgrade.
@@ -29,8 +38,16 @@ Items: {
 			'''
 	}
 
-	BlueprintWand: {
-		DisplayName: Blueprint Wand
+	BlueprintCore: {
+		DisplayName: Blueprint Core
+		Tooltip:
+			'''
+			A dense focus of gems and sky matter for assembling the Architect's Stencil.
+			'''
+	}
+
+	SelectionWand: {
+		DisplayName: Selection Wand
 		Tooltip:
 			'''
 			Blueprint bounds editing.
@@ -46,6 +63,17 @@ Items: {
 			Create and move a projection.
 			Left: drag to place/move
 			Right: cancel move while dragging; otherwise remove projection or clear Blueprint only if the cursor hits one
+			'''
+	}
+
+	ExecutionWand: {
+		DisplayName: Execution Wand
+		Tooltip:
+			'''
+			Run pastes against projections.
+			Right: action wheel — PASTE, RESET
+			Left: start paste or RESET hit (cursor must be on target)
+			While pasting, hold left + right to cancel like the paste stick.
 			'''
 	}
 
@@ -101,8 +129,8 @@ Items: {
 			'''
 	}
 
-	StencilWand: {
-		DisplayName: Stencil Wand
+	InclusionWand: {
+		DisplayName: Inclusion Wand
 		Tooltip:
 			'''
 			Select tiles.

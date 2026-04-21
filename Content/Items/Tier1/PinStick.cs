@@ -15,7 +15,7 @@ namespace ArchitectsStencilMod.Content.Items
 	/// - Left release: finalize pins.
 	/// - Right click: cancel the current PIN gesture and remove the active blueprint.
 	///
-	/// Note: PIN always starts fresh; use <see cref="BlueprintWand"/> for SET-style post-editing.
+	/// Note: PIN always starts fresh; use <see cref="SelectionWand"/> for SET-style post-editing.
 	/// </summary>
 	public class PinStick : ModItem
 	{
@@ -90,6 +90,16 @@ namespace ArchitectsStencilMod.Content.Items
 			// If the left button was released (transitioned from down to up), emit a release event.
 			else if (!Main.mouseLeft && Main.mouseLeftRelease)
 				actionManager.Handle(ToolAction.PIN, ToolActionKey.LeftRelease, player, cursorTile);
+		}
+
+		public override void AddRecipes()
+		{
+			CreateRecipe()
+				.AddIngredient(ItemID.Diamond, 1)
+				.AddIngredient(ItemID.Wood, 5)
+				//.AddIngredient(5710, 5) // Feywood (not in 1.4.9 ItemID)
+				.AddTile(TileID.LivingLoom)
+				.Register();
 		}
 	}
 }

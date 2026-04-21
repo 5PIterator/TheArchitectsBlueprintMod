@@ -71,10 +71,13 @@ namespace ArchitectsStencilMod.UI
         private readonly Dictionary<string, CatalogItem> _items = new(StringComparer.Ordinal);
         private readonly List<string> _drawOrder = [];
 
-        private readonly struct CatalogItem(string? family, OverlayDrawable drawable)
+        private readonly struct CatalogItem(string? family, OverlayDrawable drawable, long expiresAt)
         {
             public string? Family { get; } = family;
             public OverlayDrawable Drawable { get; } = drawable;
+            /// <summary>Absolute tick count after which this item is removed. 0 means it never expires.</summary>
+            public long ExpiresAt { get; } = expiresAt;
+            public bool IsExpired => ExpiresAt != 0 && Environment.TickCount64 >= ExpiresAt;
         }
 
         private static string MakeKey(string? family, string id)
@@ -86,13 +89,16 @@ namespace ArchitectsStencilMod.UI
 
         /// <summary>
         /// <paramref name="family"/> null or empty: <paramref name="id"/> is globally unique. Otherwise ids are unique per family.
+        /// Re-registering an existing key resets its TTL.
         /// </summary>
-        public void Register(string? family, string id, OverlayDrawable drawable)
+        /// <param name="ttlMs">If provided, the overlay is automatically removed after this many milliseconds.</param>
+        public void Register(string? family, string id, OverlayDrawable drawable, int? ttlMs = null)
         {
             string key = MakeKey(family, id);
+            long expiresAt = ttlMs.HasValue ? Environment.TickCount64 + ttlMs.Value : 0;
             if (!_items.ContainsKey(key))
                 _drawOrder.Add(key);
-            _items[key] = new CatalogItem(family, drawable);
+            _items[key] = new CatalogItem(family, drawable, expiresAt);
         }
 
         public void Unregister(string? family, string id)
@@ -129,8 +135,27 @@ namespace ArchitectsStencilMod.UI
 
         public void Draw()
         {
+            List<string>? expired = null;
             for (int i = 0; i < _drawOrder.Count; i++)
-                _items[_drawOrder[i]].Drawable.Draw();
+            {
+                string key = _drawOrder[i];
+                var item = _items[key];
+                if (item.IsExpired)
+                {
+                    (expired ??= []).Add(key);
+                    continue;
+                }
+                item.Drawable.Draw();
+            }
+
+            if (expired != null)
+            {
+                foreach (string key in expired)
+                {
+                    _items.Remove(key);
+                    _drawOrder.Remove(key);
+                }
+            }
         }
     }
 
@@ -193,43 +218,44 @@ namespace ArchitectsStencilMod.UI
         }
 
         /// <param name="family">Optional; when set, <paramref name="id"/> only needs to be unique within this family.</param>
-        public static void RegPoints(string id, Point[] points, Color color, string? family = null)
+        /// <param name="ttlMs">If provided, the overlay is automatically removed after this many milliseconds.</param>
+        public static void RegPoints(string id, Point[] points, Color color, string? family = null, int? ttlMs = null)
         {
             ValidateRegistration(id, points);
             var copy = new Point[points.Length];
             Array.Copy(points, copy, points.Length);
-            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.Point, copy, color, 0));
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.Point, copy, color, 0), ttlMs);
         }
 
         /// <inheritdoc cref="RegPoints"/>
-        public static void RegTileFill(string id, Point[] tiles, Color fill, string? family = null)
+        public static void RegTileFill(string id, Point[] tiles, Color fill, string? family = null, int? ttlMs = null)
         {
             ValidateRegistration(id, tiles);
             var copy = new Point[tiles.Length];
             Array.Copy(tiles, copy, tiles.Length);
-            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileFill, copy, fill, 0));
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileFill, copy, fill, 0), ttlMs);
         }
 
         /// <inheritdoc cref="RegPoints"/>
-        public static void RegTileBounds(string id, Rectangle tileBounds, Color color, int borderWidth, string? family = null)
+        public static void RegTileBounds(string id, Rectangle tileBounds, Color color, int borderWidth, string? family = null, int? ttlMs = null)
         {
             ValidateRegistration(id, tileBounds);
-            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileBounds, tileBounds, color, borderWidth));
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileBounds, tileBounds, color, borderWidth), ttlMs);
         }
 
         /// <summary>Registers a tile rectangle outline only (no interior fill).</summary>
         /// <inheritdoc cref="RegPoints"/>
-        public static void RegTileBorder(string id, Rectangle tileBounds, Color color, int borderWidth, string? family = null)
+        public static void RegTileBorder(string id, Rectangle tileBounds, Color color, int borderWidth, string? family = null, int? ttlMs = null)
         {
             ValidateRegistration(id, tileBounds);
-            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileBorder, tileBounds, color, borderWidth));
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileBorder, tileBounds, color, borderWidth), ttlMs);
         }
 
         /// <inheritdoc cref="RegPoints"/>
-        public static void RegScreen(string id, Action draw, string? family = null)
+        public static void RegScreen(string id, Action draw, string? family = null, int? ttlMs = null)
         {
             ValidateRegistration(id, draw);
-            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.Screen, draw, default, 0));
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.Screen, draw, default, 0), ttlMs);
         }
 
         public static void Unregister(string id, string? family = null)

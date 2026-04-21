@@ -122,5 +122,17 @@ namespace ArchitectsStencilMod.Content.Items
 			else if (!Main.mouseLeft && Main.mouseLeftRelease)
 				actionManager.Handle(_mode, ToolActionKey.LeftRelease, player, cursorTile);
 		}
+
+		public override void AddRecipes()
+		{
+			CreateRecipe()
+				.AddIngredient<CopyStick>(1)
+				.AddIngredient(ItemID.Ruby, 1)
+				.AddIngredient(ItemID.AcornAxe, 1) // Axe of Regrowth
+				.AddIngredient(ItemID.Wood, 25)
+				//.AddIngredient(5710, 25) // Feywood (not in 1.4.9 ItemID)
+				.AddTile(TileID.LivingLoom)
+				.Register();
+		}
 	}
 }

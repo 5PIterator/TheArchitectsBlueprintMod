@@ -120,5 +120,19 @@ namespace ArchitectsStencilMod.Content.Items
 			else if (!Main.mouseLeft && Main.mouseLeftRelease)
 				actionManager.Handle(_mode, ToolActionKey.LeftRelease, player, cursorTile);
 		}
+
+		public override void AddRecipes()
+		{
+			CreateRecipe()
+				.AddIngredient<SelectionWand>(1)
+				.AddIngredient<ProjectionWand>(1)
+				.AddIngredient<InclusionWand>(1)
+				.AddIngredient<ExecutionWand>(1)
+				.AddIngredient<BlueprintCore>(1)
+				.AddIngredient(ItemID.Wood, 50)
+				//.AddIngredient(5710, 50) // Feywood (not in 1.4.9 ItemID)
+				.AddTile(TileID.TinkerersWorkbench)
+				.Register();
+		}
 	}
 }
