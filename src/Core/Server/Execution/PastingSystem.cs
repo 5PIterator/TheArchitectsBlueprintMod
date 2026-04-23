@@ -34,9 +34,21 @@ namespace ArchitectsStencilMod.Core
         {
             // --- Ignore invalid or already-running projections, then prepare storage and register a new operation.
 
-            /// Validate the projection
+            // Validate the projection
             if (!ValidateProjection(projection, out rejectReason))
                 return false;
+
+            // If the player is on a client, request a paste from the server.
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                PasteNetworking.SendPasteRequest(Mod, Main.LocalPlayer, projection, out rejectReason);
+                if (rejectReason != PasteRejectReason.None)
+                {
+                    return false;
+                }
+            }
+
+            // Else, start the paste locally.
 
             // For each projection in each running operation, collect the tile and wall IDs and unify them into a single set.
             var config = ModContent.GetInstance<PastingConfig>();
@@ -75,6 +87,12 @@ namespace ArchitectsStencilMod.Core
             /// Find the matching operation and teardown it.
 
             ArgumentNullException.ThrowIfNull(projection);
+
+            // If the player is on a client, request a paste cancel from the server.
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                PasteNetworking.SendCancelIfPending(Mod, projection);
+            }
 
             // Iterate over the list of running operations and find the matching operation.
             foreach (PastingOperation operation in _operations)

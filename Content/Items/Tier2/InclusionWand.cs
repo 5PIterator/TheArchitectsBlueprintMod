@@ -11,11 +11,11 @@ using ArchitectsStencilMod.Utils;
 namespace ArchitectsStencilMod.Content.Items
 {
 	/// <summary>
-	/// INCLUSION WAND: ADD / REMOVE via action wheel (rectangle gestures for tile mask edits).
+	/// INCLUSION WAND: INCLUDE / EXCLUDE via action wheel (rectangle gestures for tile mask edits).
 	/// </summary>
 	public class InclusionWand : ModItem
 	{
-		private ToolAction _mode = ToolAction.ADD;
+		private ToolAction _mode = ToolAction.INCLUDE;
 
 		public override void SetDefaults()
 		{
@@ -46,9 +46,9 @@ namespace ArchitectsStencilMod.Content.Items
 			if (!System.Enum.IsDefined(typeof(ToolAction), raw))
 				return;
 			var loaded = (ToolAction)raw;
-			_mode = loaded == ToolAction.RESET ? ToolAction.ADD : loaded;
-			if (_mode != ToolAction.ADD && _mode != ToolAction.REMOVE)
-				_mode = ToolAction.ADD;
+			_mode = loaded == ToolAction.RESET ? ToolAction.INCLUDE : loaded;
+			if (_mode != ToolAction.INCLUDE && _mode != ToolAction.EXCLUDE)
+				_mode = ToolAction.INCLUDE;
 		}
 
 		public override bool AltFunctionUse(Player player) => true;
@@ -73,13 +73,13 @@ namespace ArchitectsStencilMod.Content.Items
 					ActionWheel.CancelActive();
 				else
 				{
-					var entries = new List<ActionWheelEntry>(2)
-					{
-						new(GetActionId(ToolAction.ADD), GetActionLabel(ToolAction.ADD), onSelect: () => _mode = ToolAction.ADD,
-							isSelected: () => _mode == ToolAction.ADD),
-						new(GetActionId(ToolAction.REMOVE), GetActionLabel(ToolAction.REMOVE), onSelect: () => _mode = ToolAction.REMOVE,
-							isSelected: () => _mode == ToolAction.REMOVE)
-					};
+				var entries = new List<ActionWheelEntry>(2)
+				{
+					new(GetActionId(ToolAction.INCLUDE), GetActionLabel(ToolAction.INCLUDE), onSelect: () => _mode = ToolAction.INCLUDE,
+						isSelected: () => _mode == ToolAction.INCLUDE),
+					new(GetActionId(ToolAction.EXCLUDE), GetActionLabel(ToolAction.EXCLUDE), onSelect: () => _mode = ToolAction.EXCLUDE,
+						isSelected: () => _mode == ToolAction.EXCLUDE)
+				};
 					ActionWheel.OpenNew(Main.myPlayer, Item.type, entries);
 				}
 			}
@@ -106,8 +106,8 @@ namespace ArchitectsStencilMod.Content.Items
 		public override void AddRecipes()
 		{
 			CreateRecipe()
-				.AddIngredient<AddStick>(1)
-				.AddIngredient<RemoveStick>(1)
+				.AddIngredient<IncludeStick>(1)
+				.AddIngredient<ExcludeStick>(1)
 				.AddIngredient(ItemID.AmberStaff, 1)
 				.AddIngredient(ItemID.Wood, 25)
 				//.AddIngredient(5710, 25) // Feywood (not in 1.4.9 ItemID)

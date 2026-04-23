@@ -11,13 +11,13 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private PaintLayer() : base("Paint", LayerType.Paint) { }
 
-        public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _)
+        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _)
         {
             Tile subjectTile = tile.Subject;
             if (subjectTile.TileColor == PaintID.None && subjectTile.WallColor == PaintID.None)
                 return [];
 
-            return [new Blueprint.BoundedTile(tile.Relative, selected: true)];
+            return [new Selection.BoundedTile(tile.Relative, included: true)];
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context)

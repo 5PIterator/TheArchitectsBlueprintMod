@@ -10,11 +10,11 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private WiringLayer() : base("Wiring", LayerType.Wiring) { }
 
-        public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _)
+        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _)
         {
             Tile subjectTile = tile.Subject;
             bool hasWiring = subjectTile.RedWire || subjectTile.BlueWire || subjectTile.GreenWire || subjectTile.YellowWire || subjectTile.HasActuator;
-            return hasWiring ? [new Blueprint.BoundedTile(tile.Relative, selected: true)] : [];
+            return hasWiring ? [new Selection.BoundedTile(tile.Relative, included: true)] : [];
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context)

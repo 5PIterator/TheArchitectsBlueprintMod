@@ -14,13 +14,13 @@ namespace ArchitectsStencilMod.Core.Layers
         /// <summary>
         /// Full paste footprint from the lookup; ignores the input tile content.
         /// </summary>
-        public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
         {
             if (lookup.PasteTiles.Count == 0) return [];
 
-            var bounded = new List<Blueprint.BoundedTile>(lookup.PasteTiles.Count);
+            var bounded = new List<Selection.BoundedTile>(lookup.PasteTiles.Count);
             for (int i = 0; i < lookup.PasteTiles.Count; i++)
-                bounded.Add(new Blueprint.BoundedTile(lookup.PasteTiles[i].Relative, selected: true));
+                bounded.Add(new Selection.BoundedTile(lookup.PasteTiles[i].Relative, included: true));
             return bounded;
         }
 

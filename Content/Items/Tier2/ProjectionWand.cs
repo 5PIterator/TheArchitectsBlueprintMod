@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -61,7 +62,7 @@ namespace ArchitectsStencilMod.Content.Items
 				_mode = (ToolAction)raw;
 		}
 
-		/// <summary>Enables alternate use to open or dismiss the projection action wheel.</summary>
+		/// <summary>Enables alternate use: pick mode or (when in PASTE) RST-equivalent reset on right, or Shift+right to open the mode wheel.</summary>
 		public override bool AltFunctionUse(Player player) => true;
 
 		/// <summary>Blocks use while the shared action wheel is open or opening.</summary>

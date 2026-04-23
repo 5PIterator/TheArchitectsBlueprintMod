@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using ArchitectsStencilMod.Config;
 using ArchitectsStencilMod.Core;
@@ -15,6 +16,17 @@ namespace ArchitectsStencilMod.Core.Server
     internal static class PasteNetworking
     {
         private static int _nextRequestId = 1;
+
+        /// <summary>Game update timeout if no <see cref="PasteNetPacketType.PasteAck"/> (client-side, listen host / joiners).</summary>
+        private const int ClientAckTimeoutGameUpdates = 600;
+
+        private sealed class PendingClientAck
+        {
+            public int RequestId;
+            public uint StartGameUpdate;
+        }
+
+        private static readonly List<PendingClientAck> ClientPendingAcks = [];
 
         internal static bool IsHostClient()
         {
@@ -70,6 +82,7 @@ namespace ArchitectsStencilMod.Core.Server
 
             projection.Lock();
             projection.Id = requestId;
+            RegisterClientPendingAck(requestId);
             return true;
         }
 
@@ -85,6 +98,13 @@ namespace ArchitectsStencilMod.Core.Server
             packet.Write((byte)PasteNetPacketType.PasteCancel);
             new PasteCancelPacket(requestId).Write(packet);
             packet.Send();
+        }
+
+        /// <summary>Stops the client ack timer for this request (e.g. after send cancel) so a late timeout does not fire.</summary>
+        internal static void DismissClientPendingAckIfMatches(int requestId)
+        {
+            if (requestId > 0)
+                RemoveClientPendingAck(requestId);
         }
 
         private static void HandlePasteRequest(Mod mod, BinaryReader reader, int whoAmI)
@@ -146,6 +166,8 @@ namespace ArchitectsStencilMod.Core.Server
                 return;
 
             var ack = PasteAckPacket.Read(reader);
+            RemoveClientPendingAck(ack.RequestId);
+
             var projectionSystem = ModContent.GetInstance<ProjectionSystem>();
             if (!projectionSystem.TryGetProjectionByCorrelationId(Main.LocalPlayer, ack.RequestId, out var projection))
             {
@@ -155,10 +177,6 @@ namespace ArchitectsStencilMod.Core.Server
             projection.Unlock();
             projection.Id = 0;
 
-            if (!ack.Accepted)
-            {
-                Main.NewText($"Paste rejected: {FormatReason(ack.Reason)}", Color.OrangeRed);
-            }
         }
 
         private static void SendAck(Mod mod, int toClient, int requestId, bool accepted, PasteRejectReason reason)
@@ -169,10 +187,14 @@ namespace ArchitectsStencilMod.Core.Server
             packet.Send(toClient);
         }
 
-        private static string FormatReason(PasteRejectReason reason)
+        internal static string FormatPasteRejectReason(PasteRejectReason reason)
         {
             return reason switch
             {
+                PasteRejectReason.None => "No error (internal).",
+                PasteRejectReason.InvalidProjection => "Invalid projection (missing payload or not ready to paste).",
+                PasteRejectReason.InvalidPayload => "Invalid payload for paste.",
+                PasteRejectReason.InvalidPacket => "Invalid paste request packet or send failed (wrong game mode).",
                 PasteRejectReason.NotHost => "Only host can paste in multiplayer.",
                 PasteRejectReason.AreaLimit => "Projection exceeds area limits.",
                 PasteRejectReason.VolumeLimit => "Projection exceeds tile volume limit.",
@@ -181,6 +203,50 @@ namespace ArchitectsStencilMod.Core.Server
                 PasteRejectReason.AlreadyActive => "Paste operation already active.",
                 _ => "Invalid or unsupported paste request.",
             };
+        }
+
+        private static void RegisterClientPendingAck(int requestId)
+        {
+            ClientPendingAcks.Add(new PendingClientAck
+            {
+                RequestId = requestId,
+                StartGameUpdate = Main.GameUpdateCount,
+            });
+        }
+
+        private static void RemoveClientPendingAck(int requestId)
+        {
+            for (int i = ClientPendingAcks.Count - 1; i >= 0; i--)
+            {
+                if (ClientPendingAcks[i].RequestId == requestId)
+                    ClientPendingAcks.RemoveAt(i);
+            }
+        }
+
+        /// <summary>Client only: drops stale pending requests if the server never answered in time.</summary>
+        internal static void TickClientPendingAckTimeouts()
+        {
+            if (Main.netMode != NetmodeID.MultiplayerClient || ClientPendingAcks.Count == 0)
+                return;
+
+            var projectionSystem = ModContent.GetInstance<ProjectionSystem>();
+            var pastingSystem = ModContent.GetInstance<PastingSystem>();
+            uint now = Main.GameUpdateCount;
+
+            for (int i = ClientPendingAcks.Count - 1; i >= 0; i--)
+            {
+                PendingClientAck p = ClientPendingAcks[i];
+                if (now - p.StartGameUpdate <= ClientAckTimeoutGameUpdates)
+                    continue;
+
+                ClientPendingAcks.RemoveAt(i);
+
+                if (!projectionSystem.TryGetProjectionByCorrelationId(Main.LocalPlayer, p.RequestId, out var projection))
+                    continue;
+
+                projection.Unlock();
+                projection.Id = 0;
+            }
         }
     }
 }

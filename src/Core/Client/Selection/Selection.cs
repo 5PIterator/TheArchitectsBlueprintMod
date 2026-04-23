@@ -7,32 +7,32 @@ namespace ArchitectsStencilMod.Core
 {
     /// <summary>
     /// Represents the primary region in the world that The Architect's Stencil operates on.
-    /// For now this is a rectangle plus a tile selection mask.
+    /// For now this is a rectangle plus a tile inclusion mask.
     ///
     /// Selection semantics:
-    /// - The blueprint owns a per-tile list for the current <see cref="Bounds"/>.
-    /// - Each tile has a mutable <see cref="BoundedTile.Selected"/> flag.
+    /// - The selection owns a per-tile list for the current <see cref="Bounds"/>.
+    /// - Each tile has a mutable <see cref="BoundedTile.Included"/> flag.
     /// </summary>
-    public class Blueprint
+    public class Selection
     {
         /// <summary>
         /// A tile at a relative position within a bounded region.
         /// Relative is the canonical position; world position is Bounds.Location + Relative.
         /// Tile data is not stored; it is gathered from coordinates when requested.
         /// </summary>
-        public sealed class BoundedTile(Point relative, bool selected = true)
+        public sealed class BoundedTile(Point relative, bool included = true)
         {
             public Point Relative { get; } = relative;
-            public bool Selected { get; set; } = selected;
+            public bool Included { get; set; } = included;
         }
 
         /// <summary>
-        /// World-space bounds of the blueprint, in tile coordinates.
+        /// World-space bounds of the selection, in tile coordinates.
         /// </summary>
         public Rectangle Bounds { get; private set; } = Rectangle.Empty;
 
         /// <summary>
-        /// Whether this blueprint has been defined.
+        /// Whether this selection has been defined.
         /// </summary>
         public bool IsDefined => !Bounds.IsEmpty;
 
@@ -44,12 +44,12 @@ namespace ArchitectsStencilMod.Core
         private readonly List<BoundedTile> _tiles = [];
 
         /// <summary>
-        /// Top-left of the blueprint in tile coordinates.
+        /// Top-left of the selection in tile coordinates.
         /// </summary>
         public Vector2 TilePosition => new(Bounds.X, Bounds.Y);
 
         /// <summary>
-        /// Size of the blueprint in tiles.
+        /// Size of the selection in tiles.
         /// </summary>
         public Vector2 TileSize => new(Bounds.Width, Bounds.Height);
 
@@ -57,7 +57,7 @@ namespace ArchitectsStencilMod.Core
         {
             int oldWidth = Bounds.Width;
             int oldHeight = Bounds.Height;
-            BoundedTile[]? previous = _tiles.Count > 0 ? _tiles.ToArray() : null;
+            BoundedTile[]? previous = _tiles.Count > 0 ? [.. _tiles] : null;
 
             Bounds = bounds;
 
@@ -68,22 +68,22 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            // Rebuild tile list for new bounds, preserving selection state where possible.
+            // Rebuild tile list for new bounds, preserving inclusion state where possible.
             for (int y = 0; y < Bounds.Height; y++)
             {
                 for (int x = 0; x < Bounds.Width; x++)
                 {
-                    bool selected = true;
+                    bool included = true;
                     if (previous is not null
                         && oldWidth > 0
                         && oldHeight > 0
                         && (uint)x < (uint)oldWidth
                         && (uint)y < (uint)oldHeight)
                     {
-                        selected = previous[y * oldWidth + x].Selected;
+                        included = previous[y * oldWidth + x].Included;
                     }
 
-                    _tiles.Add(new BoundedTile(new Point(x, y), selected));
+                    _tiles.Add(new BoundedTile(new Point(x, y), included));
                 }
             }
         }
@@ -94,9 +94,9 @@ namespace ArchitectsStencilMod.Core
             _tiles.Clear();
         }
 
-        public bool IsTileSelected(Point world)
+        public bool IsTileIncluded(Point world)
         {
-            return TryWorldToRelative(world, out var rel) && TryGetTileByRelative(rel, out var t) && t.Selected;
+            return TryWorldToRelative(world, out var rel) && TryGetTileByRelative(rel, out var t) && t.Included;
         }
 
         public bool TryGetTile(Point world, out BoundedTile boundedTile)
@@ -137,7 +137,7 @@ namespace ArchitectsStencilMod.Core
 
         /// <summary>
         /// Converts a world position to the relative position within <see cref="Bounds"/>.
-        /// Returns false if the world position is outside the blueprint.
+        /// Returns false if the world position is outside the selection.
         /// </summary>
         public bool TryWorldToRelative(Point world, out Point relative)
         {
@@ -166,10 +166,10 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// World tile coordinates for tiles in this blueprint that are not <see cref="BoundedTile.Selected"/>.
-        /// Used for selection-mask overlays (blueprint / projection).
+        /// World tile coordinates for tiles in this selection that are not <see cref="BoundedTile.Included"/>.
+        /// Used for exclusion-mask overlays (selection / projection).
         /// </summary>
-        public Point[] BuildUnselectedTilePoints()
+        public Point[] BuildExcludedTilePoints()
         {
             IReadOnlyList<BoundedTile> tiles = Tiles;
             if (tiles.Count == 0) return [];
@@ -178,7 +178,7 @@ namespace ArchitectsStencilMod.Core
             for (int i = 0; i < tiles.Count; i++)
             {
                 var t = tiles[i];
-                if (t.Selected) continue;
+                if (t.Included) continue;
                 points.Add(new Point(boundsOrigin.X + t.Relative.X, boundsOrigin.Y + t.Relative.Y));
             }
             return points.Count == 0 ? [] : points.ToArray();
@@ -200,9 +200,9 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Marks all tiles in the given rectangle as selected (clamped to <see cref="Bounds"/>).
+        /// Marks all tiles in the given rectangle as included (clamped to <see cref="Bounds"/>).
         /// </summary>
-        public void SelectTiles(Rectangle tileRect)
+        public void IncludeTiles(Rectangle tileRect)
         {
             if (Bounds.IsEmpty)
             {
@@ -221,16 +221,16 @@ namespace ArchitectsStencilMod.Core
                 {
                     if (TryGetTileByRelative(new Point(x - Bounds.X, y - Bounds.Y), out var t))
                     {
-                        t.Selected = true;
+                        t.Included = true;
                     }
                 }
             }
         }
 
         /// <summary>
-        /// Marks all tiles in the given rectangle as deselected (clamped to <see cref="Bounds"/>).
+        /// Marks all tiles in the given rectangle as excluded (clamped to <see cref="Bounds"/>).
         /// </summary>
-        public void DeselectTiles(Rectangle tileRect)
+        public void ExcludeTiles(Rectangle tileRect)
         {
             if (Bounds.IsEmpty)
             {
@@ -249,16 +249,16 @@ namespace ArchitectsStencilMod.Core
                 {
                     if (TryGetTileByRelative(new Point(x - Bounds.X, y - Bounds.Y), out var t))
                     {
-                        t.Selected = false;
+                        t.Included = false;
                     }
                 }
             }
         }
 
         /// <summary>
-        /// Snapshot of selected tile coordinates from this blueprint.
+        /// Snapshot of included tile coordinates from this selection.
         /// Only includes tiles where getSourceTile returns a value (filters by source availability).
-        /// Used when constructing a <see cref="Projection"/> from a live blueprint (before <see cref="Projection.LoadPayloadFromWorld"/>).
+        /// Used when constructing a <see cref="Projection"/> from a live selection (before <see cref="Projection.LoadPayloadFromWorld"/>).
         /// </summary>
         public IReadOnlyList<BoundedTile> SnapshotTiles(Func<Point, Tile?> getSourceTile)
         {
@@ -273,7 +273,7 @@ namespace ArchitectsStencilMod.Core
             for (int i = 0; i < Tiles.Count; i++)
             {
                 var t = Tiles[i];
-                if (!t.Selected)
+                if (!t.Included)
                 {
                     continue;
                 }
@@ -283,7 +283,7 @@ namespace ArchitectsStencilMod.Core
                     continue;
                 }
 
-                result.Add(new BoundedTile(t.Relative, selected: true));
+                result.Add(new BoundedTile(t.Relative, included: true));
             }
             return result;
         }
@@ -306,4 +306,3 @@ namespace ArchitectsStencilMod.Core
         }
     }
 }
-

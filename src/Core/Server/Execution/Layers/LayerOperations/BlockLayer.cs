@@ -18,9 +18,9 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
 
-        /// <summary>At most one <see cref="Blueprint.BoundedTile"/> (this relative only). No multi-cell frame expansion.</summary>
-        public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
-            IsBlock(tile.Subject) ? [new Blueprint.BoundedTile(tile.Relative, selected: true)] : [];
+        /// <summary>At most one <see cref="Selection.BoundedTile"/> (this relative only). No multi-cell frame expansion.</summary>
+        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
+            IsBlock(tile.Subject) ? [new Selection.BoundedTile(tile.Relative, included: true)] : [];
 
         /// <summary>Classifies <paramref name="subjectTile"/> (source-side intent vs target world per <see cref="PasteTile.SubjectType"/>).</summary>
         private static bool IsBlock(Tile subjectTile)

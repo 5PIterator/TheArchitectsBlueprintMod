@@ -9,7 +9,7 @@ using ArchitectsStencilMod.Utils;
 namespace ArchitectsStencilMod.Content.Items
 {
 	/// <summary>
-	/// COPY STICK: creates and moves a Copy Projection of the active Blueprint.
+	/// COPY STICK: creates and moves a Copy Projection of the active Selection.
 	/// Usage:
 	/// - Left click: place or confirm a projection.
 	/// - Left hold: drag the projection before release.

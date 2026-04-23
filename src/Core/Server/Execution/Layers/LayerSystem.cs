@@ -30,7 +30,7 @@ namespace ArchitectsStencilMod.Core.Layers
         public static LayerResult Fail() => new(false, [], null);
     }
 
-    internal readonly record struct LayerIdentifyResult(Layer Layer, IReadOnlyList<Blueprint.BoundedTile> Tiles, bool CanPlace);
+    internal readonly record struct LayerIdentifyResult(Layer Layer, IReadOnlyList<Selection.BoundedTile> Tiles, bool CanPlace);
 
     internal sealed class LayerPipeline
     {
@@ -159,7 +159,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 if (claimedTypes.Contains(layer.LayerType))
                     continue;
 
-                IReadOnlyList<Blueprint.BoundedTile> tiles = layer.Identify(in pasteTile, in identifyLookup);
+                IReadOnlyList<Selection.BoundedTile> tiles = layer.Identify(in pasteTile, in identifyLookup);
                 if (tiles.Count == 0)
                     continue;
 

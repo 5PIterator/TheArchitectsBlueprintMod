@@ -11,11 +11,11 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private DetailLayer() : base("Detail", LayerType.Detail) { }
 
-        public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _)
+        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _)
         {
             Tile subjectTile = tile.Subject;
             bool hasDetail = subjectTile.IsActuated || subjectTile.BlockType != BlockType.Solid;
-            return hasDetail ? [new Blueprint.BoundedTile(tile.Relative, selected: true)] : [];
+            return hasDetail ? [new Selection.BoundedTile(tile.Relative, included: true)] : [];
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context)

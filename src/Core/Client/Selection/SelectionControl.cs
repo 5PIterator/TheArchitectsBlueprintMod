@@ -6,12 +6,12 @@ using Terraria.ModLoader;
 namespace ArchitectsStencilMod.Core
 {
     /// <summary>
-    /// Camera-mode-like interactive selection for a player's Blueprint bounds.
+    /// Camera-mode-like interactive gesture handler for a player's Selection bounds.
     /// Driven by <see cref="ToolActionManager"/> for PIN/SET left-click/hold/release; right-click cancel is handled there.
     /// <para/>
     /// In-progress gestures can be canceled via <see cref="CancelGesture"/> (e.g. tool right-click).
     /// </summary>
-    public sealed class BlueprintControl : ModSystem
+    public sealed class SelectionControl : ModSystem
     {
         private const int TilePixelSize = 16;
         private const int HandleThicknessPx = 8;
@@ -62,7 +62,7 @@ namespace ArchitectsStencilMod.Core
             public Mode Mode;
             public DragKind DragKind;
 
-            public Point FixedPoint; // Used for EdgeSelection (fixed B).
+            public Point FixedPoint; // Used for EdgeSelection (anchor for point A).
 
             public Point DragStartCursorTile;
             public Rectangle DragStartBounds;
@@ -72,25 +72,20 @@ namespace ArchitectsStencilMod.Core
 
         private readonly PlayerState[] _states = new PlayerState[Main.maxPlayers];
 
-        public static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
+        public static SelectionSystem SelectionSystem => ModContent.GetInstance<SelectionSystem>();
 
         /// <summary>Begins a PIN gesture (left click).</summary>
         public void BeginPin(Player player, Point cursorTile)
         {
             var state = GetState(player);
 
-            Blueprint blueprint = BlueprintSystem.GetBlueprint(player);
+            // PIN always starts a new selection (clears prior bounds and per-tile inclusion state).
+            SelectionSystem.NewSelection(player);
 
-            // Default gesture: place Edge B immediately and drag Edge A while holding.
-            // PIN always starts fresh. SET only starts fresh if no blueprint exists.
-            if (!blueprint.IsDefined)
-            {
-                BlueprintSystem.NewBlueprint(player);
-            }
-
-            BlueprintSystem.SetPoints(player, cursorTile, cursorTile);
+            // Edge gesture: anchor point A on first click, drag point B while holding.
+            SelectionSystem.SetPoints(player, cursorTile, cursorTile);
             state.Mode = Mode.EdgeSelection;
-            state.FixedPoint = cursorTile; // fixed B
+            state.FixedPoint = cursorTile; // point A
         }
 
         /// <summary>Begins a SET gesture (left click).</summary>
@@ -98,18 +93,18 @@ namespace ArchitectsStencilMod.Core
         {
             var state = GetState(player);
 
-            Blueprint blueprint = BlueprintSystem.GetBlueprint(player);
+            Selection selection = SelectionSystem.GetSelection(player);
 
-            if (blueprint.IsDefined)
+            if (selection.IsDefined)
             {
-                Rectangle screenBounds = blueprint.GetScreenPixelBounds(Main.screenPosition, TilePixelSize);
+                Rectangle screenBounds = selection.GetScreenPixelBounds(Main.screenPosition, TilePixelSize);
                 Point mouse = new(Main.mouseX, Main.mouseY);
 
                 HitRegion region = HitTest(player, screenBounds, mouse);
                 DragKind dragKind = DragKindFromHit(region);
                 if (dragKind != DragKind.None)
                 {
-                    BeginDrag(state, dragKind, player, blueprint, cursorTile);
+                    BeginDrag(state, dragKind, player, selection, cursorTile);
                     return;
                 }
             }
@@ -120,8 +115,8 @@ namespace ArchitectsStencilMod.Core
         {
             var state = GetState(player);
 
-            Blueprint blueprint = BlueprintSystem.GetBlueprint(player);
-            UpdateDrag(state, blueprint, player, cursorTile);
+            Selection selection = SelectionSystem.GetSelection(player);
+            UpdateDrag(state, selection, player, cursorTile);
         }
 
         /// <summary>Ends the current left-button gesture (release).</summary>
@@ -144,20 +139,20 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            var blueprint = BlueprintSystem.GetBlueprint(player);
+            var selection = SelectionSystem.GetSelection(player);
 
             if (state.Mode == Mode.EdgeSelection)
             {
-                BlueprintSystem.SetPoints(player, state.FixedPoint, state.FixedPoint);
+                SelectionSystem.SetPoints(player, state.FixedPoint, state.FixedPoint);
                 state.Mode = Mode.None;
                 state.DragKind = DragKind.None;
                 return;
             }
 
-            if (state.Mode == Mode.Drag && blueprint.IsDefined)
+            if (state.Mode == Mode.Drag && selection.IsDefined)
             {
-                BlueprintSystem.SetBounds(player, state.DragStartBounds);
-                BlueprintSystem.SetPoints(player, state.DragStartPointA, state.DragStartPointB);
+                SelectionSystem.SetBounds(player, state.DragStartBounds);
+                SelectionSystem.SetPoints(player, state.DragStartPointA, state.DragStartPointB);
                 state.Mode = Mode.None;
                 state.DragKind = DragKind.None;
             }
@@ -166,36 +161,36 @@ namespace ArchitectsStencilMod.Core
             state.DragKind = DragKind.None;
         }
 
-        private static void BeginDrag(PlayerState state, DragKind kind, Player player, Blueprint blueprint, Point cursorTile)
+        private static void BeginDrag(PlayerState state, DragKind kind, Player player, Selection selection, Point cursorTile)
         {
             state.Mode = Mode.Drag;
             state.DragKind = kind;
             state.DragStartCursorTile = cursorTile;
-            state.DragStartBounds = blueprint.Bounds;
+            state.DragStartBounds = selection.Bounds;
 
-            if (BlueprintSystem.TryGetPoints(player, out var a, out var b))
+            if (SelectionSystem.TryGetPoints(player, out var a, out var b))
             {
                 state.DragStartPointA = a;
                 state.DragStartPointB = b;
             }
             else
             {
-                // Shouldn't happen for a defined blueprint, but keep invariants safe.
-                state.DragStartPointA = new Point(blueprint.Bounds.Left, blueprint.Bounds.Top);
-                state.DragStartPointB = new Point(blueprint.Bounds.Right - 1, blueprint.Bounds.Bottom - 1);
+                // Shouldn't happen for a defined selection, but keep invariants safe.
+                state.DragStartPointA = new Point(selection.Bounds.Left, selection.Bounds.Top);
+                state.DragStartPointB = new Point(selection.Bounds.Right - 1, selection.Bounds.Bottom - 1);
             }
         }
 
-        private static void UpdateDrag(PlayerState state, Blueprint blueprint, Player player, Point cursorTile)
+        private static void UpdateDrag(PlayerState state, Selection selection, Player player, Point cursorTile)
         {
 
             if (state.Mode == Mode.EdgeSelection)
             {
-                BlueprintSystem.SetPoints(player, cursorTile, state.FixedPoint);
+                SelectionSystem.SetPoints(player, state.FixedPoint, cursorTile);
                 return;
             }
 
-            if (state.Mode != Mode.Drag || state.DragKind == DragKind.None || !blueprint.IsDefined)
+            if (state.Mode != Mode.Drag || state.DragKind == DragKind.None || !selection.IsDefined)
             {
                 return;
             }
@@ -203,11 +198,11 @@ namespace ArchitectsStencilMod.Core
             switch (state.DragKind)
             {
                 case DragKind.PointA:
-                    BlueprintSystem.SetPoints(player, cursorTile, state.DragStartPointB);
+                    SelectionSystem.SetPoints(player, cursorTile, state.DragStartPointB);
                     return;
 
                 case DragKind.PointB:
-                    BlueprintSystem.SetPoints(player, state.DragStartPointA, cursorTile);
+                    SelectionSystem.SetPoints(player, state.DragStartPointA, cursorTile);
                     return;
 
                 case DragKind.Move:
@@ -215,14 +210,14 @@ namespace ArchitectsStencilMod.Core
                     Point delta = new(cursorTile.X - state.DragStartCursorTile.X, cursorTile.Y - state.DragStartCursorTile.Y);
                     Rectangle b = state.DragStartBounds;
                     var moved = new Rectangle(b.X + delta.X, b.Y + delta.Y, b.Width, b.Height);
-                    BlueprintSystem.SetBounds(player, moved);
+                    SelectionSystem.SetBounds(player, moved);
                     return;
                 }
 
                 default:
                 {
                     Rectangle r = ResizeFromCursor(state.DragStartBounds, state.DragKind, cursorTile);
-                    BlueprintSystem.SetBounds(player, r);
+                    SelectionSystem.SetBounds(player, r);
                     return;
                 }
             }
@@ -253,7 +248,7 @@ namespace ArchitectsStencilMod.Core
         private static HitRegion HitTest(Player player, Rectangle screenBounds, Point mouse)
         {
             // Point A/B handles (prefer these over corner handles so dragging endpoints feels "sticky").
-            if (BlueprintSystem.TryGetPoints(player, out var a, out var b))
+            if (SelectionSystem.TryGetPoints(player, out var a, out var b))
             {
                 if (GetPointHandleRect(a).Contains(mouse))
                 {

@@ -21,19 +21,19 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         public enum ToolAction
         {
-            /// <summary>Starts a fresh blueprint bounds selection (pin gesture).</summary>
+            /// <summary>Starts a fresh selection bounds (pin gesture).</summary>
             PIN = 0,
-            /// <summary>Edits an existing blueprint's bounds, or falls back to PIN if undefined.</summary>
+            /// <summary>Edits an existing selection's bounds, or falls back to PIN if undefined.</summary>
             SET = 1,
-            /// <summary>Adds tiles to the current blueprint or projection selection via rectangle edit.</summary>
-            ADD = 2,
-            /// <summary>Removes tiles from the current blueprint or projection selection via rectangle edit.</summary>
-            REMOVE = 3,
-            /// <summary>Creates or moves a copy projection linked to the active blueprint.</summary>
+            /// <summary>Includes tiles in the current selection or projection via rectangle edit.</summary>
+            INCLUDE = 2,
+            /// <summary>Excludes tiles from the current selection or projection via rectangle edit.</summary>
+            EXCLUDE = 3,
+            /// <summary>Creates or moves a copy projection linked to the active selection.</summary>
             COPY = 4,
             /// <summary>Starts or cancels paste against the projection under the cursor.</summary>
             PASTE = 5,
-            /// <summary>Removes either the blueprint or the projection under the cursor.</summary>
+            /// <summary>Removes either the selection or the projection under the cursor.</summary>
             RESET = 6,
         }
 
@@ -57,11 +57,10 @@ namespace ArchitectsStencilMod.Core
             RightRelease
         }
 
-        private static BlueprintControl BlueprintControl => ModContent.GetInstance<BlueprintControl>();
-        private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
+        private static SelectionControl SelectionControl => ModContent.GetInstance<SelectionControl>();
         private static SelectionSystem SelectionSystem => ModContent.GetInstance<SelectionSystem>();
+        private static InclusionControl InclusionControl => ModContent.GetInstance<InclusionControl>();
         private static ProjectionSystem ProjectionSystem => ModContent.GetInstance<ProjectionSystem>();
-
         private static ProjectionControl ProjectionControl => ModContent.GetInstance<ProjectionControl>();
         private static PastingSystem PastingSystem => ModContent.GetInstance<PastingSystem>();
 
@@ -78,8 +77,8 @@ namespace ArchitectsStencilMod.Core
             {
                 ToolAction.PIN => "PIN",
                 ToolAction.SET => "SET",
-                ToolAction.ADD => "ADD",
-                ToolAction.REMOVE => "RMV",
+                ToolAction.INCLUDE => "INC",
+                ToolAction.EXCLUDE => "EXC",
                 ToolAction.COPY => "CPY",
                 ToolAction.PASTE => "PST",
                 ToolAction.RESET => "RST",
@@ -109,8 +108,8 @@ namespace ArchitectsStencilMod.Core
                         HandleSet(key, player, cursorTile);
                         return;
 
-                    case ToolAction.ADD:
-                    case ToolAction.REMOVE:
+                    case ToolAction.INCLUDE:
+                    case ToolAction.EXCLUDE:
                         HandleEdit(action, key, player, cursorTile);
                         return;
 
@@ -125,7 +124,7 @@ namespace ArchitectsStencilMod.Core
                     case ToolAction.RESET:
                         // Apply hit-test reset only on discrete click keys (not hold/release noise).
                         if (key is ToolActionKey.LeftClick or ToolActionKey.RightClick)
-                            ApplyContextResetHitTest(player, cursorTile);
+                            ApplyContextResetHitTest(player, action, cursorTile);
                         return;
 
                     default:
@@ -139,26 +138,26 @@ namespace ArchitectsStencilMod.Core
             }
         }
 
-        /// <summary>Runs PIN blueprint gestures, treating right-click as cancel-only.</summary>
+        /// <summary>Runs PIN selection gestures, treating right-click as cancel-only.</summary>
         private static void HandlePin(ToolActionKey key, Player player, Point cursorTile)
         {
             switch (key)
             {
                 case ToolActionKey.LeftClick:
-                    BlueprintControl.BeginPin(player, cursorTile);
+                    SelectionControl.BeginPin(player, cursorTile);
                     return;
 
                 case ToolActionKey.LeftHold:
-                    BlueprintControl.UpdateGesture(player, cursorTile);
+                    SelectionControl.UpdateGesture(player, cursorTile);
                     return;
 
                 case ToolActionKey.LeftRelease:
-                    BlueprintControl.EndGesture(player);
+                    SelectionControl.EndGesture(player);
                     return;
 
                 case ToolActionKey.RightClick:
-                    BlueprintControl.CancelGesture(player);
-                    BlueprintSystem.ClearBlueprint(player);
+                    SelectionControl.CancelGesture(player);
+                    SelectionSystem.ClearSelection(player);
                     return;
 
                 default:
@@ -166,33 +165,33 @@ namespace ArchitectsStencilMod.Core
             }
         }
 
-        /// <summary>Runs SET when a blueprint exists, otherwise falls back to PIN behavior.</summary>
+        /// <summary>Runs SET when a selection exists, otherwise falls back to PIN behavior.</summary>
         private static void HandleSet(ToolActionKey key, Player player, Point cursorTile)
         {
             switch (key)
             {
                 case ToolActionKey.LeftClick:
-                    var blueprint = BlueprintSystem.GetBlueprint(player);
-                    if (!blueprint.IsDefined)
+                    var selection = SelectionSystem.GetSelection(player);
+                    if (!selection.IsDefined)
                     {
-                        BlueprintControl.BeginPin(player, cursorTile);
+                        SelectionControl.BeginPin(player, cursorTile);
                     }
                     else
                     {
-                        BlueprintControl.BeginSet(player, cursorTile);
+                        SelectionControl.BeginSet(player, cursorTile);
                     }
                     return;
 
                 case ToolActionKey.LeftHold:
-                    BlueprintControl.UpdateGesture(player, cursorTile);
+                    SelectionControl.UpdateGesture(player, cursorTile);
                     return;
 
                 case ToolActionKey.LeftRelease:
-                    BlueprintControl.EndGesture(player);
+                    SelectionControl.EndGesture(player);
                     return;
 
                 case ToolActionKey.RightClick:
-                    BlueprintControl.CancelGesture(player);
+                    SelectionControl.CancelGesture(player);
                     return;
 
                 default:
@@ -200,30 +199,28 @@ namespace ArchitectsStencilMod.Core
             }
         }
 
-        /// <summary>Maps editable ADD/REMOVE rectangle gestures to the selection system.</summary>
+        /// <summary>Routes INCLUDE/EXCLUDE gestures to <see cref="InclusionControl"/>; the action determines which begin variant is called.</summary>
         private static void HandleEdit(ToolAction action, ToolActionKey key, Player player, Point cursorTile)
         {
-            // --- Translate discrete click/hold/release into selection begin/update/apply; right-click cancels preview.
-
             switch (key)
             {
                 case ToolActionKey.LeftClick:
-                    SelectionSystem.Begin(player, action, cursorTile);
+                    if (action == ToolAction.INCLUDE)
+                        InclusionControl.BeginInc(player, cursorTile);
+                    else
+                        InclusionControl.BeginExc(player, cursorTile);
                     return;
 
                 case ToolActionKey.LeftHold:
-                    SelectionSystem.Update(player, cursorTile);
+                    InclusionControl.UpdateGesture(player, cursorTile);
                     return;
 
                 case ToolActionKey.LeftRelease:
-                    SelectionSystem.Apply(player, cursorTile);
+                    InclusionControl.EndGesture(player, cursorTile);
                     return;
 
                 case ToolActionKey.RightClick:
-                    if (SelectionSystem.TryGetPreview(player, out _, out _, out _))
-                    {
-                        SelectionSystem.Cancel(player);
-                    }
+                    InclusionControl.CancelGesture(player);
                     return;
 
                 default:
@@ -259,27 +256,16 @@ namespace ArchitectsStencilMod.Core
             }
         }
 
-        /// <summary>Starts or cancels paste for the projection under the cursor (local player only).</summary>
+        /// <summary>Starts or stops/cancels paste for the projection under the cursor (local player only). Network is handled in <see cref="PastingSystem"/>.</summary>
         private void HandlePaste(ToolActionKey key, Player player, Point cursorTile)
         {
             // --- Right-click stops an in-flight paste on the hit projection; left-click validates and starts or requests paste.
 
             ArgumentNullException.ThrowIfNull(player);
-
             if (player.whoAmI != Main.myPlayer)
-            {
                 return;
-            }
-
-            // Get the pasting system.
-            if (
-                !ProjectionSystem.TryGetProjectionAt(player, cursorTile, out var projection) ||
-                projection is null ||
-                !projection.IsDefined
-                )
-            {
+            if (!ProjectionSystem.TryGetProjectionAt(player, cursorTile, out var projection) || projection is null || !projection.IsDefined)
                 return;
-            }
 
             // check ToolActionKey first, then handle per Netmode
             switch (key)
@@ -305,49 +291,24 @@ namespace ArchitectsStencilMod.Core
                         return;
                     }
 
-                    // Handle per Netmode.
-                    switch (Main.netMode)
+                    if (!PastingSystem.StartPaste(projection, ClientPreferences.FromLocalConfigs(), out var startReject))
                     {
-                        // Left-click: Single-player: start paste locally.
-                        case NetmodeID.SinglePlayer:
-                            if (!PastingSystem.StartPaste(projection, ClientPreferences.FromLocalConfigs(), out var startReject))
-                            {
-                                Main.NewText($"Paste rejected: {startReject}", Color.OrangeRed);
-                            }
-                            break;
-
-                        case NetmodeID.MultiplayerClient:
-                            // For multiplayer, send a paste request to the server.
-                            if (!PasteNetworking.SendPasteRequest(Mod, player, projection, out var rejectReason))
-                            {
-                                Main.NewText($"Paste request failed: {rejectReason}", Color.OrangeRed);
-                            }
-                            break;
+                        Main.NewText($"Paste rejected: {startReject}", Color.OrangeRed);
                     }
                     break;
+                // Right-click: Run the RESET action.
                 case ToolActionKey.RightClick:
-                    switch (Main.netMode)
-                    {
-                        case NetmodeID.SinglePlayer:
-                            projection.Id = 0;
-                            projection.Unlock();
-                            PastingSystem.StopPaste(projection);
-                            break;
-
-                        case NetmodeID.MultiplayerClient:
-                            PasteNetworking.SendCancelIfPending(Mod, projection);
-                            break;
-                    }
+                    PastingSystem.StopPaste(projection);
                     break;
                 default:
                     return;
             }
         }
 
-        /// <summary>Removes a projection at the cursor, or clears the blueprint when the cursor lies inside defined bounds.</summary>
-        public static void ApplyContextResetHitTest(Player player, Point cursorTile)
+        /// <summary>Removes a projection at the cursor, or clears the selection when the cursor lies inside defined bounds.</summary>
+        public static void ApplyContextResetHitTest(Player player, ToolAction action, Point cursorTile)
         {
-            // --- For local player only: remove projection under cursor, else clear blueprint if cursor is inside bounds.
+            // --- For local player only: remove projection under cursor, else clear selection if cursor is inside bounds.
 
             ArgumentNullException.ThrowIfNull(player);
             if (player.whoAmI != Main.myPlayer)
@@ -355,17 +316,55 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            // Prefer removing a projection at the cursor when one exists.
-            if (ProjectionSystem.RemoveProjectionAt(player, cursorTile))
-            {
-                return;
-            }
+            ProjectionSystem.TryGetProjectionAt(player, cursorTile, out var projection); // returns false if no projection, but we still want to check selection in that case, so ignore the bool result.
 
-            // Otherwise clear the blueprint selection when the cursor lies inside defined bounds.
-            var blueprint = BlueprintSystem.GetBlueprint(player);
-            if (blueprint.IsDefined && blueprint.Bounds.Contains(cursorTile))
+            switch (action)
             {
-                BlueprintSystem.ClearBlueprint(player);
+                // RESET: Reset based on priority (paste > projection > selection)
+                case ToolAction.RESET:
+
+                    if (projection != null && projection.IsDefined)
+                    {
+                        // If the projection is locked (Paste is in progress), Stop the paste.
+                        if (projection.IsLocked)
+                        {
+                            PastingSystem.StopPaste(projection);
+                        }
+                        // Otherwise, remove the projection.
+                        else
+                        {
+                            ProjectionSystem.RemoveProjectionAt(player, cursorTile);
+                        }
+                    }
+                    else
+                    {
+                        // If the projection is not defined, clear the selection under the cursor.
+                        if (SelectionSystem.GetSelection(player).IsDefined && SelectionSystem.GetSelection(player).Bounds.Contains(cursorTile))
+                        {
+                            SelectionSystem.ClearSelection(player);
+                        }
+                    }
+                    break;
+                // PASTE: Stop the paste.
+                case ToolAction.PASTE:
+                    if (projection != null && projection.IsDefined)
+                    {
+                        PastingSystem.StopPaste(projection);
+                    }
+                    break;
+                // COPY: Remove the projection at the cursor.
+                case ToolAction.COPY:
+                    ProjectionSystem.RemoveProjectionAt(player, cursorTile);
+                    break;
+                // PIN/SET: Clear the selection.
+                case ToolAction.PIN|ToolAction.SET:
+                    if (SelectionSystem.GetSelection(player).IsDefined && SelectionSystem.GetSelection(player).Bounds.Contains(cursorTile))
+                    {
+                        SelectionSystem.ClearSelection(player);
+                    }
+                    break;
+                default:
+                    break;
             }
         }
     }

@@ -8,7 +8,7 @@ using static ArchitectsStencilMod.Core.ToolActionManager;
 namespace ArchitectsStencilMod.Content.Items
 {
 	/// <summary>
-	/// PASTE STICK: starts pasting at a projection with left-click and cancels an active paste with right-click (alt-use).
+	/// PASTE STICK: left-click starts paste on a projection; right-click (alt-use) runs the same reset/stop path as RST (stops pastes, removes ghost, may clear in-bounds selection).
 	/// </summary>
 	public class PasteStick : ModItem
 	{
@@ -28,10 +28,10 @@ namespace ArchitectsStencilMod.Content.Items
 			Item.autoReuse = false; // UseItem fires once per click
 		}
 
-		/// <summary>Enables alternate use so right-click maps to paste cancel.</summary>
+		/// <summary>Enables alternate use for right-hand reset/stop (RST-equivalent) behavior.</summary>
 		public override bool AltFunctionUse(Player player) => true;
 
-		/// <summary>Forwards left-click to start paste and cancels paste only when both buttons are pressed.</summary>
+		/// <summary>Left: start/retry paste. Right: PASTE action reset (stops in-flight pastes, then RST hit-test.</summary>
 		public override bool? UseItem(Player player)
 		{
 			// --- Ignore remote players; resolve tile under mouse; dispatch PASTE left vs right.
@@ -42,33 +42,12 @@ namespace ArchitectsStencilMod.Content.Items
 			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
 			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
-			// If the player is using the primary function (left-click), trigger a paste action.
 			if (player.altFunctionUse == 0)
-			{
 				actionManager.Handle(ToolAction.PASTE, ToolActionKey.LeftClick, player, cursorTile);
-			}
-			// If the player is using the alternate function (right-click), only trigger cancel when left is not also held.
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
-			{
-				// Right-click alone does not cancel paste; cancellation is handled by the left+right hold gesture.
-			}
+				actionManager.Handle(ToolAction.PASTE, ToolActionKey.RightClick, player, cursorTile);
 
 			return true;
-		}
-
-		/// <summary>Emits a paste cancel event only when both left and right buttons are held.</summary>
-		public override void HoldItem(Player player)
-		{
-			if (player.whoAmI != Main.myPlayer)
-				return;
-
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
-			var actionManager = ModContent.GetInstance<ToolActionManager>();
-
-			if (Main.mouseLeft && Main.mouseRight)
-			{
-				actionManager.Handle(ToolAction.PASTE, ToolActionKey.RightClick, player, cursorTile);
-			}
 		}
 
 		public override void AddRecipes()

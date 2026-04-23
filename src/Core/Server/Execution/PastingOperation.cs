@@ -216,7 +216,7 @@ namespace ArchitectsStencilMod.Core
             }
 
             PasteTile anchorPasteTile = Lookup.PasteTiles[0];
-            IReadOnlyList<Blueprint.BoundedTile> identified = sweep.Identify(in anchorPasteTile, in Lookup);
+            IReadOnlyList<Selection.BoundedTile> identified = sweep.Identify(in anchorPasteTile, in Lookup);
             if (identified.Count == 0)
             {
                 ClearAllTaskQueues();
@@ -254,6 +254,7 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         internal void Teardown()
         {
+            Projection.Id = 0;
             Projection.Unlock();
         }
 
@@ -391,9 +392,13 @@ namespace ArchitectsStencilMod.Core
             if (_prepIndex >= Projection.SourceTiles.Count)
                 return false;
 
-            // Fetch the next relative source tile and advance the cursor.
-            Point rel = Projection.SourceTiles[_prepIndex].Relative;
+            // Fetch the next source tile, advance the cursor, and respect inclusion (excluded = no place/clear footprint).
+            Selection.BoundedTile sourceCell = Projection.SourceTiles[_prepIndex];
             _prepIndex++;
+            if (!sourceCell.Included)
+                return true;
+
+            Point rel = sourceCell.Relative;
 
             // Skip relatives that are not represented in the payload lookup.
             if (!Lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
@@ -844,7 +849,7 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         private void QueueClearLayer(
             Layer layer,
-            IReadOnlyList<Blueprint.BoundedTile> identified,
+            IReadOnlyList<Selection.BoundedTile> identified,
             in PasteTileLookup lookup,
             HashSet<Point>[] queuedClearByLayer,
             HashSet<Point> restrictClearRelatives,
@@ -875,7 +880,7 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         private void QueuePlaceLayer(
             Layer layer,
-            IReadOnlyList<Blueprint.BoundedTile> identified,
+            IReadOnlyList<Selection.BoundedTile> identified,
             in PasteTileLookup lookup,
             HashSet<Point>[] queuedPlaceByLayer,
             in PasteContext schedulingContext)
@@ -897,20 +902,20 @@ namespace ArchitectsStencilMod.Core
         /// <summary>
         /// Filters identified relatives and returns a detached bounded-tile list.
         /// </summary>
-        private static List<Blueprint.BoundedTile> ClampIdentified(
-            IReadOnlyList<Blueprint.BoundedTile> identified,
+        private static List<Selection.BoundedTile> ClampIdentified(
+            IReadOnlyList<Selection.BoundedTile> identified,
             HashSet<Point> allowedRelatives = null)
         {
             // --- Keep only allowed relatives (when provided) and copy selected flags into a compact list.
 
-            var clamped = new List<Blueprint.BoundedTile>(identified.Count);
+            var clamped = new List<Selection.BoundedTile>(identified.Count);
             for (int i = 0; i < identified.Count; i++)
             {
                 Point relative = identified[i].Relative;
                 if (allowedRelatives is not null && !allowedRelatives.Contains(relative))
                     continue;
 
-                clamped.Add(new Blueprint.BoundedTile(relative, identified[i].Selected));
+                clamped.Add(new Selection.BoundedTile(relative, identified[i].Included));
             }
 
             return clamped;
@@ -926,7 +931,7 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         private static List<PasteTile> CreatePasteTiles(
             Layer layer,
-            IReadOnlyList<Blueprint.BoundedTile> identified,
+            IReadOnlyList<Selection.BoundedTile> identified,
             HashSet<Point> queuedWorldTiles,
             PasteTileResolver resolver,
             bool forClearQueue,
@@ -1067,7 +1072,7 @@ namespace ArchitectsStencilMod.Core
         /// Converts sweep-identified relatives into paste tiles that can be applied in one cheat pass.
         /// </summary>
         private static List<PasteTile> CreateSweepCheatPasteTiles(
-            IReadOnlyList<Blueprint.BoundedTile> identified,
+            IReadOnlyList<Selection.BoundedTile> identified,
             in PasteTileLookup lookup)
         {
             // --- Resolve each identified relative through lookup and keep only resolvable paste tiles.

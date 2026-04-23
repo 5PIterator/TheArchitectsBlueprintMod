@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using ArchitectsStencilMod.UI;
+using ArchitectsStencilMod.Core;
 
 namespace ArchitectsStencilMod.Core.Client
 {
@@ -87,14 +88,16 @@ namespace ArchitectsStencilMod.Core.Client
                 string family = MakeFamily(prefix, s.OverlayId);
                 trackIds.Add(s.OverlayId);
 
-                Color baseHue = s.IsPlacePhase ? Color.LimeGreen : Color.Orange;
+                Color placeHue = ArchitectVisualPalette.PlacePhaseColor;
+                Color clearHue = ArchitectVisualPalette.ClearPhaseColor;
+                Color baseHue = s.IsPlacePhase ? placeHue : clearHue;
 
                 if (s.Pending.Length > 0)
                     OverlaySystem.RegTileFill("pending", s.Pending, baseHue * 0.35f, family);
                 if (s.Clear.Length > 0)
-                    OverlaySystem.RegTileFill("clear", s.Clear, Color.Orange * 0.6f, family);
+                    OverlaySystem.RegTileFill("clear", s.Clear, clearHue * 0.6f, family);
                 if (s.Place.Length > 0)
-                    OverlaySystem.RegTileFill("place", s.Place, Color.LimeGreen * 0.6f, family);
+                    OverlaySystem.RegTileFill("place", s.Place, placeHue * 0.6f, family);
                 if (s.Done.Length > 0)
                     OverlaySystem.RegTileFill("done", s.Done, baseHue * 0.1f, family);
             }

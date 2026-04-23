@@ -6,8 +6,8 @@ using Terraria.ModLoader;
 namespace ArchitectsStencilMod.Core
 {
     /// <summary>
-    /// COPY-tool gestures for projections: create from blueprint, pick up and move, cancel restores start-of-drag position.
-    /// Mirrors <see cref="BlueprintControl"/> (gesture state here; list data in <see cref="ProjectionSystem"/>).
+    /// COPY-tool gestures for projections: create from selection, pick up and move, cancel restores start-of-drag position.
+    /// Mirrors <see cref="SelectionControl"/> (gesture state here; list data in <see cref="ProjectionSystem"/>).
     /// Future: handles, resize, and on-projection buttons follow the same Control vs System split.
     /// </summary>
     public sealed class ProjectionControl : ModSystem

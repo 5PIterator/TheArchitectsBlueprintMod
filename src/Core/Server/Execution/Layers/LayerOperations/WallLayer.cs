@@ -12,8 +12,8 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private WallLayer() : base("Wall", LayerType.Wall) { }
 
-        public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
-            tile.Subject.WallType == WallID.None ? [] : [new Blueprint.BoundedTile(tile.Relative, selected: true)];
+        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
+            tile.Subject.WallType == WallID.None ? [] : [new Selection.BoundedTile(tile.Relative, included: true)];
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].WallType != WallID.None;

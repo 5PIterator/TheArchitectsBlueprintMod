@@ -74,17 +74,17 @@ namespace ArchitectsStencilMod.Core.Layers
             return list;
         }
 
-        public static IReadOnlyList<Blueprint.BoundedTile>? GetFrameTilesAsBounded(Point originRel, in Tile sourceTile, in PasteTileLookup lookup)
+        public static IReadOnlyList<Selection.BoundedTile>? GetFrameTilesAsBounded(Point originRel, in Tile sourceTile, in PasteTileLookup lookup)
         {
             var points = GetFrameTiles(originRel, sourceTile, lookup);
             if (points is null || points.Count == 0) return null;
-            var list = new List<Blueprint.BoundedTile>(points.Count);
+            var list = new List<Selection.BoundedTile>(points.Count);
             for (int i = 0; i < points.Count; i++)
-                list.Add(new Blueprint.BoundedTile(points[i], selected: true));
+                list.Add(new Selection.BoundedTile(points[i], included: true));
             return list;
         }
 
-        public static IReadOnlyList<Blueprint.BoundedTile>? GetFrameTilesAsBoundedFromOrigin(Point originRel, in Tile sourceTile)
+        public static IReadOnlyList<Selection.BoundedTile>? GetFrameTilesAsBoundedFromOrigin(Point originRel, in Tile sourceTile)
         {
             if (!sourceTile.HasTile || sourceTile.TileType >= TileLoader.TileCount)
                 return null;
@@ -92,11 +92,11 @@ namespace ArchitectsStencilMod.Core.Layers
             int style = 0, alternate = 0;
             TileObjectData.GetTileInfo(sourceTile, ref style, ref alternate);
             if (style < 0)
-                return [new Blueprint.BoundedTile(originRel, selected: true)];
+                return [new Selection.BoundedTile(originRel, included: true)];
 
             var data = TileObjectData.GetTileData(sourceTile);
             if (data is null)
-                return [new Blueprint.BoundedTile(originRel, selected: true)];
+                return [new Selection.BoundedTile(originRel, included: true)];
 
             int w = Math.Max(1, data.Width);
             int h = Math.Max(1, data.Height);
@@ -112,11 +112,11 @@ namespace ArchitectsStencilMod.Core.Layers
             int topLeftX = originRel.X - ox;
             int topLeftY = originRel.Y - oy;
 
-            var list = new List<Blueprint.BoundedTile>(w * h);
+            var list = new List<Selection.BoundedTile>(w * h);
             for (int dy = 0; dy < h; dy++)
             {
                 for (int dx = 0; dx < w; dx++)
-                    list.Add(new Blueprint.BoundedTile(new Point(topLeftX + dx, topLeftY + dy), selected: true));
+                    list.Add(new Selection.BoundedTile(new Point(topLeftX + dx, topLeftY + dy), included: true));
             }
             return list;
         }

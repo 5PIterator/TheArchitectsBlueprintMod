@@ -14,7 +14,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
 
-        public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
         {
             PasteSubject classify = tile.SubjectType;
             Tile subjectTile = tile.Subject;
@@ -23,7 +23,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 !TileID.Sets.Falling[subjectTile.TileType])
                 return [];
 
-            var list = new List<Blueprint.BoundedTile>();
+            var list = new List<Selection.BoundedTile>();
             for (int dy = 0; ; dy--)
             {
                 var p = new Microsoft.Xna.Framework.Point(tile.Relative.X, tile.Relative.Y + dy);
@@ -34,7 +34,7 @@ namespace ArchitectsStencilMod.Core.Layers
                     t.TileType >= TileLoader.TileCount ||
                     !TileID.Sets.Falling[t.TileType])
                     break;
-                list.Insert(0, new Blueprint.BoundedTile(p, selected: true));
+                list.Insert(0, new Selection.BoundedTile(p, included: true));
             }
             for (int dy = 1; ; dy++)
             {
@@ -46,7 +46,7 @@ namespace ArchitectsStencilMod.Core.Layers
                     t.TileType >= TileLoader.TileCount ||
                     !TileID.Sets.Falling[t.TileType])
                     break;
-                list.Add(new Blueprint.BoundedTile(p, selected: true));
+                list.Add(new Selection.BoundedTile(p, included: true));
             }
             return list.Count > 0 ? list : [];
         }

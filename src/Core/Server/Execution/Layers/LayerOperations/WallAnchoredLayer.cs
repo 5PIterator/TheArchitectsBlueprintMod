@@ -12,7 +12,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
 
-        public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
         {
             Tile subjectTile = tile.Subject;
             if (!FrameOperations.HasWallAnchor(subjectTile))
@@ -20,7 +20,7 @@ namespace ArchitectsStencilMod.Core.Layers
             if (FrameOperations.HasOtherAnchor(subjectTile))
                 return [];
 
-            IReadOnlyList<Blueprint.BoundedTile>? tiles = FrameOperations.GetFrameTilesAsBounded(tile.Relative, subjectTile, lookup);
+            IReadOnlyList<Selection.BoundedTile>? tiles = FrameOperations.GetFrameTilesAsBounded(tile.Relative, subjectTile, lookup);
             return tiles ?? [];
         }
 

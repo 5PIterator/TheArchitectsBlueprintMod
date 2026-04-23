@@ -16,8 +16,8 @@ namespace ArchitectsStencilMod.Core.Layers
         public override bool Match(in PasteTile tile) =>
             tile.Source.HasTile == tile.Target.HasTile && (!tile.Source.HasTile || tile.Source.TileType == tile.Target.TileType);
 
-        public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
-            tile.Subject.HasTile && IsUnknownTileType(tile.Subject.TileType) ? [new Blueprint.BoundedTile(tile.Relative, selected: true)] : [];
+        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
+            tile.Subject.HasTile && IsUnknownTileType(tile.Subject.TileType) ? [new Selection.BoundedTile(tile.Relative, included: true)] : [];
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             tile.Target.HasTile;

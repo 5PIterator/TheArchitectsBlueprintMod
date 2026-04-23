@@ -10,7 +10,7 @@ using Terraria.ModLoader;
 namespace ArchitectsStencilMod.Core
 {
     /// <summary>
-    /// A movable ghost of a <see cref="Blueprint"/>: carries the <see cref="Core.Payload">payload</see>
+    /// A movable ghost of a <see cref="Selection"/>: carries the <see cref="Core.Payload">payload</see>
     /// (detached <c>TileData</c> snapshots per cell), aligned with <see cref="SourceArea"/> / <see cref="TargetArea"/>,
     /// and <see cref="SourceTiles"/> / <see cref="TargetTiles"/> selection masks.
     /// <see cref="SourceArea"/> and <see cref="SourceTiles"/> are fixed when the projection is constructed;
@@ -18,11 +18,11 @@ namespace ArchitectsStencilMod.Core
     /// </summary>
     /// <param name="cutSource">Initial cut-from-source flag (still clamped when there is no payload or no source area).</param>
     /// <param name="sourceArea">World rectangle for world capture / source clear; omit or empty when not tied to a capture region (e.g. JSON-only).</param>
-    /// <param name="sourceTiles">Selection mask in payload-relative coordinates; typically from <see cref="Blueprint.SnapshotTiles"/> or an import document.</param>
+    /// <param name="sourceTiles">Selection mask in payload-relative coordinates; typically from <see cref="Selection.SnapshotTiles"/> or an import document.</param>
     public sealed class Projection(
         bool cutSource = false,
         Rectangle? sourceArea = null,
-        IReadOnlyList<Blueprint.BoundedTile>? sourceTiles = null) : Blueprint
+        IReadOnlyList<Selection.BoundedTile>? sourceTiles = null) : Selection
     {
         private readonly Rectangle _sourceArea = sourceArea ?? Rectangle.Empty;
         private readonly List<BoundedTile> _sourceTiles = CloneSourceTiles(sourceTiles);
@@ -42,7 +42,7 @@ namespace ArchitectsStencilMod.Core
             for (int i = 0; i < sourceTiles.Count; i++)
             {
                 var sourceTile = sourceTiles[i];
-                list.Add(new BoundedTile(sourceTile.Relative, sourceTile.Selected));
+                list.Add(new BoundedTile(sourceTile.Relative, sourceTile.Included));
             }
 
             return list;
@@ -55,7 +55,7 @@ namespace ArchitectsStencilMod.Core
         public int Id { get; internal set; }
 
         /// <summary>
-        /// Owning player index. Projections are owned by the player whose Blueprint created them.
+        /// Owning player index. Projections are owned by the player whose Selection created them.
         /// </summary>
         public int OwnerPlayerIndex { get; internal set; } = -1;
 
@@ -78,7 +78,7 @@ namespace ArchitectsStencilMod.Core
         public Rectangle SourceArea => _sourceArea;
 
         /// <summary>
-        /// World rectangle where the ghost is placed — same as <see cref="Blueprint.Bounds"/>.
+        /// World rectangle where the ghost is placed — same as <see cref="Selection.Bounds"/>.
         /// Live target tiles are <c>Main.tile</c> under this region (see <see cref="TryGetTargetTile"/>).
         /// </summary>
         public Rectangle TargetArea => Bounds;
@@ -94,7 +94,7 @@ namespace ArchitectsStencilMod.Core
         public Payload Payload => _payload;
 
         /// <summary>
-        /// Selection mask in payload-relative coordinates (same grid as <see cref="Blueprint.Bounds"/>).
+        /// Selection mask in payload-relative coordinates (same grid as <see cref="Selection.Bounds"/>).
         /// </summary>
         public IReadOnlyList<BoundedTile> SourceTiles => _sourceTiles;
 
@@ -181,12 +181,12 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Border color for the projection overlay: green when not cutting source, red when
+        /// Border color for the projection overlay: amethyst purple when copying, ruby red when
         /// <see cref="CutSource"/> is enabled.
         /// </summary>
         public Color GetOverlayBorderColor()
         {
-            return CutSource ? Color.Red : Color.LimeGreen;
+            return CutSource ? ArchitectVisualPalette.ProjectionCutColor : ArchitectVisualPalette.ProjectionCopyColor;
         }
 
         /// <summary>
@@ -323,7 +323,7 @@ namespace ArchitectsStencilMod.Core
                     continue;
                 }
 
-                var targetBoundedTile = new BoundedTile(sourceBoundedTile.Relative, sourceBoundedTile.Selected);
+                var targetBoundedTile = new BoundedTile(sourceBoundedTile.Relative, sourceBoundedTile.Included);
                 _targetTiles.Add(targetBoundedTile);
             }
         }

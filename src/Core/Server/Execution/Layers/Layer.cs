@@ -22,7 +22,7 @@ namespace ArchitectsStencilMod.Core.Layers
     /// <summary>
     /// Paste-order layer. Each concrete layer owns match, identify, clear, and place.
     /// After a successful place, <see cref="Place"/> calls <see cref="Consume"/> (and planning uses <see cref="CanConsume"/>).
-    /// Identify returns which relatives (<see cref="Blueprint.BoundedTile"/>) this layer claims for the current source tile (empty = no match).
+    /// Identify returns which relatives (<see cref="Selection.BoundedTile"/>) this layer claims for the current source tile (empty = no match).
     /// CanPlace decides whether placement can be planned given inventory reservation rules.
     /// </summary>
     internal abstract class Layer(string id, LayerType layerType)
@@ -39,7 +39,7 @@ namespace ArchitectsStencilMod.Core.Layers
         /// <summary>
         /// Classifies tiles for this layer using <see cref="PasteTile.IdentifyFace"/> (blueprint <see cref="PasteTile.PayloadCell"/> when placing, live <see cref="PasteTile.Target"/> when clearing).
         /// </summary>
-        public abstract IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup);
+        public abstract IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup);
 
         /// <summary>
         /// Clears the given tiles. Returns the remaining tiles that were not cleared.

@@ -11,7 +11,7 @@ using ArchitectsStencilMod.Utils;
 namespace ArchitectsStencilMod.Content.Items
 {
 	/// <summary>
-	/// EXECUTION WAND: PASTE / RESET only (tier-2 paste branch; projection wand keeps COPY).
+	/// EXECUTION WAND: PASTE / RESET only (tier-2 paste branch; projection wand keeps COPY). Default is RESET so alt-use can open the mode wheel; pick PASTE to paste, then right-click is RST-equivalent.
 	/// </summary>
 	public class ExecutionWand : ModItem
 	{
@@ -83,18 +83,6 @@ namespace ArchitectsStencilMod.Content.Items
 			}
 
 			return true;
-		}
-
-		public override void HoldItem(Player player)
-		{
-			if (player.whoAmI != Main.myPlayer || ActionWheel.IsActive || ActionWheel.IsPendingOpen)
-				return;
-
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
-			var actionManager = ModContent.GetInstance<ToolActionManager>();
-
-			if (_mode == ToolAction.PASTE && Main.mouseLeft && Main.mouseRight)
-				actionManager.Handle(ToolAction.PASTE, ToolActionKey.RightClick, player, cursorTile);
 		}
 
 		public override void AddRecipes()

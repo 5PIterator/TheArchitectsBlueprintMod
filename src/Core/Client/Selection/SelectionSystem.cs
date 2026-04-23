@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using ArchitectsStencilMod.Config;
 using ArchitectsStencilMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -9,260 +7,232 @@ using Terraria.ModLoader;
 namespace ArchitectsStencilMod.Core
 {
     /// <summary>
-    /// Manages tile-selection edits (ADD/REMOVE) within a player's Blueprint (and later, Projections).
-    /// Gesture model: LeftClick begins (sets point A), LeftHold updates preview rectangle,
-    /// LeftRelease applies, RightClick cancels.
+    /// Owns each player's active Selection for the world.
+    /// This system handles only the selection bounds (two points A/B -> a rectangle).
+    /// Tile-level editing of that selection (INCLUDE/EXCLUDE) lives in <see cref="InclusionControl"/>.
     /// </summary>
     public sealed class SelectionSystem : ModSystem
     {
-        private sealed class PlayerEditState
+        private sealed class PlayerSelectionState
         {
-            public bool IsActive;
-            public Point Anchor;
-            public Point Current;
-            public ToolActionManager.ToolAction CurrentAction;
-            public Blueprint Target;
+            public Selection Selection = new();
+            public bool HasPointA;
+            public bool HasPointB;
+            public Point PointA;
+            public Point PointB;
         }
 
-        private readonly PlayerEditState[] _editStates = new PlayerEditState[Main.maxPlayers];
+        private readonly PlayerSelectionState[] _playerStates = new PlayerSelectionState[Main.maxPlayers];
 
-        public void Begin(Player player, ToolActionManager.ToolAction action, Point cursorTile)
+        public Selection GetSelection(Player player)
         {
-            if (action != ToolActionManager.ToolAction.ADD && action != ToolActionManager.ToolAction.REMOVE)
-            {
-                throw new ArgumentOutOfRangeException(nameof(action), action, "SelectionSystem only supports Add/Remove actions.");
-            }
-
-            var blueprintSystem = ModContent.GetInstance<BlueprintSystem>();
-            Blueprint blueprint = blueprintSystem.GetBlueprint(player);
-            var projectionSystem = ModContent.GetInstance<ProjectionSystem>();
-            Blueprint target = blueprint;
-            if (projectionSystem.TryGetProjectionAt(player, cursorTile, out var projection))
-            {
-                target = projection;
-            }
-
-            if (!target.IsDefined)
-            {
-                return;
-            }
-
-            var state = GetState(player);
-            state.IsActive = true;
-            state.CurrentAction = action;
-            state.Target = target;
-            // Anchor/Current are stored in tile coordinates; we convert to a rectangle on demand.
-            state.Anchor = cursorTile;
-            state.Current = cursorTile;
-            UpdateGestureOverlay(player);
+            return GetState(player).Selection;
         }
 
-        public void Update(Player player, Point cursorTile)
+        public bool TryGetPointA(Player player, out Point pointA)
         {
             var state = GetState(player);
-            if (!state.IsActive)
+            if (!state.HasPointA)
             {
-                return;
-            }
-
-            state.Current = cursorTile;
-            UpdateGestureOverlay(player);
-        }
-
-        public void Apply(Player player, Point cursorTile)
-        {
-            var state = GetState(player);
-            if (!state.IsActive)
-            {
-                return;
-            }
-
-            state.Current = cursorTile;
-
-            Blueprint target = state.Target;
-            if (target is null || !target.IsDefined)
-            {
-                state.IsActive = false;
-                ClearGestureOverlay(player);
-                return;
-            }
-
-            Rectangle rect = Blueprint.FromPoints(state.Anchor, state.Current);
-
-            switch (state.CurrentAction)
-            {
-                case ToolActionManager.ToolAction.ADD:
-                    ApplyAddWithVolumeLimit(target, rect);
-                    break;
-
-                case ToolActionManager.ToolAction.REMOVE:
-                    target.DeselectTiles(rect);
-                    break;
-
-                default:
-                    throw new InvalidOperationException($"Unexpected edit action: {state.CurrentAction}");
-            }
-
-            state.IsActive = false;
-            ClearGestureOverlay(player);
-            UpdateTargetOverlay(player, target);
-        }
-
-        public void Cancel(Player player)
-        {
-            var state = GetState(player);
-            state.IsActive = false;
-            state.Target = null;
-            ClearGestureOverlay(player);
-        }
-
-        public bool TryGetPreview(Player player, out ToolActionManager.ToolAction action, out Rectangle rect, out Rectangle targetBounds)
-        {
-            var state = GetState(player);
-            if (!state.IsActive)
-            {
-                action = default;
-                rect = Rectangle.Empty;
-                targetBounds = Rectangle.Empty;
+                pointA = default;
                 return false;
             }
 
-            action = state.CurrentAction;
-            rect = Blueprint.FromPoints(state.Anchor, state.Current);
-            targetBounds = state.Target?.Bounds ?? Rectangle.Empty;
+            pointA = state.PointA;
             return true;
+        }
+
+        public bool TryGetPointB(Player player, out Point pointB)
+        {
+            var state = GetState(player);
+            if (!state.HasPointB)
+            {
+                pointB = default;
+                return false;
+            }
+
+            pointB = state.PointB;
+            return true;
+        }
+
+        public bool TryGetPoints(Player player, out Point pointA, out Point pointB)
+        {
+            var state = GetState(player);
+            if (!state.HasPointA || !state.HasPointB)
+            {
+                pointA = default;
+                pointB = default;
+                return false;
+            }
+
+            pointA = state.PointA;
+            pointB = state.PointB;
+            return true;
+        }
+
+        /// <summary>
+        /// Replaces the current selection instance for this player.
+        /// Intended for "crude" selector tools that always start fresh.
+        /// </summary>
+        public void NewSelection(Player player)
+        {
+            var state = GetState(player);
+            state.Selection = new Selection();
+            state.HasPointA = false;
+            state.HasPointB = false;
+            state.PointA = default;
+            state.PointB = default;
+            UpdateSelectionOverlay(player);
+        }
+
+        /// <summary>
+        /// Refreshes selection world overlay registration for this player (client only).
+        /// </summary>
+        internal void UpdateSelectionOverlay(Player player)
+        {
+            int who = player.whoAmI;
+            string family = $"selection:{who}";
+
+            Selection selection = GetSelection(player);
+            if (!selection.IsDefined)
+            {
+                OverlaySystem.UnregisterFamily(family);
+                return;
+            }
+
+            // Draw the bounds of the selection
+            OverlaySystem.RegTileBounds("bounds", selection.Bounds, ArchitectVisualPalette.SelectionBoundsColor, 2, family);
+            // Draw the unselected tiles of the selection
+            Point[] excluded = selection.BuildExcludedTilePoints();
+            if (excluded.Length > 0)
+                OverlaySystem.RegTileFill("unsel", excluded, Color.Black * 0.35f, family);
+            // Draw the pin points of the selection
+            if (TryGetPoints(player, out var a, out var b))
+            {
+                OverlaySystem.RegPoints("a", [a], ArchitectVisualPalette.PinAColor, family);
+                OverlaySystem.RegPoints("b", [b], ArchitectVisualPalette.PinBColor, family);
+            }
+        }
+
+        private static void UpdateSelection(PlayerSelectionState state)
+        {
+            // Invariant: Selection.Bounds should always reflect whichever endpoints have been provided.
+            if (state.HasPointA && state.HasPointB)
+            {
+                state.Selection.Define(Selection.FromPoints(state.PointA, state.PointB));
+                return;
+            }
+
+            if (state.HasPointA)
+            {
+                state.Selection.Define(new Rectangle(state.PointA.X, state.PointA.Y, 1, 1));
+                return;
+            }
+
+            if (state.HasPointB)
+            {
+                state.Selection.Define(new Rectangle(state.PointB.X, state.PointB.Y, 1, 1));
+                return;
+            }
+
+            state.Selection.Clear();
+        }
+
+        /// <summary>
+        /// Clears the bounds selection entirely for this player.
+        /// </summary>
+        public void ClearSelection(Player player)
+        {
+            var state = GetState(player);
+            state.HasPointA = false;
+            state.HasPointB = false;
+            state.PointA = default;
+            state.PointB = default;
+            state.Selection.Clear();
+            UpdateSelectionOverlay(player);
+        }
+
+        /// <summary>
+        /// Set/drag point A of the selection bounds (tile coordinates).
+        /// </summary>
+        public void SetPointA(Player player, Point tilePosition)
+        {
+            var state = GetState(player);
+            state.PointA = tilePosition;
+            state.HasPointA = true;
+            UpdateSelection(state);
+            UpdateSelectionOverlay(player);
+        }
+
+        /// <summary>
+        /// Set/drag point B of the selection bounds (tile coordinates).
+        /// </summary>
+        public void SetPointB(Player player, Point tilePosition)
+        {
+            var state = GetState(player);
+            state.PointB = tilePosition;
+            state.HasPointB = true;
+            UpdateSelection(state);
+            UpdateSelectionOverlay(player);
+        }
+
+        /// <summary>
+        /// Sets both points A and B in one call (tile coordinates).
+        /// Useful for interactive resize/move so we only rebuild once.
+        /// </summary>
+        public void SetPoints(Player player, Point pointA, Point pointB)
+        {
+            var state = GetState(player);
+            state.PointA = pointA;
+            state.PointB = pointB;
+            state.HasPointA = true;
+            state.HasPointB = true;
+            UpdateSelection(state);
+            UpdateSelectionOverlay(player);
+        }
+
+        /// <summary>
+        /// Defines the selection bounds directly (tile coordinates, inclusive sizing like <see cref="Selection.Bounds"/>).
+        /// </summary>
+        public void SetBounds(Player player, Rectangle bounds)
+        {
+            if (bounds.IsEmpty)
+            {
+                ClearSelection(player);
+                return;
+            }
+
+            var a = new Point(bounds.Left, bounds.Top);
+            var b = new Point(bounds.Right - 1, bounds.Bottom - 1);
+            SetPoints(player, a, b);
         }
 
         public override void OnWorldUnload()
         {
-            for (int i = 0; i < _editStates.Length; i++)
+            for (int i = 0; i < _playerStates.Length; i++)
             {
-                if (_editStates[i] is not { } state)
+                if (_playerStates[i] is not { } state)
                     continue;
 
-                state.IsActive = false;
-                state.Anchor = default;
-                state.Current = default;
-                state.CurrentAction = default;
-                state.Target = null;
+                state.HasPointA = false;
+                state.HasPointB = false;
+                state.PointA = default;
+                state.PointB = default;
+                state.Selection.Clear();
             }
         }
 
-        /// <summary>
-        /// Rebuilds semi-transparent black fills for deselected projection tiles (separate overlay family from projection bounds).
-        /// </summary>
-        internal void UpdateDeselectionOverlays(Player player)
-        {
-            int who = player.whoAmI;
-            string family = $"projection:deselect:{who}";
-            OverlaySystem.UnregisterFamily(family);
-
-            var projectionSystem = ModContent.GetInstance<ProjectionSystem>();
-            IReadOnlyList<Projection> list = projectionSystem.GetProjections(player);
-            for (int i = 0; i < list.Count; i++)
-            {
-                Point[] unsel = list[i].BuildUnselectedTilePoints();
-                if (unsel.Length > 0)
-                    OverlaySystem.RegTileFill($"{i}:u", unsel, Color.Black * 0.25f, family);
-            }
-        }
-
-        private PlayerEditState GetState(Player player)
+        private PlayerSelectionState GetState(Player player)
         {
             ArgumentNullException.ThrowIfNull(player);
 
             int index = player.whoAmI;
-            if (index < 0 || index >= _editStates.Length)
+            if (index < 0 || index >= _playerStates.Length)
             {
                 throw new ArgumentOutOfRangeException(nameof(player), $"Invalid player index: {index}");
             }
 
-            return _editStates[index] ??= new PlayerEditState();
+            return _playerStates[index] ??= new PlayerSelectionState();
         }
-
-        private void UpdateGestureOverlay(Player player)
-        {
-            var state = GetState(player);
-            if (!state.IsActive || state.Target is null || !state.Target.IsDefined)
-            {
-                ClearGestureOverlay(player);
-                return;
-            }
-
-            Rectangle rect = Blueprint.FromPoints(state.Anchor, state.Current);
-            Rectangle targetBounds = state.Target.Bounds;
-            Color c = state.CurrentAction == ToolActionManager.ToolAction.ADD ? Color.LimeGreen : Color.Red;
-            Rectangle clamped = Rectangle.Intersect(targetBounds, rect);
-            int who = player.whoAmI;
-            OverlaySystem.RegTileBounds("preview", clamped, c, 2, $"selection:{who}");
-        }
-
-        private static void ClearGestureOverlay(Player player)
-        {
-            OverlaySystem.UnregisterFamily($"selection:{player.whoAmI}");
-        }
-
-        private static void UpdateTargetOverlay(Player player, Blueprint target)
-        {
-            var blueprintSystem = ModContent.GetInstance<BlueprintSystem>();
-            if (ReferenceEquals(target, blueprintSystem.GetBlueprint(player)))
-                blueprintSystem.UpdateBlueprintOverlay(player);
-            else
-                ModContent.GetInstance<ProjectionSystem>().UpdateProjectionOverlay(player);
-        }
-
-        private static void ApplyAddWithVolumeLimit(Blueprint target, Rectangle tileRect)
-        {
-            var config = ModContent.GetInstance<PastingConfig>();
-            int volumeLimit = config.VolumeLimit;
-            if (volumeLimit <= 0 || target.Bounds.IsEmpty)
-            {
-                return;
-            }
-
-            int selected = CountSelectedTiles(target);
-            if (selected >= volumeLimit)
-            {
-                return;
-            }
-
-            Rectangle area = Rectangle.Intersect(target.Bounds, tileRect);
-            if (area.IsEmpty)
-            {
-                return;
-            }
-
-            for (int x = area.Left; x < area.Right; x++)
-            {
-                for (int y = area.Top; y < area.Bottom; y++)
-                {
-                    if (!target.TryGetTile(new Point(x, y), out var boundedTile) || boundedTile.Selected)
-                    {
-                        continue;
-                    }
-
-                    boundedTile.Selected = true;
-                    selected++;
-                    if (selected >= volumeLimit)
-                    {
-                        return;
-                    }
-                }
-            }
-        }
-
-        private static int CountSelectedTiles(Blueprint target)
-        {
-            int selected = 0;
-            for (int i = 0; i < target.Tiles.Count; i++)
-            {
-                if (target.Tiles[i].Selected)
-                {
-                    selected++;
-                }
-            }
-            return selected;
-        }
-
     }
 }

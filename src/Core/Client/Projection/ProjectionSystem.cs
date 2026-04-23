@@ -15,7 +15,6 @@ namespace ArchitectsStencilMod.Core
     /// </summary>
     public sealed class ProjectionSystem : ModSystem
     {
-        private static readonly Color InventoryOutlineColor = new(139, 69, 19);
 
         private sealed class PlayerProjectionState
         {
@@ -59,33 +58,33 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Creates a projection from the player's blueprint when the cursor lies inside it; returns null on failure.
+        /// Creates a projection from the player's selection when the cursor lies inside it; returns null on failure.
         /// Adds the projection to the player's list and sets <see cref="ActiveProjection"/>.
         /// </summary>
         public Projection NewProjection(Player player, Point cursorTile)
         {
 
-            // Get the blueprint from the blueprint system
-            var blueprintSystem = ModContent.GetInstance<BlueprintSystem>();
-            Blueprint blueprint = blueprintSystem.GetBlueprint(player);
+            // Get the selection from the selection system
+            var selectionSystem = ModContent.GetInstance<SelectionSystem>();
+            Selection selection = selectionSystem.GetSelection(player);
 
-            // Validate the blueprint
-            if (!blueprint.IsDefined || !blueprint.Bounds.Contains(cursorTile))
+            // Validate the selection
+            if (!selection.IsDefined || !selection.Bounds.Contains(cursorTile))
             {
                 return null;
             }
             var config = ModContent.GetInstance<PastingConfig>();
-            if (blueprint.Bounds.Width > config.MaxPasteWidth || blueprint.Bounds.Height > config.MaxPasteHeight)
+            if (selection.Bounds.Width > config.MaxPasteWidth || selection.Bounds.Height > config.MaxPasteHeight)
             {
                 return null;
             }
 
-            // Gather Blueprint rel, origin and source tiles.
-            Point rel = new(cursorTile.X - blueprint.Bounds.X, cursorTile.Y - blueprint.Bounds.Y);
+            // Gather Selection rel, origin and source tiles.
+            Point rel = new(cursorTile.X - selection.Bounds.X, cursorTile.Y - selection.Bounds.Y);
             Point origin = new(cursorTile.X - rel.X, cursorTile.Y - rel.Y);
-            IReadOnlyList<Blueprint.BoundedTile> sourceTiles = blueprint.SnapshotTiles(rel =>
+            IReadOnlyList<Selection.BoundedTile> sourceTiles = selection.SnapshotTiles(rel =>
             {
-                Point world = blueprint.RelativeToWorld(rel);
+                Point world = selection.RelativeToWorld(rel);
                 if (!WorldGen.InWorld(world.X, world.Y))
                 {
                     return null;
@@ -97,20 +96,20 @@ namespace ArchitectsStencilMod.Core
             // Create the projection
             var projection = new Projection(
                 cutSource: false,
-                sourceArea: blueprint.Bounds,
+                sourceArea: selection.Bounds,
                 sourceTiles: sourceTiles)
             {
                 OwnerPlayerIndex = player.whoAmI,
             };
-            projection.Define(new Rectangle(origin.X, origin.Y, blueprint.Bounds.Width, blueprint.Bounds.Height));
+            projection.Define(new Rectangle(origin.X, origin.Y, selection.Bounds.Width, selection.Bounds.Height));
 
-            // Synchronize the selected tiles with the blueprint
-            for (int i = 0; i < blueprint.Tiles.Count; i++)
+            // Synchronize the selected tiles with the selection
+            for (int i = 0; i < selection.Tiles.Count; i++)
             {
-                var t = blueprint.Tiles[i];
+                var t = selection.Tiles[i];
                 if (projection.TryGetTileByRelative(t.Relative, out var pTile))
                 {
-                    pTile.Selected = t.Selected;
+                    pTile.Included = t.Included;
                 }
             }
 
@@ -145,7 +144,7 @@ namespace ArchitectsStencilMod.Core
                 if (!proj.Bounds.IsEmpty)
                 {
                     // CUT vs COPY: border color. Locked: outline only (transparent interior); unlocked: border + tinted fill.
-                    Color c = proj.CutSource ? Color.Red : Color.LimeGreen;
+                    Color c = proj.CutSource ? ArchitectVisualPalette.ProjectionCutColor : ArchitectVisualPalette.ProjectionCopyColor;
                     if (proj.IsLocked)
                         OverlaySystem.RegTileBorder($"{i}:b", proj.Bounds, c, 2, family);
                     else
@@ -154,19 +153,19 @@ namespace ArchitectsStencilMod.Core
                     if (proj.CutSource)
                     {
                         if (proj.IsLocked)
-                            OverlaySystem.RegTileBorder($"{i}:s", proj.SourceArea, Color.Gray, 2, family);
+                            OverlaySystem.RegTileBorder($"{i}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
                         else
-                            OverlaySystem.RegTileBounds($"{i}:s", proj.SourceArea, Color.Gray, 2, family);
+                            OverlaySystem.RegTileBounds($"{i}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
                     }
                 }
             }
 
-            ModContent.GetInstance<SelectionSystem>().UpdateDeselectionOverlays(player);
+            ModContent.GetInstance<InclusionControl>().UpdateExcludedTileOverlays(player);
             UpdateInventoryOverlay(player);
         }
 
         /// <summary>
-        /// Draws brown outlines for each rectangle in <see cref="Projection.Inventories"/>.
+        /// Draws outlines for each rectangle in <see cref="Projection.Inventories"/>.
         /// </summary>
         private void UpdateInventoryOverlay(Player player)
         {
@@ -178,10 +177,15 @@ namespace ArchitectsStencilMod.Core
             int idx = 0;
             for (int i = 0; i < list.Count; i++)
             {
+                bool locked = list[i].IsLocked;
                 IReadOnlyList<Rectangle> inventories = list[i].Inventories;
                 for (int j = 0; j < inventories.Count; j++)
                 {
-                    OverlaySystem.RegTileBorder($"c:{idx}", inventories[j], InventoryOutlineColor, 2, family);
+                    Color c = ArchitectVisualPalette.InventoryOutlineColor;
+                    if (locked)
+                        OverlaySystem.RegTileBorder($"c:{idx}", inventories[j], c, 2, family);
+                    else
+                        OverlaySystem.RegTileBounds($"c:{idx}", inventories[j], c, 2, family);
                     idx++;
                 }
             }

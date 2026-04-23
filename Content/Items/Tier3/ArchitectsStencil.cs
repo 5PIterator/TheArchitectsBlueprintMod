@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -11,7 +12,7 @@ using ArchitectsStencilMod.Utils;
 namespace ArchitectsStencilMod.Content.Items
 {
 	/// <summary>
-	/// ARCHITECT'S STENCIL: PIN / SET / ADD / REMOVE / COPY / PASTE / RESET in one tool via action wheel.
+	/// ARCHITECT'S STENCIL: PIN / SET / INC / EXC / COPY / PASTE / RESET in one tool via action wheel.
 	/// </summary>
 	public class ArchitectsStencil : ModItem
 	{
@@ -87,7 +88,7 @@ namespace ArchitectsStencilMod.Content.Items
 				{
 					IReadOnlyList<ToolAction> actions =
 					[
-						ToolAction.PIN, ToolAction.SET, ToolAction.ADD, ToolAction.REMOVE,
+						ToolAction.PIN, ToolAction.SET, ToolAction.INCLUDE, ToolAction.EXCLUDE,
 						ToolAction.COPY, ToolAction.PASTE, ToolAction.RESET
 					];
 					ActionWheel.OpenToolActionWheel(
@@ -105,7 +106,7 @@ namespace ArchitectsStencilMod.Content.Items
 		/// <summary>Forwards left drag and release; clears stale rectangle preview while the wheel is open.</summary>
 		public override void HoldItem(Player player)
 		{
-			// --- While the wheel is visible, drop rectangle preview; otherwise use an AddStick-style hold chain.
+			// --- While the wheel is visible, drop rectangle preview; otherwise use an IncludeStick-style hold chain.
 
 			if (player.whoAmI != Main.myPlayer)
 				return;

@@ -8,12 +8,12 @@ using static ArchitectsStencilMod.Core.ToolActionManager;
 namespace ArchitectsStencilMod.Content.Items
 {
 	/// <summary>
-	/// PIN STICK: pins a new Blueprint bounds selection.
+	/// PIN STICK: pins a new Selection bounds.
 	/// Usage:
-	/// - Left click: place Pin B and start a fresh Blueprint.
+	/// - Left click: place Pin B and start a fresh Selection.
 	/// - Left hold: drag Pin A to define the bounds.
 	/// - Left release: finalize pins.
-	/// - Right click: cancel the current PIN gesture and remove the active blueprint.
+	/// - Right click: cancel the current PIN gesture and remove the active selection.
 	///
 	/// Note: PIN always starts fresh; use <see cref="SelectionWand"/> for SET-style post-editing.
 	/// </summary>

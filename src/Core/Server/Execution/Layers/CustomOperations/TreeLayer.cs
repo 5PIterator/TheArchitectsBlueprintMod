@@ -32,15 +32,15 @@ namespace ArchitectsStencilMod.Core.Layers
                 || TileID.Sets.Leaves[tileType];
         }
 
-        public override IReadOnlyList<Blueprint.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
         {
             var buffer = new List<Point>();
             CollectTreeRelatives(tile.Relative, tile.SubjectType, in lookup, buffer);
             if (buffer.Count == 0) return [];
 
-            var bounded = new List<Blueprint.BoundedTile>(buffer.Count);
+            var bounded = new List<Selection.BoundedTile>(buffer.Count);
             for (int i = 0; i < buffer.Count; i++)
-                bounded.Add(new Blueprint.BoundedTile(buffer[i], selected: true));
+                bounded.Add(new Selection.BoundedTile(buffer[i], included: true));
             return bounded;
         }
 
