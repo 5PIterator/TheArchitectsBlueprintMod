@@ -317,7 +317,7 @@ namespace ArchitectsStencilMod.Core
             if (projection is null || !projection.HasPayload)
                 return (tileIds, wallIds);
 
-            // Walk payload cells and gather the material IDs needed by interaction-map loading.
+            // Walk all payload cells (order matches foreach on the payload grid; only IDs are collected).
             foreach (PayloadCell cell in projection.Payload.Cells)
             {
                 // If the cell is empty, skip it.

@@ -103,10 +103,9 @@ namespace ArchitectsStencilMod.Core
             };
             projection.Define(new Rectangle(origin.X, origin.Y, selection.Bounds.Width, selection.Bounds.Height));
 
-            // Synchronize the selected tiles with the selection
-            for (int i = 0; i < selection.Tiles.Count; i++)
+            // Synchronize the selected tiles with the selection (2D mask copied by relative)
+            foreach (var t in selection.Tiles)
             {
-                var t = selection.Tiles[i];
                 if (projection.TryGetTileByRelative(t.Relative, out var pTile))
                 {
                     pTile.Included = t.Included;

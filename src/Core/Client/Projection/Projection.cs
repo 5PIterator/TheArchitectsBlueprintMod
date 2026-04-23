@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using ArchitectsStencilMod.Debug;
 using ArchitectsStencilMod.UI;
@@ -12,41 +13,102 @@ namespace ArchitectsStencilMod.Core
     /// <summary>
     /// A movable ghost of a <see cref="Selection"/>: carries the <see cref="Core.Payload">payload</see>
     /// (detached <c>TileData</c> snapshots per cell), aligned with <see cref="SourceArea"/> / <see cref="TargetArea"/>,
-    /// and <see cref="SourceTiles"/> / <see cref="TargetTiles"/> selection masks.
-    /// <see cref="SourceArea"/> and <see cref="SourceTiles"/> are fixed when the projection is constructed;
+    /// and <see cref="SourceTiles"/> / <see cref="TargetTiles"/> walk orders over the 2D snapshot mask.
+    /// <see cref="SourceArea"/> and the initial snapshot set are fixed when the projection is constructed;
     /// fill <see cref="Payload"/> afterward via <see cref="LoadPayloadFromWorld"/> or <see cref="SetPayload"/>.
     /// </summary>
     /// <param name="cutSource">Initial cut-from-source flag (still clamped when there is no payload or no source area).</param>
     /// <param name="sourceArea">World rectangle for world capture / source clear; omit or empty when not tied to a capture region (e.g. JSON-only).</param>
-    /// <param name="sourceTiles">Selection mask in payload-relative coordinates; typically from <see cref="Selection.SnapshotTiles"/> or an import document.</param>
-    public sealed class Projection(
-        bool cutSource = false,
-        Rectangle? sourceArea = null,
-        IReadOnlyList<Selection.BoundedTile>? sourceTiles = null) : Selection
+    /// <param name="sourceTiles">Sparse cell list from <see cref="Selection.SnapshotTiles"/> (payload-relative). Used to build a <see cref="bool"/>[,] snapshot mask on first <see cref="Selection.Define"/>.</param>
+    public sealed class Projection : Selection
     {
-        private readonly Rectangle _sourceArea = sourceArea ?? Rectangle.Empty;
-        private readonly List<BoundedTile> _sourceTiles = CloneSourceTiles(sourceTiles);
+        private readonly Rectangle _sourceArea;
+
+        /// <summary>Initial sparse snapshot: consumed in <see cref="OnAfterDefine"/> to set <see cref="_inSnapshot"/>; then nulled.</summary>
+        private IReadOnlyList<BoundedTile>? _pendingSourceSnapshot;
+
+        /// <summary>True for cells that were present in the initial <see cref="Selection.SnapshotTiles"/>; same width/height as <see cref="Selection.Bounds"/>.</summary>
+        private bool[,]? _inSnapshot;
+
+        /// <summary>Row-major list of <see cref="Point"/> in <see cref="_inSnapshot"/>; paste prep walks in this order.</summary>
+        private Point[] _walk = Array.Empty<Point>();
 
         private Payload _payload = Payload.Empty;
         private readonly List<BoundedTile> _targetTiles = [];
         private readonly List<Rectangle> _inventories = [];
 
-        private static List<BoundedTile> CloneSourceTiles(IReadOnlyList<BoundedTile>? sourceTiles)
+        public Projection(
+            bool cutSource = false,
+            Rectangle? sourceArea = null,
+            IReadOnlyList<BoundedTile>? sourceTiles = null)
+        {
+            _sourceArea = sourceArea ?? Rectangle.Empty;
+            _pendingSourceSnapshot = CopySourceSnapshotForProjection(sourceTiles);
+            CutSource = cutSource;
+        }
+
+        private static IReadOnlyList<BoundedTile>? CopySourceSnapshotForProjection(IReadOnlyList<BoundedTile>? sourceTiles)
         {
             if (sourceTiles is null || sourceTiles.Count == 0)
-            {
-                return [];
-            }
+                return null;
 
             var list = new List<BoundedTile>(sourceTiles.Count);
             for (int i = 0; i < sourceTiles.Count; i++)
             {
-                var sourceTile = sourceTiles[i];
-                list.Add(new BoundedTile(sourceTile.Relative, sourceTile.Included));
+                var t = sourceTiles[i];
+                list.Add(new BoundedTile(t.Relative, t.Included));
             }
-
             return list;
         }
+
+        private static Point[] BuildWalkFromSnapshot(bool[,] snap, int w, int h)
+        {
+            int count = 0;
+            foreach (bool set in snap)
+            {
+                if (set) count++;
+            }
+
+            if (count == 0) return Array.Empty<Point>();
+            var walk = new Point[count];
+            int n = 0;
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    if (snap[x, y]) walk[n++] = new Point(x, y);
+                }
+            }
+
+            return walk;
+        }
+
+        private sealed class SourceTileView(Projection p) : IReadOnlyList<BoundedTile>
+        {
+            public int Count => p._walk.Length;
+
+            public BoundedTile this[int index]
+            {
+                get
+                {
+                    if ((uint)index >= (uint)p._walk.Length)
+                        throw new ArgumentOutOfRangeException(nameof(index));
+                    Point rel = p._walk[index];
+                    bool inc = p.TryGetTileByRelative(rel, out var t) && t.Included;
+                    return new BoundedTile(rel, inc);
+                }
+            }
+
+            public IEnumerator<BoundedTile> GetEnumerator()
+            {
+                for (int i = 0; i < Count; i++)
+                    yield return this[i];
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
+        private SourceTileView? _sourceView;
 
         /// <summary>
         /// Optional id tying this projection to an in-flight paste request (e.g. awaiting ack).
@@ -63,7 +125,7 @@ namespace ArchitectsStencilMod.Core
         /// When true, paste planning includes a source-area clear pass at the original capture area.
         /// Use <see cref="SetCut"/> or <see cref="ToggleCut"/> so the world overlay stays in sync.
         /// </summary>
-        public bool CutSource { get; private set; } = cutSource;
+        public bool CutSource { get; private set; }
 
         /// <summary>
         /// True while a paste operation is active for this projection.
@@ -73,7 +135,7 @@ namespace ArchitectsStencilMod.Core
 
         /// <summary>
         /// World rectangle that was captured into the payload (live <c>Main.tile</c> under this region
-        /// for cut / source-clear). Distinct from <see cref="TargetArea"/>.
+        /// for cut / source clear). Distinct from <see cref="TargetArea"/>.
         /// </summary>
         public Rectangle SourceArea => _sourceArea;
 
@@ -94,13 +156,25 @@ namespace ArchitectsStencilMod.Core
         public Payload Payload => _payload;
 
         /// <summary>
-        /// Selection mask in payload-relative coordinates (same grid as <see cref="Selection.Bounds"/>).
+        /// Snapshot walk for paste: one entry per true cell in the initial 2D snapshot mask; <see cref="BoundedTile.Included"/>
+        /// reflects the current <see cref="Selection"/> inclusion mask at that cell.
         /// </summary>
-        public IReadOnlyList<BoundedTile> SourceTiles => _sourceTiles;
+        public IReadOnlyList<BoundedTile> SourceTiles
+        {
+            get
+            {
+                if (!IsDefined || _walk.Length == 0)
+                {
+                    return Array.Empty<BoundedTile>();
+                }
+
+                return _sourceView ??= new SourceTileView(this);
+            }
+        }
 
         /// <summary>
-        /// Same relatives as <see cref="SourceTiles"/>, indexed against <see cref="TargetArea"/>; refreshed when the projection moves.
-        /// Use <see cref="TryGetTargetTile"/> for live <c>Main.tile</c> references in the target area.
+        /// Target-side walk: same <see cref="Point.Relative"/> as <see cref="SourceTiles"/>, restricted to
+        /// in-bounds world targets when this list was last refreshed; refreshed when the projection moves.
         /// </summary>
         public IReadOnlyList<BoundedTile> TargetTiles => _targetTiles;
 
@@ -209,14 +283,13 @@ namespace ArchitectsStencilMod.Core
             }
 
             _payload = Payload.FromWorld(_sourceArea);
-            //LogPayloadSnapshot("LoadPayloadFromWorld", _sourceArea);
             RefreshTargetTiles();
             UpdateOverlay();
         }
 
         /// <summary>
         /// Replaces the payload grid from a prepared <see cref="Core.Payload"/> (stores an independent copy).
-        /// Does not change <see cref="SourceArea"/> or <see cref="SourceTiles"/>.
+        /// Does not change <see cref="SourceArea"/> or the 2D snapshot walk.
         /// </summary>
         internal void SetPayload(Payload source)
         {
@@ -239,27 +312,7 @@ namespace ArchitectsStencilMod.Core
             CutSource = CutSource && !_sourceArea.IsEmpty && HasPayload;
             RefreshTargetTiles();
             UpdateOverlay();
-            //LogPayloadSnapshot("SetPayload", _sourceArea, importEntryCount: null, selectedCount: SourceTiles.Count);
         }
-
-        /// <summary>Debug: non-null / block-tile counts and bounds when a payload grid is first populated.</summary>
-        //private void LogPayloadSnapshot(string origin, Rectangle sourceRect, int? importEntryCount = null, int? selectedCount = null)
-        //{
-        //    if (!ASMLog.IsDebugEnabled)
-        //        return;
-
-        //    (int nonNull, int blockTiles) = _payload.GetCellStatistics();
-
-        //    string extra = importEntryCount.HasValue
-        //        ? $" importEntries={importEntryCount} selectedTiles={selectedCount ?? 0}"
-        //        : selectedCount.HasValue
-        //            ? $" selectedTiles={selectedCount.Value}"
-        //            : string.Empty;
-
-        //    ASMLog.Debug(
-        //        $"Projection payload created [{origin}] id={Id} owner={OwnerPlayerIndex} grid={_payload.Width}x{_payload.Height} nonNull={nonNull} blockTiles={blockTiles} sourceRect=({sourceRect.X},{sourceRect.Y},{sourceRect.Width},{sourceRect.Height}) targetBounds=({Bounds.X},{Bounds.Y},{Bounds.Width},{Bounds.Height}){extra}",
-        //        "Projection");
-        //}
 
         /// <summary>
         /// Live <c>Main.tile</c> under <see cref="TargetArea"/> at <paramref name="relative"/>.
@@ -303,28 +356,29 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Refreshes <see cref="TargetTiles"/> from <see cref="SourceTiles"/> when the projection moves.
+        /// Refreshes <see cref="TargetTiles"/> from the snapshot walk and current inclusion when the projection moves.
         /// </summary>
         internal void RefreshTargetTiles()
         {
             _targetTiles.Clear();
+            _sourceView = null;
 
-            if (!IsDefined || _sourceTiles.Count == 0)
+            if (!IsDefined || _walk.Length == 0)
             {
                 return;
             }
 
-            for (int i = 0; i < _sourceTiles.Count; i++)
+            for (int i = 0; i < _walk.Length; i++)
             {
-                var sourceBoundedTile = _sourceTiles[i];
-                Point world = RelativeToWorld(sourceBoundedTile.Relative);
+                Point rel = _walk[i];
+                Point world = RelativeToWorld(rel);
                 if (!WorldGen.InWorld(world.X, world.Y))
                 {
                     continue;
                 }
 
-                var targetBoundedTile = new BoundedTile(sourceBoundedTile.Relative, sourceBoundedTile.Included);
-                _targetTiles.Add(targetBoundedTile);
+                bool inc = TryGetTileByRelative(rel, out var t) && t.Included;
+                _targetTiles.Add(new BoundedTile(rel, inc));
             }
         }
 
@@ -372,6 +426,56 @@ namespace ArchitectsStencilMod.Core
             RefreshTargetTiles();
             RefreshInventories();
             UpdateOverlay();
+        }
+
+        /// <summary>
+        /// Builds the 2D <see cref="_inSnapshot"/> from <see cref="_pendingSourceSnapshot"/>, or preserves overlap
+        /// when bounds change without a new pending list.
+        /// </summary>
+        protected override void OnAfterDefine()
+        {
+            _sourceView = null;
+            if (!IsDefined)
+            {
+                _inSnapshot = null;
+                _walk = Array.Empty<Point>();
+                _targetTiles.Clear();
+                return;
+            }
+
+            int w = Bounds.Width;
+            int h = Bounds.Height;
+            var newSnap = new bool[w, h];
+            if (_pendingSourceSnapshot is { Count: > 0 } pending)
+            {
+                for (int i = 0; i < pending.Count; i++)
+                {
+                    var rel = pending[i].Relative;
+                    if ((uint)rel.X < (uint)w && (uint)rel.Y < (uint)h)
+                    {
+                        newSnap[rel.X, rel.Y] = true;
+                    }
+                }
+                _pendingSourceSnapshot = null;
+            }
+            else if (_inSnapshot is not null)
+            {
+                int ow = _inSnapshot.GetLength(0);
+                int oh = _inSnapshot.GetLength(1);
+                int cx = Math.Min(ow, w);
+                int cy = Math.Min(oh, h);
+                for (int y = 0; y < cy; y++)
+                {
+                    for (int x = 0; x < cx; x++)
+                    {
+                        newSnap[x, y] = _inSnapshot[x, y];
+                    }
+                }
+            }
+
+            _inSnapshot = newSnap;
+            _walk = BuildWalkFromSnapshot(_inSnapshot, w, h);
+            RefreshTargetTiles();
         }
     }
 }

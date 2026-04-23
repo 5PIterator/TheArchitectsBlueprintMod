@@ -224,9 +224,9 @@ namespace ArchitectsStencilMod.Core
         private static int CountIncludedTiles(Selection target)
         {
             int count = 0;
-            for (int i = 0; i < target.Tiles.Count; i++)
+            foreach (var t in target.Tiles)
             {
-                if (target.Tiles[i].Included)
+                if (t.Included)
                     count++;
             }
             return count;

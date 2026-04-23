@@ -183,7 +183,7 @@ namespace ArchitectsStencilMod.Core
     }
 
     /// <summary>
-    /// Immutable grid of detached tile snapshots (<see cref="PayloadCell"/>).
+    /// Immutable grid of detached tile snapshots (<see cref="PayloadCell"/>), stored as a 2D array <c>[x, y]</c>.
     /// New state is always produced via <see cref="Empty"/>, <see cref="FromWorld"/>, <see cref="FromSparse"/>, or <see cref="FromDocument"/>.
     /// </summary>
     public sealed class Payload
@@ -196,25 +196,37 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>Zero-sized payload (no grid).</summary>
-        public static Payload Empty { get; } = new Payload(0, 0, []);
+        public static Payload Empty { get; } = new(0, 0, new PayloadCell[0, 0]);
 
-        private readonly PayloadCell[] _cells;
+        private readonly PayloadCell[,] _cells;
         private readonly int _width;
         private readonly int _height;
 
-        private Payload(int width, int height, PayloadCell[] cells)
+        private Payload(int width, int height, PayloadCell[,] cells)
         {
             _width = width;
             _height = height;
             _cells = cells;
         }
 
-        public PayloadCell[] Cells => _cells;
+        /// <summary>
+        /// All cells in C# multidimensional order: first index (width) slowest, second (height) fastest — same as <c>foreach</c> on the backing 2D array.
+        /// </summary>
+        public IEnumerable<PayloadCell> Cells => EnumerateCells();
+
         public Point Size => IsDefined ? new Point(_width, _height) : Point.Zero;
-        public bool IsDefined => _cells.Length > 0 && _width > 0 && _height > 0;
+        public bool IsDefined => _width > 0 && _height > 0;
 
         public int Width => _width;
         public int Height => _height;
+
+        private IEnumerable<PayloadCell> EnumerateCells()
+        {
+            if (!IsDefined)
+                yield break;
+            foreach (PayloadCell cell in _cells)
+                yield return cell;
+        }
 
         /// <summary>Captures live world tiles under <paramref name="worldBounds"/>.</summary>
         public static Payload FromWorld(Rectangle worldBounds)
@@ -224,8 +236,7 @@ namespace ArchitectsStencilMod.Core
 
             int w = worldBounds.Width;
             int h = worldBounds.Height;
-            var cells = new PayloadCell[w * h];
-
+            var cells = new PayloadCell[w, h];
             for (int x = 0; x < w; x++)
             {
                 for (int y = 0; y < h; y++)
@@ -235,7 +246,7 @@ namespace ArchitectsStencilMod.Core
                     if (!WorldGen.InWorld(wx, wy))
                         continue;
 
-                    cells[y * w + x] = PayloadCell.FromTile(Framing.GetTileSafely(wx, wy));
+                    cells[x, y] = PayloadCell.FromTile(Framing.GetTileSafely(wx, wy));
                 }
             }
 
@@ -250,14 +261,14 @@ namespace ArchitectsStencilMod.Core
             if (entries is null || width <= 0 || height <= 0)
                 return Empty;
 
-            var cells = new PayloadCell[width * height];
+            var cells = new PayloadCell[width, height];
             for (int i = 0; i < entries.Count; i++)
             {
                 Entry e = entries[i];
                 Point rel = e.Relative;
                 if ((uint)rel.X >= (uint)width || (uint)rel.Y >= (uint)height)
                     continue;
-                cells[rel.Y * width + rel.X] = e.Cell;
+                cells[rel.X, rel.Y] = e.Cell;
             }
 
             return new Payload(width, height, cells);
@@ -296,15 +307,16 @@ namespace ArchitectsStencilMod.Core
             return FromSparse(entries, width, height);
         }
 
-        /// <summary>Independent copy of <paramref name="other"/> (same cells; new array).</summary>
+        /// <summary>Independent copy of <paramref name="other"/> (same cells; new 2D array).</summary>
         public static Payload FromClone(Payload other)
         {
             ArgumentNullException.ThrowIfNull(other);
             if (!other.IsDefined)
                 return Empty;
 
-            var cells = new PayloadCell[other._cells.Length];
+            var cells = new PayloadCell[other._width, other._height];
             Array.Copy(other._cells, cells, other._cells.Length);
+
             return new Payload(other._width, other._height, cells);
         }
 
@@ -326,37 +338,30 @@ namespace ArchitectsStencilMod.Core
             }
 
             int nonEmpty = 0;
-            for (int i = 0; i < _cells.Length; i++)
+            foreach (PayloadCell cell in _cells)
             {
-                if (!_cells[i].IsEmpty)
+                if (!cell.IsEmpty)
                     nonEmpty++;
             }
 
             writer.Write(nonEmpty);
-            for (int i = 0; i < _cells.Length; i++)
+            for (int y = 0; y < _height; y++)
             {
-                PayloadCell cell = _cells[i];
-                if (cell.IsEmpty)
-                    continue;
+                for (int x = 0; x < _width; x++)
+                {
+                    PayloadCell cell = _cells[x, y];
+                    if (cell.IsEmpty)
+                        continue;
 
-                int x = i % _width;
-                int y = i / _width;
-                writer.Write(x);
-                writer.Write(y);
-                writer.Write(cell.ToJson());
+                    writer.Write(x);
+                    writer.Write(y);
+                    writer.Write(cell.ToJson());
+                }
             }
         }
 
-        /// Returns a JSON string of 2D cell data.
-        public string ToJson()
-        {
-            PayloadCell[,] cells = new PayloadCell[_width, _height];
-            for (int i = 0; i < _cells.Length; i++)
-            {
-                cells[i % _width, i / _width] = _cells[i];
-            }
-            return JsonConvert.SerializeObject(cells);
-        }
+        /// <summary>Returns a JSON string of 2D cell data.</summary>
+        public string ToJson() => JsonConvert.SerializeObject(_cells);
 
         public bool TryGetCell(Point relative, out PayloadCell cell)
         {
@@ -366,7 +371,7 @@ namespace ArchitectsStencilMod.Core
                 return false;
             }
 
-            cell = _cells[relative.Y * _width + relative.X];
+            cell = _cells[relative.X, relative.Y];
             return true;
         }
     }

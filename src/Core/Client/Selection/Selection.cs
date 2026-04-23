@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -7,11 +8,10 @@ namespace ArchitectsStencilMod.Core
 {
     /// <summary>
     /// Represents the primary region in the world that The Architect's Stencil operates on.
-    /// For now this is a rectangle plus a tile inclusion mask.
+    /// A rectangle and a 2D tile inclusion mask: <c>[x, y]</c> in payload-relative space.
     ///
     /// Selection semantics:
-    /// - The selection owns a per-tile list for the current <see cref="Bounds"/>.
-    /// - Each tile has a mutable <see cref="BoundedTile.Included"/> flag.
+    /// - <see cref="Bounds"/> defines width/hight; each cell is a <see cref="BoundedTile"/> with a mutable <see cref="BoundedTile.Included"/> flag.
     /// </summary>
     public class Selection
     {
@@ -26,6 +26,32 @@ namespace ArchitectsStencilMod.Core
             public bool Included { get; set; } = included;
         }
 
+        private sealed class LinearTileView(Selection owner) : IReadOnlyList<BoundedTile>
+        {
+            public int Count => owner.IsDefined ? owner.Bounds.Width * owner.Bounds.Height : 0;
+
+            public BoundedTile this[int index]
+            {
+                get
+                {
+                    if (!owner.IsDefined || (uint)index >= (uint)Count)
+                        throw new ArgumentOutOfRangeException(nameof(index));
+                    int w = owner.Bounds.Width;
+                    int x = index % w;
+                    int y = index / w;
+                    return owner._grid![x, y];
+                }
+            }
+
+            public IEnumerator<BoundedTile> GetEnumerator()
+            {
+                for (int i = 0; i < Count; i++)
+                    yield return this[i];
+            }
+
+            IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        }
+
         /// <summary>
         /// World-space bounds of the selection, in tile coordinates.
         /// </summary>
@@ -36,12 +62,27 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         public bool IsDefined => !Bounds.IsEmpty;
 
-        /// <summary>
-        /// All tiles inside <see cref="Bounds"/>.
-        /// </summary>
-        public IReadOnlyList<BoundedTile> Tiles => _tiles;
+        private BoundedTile[,]? _grid;
+        private LinearTileView? _linearView;
 
-        private readonly List<BoundedTile> _tiles = [];
+        /// <summary>
+        /// All tiles inside <see cref="Bounds"/>, in row-major order (increasing y, then x); index <c>y * Width + x</c>.
+        /// </summary>
+        public IReadOnlyList<BoundedTile> Tiles
+        {
+            get
+            {
+                if (!IsDefined)
+                {
+                    return Array.Empty<BoundedTile>();
+                }
+
+                return _linearView ??= new LinearTileView(this);
+            }
+        }
+
+        /// <summary>Number of tile cells in the current bounds; zero if undefined.</summary>
+        public int TileCount => IsDefined ? Bounds.Width * Bounds.Height : 0;
 
         /// <summary>
         /// Top-left of the selection in tile coordinates.
@@ -57,18 +98,20 @@ namespace ArchitectsStencilMod.Core
         {
             int oldWidth = Bounds.Width;
             int oldHeight = Bounds.Height;
-            BoundedTile[]? previous = _tiles.Count > 0 ? [.. _tiles] : null;
+            BoundedTile[,]? previous = _grid;
 
             Bounds = bounds;
-
-            _tiles.Clear();
+            _grid = null;
+            _linearView = null;
 
             if (Bounds.IsEmpty)
             {
+                OnAfterDefine();
                 return;
             }
 
-            // Rebuild tile list for new bounds, preserving inclusion state where possible.
+            _grid = new BoundedTile[Bounds.Width, Bounds.Height];
+
             for (int y = 0; y < Bounds.Height; y++)
             {
                 for (int x = 0; x < Bounds.Width; x++)
@@ -80,19 +123,26 @@ namespace ArchitectsStencilMod.Core
                         && (uint)x < (uint)oldWidth
                         && (uint)y < (uint)oldHeight)
                     {
-                        included = previous[y * oldWidth + x].Included;
+                        included = previous[x, y].Included;
                     }
 
-                    _tiles.Add(new BoundedTile(new Point(x, y), included));
+                    _grid[x, y] = new BoundedTile(new Point(x, y), included);
                 }
             }
+
+            OnAfterDefine();
         }
 
         public void Clear()
         {
             Bounds = Rectangle.Empty;
-            _tiles.Clear();
+            _grid = null;
+            _linearView = null;
+            OnAfterDefine();
         }
+
+        /// <summary>Called after <see cref="Define"/> or <see cref="Clear"/> rebuilds the grid (including when empty).</summary>
+        protected virtual void OnAfterDefine() { }
 
         public bool IsTileIncluded(Point world)
         {
@@ -111,27 +161,16 @@ namespace ArchitectsStencilMod.Core
 
         public bool TryGetTileByRelative(Point relative, out BoundedTile boundedTile)
         {
-            if (!TryGetTileIndex(relative, out int index))
+            if (!IsDefined
+                || _grid is null
+                || (uint)relative.X >= (uint)Bounds.Width
+                || (uint)relative.Y >= (uint)Bounds.Height)
             {
                 boundedTile = null!;
                 return false;
             }
 
-            boundedTile = _tiles[index];
-            return true;
-        }
-
-        private bool TryGetTileIndex(Point relative, out int index)
-        {
-            if (!IsDefined
-                || (uint)relative.X >= (uint)Bounds.Width
-                || (uint)relative.Y >= (uint)Bounds.Height)
-            {
-                index = 0;
-                return false;
-            }
-
-            index = relative.Y * Bounds.Width + relative.X;
+            boundedTile = _grid[relative.X, relative.Y];
             return true;
         }
 
@@ -171,16 +210,20 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         public Point[] BuildExcludedTilePoints()
         {
-            IReadOnlyList<BoundedTile> tiles = Tiles;
-            if (tiles.Count == 0) return [];
+            if (!IsDefined || _grid is null) return [];
             Point boundsOrigin = Bounds.Location;
-            var points = new List<Point>(tiles.Count);
-            for (int i = 0; i < tiles.Count; i++)
+            int w = Bounds.Width;
+            int h = Bounds.Height;
+            var points = new List<Point>(w * h / 4);
+            for (int y = 0; y < h; y++)
             {
-                var t = tiles[i];
-                if (t.Included) continue;
-                points.Add(new Point(boundsOrigin.X + t.Relative.X, boundsOrigin.Y + t.Relative.Y));
+                for (int x = 0; x < w; x++)
+                {
+                    if (_grid[x, y].Included) continue;
+                    points.Add(new Point(boundsOrigin.X + x, boundsOrigin.Y + y));
+                }
             }
+
             return points.Count == 0 ? [] : points.ToArray();
         }
 
@@ -265,26 +308,32 @@ namespace ArchitectsStencilMod.Core
             ArgumentNullException.ThrowIfNull(getSourceTile);
 
             var result = new List<BoundedTile>();
-            if (!IsDefined)
+            if (!IsDefined || _grid is null)
             {
                 return result;
             }
 
-            for (int i = 0; i < Tiles.Count; i++)
+            int w = Bounds.Width;
+            int h = Bounds.Height;
+            for (int y = 0; y < h; y++)
             {
-                var t = Tiles[i];
-                if (!t.Included)
+                for (int x = 0; x < w; x++)
                 {
-                    continue;
-                }
+                    var t = _grid[x, y];
+                    if (!t.Included)
+                    {
+                        continue;
+                    }
 
-                if (!getSourceTile(t.Relative).HasValue)
-                {
-                    continue;
-                }
+                    if (!getSourceTile(t.Relative).HasValue)
+                    {
+                        continue;
+                    }
 
-                result.Add(new BoundedTile(t.Relative, included: true));
+                    result.Add(new BoundedTile(t.Relative, included: true));
+                }
             }
+
             return result;
         }
 
