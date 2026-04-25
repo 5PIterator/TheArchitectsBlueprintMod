@@ -30,7 +30,7 @@ namespace ArchitectsStencilMod.Core
 
         private Phase _phase;
         private PrepWorkStage _prepWork;
-        private int _prepIndex;
+        private Point _prepIndex;
         private HashSet<Point>[]? _queuedClearByLayer;
         private HashSet<Point>[]? _queuedPlaceByLayer;
         private HashSet<Point>? _allowedPlaceRelatives;
@@ -92,8 +92,8 @@ namespace ArchitectsStencilMod.Core
 
             // Validate the projection
             Projection = projection ?? throw new ArgumentNullException(nameof(projection));
-            if (Projection.OwnerPlayerIndex < 0 || Projection.OwnerPlayerIndex >= Main.maxPlayers)
-                throw new InvalidOperationException($"Projection has invalid owner index: {Projection.OwnerPlayerIndex}");
+            if (Projection.Owner < 0 || Projection.Owner >= Main.maxPlayers)
+                throw new InvalidOperationException($"Projection has invalid owner index: {Projection.Owner}");
             if (!projection.HasPayload)
                 throw new InvalidOperationException("Projection has no source payload. Recreate the projection.");
 
@@ -107,15 +107,15 @@ namespace ArchitectsStencilMod.Core
             Lookup = BuildLookup();
             UpdateContext();
             ASMLog.Debug(
-                $"Paste started: sourceClear={ApplySourceClear} (projection={Projection.CutSource}, debug={config.EnableCutPasteProcess}), targetArea=({Projection.Bounds.X},{Projection.Bounds.Y}) {Projection.Bounds.Width}x{Projection.Bounds.Height}",
+                $"Paste started: sourceClear={ApplySourceClear} (projection={Projection.CutSource}, debug={config.EnableCutPasteProcess}), targetArea=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height}",
                 "Paste");
             ASMLog.Info(
-                $"START | area=({Projection.Bounds.X},{Projection.Bounds.Y}) {Projection.Bounds.Width}x{Projection.Bounds.Height} | sourceClear={ApplySourceClear} | srcTiles={Projection.SourceTiles.Count} tgtTiles={Projection.TargetTiles.Count}",
+                $"START | area=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height} | sourceClear={ApplySourceClear} | srcTiles={Projection.SourceTiles.Length} tgtTiles={Projection.TargetTiles.Length}",
                 "Paste");
 
             _phase = config.CheatSweep ? Phase.Clear : Phase.Prepare;
             _prepWork = PrepWorkStage.PlanPlace;
-            _prepIndex = 0;
+            _prepIndex = new Point(0, 0);
             _preparationComplete = config.CheatSweep;
             if (_phase == Phase.Prepare)
                 ASMLog.Info("Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)", "Paste");
@@ -208,15 +208,15 @@ namespace ArchitectsStencilMod.Core
                 return false;
 
             Layer sweep = LayerSystem.Sweep;
-            if (Lookup.PasteTiles.Count == 0)
+            if (Lookup.PasteTiles.Length == 0)
             {
                 ClearAllTaskQueues();
                 NextStepTime = 0;
                 return false;
             }
 
-            PasteTile anchorPasteTile = Lookup.PasteTiles[0];
-            IReadOnlyList<Selection.BoundedTile> identified = sweep.Identify(in anchorPasteTile, in Lookup);
+            PasteTile anchorPasteTile = Lookup.PasteTiles[0, 0];
+            IReadOnlyList<Blueprint.BlueprintCell> identified = sweep.Identify(in anchorPasteTile, in Lookup);
             if (identified.Count == 0)
             {
                 ClearAllTaskQueues();
@@ -267,7 +267,7 @@ namespace ArchitectsStencilMod.Core
 
 
             Context = new PasteContext(
-                playerIndex: Projection.OwnerPlayerIndex,
+                playerIndex: Projection.Owner,
                 items: Projection.Inventories.Count > 0 ? InventoryManager.GetContentsFromInventories(_inventories) : null,
                 serverConfig: PasteConfig,
                 clientPrefs: _clientPaste);
@@ -299,9 +299,9 @@ namespace ArchitectsStencilMod.Core
                 InitializePlanningState();
 
             // Build the contexts used by identify/planning for this batch.
-            var identifyContext = new PasteContext(Projection.OwnerPlayerIndex, null, PasteConfig, _clientPaste);
+            var identifyContext = new PasteContext(Projection.Owner, null, PasteConfig, _clientPaste);
             var planningContext = new PasteContext(
-                Projection.OwnerPlayerIndex,
+                Projection.Owner,
                 InventoryManager.GetContentsFromInventories(_inventories),
                 PasteConfig,
                 _clientPaste);
@@ -372,11 +372,11 @@ namespace ArchitectsStencilMod.Core
             // Start at PlaceSource with a fresh allowed-relatives accumulator.
             _allowedPlaceRelatives = [];
             _prepWork = PrepWorkStage.PlanPlace;
-            _prepIndex = 0;
+            _prepIndex = new Point(0, 0);
 
             ASMLog.Info("Prep: PlaceSource — queuing place tasks from source tiles", "Paste");
             ASMLog.Debug(
-                $"Prep: begin prepTileBudget={PreparePhaseTileBudget} sourceTiles={Projection.SourceTiles.Count} lookupTiles={Lookup.Count} targetTiles={Projection.TargetTiles.Count} transparent={_clientPaste.TransparentPaste} sourceAreaClear={ApplySourceClear}",
+                $"Prep: begin prepTileBudget={PreparePhaseTileBudget} sourceTiles={Projection.SourceTiles.Length} lookupTiles={Lookup.Count} targetTiles={Projection.TargetTiles.Length} transparent={_clientPaste.TransparentPaste} sourceAreaClear={ApplySourceClear}",
                 "Paste");
         }
 
@@ -389,12 +389,17 @@ namespace ArchitectsStencilMod.Core
             // --- Walk the source-tile list once, projecting each into place tasks at its target location.
 
             // Signal stage completion when the source-tile cursor is exhausted.
-            if (_prepIndex >= Projection.SourceTiles.Count)
+            if (_prepIndex.X >= Projection.SourceTiles.GetLength(0) || _prepIndex.Y >= Projection.SourceTiles.GetLength(1))
                 return false;
 
             // Fetch the next source tile, advance the cursor, and respect inclusion (excluded = no place/clear footprint).
-            Selection.BoundedTile sourceCell = Projection.SourceTiles[_prepIndex];
-            _prepIndex++;
+            Blueprint.BlueprintCell sourceCell = Projection.SourceTiles[_prepIndex.X, _prepIndex.Y];
+            _prepIndex.X++;
+            if (_prepIndex.X >= Projection.SourceTiles.GetLength(0))
+            {
+                _prepIndex.X = 0;
+                _prepIndex.Y++;
+            }
             if (!sourceCell.Included)
                 return true;
 
@@ -431,11 +436,16 @@ namespace ArchitectsStencilMod.Core
             if (transparent)
             {
                 // Signal stage completion when the target-tile cursor is exhausted.
-                if (_prepIndex >= Projection.TargetTiles.Count)
+                if (_prepIndex.X >= Projection.TargetTiles.GetLength(0) || _prepIndex.Y >= Projection.TargetTiles.GetLength(1))
                     return false;
 
-                Point rel = Projection.TargetTiles[_prepIndex].Relative;
-                _prepIndex++;
+                Point rel = Projection.TargetTiles[_prepIndex.X, _prepIndex.Y].Relative;
+                _prepIndex.X++;
+                if (_prepIndex.X >= Projection.TargetTiles.GetLength(0))
+                {
+                    _prepIndex.X = 0;
+                    _prepIndex.Y++;
+                }
 
                 // Skip target tiles outside the allowed place footprint or missing from the lookup.
                 if (!_allowedPlaceRelatives!.Contains(rel))
@@ -458,11 +468,16 @@ namespace ArchitectsStencilMod.Core
             }
 
             // Opaque paste clears every lookup tile regardless of whether a place task was queued there.
-            if (_prepIndex >= Lookup.Count)
+            if (_prepIndex.X >= Lookup.PasteTiles.GetLength(0) || _prepIndex.Y >= Lookup.PasteTiles.GetLength(1))
                 return false;
 
-            PasteTile opaqueTile = Lookup.PasteTiles[_prepIndex];
-            _prepIndex++;
+            PasteTile opaqueTile = Lookup.PasteTiles[_prepIndex.X, _prepIndex.Y];
+            _prepIndex.X++;
+            if (_prepIndex.X >= Lookup.PasteTiles.GetLength(0))
+            {
+                _prepIndex.X = 0;
+                _prepIndex.Y++;
+            }
 
             // Identify clear layers without any restriction — the full footprint is fair game.
             QueueClearLayersForTile(
@@ -491,11 +506,16 @@ namespace ArchitectsStencilMod.Core
                 return false;
 
             // Signal stage completion when every source tile has been considered.
-            if (_prepIndex >= Projection.SourceTiles.Count)
+            if (_prepIndex.X >= Projection.SourceTiles.GetLength(0) || _prepIndex.Y >= Projection.SourceTiles.GetLength(1))
                 return false;
 
-            Point rel = Projection.SourceTiles[_prepIndex].Relative;
-            _prepIndex++;
+            Point rel = Projection.SourceTiles[_prepIndex.X, _prepIndex.Y].Relative;
+            _prepIndex.X++;
+            if (_prepIndex.X >= Projection.SourceTiles.GetLength(0))
+            {
+                _prepIndex.X = 0;
+                _prepIndex.Y++;
+            }
 
             // Restrict source-area clears to the allowed place footprint — we only cut what we would paste.
             if (!_allowedPlaceRelatives!.Contains(rel))
@@ -528,7 +548,7 @@ namespace ArchitectsStencilMod.Core
 
             PrepWorkStage to = (PrepWorkStage)((int)from + 1);
             _prepWork = to;
-            _prepIndex = 0;
+            _prepIndex = new Point(0, 0);
 
             switch (to)
             {
@@ -595,12 +615,12 @@ namespace ArchitectsStencilMod.Core
             return _prepWork switch
             {
                 PrepWorkStage.PlanPlace =>
-                    $"{Math.Min(_prepIndex, Projection.SourceTiles.Count)}/{Projection.SourceTiles.Count}",
+                    $"{Math.Min(_prepIndex.X, Projection.SourceTiles.GetLength(0))}x{Math.Min(_prepIndex.Y, Projection.SourceTiles.GetLength(1))}",
                 PrepWorkStage.PlanClear => _clientPaste.TransparentPaste
-                    ? $"{Math.Min(_prepIndex, Projection.TargetTiles.Count)}/{Projection.TargetTiles.Count}"
-                    : $"{Math.Min(_prepIndex, Lookup.Count)}/{Lookup.Count}",
+                    ? $"{Math.Min(_prepIndex.X, Projection.TargetTiles.GetLength(0))}x{Math.Min(_prepIndex.Y, Projection.TargetTiles.GetLength(1))}"
+                    : $"{Math.Min(_prepIndex.X, Lookup.PasteTiles.GetLength(0))}x{Math.Min(_prepIndex.Y, Lookup.PasteTiles.GetLength(1))}",
                 PrepWorkStage.PlanCut =>
-                    $"{Math.Min(_prepIndex, Projection.SourceTiles.Count)}/{Projection.SourceTiles.Count}",
+                    $"{Math.Min(_prepIndex.X, Projection.SourceTiles.GetLength(0))}x{Math.Min(_prepIndex.Y, Projection.SourceTiles.GetLength(1))}",
                 PrepWorkStage.Done => "complete",
                 _ => "?"
             };
@@ -694,7 +714,7 @@ namespace ArchitectsStencilMod.Core
             Point size = Projection.PayloadSize;
             int w = size.X;
             int h = size.Y;
-            var list = new List<PasteTile>(Math.Max(0, w * h));
+            var list = new PasteTile[w, h];
 
             // For each source-relative tile, resolve the payload, source intent, and target world tile, along with interaction metadata for layer logic.
             for (int y = 0; y < h; y++)
@@ -714,13 +734,13 @@ namespace ArchitectsStencilMod.Core
 
                     Point world = Projection.RelativeToWorld(rel);
                     InteractionEntry interaction = ResolveInteraction(cell.ToTile());
-                    list.Add(new PasteTile(
+                    list[x, y] = new PasteTile(
                         payloadCell: cell,
                         interaction: interaction,
                         source: sourceTile,
                         target: targetTile,
                         relative: rel,
-                        world: world));
+                        world: world);
                 }
             }
 
@@ -824,7 +844,7 @@ namespace ArchitectsStencilMod.Core
             for (int i = 0; i < identifiedLayers.Count; i++)
             {
                 var identified = identifiedLayers[i];
-                ASMLog.Debug($"Identify place layer={identified.Layer.Id} rel=({rel.X},{rel.Y}) tiles={identified.Tiles.Count} canPlace={identified.CanPlace}", "Paste");
+                ASMLog.Debug($"Identify place layer={identified.Layer.Id} rel=({rel.X},{rel.Y}) tiles={identified.Tiles.Count} placementValid={identified.PlacementValid} hasItems={identified.HasRequiredItems}", "Paste");
             }
 
             for (int i = 0; i < identifiedLayers.Count; i++)
@@ -834,7 +854,7 @@ namespace ArchitectsStencilMod.Core
                 if (clamped.Count == 0)
                     continue;
 
-                if (!identified.CanPlace && Context.ForceTiles)
+                if ((Context.IgnoreItems && !identified.HasRequiredItems) || (Context.IgnoreInvalid && !identified.PlacementValid))
                     continue;
 
                 for (int j = 0; j < clamped.Count; j++)
@@ -849,7 +869,7 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         private void QueueClearLayer(
             Layer layer,
-            IReadOnlyList<Selection.BoundedTile> identified,
+            IReadOnlyList<Blueprint.BlueprintCell> identified,
             in PasteTileLookup lookup,
             HashSet<Point>[] queuedClearByLayer,
             HashSet<Point> restrictClearRelatives,
@@ -880,7 +900,7 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         private void QueuePlaceLayer(
             Layer layer,
-            IReadOnlyList<Selection.BoundedTile> identified,
+            IReadOnlyList<Blueprint.BlueprintCell> identified,
             in PasteTileLookup lookup,
             HashSet<Point>[] queuedPlaceByLayer,
             in PasteContext schedulingContext)
@@ -902,20 +922,20 @@ namespace ArchitectsStencilMod.Core
         /// <summary>
         /// Filters identified relatives and returns a detached bounded-tile list.
         /// </summary>
-        private static List<Selection.BoundedTile> ClampIdentified(
-            IReadOnlyList<Selection.BoundedTile> identified,
+        private static List<Blueprint.BlueprintCell> ClampIdentified(
+            IReadOnlyList<Blueprint.BlueprintCell> identified,
             HashSet<Point> allowedRelatives = null)
         {
             // --- Keep only allowed relatives (when provided) and copy selected flags into a compact list.
 
-            var clamped = new List<Selection.BoundedTile>(identified.Count);
+            var clamped = new List<Blueprint.BlueprintCell>(identified.Count);
             for (int i = 0; i < identified.Count; i++)
             {
                 Point relative = identified[i].Relative;
                 if (allowedRelatives is not null && !allowedRelatives.Contains(relative))
                     continue;
 
-                clamped.Add(new Selection.BoundedTile(relative, identified[i].Included));
+                clamped.Add(new Blueprint.BlueprintCell(relative, identified[i].World, identified[i].Included));
             }
 
             return clamped;
@@ -931,7 +951,7 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         private static List<PasteTile> CreatePasteTiles(
             Layer layer,
-            IReadOnlyList<Selection.BoundedTile> identified,
+            IReadOnlyList<Blueprint.BlueprintCell> identified,
             HashSet<Point> queuedWorldTiles,
             PasteTileResolver resolver,
             bool forClearQueue,
@@ -1072,7 +1092,7 @@ namespace ArchitectsStencilMod.Core
         /// Converts sweep-identified relatives into paste tiles that can be applied in one cheat pass.
         /// </summary>
         private static List<PasteTile> CreateSweepCheatPasteTiles(
-            IReadOnlyList<Selection.BoundedTile> identified,
+            IReadOnlyList<Blueprint.BlueprintCell> identified,
             in PasteTileLookup lookup)
         {
             // --- Resolve each identified relative through lookup and keep only resolvable paste tiles.

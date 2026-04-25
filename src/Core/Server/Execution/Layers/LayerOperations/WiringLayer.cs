@@ -10,11 +10,11 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private WiringLayer() : base("Wiring", LayerType.Wiring) { }
 
-        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _)
         {
             Tile subjectTile = tile.Subject;
             bool hasWiring = subjectTile.RedWire || subjectTile.BlueWire || subjectTile.GreenWire || subjectTile.YellowWire || subjectTile.HasActuator;
-            return hasWiring ? [new Selection.BoundedTile(tile.Relative, included: true)] : [];
+            return hasWiring ? [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)] : [];
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
@@ -23,7 +23,9 @@ namespace ArchitectsStencilMod.Core.Layers
             return t.RedWire || t.BlueWire || t.GreenWire || t.YellowWire || t.HasActuator;
         }
 
-        public override bool CanPlace(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
+        public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
+
+        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
             if (!context.NeedsItems || context.Items is null) return true;
             IReadOnlyList<int>? items = GetItem(in tile);
@@ -86,7 +88,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 if (!placeResult.Success)
                     return placeResult;
                 if (!context.CheatSweep && !Consume(in tile, in context))
-                    return LayerResult.Fail(tile.World);
+                    return LayerResult.Fail(tile.World, LayerFailReason.MissingItems);
             }
 
             var src = tile.PayloadCell.Wire;

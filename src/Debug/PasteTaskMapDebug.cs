@@ -38,10 +38,10 @@ internal static class PasteTaskMapDebug
         {
             ProjectionClearsSource = projection.CutSource,
             ApplySourceClear = applySourceClear,
-            TargetArea = Rect(projection.Bounds),
+            TargetArea = Rect(projection.Area),
             SourceArea = Rect(projection.SourceArea),
-            SourceTileCount = projection.SourceTiles.Count,
-            TargetTileCount = projection.TargetTiles.Count,
+            SourceTileCount = projection.SourceTiles.Length,
+            TargetTileCount = projection.TargetTiles.Length,
             ClearTasks = BuildClearMap(pipeline, clearTasksByLayer),
             PlaceTasks = BuildPlaceMap(pipeline, placeTasksByLayer),
         };

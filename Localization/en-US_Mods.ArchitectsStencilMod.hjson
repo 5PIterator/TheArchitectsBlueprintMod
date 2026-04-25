@@ -162,16 +162,25 @@ Configs: {
 		DisplayName: Client paste
 		Tooltip:
 			'''
-			How your game plans each paste: transparency, forcing placeable tiles only, and desired tiles-per-step.
+			How your game plans each paste: which cells to skip, transparency, and tiles-per-step.
 			Sent with the paste request when you are the multiplayer host; the server still enforces its maximum step size and all area/volume limits.
 			'''
 		Headers.PastePlanning: Paste planning
 
-		ForceTiles: {
-			Label: Force tiles
+		IgnoreItems: {
+			Label: Ignore missing items
 			Tooltip:
 				'''
-				When enabled (default), placement tasks are only queued where the tile can actually be placed.
+				When enabled (default), placement is not queued where required items are missing, and place steps that fail for lack of items are treated as complete.
+				Client preference — carried with your paste on the host client.
+				'''
+		}
+
+		IgnoreInvalid: {
+			Label: Ignore invalid placement
+			Tooltip:
+				'''
+				When enabled (default), placement is not queued where the tile cannot be placed by world/rules, and place steps that fail for invalid placement are treated as complete.
 				Client preference — carried with your paste on the host client.
 				'''
 		}

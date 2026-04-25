@@ -15,7 +15,7 @@ namespace ArchitectsStencilMod.Core
     {
         private sealed class PlayerSelectionState
         {
-            public Selection Selection = new();
+            public Selection Selection = null!;
             public bool HasPointA;
             public bool HasPointB;
             public Point PointA;
@@ -77,7 +77,7 @@ namespace ArchitectsStencilMod.Core
         public void NewSelection(Player player)
         {
             var state = GetState(player);
-            state.Selection = new Selection();
+            state.Selection = new Selection(player.whoAmI);
             state.HasPointA = false;
             state.HasPointB = false;
             state.PointA = default;
@@ -101,11 +101,13 @@ namespace ArchitectsStencilMod.Core
             }
 
             // Draw the bounds of the selection
-            OverlaySystem.RegTileBounds("bounds", selection.Bounds, ArchitectVisualPalette.SelectionBoundsColor, 2, family);
-            // Draw the unselected tiles of the selection
+            OverlaySystem.RegTileBounds("bounds", selection.Area, ArchitectVisualPalette.SelectionBoundsColor, 2, family);
+            // Clear previous exclusion fill: RegTileFill does not run when the mask is all included, and the
+            // catalog would otherwise keep the last non-empty "excluded" registration.
+            OverlaySystem.Unregister("excluded", family);
             Point[] excluded = selection.BuildExcludedTilePoints();
             if (excluded.Length > 0)
-                OverlaySystem.RegTileFill("unsel", excluded, Color.Black * 0.35f, family);
+                OverlaySystem.RegTileFill("excluded", excluded, Color.Black * 0.35f, family);
             // Draw the pin points of the selection
             if (TryGetPoints(player, out var a, out var b))
             {
@@ -116,10 +118,10 @@ namespace ArchitectsStencilMod.Core
 
         private static void UpdateSelection(PlayerSelectionState state)
         {
-            // Invariant: Selection.Bounds should always reflect whichever endpoints have been provided.
+            // Invariant: Selection.Area should always reflect whichever endpoints have been provided.
             if (state.HasPointA && state.HasPointB)
             {
-                state.Selection.Define(Selection.FromPoints(state.PointA, state.PointB));
+                state.Selection.Define(new Rectangle(state.PointA.X, state.PointA.Y, state.PointB.X - state.PointA.X + 1, state.PointB.Y - state.PointA.Y + 1));
                 return;
             }
 
@@ -192,7 +194,7 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Defines the selection bounds directly (tile coordinates, inclusive sizing like <see cref="Selection.Bounds"/>).
+        /// Defines the selection bounds directly (tile coordinates, inclusive sizing like <see cref="Blueprint.Area"/>).
         /// </summary>
         public void SetBounds(Player player, Rectangle bounds)
         {
@@ -232,7 +234,14 @@ namespace ArchitectsStencilMod.Core
                 throw new ArgumentOutOfRangeException(nameof(player), $"Invalid player index: {index}");
             }
 
-            return _playerStates[index] ??= new PlayerSelectionState();
+            if (_playerStates[index] is not { } state)
+            {
+                state = new PlayerSelectionState();
+                state.Selection = new Selection(player.whoAmI);
+                _playerStates[index] = state;
+            }
+
+            return state;
         }
     }
 }

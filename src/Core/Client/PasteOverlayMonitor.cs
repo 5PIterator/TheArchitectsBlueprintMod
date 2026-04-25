@@ -58,7 +58,7 @@ namespace ArchitectsStencilMod.Core.Client
                     var pasting = ModContent.GetInstance<PastingSystem>();
                     foreach (var op in pasting.ActiveOperations)
                     {
-                        if (op.Projection.OwnerPlayerIndex != Main.myPlayer)
+                        if (op.Projection.Owner != Main.myPlayer)
                             continue;
                         if (op.TryBuildOverlaySnapshot(out PasteOverlaySnapshot snap))
                             _localScratch.Add(snap);

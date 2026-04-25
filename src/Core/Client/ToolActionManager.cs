@@ -276,7 +276,7 @@ namespace ArchitectsStencilMod.Core
                     var config = ModContent.GetInstance<PastingConfig>();
 
                     // Enforce configured maximum paste dimensions.
-                    if (projection.Bounds.Width > config.MaxPasteWidth || projection.Bounds.Height > config.MaxPasteHeight)
+                    if (projection.Area.Width > config.MaxPasteWidth || projection.Area.Height > config.MaxPasteHeight)
                     {
                         if (Main.netMode != NetmodeID.Server)
                             Main.NewText("Paste blocked: projection exceeds area limits.", Color.OrangeRed);
@@ -284,7 +284,7 @@ namespace ArchitectsStencilMod.Core
                     }
 
                     // Enforce configured tile volume cap.
-                    if (projection.SourceTiles.Count > config.VolumeLimit)
+                    if (projection.SourceTiles.Length > config.VolumeLimit)
                     {
                         if (Main.netMode != NetmodeID.Server)
                             Main.NewText("Paste blocked: projection exceeds tile volume limit.", Color.OrangeRed);
@@ -339,7 +339,7 @@ namespace ArchitectsStencilMod.Core
                     else
                     {
                         // If the projection is not defined, clear the selection under the cursor.
-                        if (SelectionSystem.GetSelection(player).IsDefined && SelectionSystem.GetSelection(player).Bounds.Contains(cursorTile))
+                        if (SelectionSystem.GetSelection(player).IsDefined && SelectionSystem.GetSelection(player).Area.Contains(cursorTile))
                         {
                             SelectionSystem.ClearSelection(player);
                         }
@@ -358,7 +358,7 @@ namespace ArchitectsStencilMod.Core
                     break;
                 // PIN/SET: Clear the selection.
                 case ToolAction.PIN|ToolAction.SET:
-                    if (SelectionSystem.GetSelection(player).IsDefined && SelectionSystem.GetSelection(player).Bounds.Contains(cursorTile))
+                    if (SelectionSystem.GetSelection(player).IsDefined && SelectionSystem.GetSelection(player).Area.Contains(cursorTile))
                     {
                         SelectionSystem.ClearSelection(player);
                     }

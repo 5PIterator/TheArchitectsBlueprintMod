@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ArchitectsStencilMod")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+bfd917331b04472e20c2e08caa03113805e5a5a1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2e95056c29aa66a92a9d4f8ed5fe813d49b46e6b")]
 [assembly: System.Reflection.AssemblyProductAttribute("ArchitectsStencilMod")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ArchitectsStencilMod")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -12,13 +12,15 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private WallLayer() : base("Wall", LayerType.Wall) { }
 
-        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
-            tile.Subject.WallType == WallID.None ? [] : [new Selection.BoundedTile(tile.Relative, included: true)];
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _) =>
+            tile.Subject.WallType == WallID.None ? [] : [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)];
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].WallType != WallID.None;
 
-        public override bool CanPlace(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
+        public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
+
+        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
             ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
             if (wallType == WallID.None) return true;
@@ -63,7 +65,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
             Main.tile[x, y].WallType = WallID.None;
             LayerSync.SyncTileSquare(x, y);
-            return Main.tile[x, y].WallType == WallID.None ? LayerResult.Ok(tile.World) : LayerResult.Fail(tile.World);
+            return Main.tile[x, y].WallType == WallID.None ? LayerResult.Ok(tile.World) : LayerResult.Fail(tile.World, LayerFailReason.ClearBlocked);
         }
 
         public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
@@ -75,14 +77,14 @@ namespace ArchitectsStencilMod.Core.Layers
             if (Main.tile[x, y].WallType == wallType) return LayerResult.Ok(tile.World);
 
             if (context.NeedsItems && context.Items != null && InventoryManager.FindItemByWall(context.Items, wallType) is null)
-                return LayerResult.Fail(tile.World);
+                return LayerResult.Fail(tile.World, LayerFailReason.MissingItems);
 
             WorldGen.PlaceWall(x, y, wallType, mute: true);
-            if (Main.tile[x, y].WallType != wallType) return LayerResult.Fail(tile.World);
+            if (Main.tile[x, y].WallType != wallType) return LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
             LayerSync.SyncTileSquare(x, y);
 
             if (!context.CheatSweep && !Consume(in tile, in context))
-                return LayerResult.Fail(tile.World);
+                return LayerResult.Fail(tile.World, LayerFailReason.MissingItems);
 
             return LayerResult.Ok(tile.World);
         }

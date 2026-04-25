@@ -10,27 +10,49 @@ using Terraria;
 
 namespace ArchitectsStencilMod.Core.Layers
 {
+    /// <summary>Why a <see cref="Layer"/> <see cref="Layer.Place"/> or <see cref="Layer.Clear"/> did not succeed; shared by both paths.</summary>
+    internal enum LayerFailReason
+    {
+        None,
+        Unknown,
+        MissingItems,
+        InvalidPlacement,
+        /// <summary>Clear could not break the tile (e.g. future pickaxe power check).</summary>
+        InsufficientPickaxePower,
+        ClearBlocked,
+    }
+
     /// <summary>
     /// Result of a layer's Clear or Place action. Success indicates the operation completed;
     /// AffectedTiles lists world positions that were modified (for deduplicating frame tasks).
     /// RemainingTiles: tiles that still need to be placed/cleared; non-empty means the task should run again.
     /// </summary>
-    internal readonly struct LayerResult(bool success, IReadOnlyList<Point> affectedTiles, IReadOnlyList<PasteTile>? remainingTiles)
+    internal readonly struct LayerResult(bool success, IReadOnlyList<Point> affectedTiles, IReadOnlyList<PasteTile>? remainingTiles, LayerFailReason failReason)
     {
         public readonly bool Success = success;
         public readonly IReadOnlyList<Point> AffectedTiles = affectedTiles ?? Array.Empty<Point>();
         public readonly IReadOnlyList<PasteTile> RemainingTiles = remainingTiles ?? Array.Empty<PasteTile>();
+        public readonly LayerFailReason FailReason = failReason;
 
-        public static LayerResult Ok(Point affected) => new(true, [affected], null);
-        public static LayerResult Ok(IReadOnlyList<Point> affected) => new(true, affected ?? [], null);
-        public static LayerResult Ok() => new(true, [], null);
-        public static LayerResult OkWithRemaining(IReadOnlyList<PasteTile> remaining) => new(true, [], remaining);
-        public static LayerResult Ok(Point affected, IReadOnlyList<PasteTile> remaining) => new(true, [affected], remaining);
-        public static LayerResult Fail(Point attempted) => new(false, [attempted], null);
-        public static LayerResult Fail() => new(false, [], null);
+        public static LayerResult Ok(Point affected) => new(true, [affected], null, LayerFailReason.None);
+        public static LayerResult Ok(IReadOnlyList<Point> affected) => new(true, affected ?? [], null, LayerFailReason.None);
+        public static LayerResult Ok() => new(true, [], null, LayerFailReason.None);
+        public static LayerResult OkWithRemaining(IReadOnlyList<PasteTile> remaining) => new(true, [], remaining, LayerFailReason.None);
+        public static LayerResult Ok(Point affected, IReadOnlyList<PasteTile> remaining) => new(true, [affected], remaining, LayerFailReason.None);
+        public static LayerResult Fail(Point attempted) => new(false, [attempted], null, LayerFailReason.Unknown);
+        public static LayerResult Fail(Point attempted, LayerFailReason reason) => new(false, [attempted], null, reason);
+        public static LayerResult Fail() => new(false, [], null, LayerFailReason.Unknown);
+        public static LayerResult Fail(LayerFailReason reason) => new(false, [], null, reason);
     }
 
-    internal readonly record struct LayerIdentifyResult(Layer Layer, IReadOnlyList<Selection.BoundedTile> Tiles, bool CanPlace);
+    internal readonly record struct LayerIdentifyResult(
+        Layer Layer,
+        IReadOnlyList<Blueprint.BlueprintCell> Tiles,
+        bool PlacementValid,
+        bool HasRequiredItems)
+    {
+        public readonly bool CanPlace => PlacementValid && HasRequiredItems;
+    }
 
     internal sealed class LayerPipeline
     {
@@ -159,12 +181,13 @@ namespace ArchitectsStencilMod.Core.Layers
                 if (claimedTypes.Contains(layer.LayerType))
                     continue;
 
-                IReadOnlyList<Selection.BoundedTile> tiles = layer.Identify(in pasteTile, in identifyLookup);
+                IReadOnlyList<Blueprint.BlueprintCell> tiles = layer.Identify(in pasteTile, in identifyLookup);
                 if (tiles.Count == 0)
                     continue;
 
-                bool canPlace = layer.CanPlace(in pasteTile, in identifyLookup, in context);
-                identifiedLayers.Add(new LayerIdentifyResult(layer, tiles, canPlace));
+                bool placementValid = layer.PlacementValid(in pasteTile, in identifyLookup, in context);
+                bool hasRequiredItems = layer.HasRequiredItems(in pasteTile, in identifyLookup, in context);
+                identifiedLayers.Add(new LayerIdentifyResult(layer, tiles, placementValid, hasRequiredItems));
                 claimedTypes.Add(layer.LayerType);
             }
 

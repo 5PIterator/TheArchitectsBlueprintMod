@@ -44,7 +44,7 @@ namespace ArchitectsStencilMod.Core.Server
                 var list = new List<PasteOverlaySnapshot>();
                 foreach (var op in system.ActiveOperations)
                 {
-                    if (op.Projection.OwnerPlayerIndex != i)
+                    if (op.Projection.Owner != i)
                         continue;
                     if (op.TryBuildOverlaySnapshot(out PasteOverlaySnapshot snap))
                         list.Add(snap);

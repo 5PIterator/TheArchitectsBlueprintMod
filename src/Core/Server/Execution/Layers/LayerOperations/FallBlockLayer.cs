@@ -14,7 +14,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
 
-        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup)
         {
             PasteSubject classify = tile.SubjectType;
             Tile subjectTile = tile.Subject;
@@ -23,7 +23,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 !TileID.Sets.Falling[subjectTile.TileType])
                 return [];
 
-            var list = new List<Selection.BoundedTile>();
+            var list = new List<Blueprint.BlueprintCell>();
             for (int dy = 0; ; dy--)
             {
                 var p = new Microsoft.Xna.Framework.Point(tile.Relative.X, tile.Relative.Y + dy);
@@ -34,7 +34,7 @@ namespace ArchitectsStencilMod.Core.Layers
                     t.TileType >= TileLoader.TileCount ||
                     !TileID.Sets.Falling[t.TileType])
                     break;
-                list.Insert(0, new Selection.BoundedTile(p, included: true));
+                list.Insert(0, new Blueprint.BlueprintCell(p, lookupTile.World, true));
             }
             for (int dy = 1; ; dy++)
             {
@@ -46,7 +46,7 @@ namespace ArchitectsStencilMod.Core.Layers
                     t.TileType >= TileLoader.TileCount ||
                     !TileID.Sets.Falling[t.TileType])
                     break;
-                list.Add(new Selection.BoundedTile(p, included: true));
+                list.Add(new Blueprint.BlueprintCell(p, lookupTile.World, true));
             }
             return list.Count > 0 ? list : [];
         }
@@ -54,7 +54,9 @@ namespace ArchitectsStencilMod.Core.Layers
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].HasTile;
 
-        public override bool CanPlace(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
+        public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
+
+        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
             if (!context.NeedsItems || context.Items is null || context.CheatSweep) return true;
             if (!tile.PayloadCell.HasTile()) return true;
@@ -104,7 +106,7 @@ namespace ArchitectsStencilMod.Core.Layers
             var res = TileOperations.Place([tile], in context);
             if (!res.Success) return res;
             if (!context.CheatSweep && !Consume(in tile, in context))
-                return LayerResult.Fail(tile.World);
+                return LayerResult.Fail(tile.World, LayerFailReason.MissingItems);
             var remaining = new List<PasteTile>(tiles.Count - 1);
             for (int i = 0; i < tiles.Count; i++)
                 if (i != lowestIdx) remaining.Add(tiles[i]);

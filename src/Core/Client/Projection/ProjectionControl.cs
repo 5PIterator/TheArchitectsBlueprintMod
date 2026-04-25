@@ -59,8 +59,8 @@ namespace ArchitectsStencilMod.Core
                 state.Mode = Mode.Drag;
                 state.DragKind = DragKind.Move;
                 state.DraggingProjection = topmost;
-                state.DragStartBounds = topmost.Bounds;
-                state.DragOffsetFromCursor = new Point(cursorTile.X - topmost.Bounds.X, cursorTile.Y - topmost.Bounds.Y);
+                state.DragStartBounds = topmost.Area;
+                state.DragOffsetFromCursor = new Point(cursorTile.X - topmost.Area.X, cursorTile.Y - topmost.Area.Y);
             }
             else
             {
@@ -73,8 +73,8 @@ namespace ArchitectsStencilMod.Core
                 state.Mode = Mode.Drag;
                 state.DragKind = DragKind.Move;
                 state.DraggingProjection = projection;
-                state.DragStartBounds = projection.Bounds;
-                state.DragOffsetFromCursor = new Point(cursorTile.X - projection.Bounds.X, cursorTile.Y - projection.Bounds.Y);
+                state.DragStartBounds = projection.Area;
+                state.DragOffsetFromCursor = new Point(cursorTile.X - projection.Area.X, cursorTile.Y - projection.Area.Y);
             }
 
             if (state.DraggingProjection is not null && state.DraggingProjection.IsDefined)

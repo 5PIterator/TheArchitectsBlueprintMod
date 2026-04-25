@@ -1,0 +1,4 @@
+Issues:
+- FallBlocks layer is not processing clear tasks.
+- Consider removing Paste's custom behavior of holding both mouse buttons to stop pasting. Instead, move that responsibility under the RESET (RST) Action. When the PASTE action is used with Right click, it will instead invoke the RST action. There could be a possible hazard that the user accidentally clicks twice, which would additionally reset the projection underneath.
+- Seems that there is a fundamental issue with excluded tiles. First, Projection should ignore the excluded source tiles. It should only initially copy the included states to the target tiles. Second, the inclusion control seem to have issues with changes in the selection, as sometimes the excluded overlay stays on the screen even when the selection is changed.

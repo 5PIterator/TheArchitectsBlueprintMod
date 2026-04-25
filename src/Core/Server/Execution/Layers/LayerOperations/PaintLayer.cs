@@ -11,13 +11,13 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private PaintLayer() : base("Paint", LayerType.Paint) { }
 
-        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _)
         {
             Tile subjectTile = tile.Subject;
             if (subjectTile.TileColor == PaintID.None && subjectTile.WallColor == PaintID.None)
                 return [];
 
-            return [new Selection.BoundedTile(tile.Relative, included: true)];
+            return [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)];
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
@@ -26,7 +26,9 @@ namespace ArchitectsStencilMod.Core.Layers
             return t.TileColor != PaintID.None || t.WallColor != PaintID.None;
         }
 
-        public override bool CanPlace(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
+        public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
+
+        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context) => true;
 

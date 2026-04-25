@@ -4,10 +4,11 @@ TAS is a Terraria mod that allows players to copy and paste structures using the
 
 ## Definitions
 
-- **Blueprint:** The user-selected region TAS will work with.
-- **Projection:** A movable instance of the blueprint data at a target location; pasting builds this payload into the world.
+- **Blueprint:** Data structure representing a user-selected region TAS will work with. It is a 2D grid of tiles that are included or excluded.
+- **Selection:** An instance of a Blueprint, acting as a selected region of the world that TAS will consider as a source of tiles to copy.
+- **Projection:** An instance of a Blueprint, acting as a movable ghost of a Selection that TAS will consider as a target of tiles to paste.
 
-**CUT** (per projection): When enabled, a paste also clears tiles in the blueprint’s **source capture area** (the region the payload was taken from), so the operation behaves like a move instead of a duplicate. Implemented on the projection as the `CutSource` flag (`PastingOperation` plans an optional source-area clear pass when this is true).
+**CUT**: When enabled, a paste also clears tiles in the Selection's source area, so the operation behaves like a move instead of a duplicate.
 
 ## Internal vs dedicated actions
 

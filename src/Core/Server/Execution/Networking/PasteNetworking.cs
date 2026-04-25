@@ -137,7 +137,7 @@ namespace ArchitectsStencilMod.Core.Server
             }
 
             var config = ModContent.GetInstance<PastingConfig>();
-            var clientPrefs = ClientPreferences.FromNetwork(request.ForceTiles, request.TransparentPaste, request.PasteStepSize, config);
+            var clientPrefs = ClientPreferences.FromNetwork(request.IgnoreItems, request.IgnoreInvalid, request.TransparentPaste, request.PasteStepSize, config);
             var pastingSystem = ModContent.GetInstance<PastingSystem>();
             if (!pastingSystem.StartPaste(projection, clientPrefs, out var startReason))
             {

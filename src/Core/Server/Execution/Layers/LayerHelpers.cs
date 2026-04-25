@@ -74,17 +74,22 @@ namespace ArchitectsStencilMod.Core.Layers
             return list;
         }
 
-        public static IReadOnlyList<Selection.BoundedTile>? GetFrameTilesAsBounded(Point originRel, in Tile sourceTile, in PasteTileLookup lookup)
+        public static IReadOnlyList<Blueprint.BlueprintCell>? GetFrameTilesAsBounded(Point originRel, in Tile sourceTile, in PasteTileLookup lookup)
         {
             var points = GetFrameTiles(originRel, sourceTile, lookup);
             if (points is null || points.Count == 0) return null;
-            var list = new List<Selection.BoundedTile>(points.Count);
+            var list = new List<Blueprint.BlueprintCell>(points.Count);
             for (int i = 0; i < points.Count; i++)
-                list.Add(new Selection.BoundedTile(points[i], included: true));
+            {
+                Point rel = points[i];
+                var pt = lookup.GetPasteTile(rel);
+                list.Add(new Blueprint.BlueprintCell(rel, pt.World, true));
+            }
             return list;
         }
 
-        public static IReadOnlyList<Selection.BoundedTile>? GetFrameTilesAsBoundedFromOrigin(Point originRel, in Tile sourceTile)
+        /// <param name="anchorWorld">World position of the tile at <paramref name="originRel"/> (target paste coordinates).</param>
+        public static IReadOnlyList<Blueprint.BlueprintCell>? GetFrameTilesAsBoundedFromOrigin(Point originRel, Point anchorWorld, in Tile sourceTile)
         {
             if (!sourceTile.HasTile || sourceTile.TileType >= TileLoader.TileCount)
                 return null;
@@ -92,11 +97,11 @@ namespace ArchitectsStencilMod.Core.Layers
             int style = 0, alternate = 0;
             TileObjectData.GetTileInfo(sourceTile, ref style, ref alternate);
             if (style < 0)
-                return [new Selection.BoundedTile(originRel, included: true)];
+                return [new Blueprint.BlueprintCell(originRel, anchorWorld, true)];
 
             var data = TileObjectData.GetTileData(sourceTile);
             if (data is null)
-                return [new Selection.BoundedTile(originRel, included: true)];
+                return [new Blueprint.BlueprintCell(originRel, anchorWorld, true)];
 
             int w = Math.Max(1, data.Width);
             int h = Math.Max(1, data.Height);
@@ -112,11 +117,15 @@ namespace ArchitectsStencilMod.Core.Layers
             int topLeftX = originRel.X - ox;
             int topLeftY = originRel.Y - oy;
 
-            var list = new List<Selection.BoundedTile>(w * h);
+            var list = new List<Blueprint.BlueprintCell>(w * h);
             for (int dy = 0; dy < h; dy++)
             {
                 for (int dx = 0; dx < w; dx++)
-                    list.Add(new Selection.BoundedTile(new Point(topLeftX + dx, topLeftY + dy), included: true));
+                {
+                    var rel = new Point(topLeftX + dx, topLeftY + dy);
+                    var wxy = new Point(anchorWorld.X + rel.X - originRel.X, anchorWorld.Y + rel.Y - originRel.Y);
+                    list.Add(new Blueprint.BlueprintCell(rel, wxy, true));
+                }
             }
             return list;
         }
@@ -337,7 +346,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 var t = tiles[i];
                 int wx = t.World.X, wy = t.World.Y;
                 if (Main.tile[wx, wy].HasTile)
-                    return LayerResult.Fail(t.World);
+                    return LayerResult.Fail(t.World, LayerFailReason.ClearBlocked);
             }
 
             return changed ? LayerResult.Ok(tiles[0].World) : LayerResult.Ok();
@@ -355,7 +364,7 @@ namespace ArchitectsStencilMod.Core.Layers
             if (tileType >= TileLoader.TileCount)
             {
                 PastingDebug.LogPlacement(tileType, 0, null, x, y, false, "PlaceObject");
-                return LayerResult.Fail(origin.World);
+                return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
             }
 
             int style = origin.PayloadCell.Detail.Style;
@@ -374,7 +383,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 if (item is null)
                 {
                     PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
-                    return LayerResult.Fail(origin.World);
+                    return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
                 }
                 style = Math.Max(0, item.placeStyle);
             }
@@ -386,7 +395,7 @@ namespace ArchitectsStencilMod.Core.Layers
             if (!WorldGen.PlaceObject(x, y, tileType, mute: true, style, alternate, random: -1, direction: -1))
             {
                 PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
-                return LayerResult.Fail(origin.World);
+                return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
             }
 
             LayerSync.SyncTileSquare(x, y);
@@ -422,7 +431,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 return LayerResult.Ok();
 
             SuppressTileDrop.KillTile(x, y);
-            return Main.tile[x, y].HasTile ? LayerResult.Fail(originTile.World) : LayerResult.Ok(originTile.World);
+            return Main.tile[x, y].HasTile ? LayerResult.Fail(originTile.World, LayerFailReason.ClearBlocked) : LayerResult.Ok(originTile.World);
         }
 
         public static LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
@@ -437,7 +446,7 @@ namespace ArchitectsStencilMod.Core.Layers
             if (tileType >= TileLoader.TileCount)
             {
                 PastingDebug.LogPlacement(tileType, 0, null, x, y, false, "PlaceTile");
-                return LayerResult.Fail(origin.World);
+                return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
             }
 
             int style = origin.PayloadCell.Detail.Style;
@@ -471,13 +480,13 @@ namespace ArchitectsStencilMod.Core.Layers
                         if (item is null)
                         {
                             PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                            return LayerResult.Fail(origin.World);
+                            return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
                         }
                         WorldGen.PlaceTile(x, y, baseType, mute: false, forced: context.CheatSweep, plr: context.Player.whoAmI, style: 0);
                         if (!Main.tile[x, y].HasTile || Main.tile[x, y].TileType != baseType)
                         {
                             PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                            return LayerResult.Fail(origin.World);
+                            return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
                         }
                         InventoryManager.ConsumeItem(item);
                     }
@@ -487,17 +496,17 @@ namespace ArchitectsStencilMod.Core.Layers
                         if (!Main.tile[x, y].HasTile || Main.tile[x, y].TileType != baseType)
                         {
                             PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                            return LayerResult.Fail(origin.World);
+                            return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
                         }
                     }
                     LayerSync.SyncTileSquare(x, y);
-                    return LayerResult.Fail(origin.World);
+                    return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
                 }
             }
             else if (dest.HasTile && !context.CheatSweep && context.NeedsItems)
             {
                 PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                return LayerResult.Fail(origin.World);
+                return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
             }
 
             int placeStyle = Math.Max(0, style);
@@ -507,7 +516,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 if (item is null)
                 {
                     PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                    return LayerResult.Fail(origin.World);
+                    return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
                 }
                 placeStyle = Math.Max(0, item.placeStyle);
             }
@@ -516,7 +525,7 @@ namespace ArchitectsStencilMod.Core.Layers
             if (!WorldGen.PlaceTile(x, y, tileType, mute: false, forced: forcePlace, plr: context.Player.whoAmI, style: placeStyle))
             {
                 PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                return LayerResult.Fail(origin.World);
+                return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
             }
 
             FrameOperations.PasteFrame(tiles);

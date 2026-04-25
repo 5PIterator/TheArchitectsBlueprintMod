@@ -267,19 +267,20 @@ namespace ArchitectsStencilMod.Core
             }
 
             var config = ModContent.GetInstance<PastingConfig>();
-            if (projection.Bounds.Width > config.MaxPasteWidth || projection.Bounds.Height > config.MaxPasteHeight)
+            if (projection.Area.Width > config.MaxPasteWidth || projection.Area.Height > config.MaxPasteHeight)
             {
                 rejectReason = PasteRejectReason.AreaLimit;
                 return false;
             }
 
-            if (projection.SourceTiles.Count > config.VolumeLimit)
+            int pasteVolume = projection.PayloadSize.X * projection.PayloadSize.Y;
+            if (pasteVolume > config.VolumeLimit)
             {
                 rejectReason = PasteRejectReason.VolumeLimit;
                 return false;
             }
 
-            if (GetActiveOperationCountForPlayer(projection.OwnerPlayerIndex) >= config.PlayerOperationLimit)
+            if (GetActiveOperationCountForPlayer(projection.Owner) >= config.PlayerOperationLimit)
             {
                 rejectReason = PasteRejectReason.PlayerOperationLimit;
                 return false;
@@ -361,7 +362,7 @@ namespace ArchitectsStencilMod.Core
             int count = 0;
             for (int i = 0; i < _operations.Count; i++)
             {
-                if (_operations[i].Projection.OwnerPlayerIndex == ownerPlayerIndex)
+                if (_operations[i].Projection.Owner == ownerPlayerIndex)
                 {
                     count++;
                 }
@@ -383,7 +384,7 @@ namespace ArchitectsStencilMod.Core
             for (int i = _operations.Count - 1; i >= 0; i--)
             {
                 Projection projection = _operations[i].Projection;
-                if (projection.OwnerPlayerIndex == ownerPlayerIndex && projection.Id == correlationId)
+                if (projection.Owner == ownerPlayerIndex && projection.Id == correlationId)
                 {
                     RemoveOperationAt(i);
                     return true;
@@ -403,7 +404,7 @@ namespace ArchitectsStencilMod.Core
 
             for (int i = 0; i < _operations.Count; i++)
             {
-                if (_operations[i].Projection.OwnerPlayerIndex == player.whoAmI)
+                if (_operations[i].Projection.Owner == player.whoAmI)
                 {
                     needsItems = _operations[i].Context.NeedsItems;
                     return true;

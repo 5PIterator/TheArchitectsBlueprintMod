@@ -22,8 +22,8 @@ namespace ArchitectsStencilMod.Core.Layers
     /// <summary>
     /// Paste-order layer. Each concrete layer owns match, identify, clear, and place.
     /// After a successful place, <see cref="Place"/> calls <see cref="Consume"/> (and planning uses <see cref="CanConsume"/>).
-    /// Identify returns which relatives (<see cref="Selection.BoundedTile"/>) this layer claims for the current source tile (empty = no match).
-    /// CanPlace decides whether placement can be planned given inventory reservation rules.
+    /// Identify returns which relatives (<see cref="Blueprint.BlueprintCell"/>) this layer claims for the current source tile (empty = no match).
+    /// <see cref="PlacementValid"/> and <see cref="HasRequiredItems"/> split planning: world/rules vs inventory when <see cref="PasteContext.NeedsItems"/> applies.
     /// </summary>
     internal abstract class Layer(string id, LayerType layerType)
     {
@@ -39,7 +39,7 @@ namespace ArchitectsStencilMod.Core.Layers
         /// <summary>
         /// Classifies tiles for this layer using <see cref="PasteTile.IdentifyFace"/> (blueprint <see cref="PasteTile.PayloadCell"/> when placing, live <see cref="PasteTile.Target"/> when clearing).
         /// </summary>
-        public abstract IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup);
+        public abstract IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup);
 
         /// <summary>
         /// Clears the given tiles. Returns the remaining tiles that were not cleared.
@@ -62,14 +62,23 @@ namespace ArchitectsStencilMod.Core.Layers
         public abstract bool CanConsume(in PasteTile tile, in PasteContext context);
 
         /// <summary>
-        /// Whether placement for this tile can be performed.
+        /// Whether this tile can be cleared at the target (for clear queue planning).
         /// </summary>
         public abstract bool CanClear(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context);
 
         /// <summary>
-        /// Whether placement for this tile can be performed.
+        /// Whether world/rules allow placing this tile (ignores inventory when items are required — use <see cref="HasRequiredItems"/>).
         /// </summary>
-        public abstract bool CanPlace(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context);
+        public abstract bool PlacementValid(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context);
+
+        /// <summary>
+        /// Whether required items are available when <see cref="PasteContext.NeedsItems"/> and inventory are in use.
+        /// </summary>
+        public abstract bool HasRequiredItems(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context);
+
+        /// <summary>Both placement validity and item requirements (when applicable).</summary>
+        public bool CanPlace(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context) =>
+            PlacementValid(in tile, in lookup, in context) && HasRequiredItems(in tile, in lookup, in context);
 
         /// <summary>
         /// Returns the items that are required for the given tile. Returns null if layer does not consume items.

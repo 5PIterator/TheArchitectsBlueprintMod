@@ -166,7 +166,7 @@ namespace ArchitectsStencilMod.Core
             state.Mode = Mode.Drag;
             state.DragKind = kind;
             state.DragStartCursorTile = cursorTile;
-            state.DragStartBounds = selection.Bounds;
+            state.DragStartBounds = selection.Area;
 
             if (SelectionSystem.TryGetPoints(player, out var a, out var b))
             {
@@ -176,8 +176,8 @@ namespace ArchitectsStencilMod.Core
             else
             {
                 // Shouldn't happen for a defined selection, but keep invariants safe.
-                state.DragStartPointA = new Point(selection.Bounds.Left, selection.Bounds.Top);
-                state.DragStartPointB = new Point(selection.Bounds.Right - 1, selection.Bounds.Bottom - 1);
+                state.DragStartPointA = new Point(selection.Area.Left, selection.Area.Top);
+                state.DragStartPointB = new Point(selection.Area.Right - 1, selection.Area.Bottom - 1);
             }
         }
 

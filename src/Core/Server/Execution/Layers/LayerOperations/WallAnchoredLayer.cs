@@ -12,7 +12,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
 
-        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup)
         {
             Tile subjectTile = tile.Subject;
             if (!FrameOperations.HasWallAnchor(subjectTile))
@@ -20,14 +20,16 @@ namespace ArchitectsStencilMod.Core.Layers
             if (FrameOperations.HasOtherAnchor(subjectTile))
                 return [];
 
-            IReadOnlyList<Selection.BoundedTile>? tiles = FrameOperations.GetFrameTilesAsBounded(tile.Relative, subjectTile, lookup);
+            IReadOnlyList<Blueprint.BlueprintCell>? tiles = FrameOperations.GetFrameTilesAsBounded(tile.Relative, subjectTile, lookup);
             return tiles ?? [];
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].HasTile;
 
-        public override bool CanPlace(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
+        public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
+
+        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
             if (!context.NeedsItems || context.Items is null || context.CheatSweep) return true;
             if (!tile.PayloadCell.HasTile()) return true;
@@ -63,7 +65,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
             var origin = FrameOperations.GetPlacementOriginTile(tiles);
             if (!context.CheatSweep && !Consume(in origin, in context))
-                return LayerResult.Fail(origin.World);
+                return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
 
             return res;
         }

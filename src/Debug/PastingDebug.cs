@@ -16,7 +16,7 @@ internal static class PastingDebug
     {
         if (!ASMLog.IsDebugEnabled) return;
         ASMLog.Debug(
-            $"Paste started: sourceClear={projection.CutSource}, targetArea=({projection.Bounds.X},{projection.Bounds.Y}) {projection.Bounds.Width}x{projection.Bounds.Height}",
+            $"Paste started: sourceClear={projection.CutSource}, targetArea=({projection.Area.X},{projection.Area.Y}) {projection.Area.Width}x{projection.Area.Height}",
             "Paste");
     }
 

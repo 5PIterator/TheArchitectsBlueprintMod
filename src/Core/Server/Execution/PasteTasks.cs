@@ -70,9 +70,13 @@ namespace ArchitectsStencilMod.Core
 
             // Execute the clearing operation. If it fails, return false and requeue the task.
             var res = _layer.Clear(_tiles, in context);
-            ASMLog.Debug($"Clear execute layer={_layer.Id} world=({_tiles[0].World.X},{_tiles[0].World.Y}) success={res.Success} remaining={res.RemainingTiles.Count}", "Paste");
+            ASMLog.Debug($"Clear execute layer={_layer.Id} world=({_tiles[0].World.X},{_tiles[0].World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
             if (!res.Success)
+            {
+                if (res.FailReason == LayerFailReason.InsufficientPickaxePower)
+                    return true;
                 return false;
+            }
 
             // If there are remaining tiles, requeue the task and return false.
             if (res.RemainingTiles.Count > 0)
@@ -140,9 +144,15 @@ namespace ArchitectsStencilMod.Core
 
             // Execute the placing operation. If it fails, return false and requeue the task.
             var res = _layer.Place(_tiles, in context);
-            ASMLog.Debug($"Place execute layer={_layer.Id} world=({_tiles[0].World.X},{_tiles[0].World.Y}) success={res.Success} remaining={res.RemainingTiles.Count}", "Paste");
+            ASMLog.Debug($"Place execute layer={_layer.Id} world=({_tiles[0].World.X},{_tiles[0].World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
             if (!res.Success)
+            {
+                if (context.IgnoreItems && res.FailReason == LayerFailReason.MissingItems)
+                    return true;
+                if (context.IgnoreInvalid && res.FailReason == LayerFailReason.InvalidPlacement)
+                    return true;
                 return false;
+            }
 
             // If there are remaining tiles, requeue the task and return false.
             if (res.RemainingTiles.Count > 0)

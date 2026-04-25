@@ -14,19 +14,27 @@ namespace ArchitectsStencilMod.Core.Layers
         /// <summary>
         /// Full paste footprint from the lookup; ignores the input tile content.
         /// </summary>
-        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup)
         {
-            if (lookup.PasteTiles.Count == 0) return [];
+            if (lookup.PasteTiles.Length == 0) return [];
 
-            var bounded = new List<Selection.BoundedTile>(lookup.PasteTiles.Count);
-            for (int i = 0; i < lookup.PasteTiles.Count; i++)
-                bounded.Add(new Selection.BoundedTile(lookup.PasteTiles[i].Relative, included: true));
+            var bounded = new List<Blueprint.BlueprintCell>(lookup.PasteTiles.Length);
+            for (int y = 0; y < lookup.PasteTiles.GetLength(1); y++)
+            {
+                for (int x = 0; x < lookup.PasteTiles.GetLength(0); x++)
+                {
+                    var pt = lookup.PasteTiles[x, y];
+                    bounded.Add(new Blueprint.BlueprintCell(pt.Relative, pt.World, true));
+                }
+            }
             return bounded;
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context) => true;
 
-        public override bool CanPlace(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context) => true;
+        public override bool PlacementValid(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context) => true;
+
+        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context) => true;
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context) => true;
 

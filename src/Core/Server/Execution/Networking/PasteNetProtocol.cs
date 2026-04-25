@@ -5,6 +5,7 @@ using System.Text;
 using ArchitectsStencilMod.Config;
 using ArchitectsStencilMod.Core;
 using Microsoft.Xna.Framework;
+using Terraria;
 using Terraria.ModLoader;
 
 namespace ArchitectsStencilMod.Core.Server
@@ -62,7 +63,8 @@ namespace ArchitectsStencilMod.Core.Server
         public Rectangle Bounds { get; private set; } = Rectangle.Empty;
         public Rectangle SourceArea { get; private set; } = Rectangle.Empty;
         public bool CutSource { get; private set; }
-        public bool ForceTiles { get; private set; }
+        public bool IgnoreItems { get; private set; }
+        public bool IgnoreInvalid { get; private set; }
         public bool TransparentPaste { get; private set; }
         public int PasteStepSize { get; private set; }
         public string Json { get; private set; } = string.Empty;
@@ -96,11 +98,12 @@ namespace ArchitectsStencilMod.Core.Server
             }
 
             request.RequestId = requestId;
-            request.Bounds = projection.Bounds;
+            request.Bounds = projection.Area;
             request.Json = json;
             var clientCfg = ModContent.GetInstance<ClientPasteConfig>();
             var serverCfg = ModContent.GetInstance<PastingConfig>();
-            request.ForceTiles = clientCfg.ForceTiles;
+            request.IgnoreItems = clientCfg.IgnoreItems;
+            request.IgnoreInvalid = clientCfg.IgnoreInvalid;
             request.TransparentPaste = clientCfg.TransparentPaste;
             request.PasteStepSize = Math.Max(1, Math.Min(clientCfg.PasteStepSize, serverCfg.MaxPasteStepSize));
             request.SourceArea = projection.SourceArea;
@@ -119,8 +122,10 @@ namespace ArchitectsStencilMod.Core.Server
 
             writer.Write(RequestId);
             WriteRectangle(writer, Bounds);
+            WriteRectangle(writer, SourceArea);
             writer.Write(CutSource);
-            writer.Write(ForceTiles);
+            writer.Write(IgnoreItems);
+            writer.Write(IgnoreInvalid);
             writer.Write(TransparentPaste);
             writer.Write(PasteStepSize);
             writer.Write(utf8.Length);
@@ -137,7 +142,8 @@ namespace ArchitectsStencilMod.Core.Server
             };
 
             request.CutSource = reader.ReadBoolean();
-            request.ForceTiles = reader.ReadBoolean();
+            request.IgnoreItems = reader.ReadBoolean();
+            request.IgnoreInvalid = reader.ReadBoolean();
             request.TransparentPaste = reader.ReadBoolean();
             request.PasteStepSize = reader.ReadInt32();
 
@@ -165,16 +171,25 @@ namespace ArchitectsStencilMod.Core.Server
             }
 
             var payload = Payload.FromJson(Json);
-            projection = new Projection(
-                cutSource: !SourceArea.IsEmpty && CutSource,
-                sourceArea: !SourceArea.IsEmpty && CutSource ? SourceArea : null
-                )
+
+            Player? shellOwner = (uint)ownerPlayerIndex < (uint)Main.maxPlayers ? Main.player[ownerPlayerIndex] : null;
+            var shell = new Selection(shellOwner.whoAmI);
+            shell.Define(Bounds);
+
+            projection = new Projection(shell, cutSource: !SourceArea.IsEmpty && CutSource)
             {
-                OwnerPlayerIndex = ownerPlayerIndex,
-                Id = RequestId
+                Id = RequestId,
             };
 
             projection.SetPayload(payload);
+
+            Rectangle targetRect = Bounds;
+            if (payload.IsDefined && (Bounds.Width != payload.Width || Bounds.Height != payload.Height))
+            {
+                targetRect = new Rectangle(Bounds.X, Bounds.Y, payload.Width, payload.Height);
+            }
+
+            projection.Define(targetRect);
             return true;
         }
 

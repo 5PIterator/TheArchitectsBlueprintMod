@@ -13,10 +13,16 @@ namespace ArchitectsStencilMod.Config
         [Header("PastePlanning")]
 
         /// <summary>
-        /// When enabled (default), tile placement is only planned when the tile can actually be placed.
+        /// When enabled (default), do not queue placement where required items are missing, and treat item failures during placement as task-complete.
         /// </summary>
         [DefaultValue(true)]
-        public bool ForceTiles = true;
+        public bool IgnoreItems = true;
+
+        /// <summary>
+        /// When enabled (default), do not queue placement where the tile cannot be placed by world/rules, and treat invalid-placement failures as task-complete.
+        /// </summary>
+        [DefaultValue(true)]
+        public bool IgnoreInvalid = true;
 
         /// <summary>
         /// When enabled (default), clears align with planned placement (selected source cells); deselected source cells do not clear the target.

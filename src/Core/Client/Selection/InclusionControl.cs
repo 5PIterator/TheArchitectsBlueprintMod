@@ -17,6 +17,7 @@ namespace ArchitectsStencilMod.Core
     /// </summary>
     public sealed class InclusionControl : ModSystem
     {
+        private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
         private enum Mode { None, Include, Exclude }
 
         private sealed class PlayerState
@@ -24,7 +25,7 @@ namespace ArchitectsStencilMod.Core
             public Mode Mode;
             public Point Anchor;
             public Point Current;
-            public Selection Target;
+            public Blueprint Target;
         }
 
         private readonly PlayerState[] _states = new PlayerState[Main.maxPlayers];
@@ -37,16 +38,7 @@ namespace ArchitectsStencilMod.Core
 
         private void BeginGesture(Player player, Mode mode, Point cursorTile)
         {
-            var selectionSystem = ModContent.GetInstance<SelectionSystem>();
-            Selection selection = selectionSystem.GetSelection(player);
-            var projectionSystem = ModContent.GetInstance<ProjectionSystem>();
-            Selection target = selection;
-            if (projectionSystem.TryGetProjectionAt(player, cursorTile, out var projection))
-            {
-                target = projection;
-            }
-
-            if (!target.IsDefined)
+            if (!BlueprintSystem.TryGetTopmostBlueprintAt(player, cursorTile, out Blueprint? target))
                 return;
 
             var state = GetState(player);
@@ -78,7 +70,7 @@ namespace ArchitectsStencilMod.Core
 
             state.Current = cursorTile;
 
-            Selection target = state.Target;
+            Blueprint target = state.Target;
             if (target is null || !target.IsDefined)
             {
                 state.Mode = Mode.None;
@@ -87,7 +79,7 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            Rectangle rect = Selection.FromPoints(state.Anchor, state.Current);
+            Rectangle rect = Blueprint.FromPoints(state.Anchor, state.Current);
 
             if (state.Mode == Mode.Include)
                 ApplyIncludeWithVolumeLimit(target, rect);
@@ -167,8 +159,8 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            Rectangle rect = Selection.FromPoints(state.Anchor, state.Current);
-            Rectangle targetBounds = state.Target.Bounds;
+            Rectangle rect = Blueprint.FromPoints(state.Anchor, state.Current);
+            Rectangle targetBounds = state.Target.Area;
             Color c = state.Mode == Mode.Include
                 ? ArchitectVisualPalette.IncludePreviewColor
                 : ArchitectVisualPalette.ExcludePreviewColor;
@@ -182,7 +174,7 @@ namespace ArchitectsStencilMod.Core
             OverlaySystem.UnregisterFamily($"inclusion:{player.whoAmI}");
         }
 
-        private static void UpdateTargetOverlay(Player player, Selection target)
+        private static void UpdateTargetOverlay(Player player, Blueprint target)
         {
             var selectionSystem = ModContent.GetInstance<SelectionSystem>();
             if (ReferenceEquals(target, selectionSystem.GetSelection(player)))
@@ -191,18 +183,18 @@ namespace ArchitectsStencilMod.Core
                 ModContent.GetInstance<ProjectionSystem>().UpdateProjectionOverlay(player);
         }
 
-        private static void ApplyIncludeWithVolumeLimit(Selection target, Rectangle tileRect)
+        private static void ApplyIncludeWithVolumeLimit(Blueprint target, Rectangle tileRect)
         {
             var config = ModContent.GetInstance<PastingConfig>();
             int volumeLimit = config.VolumeLimit;
-            if (volumeLimit <= 0 || target.Bounds.IsEmpty)
+            if (volumeLimit <= 0 || target.Area.IsEmpty)
                 return;
 
             int count = CountIncludedTiles(target);
             if (count >= volumeLimit)
                 return;
 
-            Rectangle area = Rectangle.Intersect(target.Bounds, tileRect);
+            Rectangle area = Rectangle.Intersect(target.Area, tileRect);
             if (area.IsEmpty)
                 return;
 
@@ -221,7 +213,7 @@ namespace ArchitectsStencilMod.Core
             }
         }
 
-        private static int CountIncludedTiles(Selection target)
+        private static int CountIncludedTiles(Blueprint target)
         {
             int count = 0;
             foreach (var t in target.Tiles)

@@ -61,20 +61,19 @@ namespace ArchitectsStencilMod.Core
     /// </summary>
     internal sealed class PasteTileLookup
     {
-        private readonly IReadOnlyList<PasteTile> _pasteTiles;
+        private readonly PasteTile[,] _pasteTiles;
         private readonly Dictionary<Point, PasteTile> _byRelative;
         private readonly Dictionary<Point, PasteTile> _byWorld;
 
-        public PasteTileLookup(IReadOnlyList<PasteTile> pasteTiles)
+        public PasteTileLookup(PasteTile[,] pasteTiles)
         {
             _pasteTiles = pasteTiles ?? throw new ArgumentNullException(nameof(pasteTiles));
-            int n = pasteTiles.Count;
+            int n = pasteTiles.Length;
             _byRelative = new Dictionary<Point, PasteTile>(n);
             _byWorld = new Dictionary<Point, PasteTile>(n);
 
-            for (int i = 0; i < n; i++)
+            foreach (var pasteTile in pasteTiles)
             {
-                PasteTile pasteTile = pasteTiles[i];
                 if (!_byRelative.TryAdd(pasteTile.Relative, pasteTile))
                     throw new InvalidOperationException($"Duplicate paste Relative ({pasteTile.Relative.X},{pasteTile.Relative.Y}); each cell must appear once.");
                 if (!_byWorld.TryAdd(pasteTile.World, pasteTile))
@@ -82,9 +81,9 @@ namespace ArchitectsStencilMod.Core
             }
         }
 
-        public IReadOnlyList<PasteTile> PasteTiles => _pasteTiles;
+        public PasteTile[,] PasteTiles => _pasteTiles;
 
-        public int Count => _pasteTiles.Count;
+        public int Count => _pasteTiles.Length;
 
         /// <summary>True if <paramref name="relative"/> is part of this paste.</summary>
         public bool IsInPasteScope(Point relative) => _byRelative.ContainsKey(relative);

@@ -18,9 +18,9 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
 
-        /// <summary>At most one <see cref="Selection.BoundedTile"/> (this relative only). No multi-cell frame expansion.</summary>
-        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
-            IsBlock(tile.Subject) ? [new Selection.BoundedTile(tile.Relative, included: true)] : [];
+        /// <summary>At most one <see cref="Blueprint.BlueprintCell"/> (this relative only). No multi-cell frame expansion.</summary>
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _) =>
+            IsBlock(tile.Subject) ? [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)] : [];
 
         /// <summary>Classifies <paramref name="subjectTile"/> (source-side intent vs target world per <see cref="PasteTile.SubjectType"/>).</summary>
         private static bool IsBlock(Tile subjectTile)
@@ -37,11 +37,17 @@ namespace ArchitectsStencilMod.Core.Layers
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].HasTile;
 
-        public override bool CanPlace(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
+        public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
+        {
+            if (!IsBlock(tile.Source)) return true;
+            return PlacementValidSingle(in tile, in context);
+        }
+
+        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
             if (!context.NeedsItems || context.Items is null || context.CheatSweep) return true;
             if (!IsBlock(tile.Source)) return true;
-            return CanPlaceSingleTile(in tile, in context);
+            return HasRequiredItemsSingle(in tile, in context);
         }
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
@@ -87,12 +93,12 @@ namespace ArchitectsStencilMod.Core.Layers
 
             var origin = FrameOperations.GetPlacementOriginTile(tiles);
             if (!context.CheatSweep && !Consume(in origin, in context))
-                return LayerResult.Fail(origin.World);
+                return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
 
             return res;
         }
 
-        private static bool CanPlaceSingleTile(in PasteTile tile, in PasteContext context)
+        private static bool PlacementValidSingle(in PasteTile tile, in PasteContext context)
         {
             int x = tile.World.X, y = tile.World.Y;
             if (!tile.Source.HasTile) return true;
@@ -110,10 +116,39 @@ namespace ArchitectsStencilMod.Core.Layers
             if (baseTileId.HasValue)
             {
                 ushort baseType = (ushort)baseTileId.Value;
+                if (targetTile.HasTile && targetTile.TileType != baseType)
+                    return false;
+                return true;
+            }
+
+            if (targetTile.HasTile && !context.CheatSweep)
+                return false;
+
+            return true;
+        }
+
+        private static bool HasRequiredItemsSingle(in PasteTile tile, in PasteContext context)
+        {
+            int x = tile.World.X, y = tile.World.Y;
+            if (!tile.Source.HasTile) return true;
+
+            ushort tileType = tile.Source.TileType;
+            if (tileType >= TileLoader.TileCount) return true;
+
+            int style = 0, alternate = 0;
+            TileObjectData.GetTileInfo(tile.Source, ref style, ref alternate);
+            int? baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
+            Tile targetTile = Main.tile[x, y];
+
+            if (targetTile.HasTile && targetTile.TileType == tileType) return true;
+
+            if (baseTileId.HasValue)
+            {
+                ushort baseType = (ushort)baseTileId.Value;
                 if (!targetTile.HasTile || targetTile.TileType != baseType)
                 {
-                    if (InventoryManager.FindItemByTile(context.Items, baseType) is null) return false;
-                    return InventoryManager.FindItemByTile(context.Items, tileType, style) is not null;
+                    if (InventoryManager.FindItemByTile(context.Items!, baseType) is null) return false;
+                    return InventoryManager.FindItemByTile(context.Items!, tileType, style) is not null;
                 }
             }
             else if (targetTile.HasTile && !context.CheatSweep)
@@ -121,7 +156,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 return false;
             }
 
-            return InventoryManager.FindItemByTile(context.Items, tileType, style) is not null;
+            return InventoryManager.FindItemByTile(context.Items!, tileType, style) is not null;
         }
     }
 }

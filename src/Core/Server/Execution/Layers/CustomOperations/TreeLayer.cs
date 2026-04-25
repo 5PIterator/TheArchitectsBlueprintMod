@@ -32,15 +32,19 @@ namespace ArchitectsStencilMod.Core.Layers
                 || TileID.Sets.Leaves[tileType];
         }
 
-        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup)
         {
             var buffer = new List<Point>();
             CollectTreeRelatives(tile.Relative, tile.SubjectType, in lookup, buffer);
             if (buffer.Count == 0) return [];
 
-            var bounded = new List<Selection.BoundedTile>(buffer.Count);
+            var bounded = new List<Blueprint.BlueprintCell>(buffer.Count);
             for (int i = 0; i < buffer.Count; i++)
-                bounded.Add(new Selection.BoundedTile(buffer[i], included: true));
+            {
+                Point rel = buffer[i];
+                var neighbor = lookup.GetPasteTile(rel);
+                bounded.Add(new Blueprint.BlueprintCell(rel, neighbor.World, true));
+            }
             return bounded;
         }
 
@@ -56,7 +60,9 @@ namespace ArchitectsStencilMod.Core.Layers
             return trunkRel == tile.Relative;
         }
 
-        public override bool CanPlace(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context)
+        public override bool PlacementValid(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context) => true;
+
+        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context)
         {
             if (!context.NeedsItems || context.Items is null || context.CheatSweep) return true;
             if (!tile.PayloadCell.HasTile()) return true;
@@ -168,10 +174,10 @@ namespace ArchitectsStencilMod.Core.Layers
         {
             int x = tile.World.X, y = tile.World.Y;
             if (!WorldGen.PlaceTile(x, y, TileID.LivingWood, mute: true, forced: true, plr: context.Player.whoAmI, style: 0))
-                return LayerResult.Fail(tile.World);
+                return LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
 
             if (!Main.tile[x, y].HasTile || Main.tile[x, y].TileType != TileID.LivingWood)
-                return LayerResult.Fail(tile.World);
+                return LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
 
             LayerSync.SyncTileSquare(x, y);
             return LayerResult.Ok(tile.World);
@@ -194,7 +200,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 {
                     PasteTile t = tiles[i];
                     if (!Consume(in t, in context))
-                        return LayerResult.Fail(t.World);
+                        return LayerResult.Fail(t.World, LayerFailReason.MissingItems);
                 }
             }
 

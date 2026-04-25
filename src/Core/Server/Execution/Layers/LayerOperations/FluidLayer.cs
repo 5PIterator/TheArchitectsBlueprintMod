@@ -12,13 +12,15 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private FluidLayer() : base("Fluid", LayerType.Liquid) { }
 
-        public override IReadOnlyList<Selection.BoundedTile> Identify(in PasteTile tile, in PasteTileLookup _) =>
-            tile.Subject.LiquidAmount > 0 ? [new Selection.BoundedTile(tile.Relative, included: true)] : [];
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _) =>
+            tile.Subject.LiquidAmount > 0 ? [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)] : [];
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             tile.Target.LiquidAmount > 0;
 
-        public override bool CanPlace(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
+        public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
+
+        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context) => true;
 

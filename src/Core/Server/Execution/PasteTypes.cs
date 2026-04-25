@@ -6,9 +6,10 @@ using Terraria.ModLoader;
 namespace ArchitectsStencilMod.Core
 {
     /// <summary>Per-paste preferences from the client; step size is capped by the server when pasting in multiplayer.</summary>
-    internal readonly struct ClientPreferences(bool forceTiles, bool transparentPaste, int pasteStepSize)
+    internal readonly struct ClientPreferences(bool ignoreItems, bool ignoreInvalid, bool transparentPaste, int pasteStepSize)
     {
-        public bool ForceTiles { get; } = forceTiles;
+        public bool IgnoreItems { get; } = ignoreItems;
+        public bool IgnoreInvalid { get; } = ignoreInvalid;
         public bool TransparentPaste { get; } = transparentPaste;
         public int PasteStepSize { get; } = pasteStepSize;
 
@@ -17,14 +18,14 @@ namespace ArchitectsStencilMod.Core
             var client = ModContent.GetInstance<ClientPasteConfig>();
             var server = ModContent.GetInstance<PastingConfig>();
             int step = Math.Max(1, Math.Min(client.PasteStepSize, server.MaxPasteStepSize));
-            return new ClientPreferences(client.ForceTiles, client.TransparentPaste, step);
+            return new ClientPreferences(client.IgnoreItems, client.IgnoreInvalid, client.TransparentPaste, step);
         }
 
         /// <summary>Re-clamp step after reading network values so clients cannot exceed the server's cap.</summary>
-        public static ClientPreferences FromNetwork(bool forceTiles, bool transparentPaste, int pasteStepSize, PastingConfig serverConfig)
+        public static ClientPreferences FromNetwork(bool ignoreItems, bool ignoreInvalid, bool transparentPaste, int pasteStepSize, PastingConfig serverConfig)
         {
             int step = Math.Max(1, Math.Min(pasteStepSize, serverConfig.MaxPasteStepSize));
-            return new ClientPreferences(forceTiles, transparentPaste, step);
+            return new ClientPreferences(ignoreItems, ignoreInvalid, transparentPaste, step);
         }
     }
 
@@ -37,8 +38,10 @@ namespace ArchitectsStencilMod.Core
         public readonly Player Player = Main.player[playerIndex];
         /// <summary>When true, sweep-related behavior may bypass normal item requirements (debug/cheat path).</summary>
         public readonly bool CheatSweep = serverConfig.CheatSweep;
-        /// <summary>When true, tile placement is planned only when the tile can actually be placed.</summary>
-        public readonly bool ForceTiles = clientPrefs.ForceTiles;
+        /// <summary>When true, skip queuing cells missing items and treat missing-item place failures as done.</summary>
+        public readonly bool IgnoreItems = clientPrefs.IgnoreItems;
+        /// <summary>When true, skip queuing invalid placements and treat invalid-placement failures as done.</summary>
+        public readonly bool IgnoreInvalid = clientPrefs.IgnoreInvalid;
         /// <summary>When true, layers must resolve and consume items via <see cref="Items"/>.</summary>
         public readonly bool NeedsItems = serverConfig.NeedsItems;
         /// <summary>Maximum tiles processed per paste step; clamped to at least 1.</summary>

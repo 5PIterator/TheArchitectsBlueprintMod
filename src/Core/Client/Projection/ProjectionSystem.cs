@@ -34,6 +34,21 @@ namespace ArchitectsStencilMod.Core
             return GetState(player).Projections;
         }
 
+        /// <summary>Topmost projection whose bounds contain <paramref name="cursorTile"/>, if any.</summary>
+        public bool TryGetProjectionAt(Player player, Point cursorTile, out Projection? projection)
+        {
+            var state = GetState(player);
+            int index = FindTopmostIndexAt(state, cursorTile);
+            if (index < 0)
+            {
+                projection = null;
+                return false;
+            }
+
+            projection = state.Projections[index];
+            return true;
+        }
+
         /// <summary>
         /// Sets which projection is considered active for paste and toggles (topmost under cursor is typical).
         /// </summary>
@@ -69,48 +84,18 @@ namespace ArchitectsStencilMod.Core
             Selection selection = selectionSystem.GetSelection(player);
 
             // Validate the selection
-            if (!selection.IsDefined || !selection.Bounds.Contains(cursorTile))
+            if (!selection.IsDefined || !selection.Area.Contains(cursorTile))
             {
                 return null;
             }
             var config = ModContent.GetInstance<PastingConfig>();
-            if (selection.Bounds.Width > config.MaxPasteWidth || selection.Bounds.Height > config.MaxPasteHeight)
+            if (selection.Area.Width > config.MaxPasteWidth || selection.Area.Height > config.MaxPasteHeight)
             {
                 return null;
             }
 
-            // Gather Selection rel, origin and source tiles.
-            Point rel = new(cursorTile.X - selection.Bounds.X, cursorTile.Y - selection.Bounds.Y);
-            Point origin = new(cursorTile.X - rel.X, cursorTile.Y - rel.Y);
-            IReadOnlyList<Selection.BoundedTile> sourceTiles = selection.SnapshotTiles(rel =>
-            {
-                Point world = selection.RelativeToWorld(rel);
-                if (!WorldGen.InWorld(world.X, world.Y))
-                {
-                    return null;
-                }
-
-                return Main.tile[world.X, world.Y];
-            });
-
             // Create the projection
-            var projection = new Projection(
-                cutSource: false,
-                sourceArea: selection.Bounds,
-                sourceTiles: sourceTiles)
-            {
-                OwnerPlayerIndex = player.whoAmI,
-            };
-            projection.Define(new Rectangle(origin.X, origin.Y, selection.Bounds.Width, selection.Bounds.Height));
-
-            // Synchronize the selected tiles with the selection (2D mask copied by relative)
-            foreach (var t in selection.Tiles)
-            {
-                if (projection.TryGetTileByRelative(t.Relative, out var pTile))
-                {
-                    pTile.Included = t.Included;
-                }
-            }
+            var projection = new Projection(selection, cutSource: false);
 
             // Load the payload from the world
             projection.LoadPayloadFromWorld();
@@ -140,14 +125,14 @@ namespace ArchitectsStencilMod.Core
             {
                 // If projection is defined, draw the bounds
                 Projection proj = list[i];
-                if (!proj.Bounds.IsEmpty)
+                if (!proj.Area.IsEmpty)
                 {
                     // CUT vs COPY: border color. Locked: outline only (transparent interior); unlocked: border + tinted fill.
                     Color c = proj.CutSource ? ArchitectVisualPalette.ProjectionCutColor : ArchitectVisualPalette.ProjectionCopyColor;
                     if (proj.IsLocked)
-                        OverlaySystem.RegTileBorder($"{i}:b", proj.Bounds, c, 2, family);
+                        OverlaySystem.RegTileBorder($"{i}:b", proj.Area, c, 2, family);
                     else
-                        OverlaySystem.RegTileBounds($"{i}:b", proj.Bounds, c, 2, family);
+                        OverlaySystem.RegTileBounds($"{i}:b", proj.Area, c, 2, family);
 
                     if (proj.CutSource)
                     {
@@ -210,7 +195,7 @@ namespace ArchitectsStencilMod.Core
             for (int i = state.Projections.Count - 1; i >= 0; i--)
             {
                 Projection p = state.Projections[i];
-                if (p.IsDefined && p.Bounds.Contains(cursorTile))
+                if (p.IsDefined && p.Area.Contains(cursorTile))
                 {
                     return i;
                 }
@@ -251,19 +236,6 @@ namespace ArchitectsStencilMod.Core
             return true;
         }
 
-        public bool TryGetProjectionAt(Player player, Point cursorTile, out Projection projection)
-        {
-            var state = GetState(player);
-            int index = FindTopmostIndexAt(state, cursorTile);
-            if (index >= 0)
-            {
-                projection = state.Projections[index];
-                return true;
-            }
-
-            projection = null;
-            return false;
-        }
 
         public bool TryGetProjectionByCorrelationId(Player player, int correlationId, out Projection projection)
         {
