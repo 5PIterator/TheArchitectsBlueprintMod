@@ -20,7 +20,11 @@ namespace ArchitectsStencilMod.Core.Layers
         public static bool MatchTileType(in PasteTile tile)
         {
             if (tile.PayloadCell.HasTile() != tile.Target.HasTile) return false;
-            if (!tile.Source.HasTile) return true;
+            // No source "intent" (e.g. cut-source Clear uses empty Source; destination clears use the capture).
+            // Matched = no block to reconcile only when the target is also free of a block, not "vacuously true" while
+            // Target still has a tile (which would skip queuing a clear for source cut and similar).
+            if (!tile.Source.HasTile)
+                return !tile.Target.HasTile;
             return tile.Source.TileType == tile.Target.TileType;
         }
 

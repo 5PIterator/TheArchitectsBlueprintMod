@@ -32,10 +32,10 @@ namespace ArchitectsStencilMod.Core.Layers
                 || TileID.Sets.Leaves[tileType];
         }
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
         {
             var buffer = new List<Point>();
-            CollectTreeRelatives(tile.Relative, tile.SubjectType, in lookup, buffer);
+            CollectTreeRelatives(tile.Relative, identifySubject, in lookup, buffer);
             if (buffer.Count == 0) return [];
 
             var bounded = new List<Blueprint.BlueprintCell>(buffer.Count);
@@ -127,7 +127,7 @@ namespace ArchitectsStencilMod.Core.Layers
         {
             outPoints.Clear();
             if (!lookup.TryGetPasteTile(startRel, out PasteTile seed)) return;
-            Tile seedView = seed.Subject;
+            Tile seedView = PasteTile.GetTileForIdentify(in seed, classify);
             if (!seedView.HasTile || seedView.TileType >= TileLoader.TileCount || !IsTreeType(seedView.TileType)) return;
 
             var visited = new HashSet<Point>();
@@ -146,7 +146,7 @@ namespace ArchitectsStencilMod.Core.Layers
                     Point n = new(cur.X + d.X, cur.Y + d.Y);
                     if (visited.Contains(n)) continue;
                     if (!lookup.TryGetPasteTile(n, out PasteTile neighbor)) continue;
-                    Tile view = neighbor.Subject;
+                    Tile view = PasteTile.GetTileForIdentify(in neighbor, classify);
                     if (!view.HasTile || view.TileType >= TileLoader.TileCount) continue;
                     if (!IsTreeType(view.TileType)) continue;
 

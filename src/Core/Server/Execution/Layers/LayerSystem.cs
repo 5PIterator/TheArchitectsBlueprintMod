@@ -168,7 +168,8 @@ namespace ArchitectsStencilMod.Core.Layers
             in PasteTileLookup identifyLookup,
             LayerPipeline pipeline,
             in PasteContext context,
-            PastingConfig config)
+            PastingConfig config,
+            PasteSubject identifySubject)
         {
             var identifiedLayers = new List<LayerIdentifyResult>();
             var claimedTypes = new HashSet<LayerType>();
@@ -181,7 +182,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 if (claimedTypes.Contains(layer.LayerType))
                     continue;
 
-                IReadOnlyList<Blueprint.BlueprintCell> tiles = layer.Identify(in pasteTile, in identifyLookup);
+                IReadOnlyList<Blueprint.BlueprintCell> tiles = layer.Identify(in pasteTile, in identifyLookup, identifySubject);
                 if (tiles.Count == 0)
                     continue;
 

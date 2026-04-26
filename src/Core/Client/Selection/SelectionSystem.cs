@@ -121,7 +121,7 @@ namespace ArchitectsStencilMod.Core
             // Invariant: Selection.Area should always reflect whichever endpoints have been provided.
             if (state.HasPointA && state.HasPointB)
             {
-                state.Selection.Define(new Rectangle(state.PointA.X, state.PointA.Y, state.PointB.X - state.PointA.X + 1, state.PointB.Y - state.PointA.Y + 1));
+                state.Selection.Define(state.PointA, state.PointB);
                 return;
             }
 

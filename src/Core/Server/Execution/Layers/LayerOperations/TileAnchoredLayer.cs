@@ -12,9 +12,9 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
         {
-            Tile subjectTile = tile.Subject;
+            Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             if (!FrameOperations.HasTileAnchor(subjectTile))
                 return [];
             if (FrameOperations.HasWallAnchor(subjectTile) || FrameOperations.HasOtherAnchor(subjectTile))

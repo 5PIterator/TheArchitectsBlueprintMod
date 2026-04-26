@@ -10,9 +10,9 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private WiringLayer() : base("Wiring", LayerType.Wiring) { }
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
         {
-            Tile subjectTile = tile.Subject;
+            Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             bool hasWiring = subjectTile.RedWire || subjectTile.BlueWire || subjectTile.GreenWire || subjectTile.YellowWire || subjectTile.HasActuator;
             return hasWiring ? [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)] : [];
         }

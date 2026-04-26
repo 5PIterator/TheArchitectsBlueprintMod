@@ -14,7 +14,7 @@ namespace ArchitectsStencilMod.Core.Layers
         /// <summary>
         /// Full paste footprint from the lookup; ignores the input tile content.
         /// </summary>
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject _)
         {
             if (lookup.PasteTiles.Length == 0) return [];
 

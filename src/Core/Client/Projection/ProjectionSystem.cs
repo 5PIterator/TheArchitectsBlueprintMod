@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsStencilMod.Config;
 using ArchitectsStencilMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -78,23 +77,15 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         public Projection NewProjection(Player player, Point cursorTile)
         {
-
             // Get the selection from the selection system
             var selectionSystem = ModContent.GetInstance<SelectionSystem>();
             Selection selection = selectionSystem.GetSelection(player);
 
-            // Validate the selection
             if (!selection.IsDefined || !selection.Area.Contains(cursorTile))
             {
                 return null;
             }
-            var config = ModContent.GetInstance<PastingConfig>();
-            if (selection.Area.Width > config.MaxPasteWidth || selection.Area.Height > config.MaxPasteHeight)
-            {
-                return null;
-            }
 
-            // Create the projection
             var projection = new Projection(selection, cutSource: false);
 
             // Load the payload from the world

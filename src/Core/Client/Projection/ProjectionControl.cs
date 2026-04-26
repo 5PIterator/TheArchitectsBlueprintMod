@@ -7,6 +7,7 @@ namespace ArchitectsStencilMod.Core
 {
     /// <summary>
     /// COPY-tool gestures for projections: create from selection, pick up and move, cancel restores start-of-drag position.
+    /// Hit-testing uses <see cref="BlueprintSystem"/> (same topmost order as INCLUDE/EXCLUDE).
     /// Mirrors <see cref="SelectionControl"/> (gesture state here; list data in <see cref="ProjectionSystem"/>).
     /// Future: handles, resize, and on-projection buttons follow the same Control vs System split.
     /// </summary>
@@ -37,7 +38,12 @@ namespace ArchitectsStencilMod.Core
 
         public static ProjectionSystem ProjectionSystem => ModContent.GetInstance<ProjectionSystem>();
 
-        /// <summary>Begins a COPY gesture (left click): pick up an existing projection or spawn one from the blueprint.</summary>
+        private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
+
+        /// <summary>
+        /// Begins a COPY gesture (left click): pick up the topmost <see cref="Projection"/> under the cursor, or
+        /// create one from the topmost <see cref="Selection"/> when the cursor is on the selection and not covered by a projection.
+        /// </summary>
         public void BeginCopy(Player player, Point cursorTile)
         {
             var state = GetState(player);
@@ -46,35 +52,49 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            var sys = ProjectionSystem;
-            if (sys.TryGetProjectionAt(player, cursorTile, out var topmost))
+            if (!BlueprintSystem.TryGetTopmostBlueprintAt(player, cursorTile, out Blueprint? top) || top is null)
             {
-                if (topmost.IsLocked)
-                {
-                    return;
-                }
-
-                sys.SetActiveProjection(player, topmost);
-                sys.BringProjectionToFront(player, topmost);
-                state.Mode = Mode.Drag;
-                state.DragKind = DragKind.Move;
-                state.DraggingProjection = topmost;
-                state.DragStartBounds = topmost.Area;
-                state.DragOffsetFromCursor = new Point(cursorTile.X - topmost.Area.X, cursorTile.Y - topmost.Area.Y);
+                return;
             }
-            else
+
+            var sys = ProjectionSystem;
+
+            switch (top)
             {
-                var projection = sys.NewProjection(player, cursorTile);
-                if (projection is null)
+                case Projection topmost:
+                    if (topmost.IsLocked)
+                    {
+                        return;
+                    }
+
+                    sys.SetActiveProjection(player, topmost);
+                    sys.BringProjectionToFront(player, topmost);
+                    state.Mode = Mode.Drag;
+                    state.DragKind = DragKind.Move;
+                    state.DraggingProjection = topmost;
+                    state.DragStartBounds = topmost.Area;
+                    state.DragOffsetFromCursor = new Point(cursorTile.X - topmost.Area.X, cursorTile.Y - topmost.Area.Y);
+                    break;
+
+                case Selection:
                 {
-                    return;
+                    Projection projection = sys.NewProjection(player, cursorTile);
+                    if (projection is null)
+                    {
+                        return;
+                    }
+
+                    state.Mode = Mode.Drag;
+                    state.DragKind = DragKind.Move;
+                    state.DraggingProjection = projection;
+                    state.DragStartBounds = projection.Area;
+                    state.DragOffsetFromCursor = new Point(cursorTile.X - projection.Area.X, cursorTile.Y - projection.Area.Y);
+                    break;
                 }
 
-                state.Mode = Mode.Drag;
-                state.DragKind = DragKind.Move;
-                state.DraggingProjection = projection;
-                state.DragStartBounds = projection.Area;
-                state.DragOffsetFromCursor = new Point(cursorTile.X - projection.Area.X, cursorTile.Y - projection.Area.Y);
+                default:
+                    // COPY only interacts with live projections and the world selection, not other registered blueprints.
+                    return;
             }
 
             if (state.DraggingProjection is not null && state.DraggingProjection.IsDefined)

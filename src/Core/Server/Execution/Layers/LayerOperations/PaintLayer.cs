@@ -11,9 +11,9 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private PaintLayer() : base("Paint", LayerType.Paint) { }
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
         {
-            Tile subjectTile = tile.Subject;
+            Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             if (subjectTile.TileColor == PaintID.None && subjectTile.WallColor == PaintID.None)
                 return [];
 

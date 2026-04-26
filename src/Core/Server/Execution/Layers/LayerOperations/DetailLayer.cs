@@ -11,9 +11,9 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private DetailLayer() : base("Detail", LayerType.Detail) { }
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
         {
-            Tile subjectTile = tile.Subject;
+            Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             bool hasDetail = subjectTile.IsActuated || subjectTile.BlockType != BlockType.Solid;
             return hasDetail ? [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)] : [];
         }

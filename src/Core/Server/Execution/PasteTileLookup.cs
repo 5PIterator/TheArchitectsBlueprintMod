@@ -15,7 +15,7 @@ namespace ArchitectsStencilMod.Core
 
     /// <summary>
     /// One relative index in a paste: <see cref="InteractionEntry"/>, source payload tile, source-side and target-side <see cref="Tile"/> views, and coordinates. See <see cref="Projection"/>.
-    /// <see cref="SubjectType"/> selects which face <see cref="Layer.Identify"/> uses (source intent vs world to clear).
+    /// <see cref="GetTileForIdentify"/> selects which face <see cref="Layer.Identify"/> uses (source intent vs world to clear).
     /// </summary>
     internal readonly struct PasteTile(
         PayloadCell payloadCell,
@@ -23,8 +23,7 @@ namespace ArchitectsStencilMod.Core
         Tile source,
         Tile target,
         Point relative,
-        Point world,
-        PasteSubject subjectType = PasteSubject.Source)
+        Point world)
     {
         /// <summary>Payload cell from the projection: not a real tile, just a data structure.</summary>
         public readonly PayloadCell PayloadCell = payloadCell;
@@ -38,8 +37,6 @@ namespace ArchitectsStencilMod.Core
         public readonly Point Relative = relative;
         /// <summary>World grid coordinates of the target tile (<see cref="Target"/>).</summary>
         public readonly Point World = world;
-        /// <summary>Which tile view <see cref="Layer.Identify"/> should classify (placement vs clear planning).</summary>
-        public readonly PasteSubject SubjectType = subjectType;
         /// <summary>Materializes <see cref="PayloadCell"/> as a scratch <see cref="Tile"/> (allocates/overwrites tModLoader’s <see cref="PayloadCell.ToTile"/> buffer). Prefer <see cref="PayloadCell"/> at call sites.</summary>
         public readonly Tile PayloadTile => PayloadCell.ToTile();
         /// <summary>Shorthand for <see cref="Relative"/>.X (not world; use <see cref="World"/> for <see cref="Main.tile"/>).</summary>
@@ -47,12 +44,9 @@ namespace ArchitectsStencilMod.Core
         /// <summary>Shorthand for <see cref="Relative"/>.Y (not world; use <see cref="World"/> for <see cref="Main.tile"/>).</summary>
         public int Y => Relative.Y;
 
-        /// <summary>Resolved subject tile for identification: payload-side vs destination world.</summary>
-        public Tile Subject => SubjectType == PasteSubject.Source ? Source : Target;
-
-        /// <summary>Returns a copy with a different <see cref="SubjectType"/> (lookup entries default to <see cref="PasteSubject.Source"/>).</summary>
-        public PasteTile WithSubject(PasteSubject subject) =>
-            new(PayloadCell, Interaction, Source, Target, Relative, World, subject);
+        /// <summary>Source (blueprint) or target (world) <see cref="Tile"/> for <see cref="Layer.Identify"/> (placement vs clear planning is chosen by the caller, not stored on the struct).</summary>
+        public static Tile GetTileForIdentify(in PasteTile tile, PasteSubject mode) =>
+            mode == PasteSubject.Source ? tile.Source : tile.Target;
     }
 
     /// <summary>

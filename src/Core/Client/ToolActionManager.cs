@@ -257,7 +257,7 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>Starts or stops/cancels paste for the projection under the cursor (local player only). Network is handled in <see cref="PastingSystem"/>.</summary>
-        private void HandlePaste(ToolActionKey key, Player player, Point cursorTile)
+        private static void HandlePaste(ToolActionKey key, Player player, Point cursorTile)
         {
             // --- Right-click stops an in-flight paste on the hit projection; left-click validates and starts or requests paste.
 
@@ -357,7 +357,8 @@ namespace ArchitectsStencilMod.Core
                     ProjectionSystem.RemoveProjectionAt(player, cursorTile);
                     break;
                 // PIN/SET: Clear the selection.
-                case ToolAction.PIN|ToolAction.SET:
+                case ToolAction.PIN:
+                case ToolAction.SET:
                     if (SelectionSystem.GetSelection(player).IsDefined && SelectionSystem.GetSelection(player).Area.Contains(cursorTile))
                     {
                         SelectionSystem.ClearSelection(player);

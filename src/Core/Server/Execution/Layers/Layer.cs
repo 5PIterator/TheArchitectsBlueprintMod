@@ -37,9 +37,9 @@ namespace ArchitectsStencilMod.Core.Layers
         public abstract bool Match(in PasteTile tile);
 
         /// <summary>
-        /// Classifies tiles for this layer using <see cref="PasteTile.IdentifyFace"/> (blueprint <see cref="PasteTile.PayloadCell"/> when placing, live <see cref="PasteTile.Target"/> when clearing).
+        /// Classifies tiles for this layer. Use <see cref="PasteTile.GetTileForIdentify"/> with <paramref name="identifySubject"/> (blueprint <see cref="PasteTile.Source"/> when placing, live <see cref="PasteTile.Target"/> when clearing).
         /// </summary>
-        public abstract IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup);
+        public abstract IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject);
 
         /// <summary>
         /// Clears the given tiles. Returns the remaining tiles that were not cleared.

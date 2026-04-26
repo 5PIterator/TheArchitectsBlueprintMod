@@ -1,8 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using ArchitectsStencilMod.Debug;
-using ArchitectsStencilMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ObjectData;
@@ -13,8 +11,9 @@ namespace ArchitectsStencilMod.Core
     /// <summary>
     /// A movable ghost of a <see cref="Selection"/>: carries the <see cref="Core.Payload">payload</see>
     /// (detached <c>TileData</c> snapshots per cell), aligned with <see cref="SourceArea"/> / <see cref="TargetArea"/>,
-    /// and <see cref="SourceTiles"/> / <see cref="TargetTiles"/> walk orders over the 2D snapshot mask.
-    /// <see cref="SourceArea"/> and the initial snapshot set are fixed when the projection is constructed;
+    /// <see cref="SourceTiles"/> is the original capture region (fixed clone); <see cref="TargetTiles"/> is this projection’s
+    /// grid (moves with the ghost) and is the only place where include/exclude is stored after construction.
+    /// <see cref="SourceArea"/> and the initial capture bounds are fixed when the projection is constructed;
     /// fill <see cref="Payload"/> afterward via <see cref="LoadPayloadFromWorld"/> or <see cref="SetPayload"/>.
     /// </summary>
     /// <param name="selection">Selection blueprint used to seed initial target bounds and inclusion mask.</param>
@@ -26,17 +25,25 @@ namespace ArchitectsStencilMod.Core
         private Payload _payload = Payload.Empty;
         private readonly Selection _selection;
 
+        /// <summary>
+        /// Builds a projection from a selection snapshot (e.g. server paste shell). Does not apply client cursor/size gates;
+        /// use <see cref="FromSelection"/> for in-world copy from the current selection.
+        /// </summary>
         public Projection(Selection selection, bool cutSource = false) : base(selection.Owner)
         {
             ArgumentNullException.ThrowIfNull(selection);
+            if (!selection.IsDefined)
+                throw new Exception("Selection is not defined");
+            if (selection.Owner < 0 || selection.Owner >= Main.maxPlayers)
+                throw new Exception("Selection owner is invalid");
+
+
+
             _selection = selection.Clone();
             CutSource = cutSource;
-            if (_selection.IsDefined)
-            {
-                Define(_selection.Area);
-                SyncInclusion();
-                RefreshTargetTiles();
-            }
+            Define(_selection.Area);
+            SyncInclusion();
+            RefreshTargetTiles();
         }
 
         private void SyncInclusion()
@@ -277,27 +284,56 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Refreshes <see cref="TargetTiles"/> from the <see cref="SourceTiles"/> and current inclusion when the projection moves.
+        /// Rebuilds <see cref="TargetTiles"/> (this blueprint’s <see cref="Blueprint.Tiles"/>) for the current
+        /// <see cref="Blueprint.Area"/>, preserving <see cref="BlueprintCell.Included"/> from the previous grid when
+        /// dimensions allow; otherwise copies inclusion once from the selection snapshot captured in the constructor.
+        /// Payload and inclusion are decoupled: <see cref="LoadPayloadFromWorld"/> does not change which cells are included.
         /// </summary>
         private void RefreshTargetTiles()
         {
-            if (SourceArea.IsEmpty)
+            if (Area.IsEmpty)
             {
                 return;
             }
 
-            Tiles = new BlueprintCell[Area.Width, Area.Height];
+            int w = Area.Width;
+            int h = Area.Height;
+            var previousTiles = Tiles;
+            Tiles = new BlueprintCell[w, h];
 
-            foreach (var source in SourceTiles)
+            for (int y = 0; y < h; y++)
             {
-                Point rel = source.Relative;
-                Point world = RelativeToWorld(rel);
-                if (!WorldGen.InWorld(world.X, world.Y))
+                for (int x = 0; x < w; x++)
                 {
-                    continue;
-                }
+                    Point rel = new(x, y);
+                    Point world = RelativeToWorld(rel);
+                    if (!WorldGen.InWorld(world.X, world.Y))
+                    {
+                        continue;
+                    }
 
-                Tiles[rel.X, rel.Y] = new BlueprintCell(rel, world, source.Included);
+                    bool included;
+                    if (previousTiles is not null
+                        && (uint)x < (uint)previousTiles.GetLength(0)
+                        && (uint)y < (uint)previousTiles.GetLength(1))
+                    {
+                        included = previousTiles[x, y].Included;
+                    }
+                    else if (_selection.Tiles is not null
+                        && w == _selection.Area.Width
+                        && h == _selection.Area.Height
+                        && (uint)x < (uint)_selection.Area.Width
+                        && (uint)y < (uint)_selection.Area.Height)
+                    {
+                        included = _selection.Tiles[x, y].Included;
+                    }
+                    else
+                    {
+                        included = true;
+                    }
+
+                    Tiles[x, y] = new BlueprintCell(rel, world, included);
+                }
             }
         }
 

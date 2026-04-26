@@ -14,10 +14,9 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup)
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
         {
-            PasteSubject classify = tile.SubjectType;
-            Tile subjectTile = tile.Subject;
+            Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             if (!subjectTile.HasTile ||
                 subjectTile.TileType >= TileLoader.TileCount ||
                 !TileID.Sets.Falling[subjectTile.TileType])
@@ -29,7 +28,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 var p = new Microsoft.Xna.Framework.Point(tile.Relative.X, tile.Relative.Y + dy);
                 if (!lookup.TryGetPasteTile(p, out PasteTile lookupTile))
                     break;
-                Tile t = lookupTile.Subject;
+                Tile t = PasteTile.GetTileForIdentify(in lookupTile, identifySubject);
                 if (!t.HasTile ||
                     t.TileType >= TileLoader.TileCount ||
                     !TileID.Sets.Falling[t.TileType])
@@ -41,7 +40,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 var p = new Microsoft.Xna.Framework.Point(tile.Relative.X, tile.Relative.Y + dy);
                 if (!lookup.TryGetPasteTile(p, out PasteTile lookupTile))
                     break;
-                Tile t = lookupTile.Subject;
+                Tile t = PasteTile.GetTileForIdentify(in lookupTile, identifySubject);
                 if (!t.HasTile ||
                     t.TileType >= TileLoader.TileCount ||
                     !TileID.Sets.Falling[t.TileType])

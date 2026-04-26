@@ -12,8 +12,8 @@ namespace ArchitectsStencilMod.Core.Layers
 
         private FluidLayer() : base("Fluid", LayerType.Liquid) { }
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _) =>
-            tile.Subject.LiquidAmount > 0 ? [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)] : [];
+        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject) =>
+            PasteTile.GetTileForIdentify(in tile, identifySubject).LiquidAmount > 0 ? [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)] : [];
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             tile.Target.LiquidAmount > 0;
