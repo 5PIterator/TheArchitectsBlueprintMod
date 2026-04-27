@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Utils;
+using ArchitectsStencilMod.ModUtils;
 using Terraria;
 using Terraria.ID;
 

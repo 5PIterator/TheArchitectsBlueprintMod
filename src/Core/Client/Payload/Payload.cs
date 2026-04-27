@@ -83,6 +83,7 @@ namespace ArchitectsStencilMod.Core
         };
 
         private readonly TileData? _data;
+        internal TileData? Data => _data;
         public WallData Wall => new(_data);
         public BlockData Block => new(_data);
         public LiquidData Liquid => new(_data);
@@ -92,6 +93,15 @@ namespace ArchitectsStencilMod.Core
 
         public bool IsEmpty => _data is null;
         internal PayloadCell(TileData data) => _data = data;
+
+        /// <summary>Creates a non-empty payload cell from detached tile data.</summary>
+        internal static PayloadCell FromData(TileData data)
+        {
+            // --- Preserve the already-detached snapshot object as a payload cell.
+
+            ArgumentNullException.ThrowIfNull(data);
+            return new PayloadCell(data);
+        }
 
         /// <summary>
         /// Creates a new <see cref="PayloadCell"/> from a <see cref="Tile"/>.
@@ -274,11 +284,35 @@ namespace ArchitectsStencilMod.Core
             return new Payload(width, height, cells);
         }
 
-        /// Loads a payload from a JSON string.
+        /// <summary>Loads a payload from a raw JSON 2D tile-data array.</summary>
         public static Payload FromJson(string json)
         {
-            throw new NotImplementedException();
-            //return new Payload(width, height, cells);
+            // --- Deserialize the raw grid, then convert each non-null tile snapshot into a cell.
+
+            if (string.IsNullOrWhiteSpace(json))
+                return Empty;
+
+            PayloadCell.TileData?[,]? dataGrid = JsonConvert.DeserializeObject<PayloadCell.TileData?[,]>(json);
+            if (dataGrid is null)
+                return Empty;
+
+            int width = dataGrid.GetLength(0);
+            int height = dataGrid.GetLength(1);
+            if (width <= 0 || height <= 0)
+                return Empty;
+
+            var cells = new PayloadCell[width, height];
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    PayloadCell.TileData? data = dataGrid[x, y];
+                    if (data is not null)
+                        cells[x, y] = PayloadCell.FromData(data);
+                }
+            }
+
+            return new Payload(width, height, cells);
         }
 
         /// <summary>
@@ -360,8 +394,23 @@ namespace ArchitectsStencilMod.Core
             }
         }
 
-        /// <summary>Returns a JSON string of 2D cell data.</summary>
-        public string ToJson() => JsonConvert.SerializeObject(_cells);
+        /// <summary>Returns a JSON string of raw 2D tile-data snapshots.</summary>
+        public string ToJson()
+        {
+            // --- Project cells to nullable tile data so empty cells remain explicit JSON nulls.
+
+            if (!IsDefined)
+                return JsonConvert.SerializeObject(new PayloadCell.TileData?[0, 0]);
+
+            var dataGrid = new PayloadCell.TileData?[_width, _height];
+            for (int x = 0; x < _width; x++)
+            {
+                for (int y = 0; y < _height; y++)
+                    dataGrid[x, y] = _cells[x, y].Data;
+            }
+
+            return JsonConvert.SerializeObject(dataGrid);
+        }
 
         public bool TryGetCell(Point relative, out PayloadCell cell)
         {

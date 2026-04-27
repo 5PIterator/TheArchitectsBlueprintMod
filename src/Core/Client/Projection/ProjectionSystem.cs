@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ArchitectsStencilMod.UI;
+using ArchitectsStencilMod.UIKit;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -31,6 +32,26 @@ namespace ArchitectsStencilMod.Core
         public IReadOnlyList<Projection> GetProjections(Player player)
         {
             return GetState(player).Projections;
+        }
+
+        /// <summary>Returns the front-most defined projection for a player, if one exists.</summary>
+        public bool TryGetFrontmostProjection(Player player, out Projection projection)
+        {
+            // --- Walk the projection list from topmost to backmost and return the first defined projection.
+
+            var state = GetState(player);
+            for (int i = state.Projections.Count - 1; i >= 0; i--)
+            {
+                Projection candidate = state.Projections[i];
+                if (candidate.IsDefined)
+                {
+                    projection = candidate;
+                    return true;
+                }
+            }
+
+            projection = null;
+            return false;
         }
 
         /// <summary>Topmost projection whose bounds contain <paramref name="cursorTile"/>, if any.</summary>
@@ -123,7 +144,22 @@ namespace ArchitectsStencilMod.Core
                     if (proj.IsLocked)
                         OverlaySystem.RegTileBorder($"{i}:b", proj.Area, c, 2, family);
                     else
-                        OverlaySystem.RegTileBounds($"{i}:b", proj.Area, c, 2, family);
+                    {
+                        // Test: target fill via UIRect instead of RegTileBounds (same tile→screen mapping as ModUtils.DrawBorderedRect).
+                        Rectangle targetArea = proj.Area;
+                        Color fill = c * 0.3f;
+                        OverlaySystem.RegScreen($"{i}:b", () =>
+                        {
+                            var rect = new UIRect(
+                                new Vector2(targetArea.X, targetArea.Y) * 16f - Main.screenPosition,
+                                targetArea.Width * 16f,
+                                targetArea.Height * 16f)
+                            {
+                                ForegroundColor = fill
+                            };
+                            rect.Draw(Main.spriteBatch);
+                        }, family);
+                    }
 
                     if (proj.CutSource)
                     {

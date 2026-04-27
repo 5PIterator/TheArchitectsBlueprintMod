@@ -8,7 +8,7 @@ using System.Text.Json;
 using ArchitectsStencilMod.Core;
 using ArchitectsStencilMod.Core.Layers;
 using ArchitectsStencilMod.Debug;
-using ArchitectsStencilMod.Utils;
+using ArchitectsStencilMod.ModUtils;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;

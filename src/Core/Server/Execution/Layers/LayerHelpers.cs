@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using ArchitectsStencilMod.Core;
 using ArchitectsStencilMod.Core.TileMapping;
-using ArchitectsStencilMod.Utils;
+using ArchitectsStencilMod.ModUtils;
 using ArchitectsStencilMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;

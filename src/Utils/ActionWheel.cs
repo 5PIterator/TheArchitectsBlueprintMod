@@ -11,7 +11,7 @@ using Terraria.GameContent.UI;
 using Terraria.GameInput;
 using ArchitectsStencilMod.Core;
 
-namespace ArchitectsStencilMod.Utils
+namespace ArchitectsStencilMod.ModUtils
 {
     /// <summary>
     /// Lightweight "action wheel" UI.

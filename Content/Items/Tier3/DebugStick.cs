@@ -7,7 +7,7 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using ArchitectsStencilMod.Core;
 using ArchitectsStencilMod.Debug;
-using ArchitectsStencilMod.Utils;
+using ArchitectsStencilMod.ModUtils;
 
 namespace ArchitectsStencilMod.Content.Items
 {

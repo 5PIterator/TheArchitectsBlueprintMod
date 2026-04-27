@@ -5,7 +5,8 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
-using ArchitectsStencilMod.Utils;
+using ArchitectsStencilMod.Core;
+using ArchitectsStencilMod.ModUtils;
 
 namespace ArchitectsStencilMod.UI
 {
@@ -303,11 +304,12 @@ namespace ArchitectsStencilMod.UI
                 return;
 
             Instance._catalog.Draw();
+            ProjectionControl.DrawPayloadButtonsInOverlay();
         }
 
         internal static void DrawPoints(Point[] points, Color color)
         {
-            var pixel = ModUtils.DummyTexture;
+            var pixel = ModUtils.ModUtils.DummyTexture;
             for (int i = 0; i < points.Length; i++)
             {
                 Point tile = points[i];
@@ -323,7 +325,7 @@ namespace ArchitectsStencilMod.UI
 
         public static void DrawTileFill(Point[] tiles, Color fill)
         {
-            var pixel = ModUtils.DummyTexture;
+            var pixel = ModUtils.ModUtils.DummyTexture;
             var scale = new Vector2(TilePixelSize, TilePixelSize);
             for (int i = 0; i < tiles.Length; i++)
             {
@@ -337,14 +339,14 @@ namespace ArchitectsStencilMod.UI
         {
             var pos = new Vector2(tileBounds.X, tileBounds.Y);
             var size = new Vector2(tileBounds.Width, tileBounds.Height);
-            ModUtils.DrawBorderedRect(Main.spriteBatch, color, pos, size, borderWidth);
+            ModUtils.ModUtils.DrawBorderedRect(Main.spriteBatch, color, pos, size, borderWidth);
         }
 
         public static void DrawTileBorder(Rectangle tileBounds, Color color, int borderWidth)
         {
             var pos = new Vector2(tileBounds.X, tileBounds.Y);
             var size = new Vector2(tileBounds.Width, tileBounds.Height);
-            ModUtils.DrawBorderedRect(Main.spriteBatch, Color.Transparent, color, pos, size, borderWidth);
+            ModUtils.ModUtils.DrawBorderedRect(Main.spriteBatch, Color.Transparent, color, pos, size, borderWidth);
         }
 
         /// <summary>

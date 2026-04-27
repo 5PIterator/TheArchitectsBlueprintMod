@@ -6,7 +6,7 @@ using Terraria.UI;
 using System.Collections.Generic;
 using ReLogic.Graphics;
 using Terraria.GameContent;
-using ArchitectsStencilMod.Utils;
+using ArchitectsStencilMod.ModUtils;
 using Terraria.ID;
 namespace ArchitectsStencilMod.Debug;
 

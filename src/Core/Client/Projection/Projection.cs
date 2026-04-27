@@ -238,6 +238,45 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
+        /// Applies an imported payload and resizes this projection at its current top-left tile.
+        /// </summary>
+        internal void ApplyImportedPayload(Payload source)
+        {
+            // --- Replace the payload, resize target bounds, reset inclusion, and refresh overlays.
+
+            ArgumentNullException.ThrowIfNull(source);
+            if (!source.IsDefined)
+            {
+                _payload = Payload.Empty;
+                CutSource = false;
+                RefreshTargetTiles();
+                RefreshInventories();
+                UpdateOverlay();
+                return;
+            }
+
+            _payload = Payload.FromClone(source);
+            CutSource = false;
+            Area = new Rectangle(Area.X, Area.Y, source.Width, source.Height);
+            RefreshTargetTiles();
+
+            if (Tiles is not null)
+            {
+                for (int y = 0; y < Area.Height; y++)
+                {
+                    for (int x = 0; x < Area.Width; x++)
+                    {
+                        if (Tiles[x, y] is not null)
+                            Tiles[x, y].Included = true;
+                    }
+                }
+            }
+
+            RefreshInventories();
+            UpdateOverlay();
+        }
+
+        /// <summary>
         /// Live <c>Main.tile</c> under <see cref="TargetArea"/> at <paramref name="relative"/>.
         /// </summary>
         public bool TryGetTargetTile(Point relative, out Tile targetTile)

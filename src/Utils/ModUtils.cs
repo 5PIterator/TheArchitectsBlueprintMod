@@ -11,7 +11,7 @@ using Terraria.GameContent;
 using Terraria.GameContent.Events;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Utils
+namespace ArchitectsStencilMod.ModUtils
 {
 	internal static class ModUtils
 	{
