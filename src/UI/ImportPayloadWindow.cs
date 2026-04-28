@@ -36,7 +36,7 @@ namespace ArchitectsStencilMod.UI
             AddChild(new UILabel("Mouse wheel scrolls the list") { Position = new Vector2(18, Height - 45), Scale = 0.38f, ForegroundColor = Color.LightGray });
 
             var cancel = new UIButton("Cancel") { AutoSize = false, Width = 92, Position = new Vector2(Width - 110, Height - 48) };
-            cancel.onLeftClick += (_, _) => ModContent.GetInstance<PayloadFileDialogs>().CloseWithCancel();
+            cancel.onLeftClick += (_, _) => _close();
             AddChild(cancel);
 
             RebuildRows();

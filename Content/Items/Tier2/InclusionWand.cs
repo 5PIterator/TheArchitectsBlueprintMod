@@ -5,7 +5,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using ArchitectsStencilMod.Core;
-using static ArchitectsStencilMod.Core.ToolActionManager;
+using ArchitectsStencilMod.UI;
 using ArchitectsStencilMod.ModUtils;
 
 namespace ArchitectsStencilMod.Content.Items
@@ -60,12 +60,11 @@ namespace ArchitectsStencilMod.Content.Items
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			var actionManager = ModContent.GetInstance<ToolActionManager>();
 			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
 
 			if (player.altFunctionUse == 0)
 			{
-				actionManager.Handle(_mode, ToolActionKey.LeftClick, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftClick, player, cursorTile);
 			}
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
 			{
@@ -75,9 +74,9 @@ namespace ArchitectsStencilMod.Content.Items
 				{
 				var entries = new List<ActionWheelEntry>(2)
 				{
-					new(GetActionId(ToolAction.INCLUDE), GetActionLabel(ToolAction.INCLUDE), onSelect: () => _mode = ToolAction.INCLUDE,
+					new(ToolActionDefinitions.GetActionId(ToolAction.INCLUDE), ToolActionDefinitions.GetActionLabel(ToolAction.INCLUDE), onSelect: () => _mode = ToolAction.INCLUDE,
 						isSelected: () => _mode == ToolAction.INCLUDE),
-					new(GetActionId(ToolAction.EXCLUDE), GetActionLabel(ToolAction.EXCLUDE), onSelect: () => _mode = ToolAction.EXCLUDE,
+					new(ToolActionDefinitions.GetActionId(ToolAction.EXCLUDE), ToolActionDefinitions.GetActionLabel(ToolAction.EXCLUDE), onSelect: () => _mode = ToolAction.EXCLUDE,
 						isSelected: () => _mode == ToolAction.EXCLUDE)
 				};
 					ActionWheel.OpenNew(Main.myPlayer, Item.type, entries);
@@ -93,14 +92,13 @@ namespace ArchitectsStencilMod.Content.Items
 				return;
 
 			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
-			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			if (Main.mouseLeft && Main.mouseRight)
-				actionManager.Handle(_mode, ToolActionKey.RightClick, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.RightClick, player, cursorTile);
 			else if (Main.mouseLeft && !Main.mouseLeftRelease)
-				actionManager.Handle(_mode, ToolActionKey.LeftHold, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftHold, player, cursorTile);
 			else if (!Main.mouseLeft && Main.mouseLeftRelease)
-				actionManager.Handle(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftRelease, player, cursorTile);
 		}
 
 		public override void AddRecipes()

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ArchitectsStencilMod.Config;
 using ArchitectsStencilMod.UI;
+using ArchitectsStencilMod.UIKit;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -10,7 +11,7 @@ namespace ArchitectsStencilMod.Core
 {
     /// <summary>
     /// Gesture handler for INCLUDE/EXCLUDE rectangle edits on a player's Selection or Projection.
-    /// Driven by <see cref="ToolActionManager"/> via <see cref="BeginInc"/>/<see cref="BeginExc"/>;
+    /// Driven by <see cref="ArchitectsStencilMod.UI.InterfaceSystem.DispatchToolInput"/> via <see cref="BeginInc"/>/<see cref="BeginExc"/>;
     /// hold/release/cancel routing matches <see cref="SelectionControl"/> and <see cref="ProjectionControl"/>.
     /// <para/>
     /// In-progress gestures can be canceled via <see cref="CancelGesture"/> (e.g. tool right-click).
@@ -124,8 +125,8 @@ namespace ArchitectsStencilMod.Core
         internal void UpdateExcludedTileOverlays(Player player)
         {
             int who = player.whoAmI;
-            string family = $"projection:deselect:{who}";
-            OverlaySystem.UnregisterFamily(family);
+            UIView host = InterfaceSystem.GetPerPlayerHost(InterfaceLayer.ProjectionDeselect, who);
+            host.RemoveAllChildren();
 
             var projectionSystem = ModContent.GetInstance<ProjectionSystem>();
             IReadOnlyList<Projection> list = projectionSystem.GetProjections(player);
@@ -133,7 +134,7 @@ namespace ArchitectsStencilMod.Core
             {
                 Point[] excluded = list[i].BuildExcludedTilePoints();
                 if (excluded.Length > 0)
-                    OverlaySystem.RegTileFill($"{i}:u", excluded, Color.Black * 0.25f, family);
+                    host.AddChild(new UITileFill(excluded, Color.Black * 0.25f));
             }
         }
 
@@ -166,12 +167,14 @@ namespace ArchitectsStencilMod.Core
                 : ArchitectVisualPalette.ExcludePreviewColor;
             Rectangle clamped = Rectangle.Intersect(targetBounds, rect);
             int who = player.whoAmI;
-            OverlaySystem.RegTileBounds("preview", clamped, c, 2, $"inclusion:{who}");
+            UIView host = InterfaceSystem.GetPerPlayerHost(InterfaceLayer.InclusionPreview, who);
+            host.RemoveAllChildren();
+            host.AddChild(new UIBoundsTile(clamped, c, 2));
         }
 
         private static void ClearGestureOverlay(Player player)
         {
-            OverlaySystem.UnregisterFamily($"inclusion:{player.whoAmI}");
+            InterfaceSystem.GetPerPlayerHost(InterfaceLayer.InclusionPreview, player.whoAmI).RemoveAllChildren();
         }
 
         private static void UpdateTargetOverlay(Player player, Blueprint target)

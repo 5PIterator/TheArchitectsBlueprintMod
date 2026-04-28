@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using ArchitectsStencilMod.UI;
+using ArchitectsStencilMod.UIKit;
 using ArchitectsStencilMod.Core;
 
 namespace ArchitectsStencilMod.Core.Client
@@ -15,14 +16,8 @@ namespace ArchitectsStencilMod.Core.Client
     /// </summary>
     public sealed class PasteOverlayMonitor : ModSystem
     {
-        private const string LocalFamilyPrefix = "pasteLocal";
-        private const string RemoteFamilyPrefix = "pasteRemote";
-
         private readonly List<PasteOverlaySnapshot> _localScratch = [];
         private readonly List<PasteOverlaySnapshot> _remoteFromServer = [];
-        private readonly HashSet<int> _lastLocalOverlayIds = [];
-        private readonly HashSet<int> _lastRemoteOverlayIds = [];
-
         public override void PostUpdateEverything()
         {
             if (Main.dedServ)
@@ -47,8 +42,7 @@ namespace ArchitectsStencilMod.Core.Client
 
         private void Refresh()
         {
-            UnregisterTrackedFamilies(_lastLocalOverlayIds, LocalFamilyPrefix);
-            UnregisterTrackedFamilies(_lastRemoteOverlayIds, RemoteFamilyPrefix);
+            InterfaceSystem.ClearLayer(InterfaceLayer.PasteProgress);
 
             switch (Main.netMode)
             {
@@ -63,52 +57,41 @@ namespace ArchitectsStencilMod.Core.Client
                         if (op.TryBuildOverlaySnapshot(out PasteOverlaySnapshot snap))
                             _localScratch.Add(snap);
                     }
-                    RegisterSnapshots(_localScratch, LocalFamilyPrefix, _lastLocalOverlayIds);
+                    RegisterSnapshots(_localScratch);
                     break;
                 case NetmodeID.MultiplayerClient:
-                    RegisterSnapshots(_remoteFromServer, RemoteFamilyPrefix, _lastRemoteOverlayIds);
+                    RegisterSnapshots(_remoteFromServer);
                     break;
                 case NetmodeID.Server:
                     return;
             }
         }
 
-        private static void UnregisterTrackedFamilies(HashSet<int> ids, string prefix)
+        private static void RegisterSnapshots(List<PasteOverlaySnapshot> snapshots)
         {
-            foreach (int id in ids)
-                OverlaySystem.UnregisterFamily(MakeFamily(prefix, id));
-            ids.Clear();
-        }
-
-        private static void RegisterSnapshots(List<PasteOverlaySnapshot> snapshots, string prefix, HashSet<int> trackIds)
-        {
+            UIView layer = InterfaceSystem.GetLayer(InterfaceLayer.PasteProgress);
             for (int i = 0; i < snapshots.Count; i++)
             {
                 PasteOverlaySnapshot s = snapshots[i];
-                string family = MakeFamily(prefix, s.OverlayId);
-                trackIds.Add(s.OverlayId);
 
                 Color placeHue = ArchitectVisualPalette.PlacePhaseColor;
                 Color clearHue = ArchitectVisualPalette.ClearPhaseColor;
                 Color baseHue = s.IsPlacePhase ? placeHue : clearHue;
 
                 if (s.Pending.Length > 0)
-                    OverlaySystem.RegTileFill("pending", s.Pending, baseHue * 0.35f, family);
+                    layer.AddChild(new UITileFill(s.Pending, baseHue * 0.35f));
                 if (s.Clear.Length > 0)
-                    OverlaySystem.RegTileFill("clear", s.Clear, clearHue * 0.6f, family);
+                    layer.AddChild(new UITileFill(s.Clear, clearHue * 0.6f));
                 if (s.Place.Length > 0)
-                    OverlaySystem.RegTileFill("place", s.Place, placeHue * 0.6f, family);
+                    layer.AddChild(new UITileFill(s.Place, placeHue * 0.6f));
                 if (s.Done.Length > 0)
-                    OverlaySystem.RegTileFill("done", s.Done, baseHue * 0.1f, family);
+                    layer.AddChild(new UITileFill(s.Done, baseHue * 0.1f));
             }
         }
 
-        private static string MakeFamily(string prefix, int overlayId) => $"{prefix}:{overlayId}";
-
         private void ClearAllPasteFamilies()
         {
-            UnregisterTrackedFamilies(_lastLocalOverlayIds, LocalFamilyPrefix);
-            UnregisterTrackedFamilies(_lastRemoteOverlayIds, RemoteFamilyPrefix);
+            InterfaceSystem.ClearLayer(InterfaceLayer.PasteProgress);
         }
     }
 }

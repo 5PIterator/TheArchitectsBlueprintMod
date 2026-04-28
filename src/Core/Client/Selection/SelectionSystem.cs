@@ -1,5 +1,6 @@
 using System;
 using ArchitectsStencilMod.UI;
+using ArchitectsStencilMod.UIKit;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -91,28 +92,21 @@ namespace ArchitectsStencilMod.Core
         internal void UpdateSelectionOverlay(Player player)
         {
             int who = player.whoAmI;
-            string family = $"selection:{who}";
+            UIView host = InterfaceSystem.GetPerPlayerHost(InterfaceLayer.Selection, who);
+            host.RemoveAllChildren();
 
             Selection selection = GetSelection(player);
             if (!selection.IsDefined)
-            {
-                OverlaySystem.UnregisterFamily(family);
                 return;
-            }
 
-            // Draw the bounds of the selection
-            OverlaySystem.RegTileBounds("bounds", selection.Area, ArchitectVisualPalette.SelectionBoundsColor, 2, family);
-            // Clear previous exclusion fill: RegTileFill does not run when the mask is all included, and the
-            // catalog would otherwise keep the last non-empty "excluded" registration.
-            OverlaySystem.Unregister("excluded", family);
+            host.AddChild(new UIBoundsTile(selection.Area, ArchitectVisualPalette.SelectionBoundsColor, 2));
             Point[] excluded = selection.BuildExcludedTilePoints();
             if (excluded.Length > 0)
-                OverlaySystem.RegTileFill("excluded", excluded, Color.Black * 0.35f, family);
-            // Draw the pin points of the selection
+                host.AddChild(new UITileFill(excluded, Color.Black * 0.35f));
             if (TryGetPoints(player, out var a, out var b))
             {
-                OverlaySystem.RegPoints("a", [a], ArchitectVisualPalette.PinAColor, family);
-                OverlaySystem.RegPoints("b", [b], ArchitectVisualPalette.PinBColor, family);
+                host.AddChild(new UIPoint(a, ArchitectVisualPalette.PinAColor));
+                host.AddChild(new UIPoint(b, ArchitectVisualPalette.PinBColor));
             }
         }
 

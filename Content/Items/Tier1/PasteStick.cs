@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using ArchitectsStencilMod.Core;
-using static ArchitectsStencilMod.Core.ToolActionManager;
+using ArchitectsStencilMod.UI;
 
 namespace ArchitectsStencilMod.Content.Items
 {
@@ -40,12 +40,11 @@ namespace ArchitectsStencilMod.Content.Items
 				return null;
 
 			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
-			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			if (player.altFunctionUse == 0)
-				actionManager.Handle(ToolAction.PASTE, ToolActionKey.LeftClick, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(ToolAction.PASTE, ToolActionKey.LeftClick, player, cursorTile);
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
-				actionManager.Handle(ToolAction.PASTE, ToolActionKey.RightClick, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(ToolAction.PASTE, ToolActionKey.RightClick, player, cursorTile);
 
 			return true;
 		}

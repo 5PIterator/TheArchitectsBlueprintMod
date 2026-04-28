@@ -7,7 +7,7 @@ namespace ArchitectsStencilMod.Core
 {
     /// <summary>
     /// Camera-mode-like interactive gesture handler for a player's Selection bounds.
-    /// Driven by <see cref="ToolActionManager"/> for PIN/SET left-click/hold/release; right-click cancel is handled there.
+    /// Driven by <see cref="ArchitectsStencilMod.UI.InterfaceSystem.DispatchToolInput"/> for PIN/SET left-click/hold/release; right-click cancel is handled there.
     /// <para/>
     /// In-progress gestures can be canceled via <see cref="CancelGesture"/> (e.g. tool right-click).
     /// </summary>

@@ -37,7 +37,7 @@ namespace ArchitectsStencilMod.UI
             AddChild(_textBox);
 
             var cancel = new UIButton("Cancel") { AutoSize = false, Width = 92, Position = new Vector2(Width - 212, Height - 48) };
-            cancel.onLeftClick += (_, _) => ModContent.GetInstance<PayloadFileDialogs>().CloseWithCancel();
+            cancel.onLeftClick += (_, _) => _close();
             AddChild(cancel);
 
             var export = new UIButton("Export") { AutoSize = false, Width = 92, Position = new Vector2(Width - 110, Height - 48) };

@@ -6,7 +6,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using ArchitectsStencilMod.Core;
-using static ArchitectsStencilMod.Core.ToolActionManager;
+using ArchitectsStencilMod.UI;
 using ArchitectsStencilMod.ModUtils;
 
 namespace ArchitectsStencilMod.Content.Items
@@ -76,12 +76,11 @@ namespace ArchitectsStencilMod.Content.Items
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			var actionManager = ModContent.GetInstance<ToolActionManager>();
 			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
 
 			if (player.altFunctionUse == 0)
 			{
-				actionManager.Handle(_mode, ToolActionKey.LeftClick, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftClick, player, cursorTile);
 			}
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
 			{
@@ -91,11 +90,11 @@ namespace ArchitectsStencilMod.Content.Items
 				{
 					var entries = new List<ActionWheelEntry>(3)
 					{
-						new(GetActionId(ToolAction.COPY), GetActionLabel(ToolAction.COPY), onSelect: () => _mode = ToolAction.COPY,
+						new(ToolActionDefinitions.GetActionId(ToolAction.COPY), ToolActionDefinitions.GetActionLabel(ToolAction.COPY), onSelect: () => _mode = ToolAction.COPY,
 							isSelected: () => _mode == ToolAction.COPY),
-						new(GetActionId(ToolAction.PASTE), GetActionLabel(ToolAction.PASTE), onSelect: () => _mode = ToolAction.PASTE,
+						new(ToolActionDefinitions.GetActionId(ToolAction.PASTE), ToolActionDefinitions.GetActionLabel(ToolAction.PASTE), onSelect: () => _mode = ToolAction.PASTE,
 							isSelected: () => _mode == ToolAction.PASTE),
-						new(GetActionId(ToolAction.RESET), GetActionLabel(ToolAction.RESET), onSelect: () => _mode = ToolAction.RESET,
+						new(ToolActionDefinitions.GetActionId(ToolAction.RESET), ToolActionDefinitions.GetActionLabel(ToolAction.RESET), onSelect: () => _mode = ToolAction.RESET,
 							isSelected: () => _mode == ToolAction.RESET)
 					};
 					ActionWheel.OpenNew(Main.myPlayer, Item.type, entries);
@@ -114,14 +113,13 @@ namespace ArchitectsStencilMod.Content.Items
 				return;
 
 			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
-			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			if (Main.mouseLeft && Main.mouseRight)
-				actionManager.Handle(_mode, ToolActionKey.RightClick, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.RightClick, player, cursorTile);
 			if (Main.mouseLeft && !Main.mouseLeftRelease)
-				actionManager.Handle(_mode, ToolActionKey.LeftHold, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftHold, player, cursorTile);
 			else if (!Main.mouseLeft && Main.mouseLeftRelease)
-				actionManager.Handle(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftRelease, player, cursorTile);
 		}
 
 		public override void AddRecipes()

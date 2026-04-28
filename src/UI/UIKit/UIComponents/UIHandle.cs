@@ -41,7 +41,7 @@ namespace ArchitectsStencilMod.UIKit
                 return;
 
             var fill = MouseInside ? Color.White * 0.9f : Color.White * 0.55f;
-            UIBlueprint.DrawScreenRectangle(ScreenBounds, fill, Color.Black * 0.6f);
+            UIBlueprint.DrawScreenRectangle(spriteBatch, ScreenBounds, fill, Color.Black * 0.6f);
             base.Draw(spriteBatch);
         }
     }

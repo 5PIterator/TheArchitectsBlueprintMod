@@ -31,10 +31,10 @@ namespace ArchitectsStencilMod.UIKit
 		public static bool GameMouseOverwritten = false;
 		protected static int MouseX { get { return Main.mouseX; } }
 		protected static int MouseY { get { return Main.mouseY; } }
-		protected static bool MouseLeftButton = false;
-		protected static bool MousePrevLeftButton = false;
-		protected static bool MouseRightButton = false;
-		protected static bool MousePrevRightButton = false;
+		internal static bool MouseLeftButton = false;
+		internal static bool MousePrevLeftButton = false;
+		internal static bool MouseRightButton = false;
+		internal static bool MousePrevRightButton = false;
 		public static int ScrollAmount = 0;
 
 		public static string HoverText = "";
@@ -472,6 +472,11 @@ namespace ArchitectsStencilMod.UIKit
 
 		public virtual void AddChild(UIView view)
 		{
+			if (children.Contains(view))
+				return;
+
+			view.onMouseDown -= view_onMouseDown;
+			view.onMouseUp -= view_onMouseUp;
 			view.Parent = this;
 			view.onMouseDown += new ClickEventHandler(view_onMouseDown);
 			view.onMouseUp += new ClickEventHandler(view_onMouseUp);

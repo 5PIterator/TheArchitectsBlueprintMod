@@ -126,47 +126,28 @@ namespace ArchitectsStencilMod.Core
         internal void UpdateProjectionOverlay(Player player)
         {
             int who = player.whoAmI;
-            string family = $"projection:{who}";
+            UIView host = InterfaceSystem.GetPerPlayerHost(InterfaceLayer.ProjectionWorld, who);
+            host.RemoveAllChildren();
 
-            // Clear the previous overlay
-            OverlaySystem.UnregisterFamily(family);
-
-            // For each projection, draw the bounds and the unselected tiles
             IReadOnlyList<Projection> list = GetProjections(player);
             for (int i = 0; i < list.Count; i++)
             {
-                // If projection is defined, draw the bounds
                 Projection proj = list[i];
                 if (!proj.Area.IsEmpty)
                 {
                     // CUT vs COPY: border color. Locked: outline only (transparent interior); unlocked: border + tinted fill.
                     Color c = proj.CutSource ? ArchitectVisualPalette.ProjectionCutColor : ArchitectVisualPalette.ProjectionCopyColor;
                     if (proj.IsLocked)
-                        OverlaySystem.RegTileBorder($"{i}:b", proj.Area, c, 2, family);
+                        host.AddChild(new UIBorderTile(proj.Area, c, 2));
                     else
-                    {
-                        // Test: target fill via UIRect instead of RegTileBounds (same tile→screen mapping as ModUtils.DrawBorderedRect).
-                        Rectangle targetArea = proj.Area;
-                        Color fill = c * 0.3f;
-                        OverlaySystem.RegScreen($"{i}:b", () =>
-                        {
-                            var rect = new UIRect(
-                                new Vector2(targetArea.X, targetArea.Y) * 16f - Main.screenPosition,
-                                targetArea.Width * 16f,
-                                targetArea.Height * 16f)
-                            {
-                                ForegroundColor = fill
-                            };
-                            rect.Draw(Main.spriteBatch);
-                        }, family);
-                    }
+                        host.AddChild(new UIWorldRectFill(proj.Area, c * 0.3f));
 
                     if (proj.CutSource)
                     {
                         if (proj.IsLocked)
-                            OverlaySystem.RegTileBorder($"{i}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
+                            host.AddChild(new UIBorderTile(proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2));
                         else
-                            OverlaySystem.RegTileBounds($"{i}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
+                            host.AddChild(new UIBoundsTile(proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2));
                     }
                 }
             }
@@ -181,23 +162,21 @@ namespace ArchitectsStencilMod.Core
         private void UpdateInventoryOverlay(Player player)
         {
             int who = player.whoAmI;
-            string family = $"inventory:{who}";
-            OverlaySystem.UnregisterFamily(family);
+            UIView host = InterfaceSystem.GetPerPlayerHost(InterfaceLayer.InventoryOutline, who);
+            host.RemoveAllChildren();
 
             IReadOnlyList<Projection> list = GetProjections(player);
-            int idx = 0;
             for (int i = 0; i < list.Count; i++)
             {
                 bool locked = list[i].IsLocked;
                 IReadOnlyList<Rectangle> inventories = list[i].Inventories;
+                Color c = ArchitectVisualPalette.InventoryOutlineColor;
                 for (int j = 0; j < inventories.Count; j++)
                 {
-                    Color c = ArchitectVisualPalette.InventoryOutlineColor;
                     if (locked)
-                        OverlaySystem.RegTileBorder($"c:{idx}", inventories[j], c, 2, family);
+                        host.AddChild(new UIBorderTile(inventories[j], c, 2));
                     else
-                        OverlaySystem.RegTileBounds($"c:{idx}", inventories[j], c, 2, family);
-                    idx++;
+                        host.AddChild(new UIBoundsTile(inventories[j], c, 2));
                 }
             }
         }

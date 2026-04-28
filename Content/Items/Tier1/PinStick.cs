@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using ArchitectsStencilMod.Core;
-using static ArchitectsStencilMod.Core.ToolActionManager;
+using ArchitectsStencilMod.UI;
 
 namespace ArchitectsStencilMod.Content.Items
 {
@@ -53,18 +53,17 @@ namespace ArchitectsStencilMod.Content.Items
 				return null;
 
 			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
-			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			// If the player is using the primary function (left-click), trigger a pin action.
 			if (player.altFunctionUse == 0)
 			{
-				actionManager.Handle(ToolAction.PIN, ToolActionKey.LeftClick, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(ToolAction.PIN, ToolActionKey.LeftClick, player, cursorTile);
 			}
 			// If the player is using the alternate function (right-click), trigger a cancel action.
 			// Note: if the left button is still held, ignore the right-click to prevent interference with the hold/drag gesture.
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
 			{
-				actionManager.Handle(ToolAction.PIN, ToolActionKey.RightClick, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(ToolAction.PIN, ToolActionKey.RightClick, player, cursorTile);
 			}
 
 			return true;
@@ -79,17 +78,16 @@ namespace ArchitectsStencilMod.Content.Items
 				return;
 
 			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
-			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			// If both left and right buttons are down, emit a right-click cancel event (for rectangle cancellation).
 			if (Main.mouseLeft && Main.mouseRight)
-				actionManager.Handle(ToolAction.PIN, ToolActionKey.RightClick, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(ToolAction.PIN, ToolActionKey.RightClick, player, cursorTile);
 			// If the left button is held and was also down in the previous tick, emit a hold event.
 			else if (Main.mouseLeft && !Main.mouseLeftRelease)
-				actionManager.Handle(ToolAction.PIN, ToolActionKey.LeftHold, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(ToolAction.PIN, ToolActionKey.LeftHold, player, cursorTile);
 			// If the left button was released (transitioned from down to up), emit a release event.
 			else if (!Main.mouseLeft && Main.mouseLeftRelease)
-				actionManager.Handle(ToolAction.PIN, ToolActionKey.LeftRelease, player, cursorTile);
+				InterfaceSystem.DispatchToolInput(ToolAction.PIN, ToolActionKey.LeftRelease, player, cursorTile);
 		}
 
 		public override void AddRecipes()
