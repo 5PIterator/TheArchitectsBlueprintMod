@@ -9,9 +9,8 @@ using Terraria.GameInput;
 namespace ArchitectsStencilMod.Debug
 {
     /// <summary>
-    /// Manages step-through execution of long-running processes (e.g. discovery).
-    /// When the player holds the debug stick, left-click steps; right-click cancels.
-    /// Designed for reuse by other systems beyond discovery.
+    /// Manages step-through execution of long-running processes (e.g. discovery, stepped paste).
+    /// Steps are advanced via <see cref="TryAdvanceSession"/> (debug stick primary use); right-click cancels.
     /// </summary>
     public static class DebugStepper
     {
@@ -30,7 +29,7 @@ namespace ArchitectsStencilMod.Debug
         }
 
         /// <summary>
-        /// Starts a stepper session. The enumerator will be advanced on left-click when the player holds the debug stick.
+        /// Starts a stepper session. Advance with <see cref="TryAdvanceSession"/> while holding the debug stick.
         /// Right-click cancels. Returns immediately; execution continues over frames.
         /// </summary>
         /// <param name="player">Player who must hold the debug stick to step.</param>
@@ -56,7 +55,7 @@ namespace ArchitectsStencilMod.Debug
         }
 
         /// <summary>
-        /// Called each frame by DebugStepperSystem. Advances the session when the player steps or cancels.
+        /// Called each frame by DebugStepperSystem for cancel / validity checks (stepping is item-driven).
         /// </summary>
         internal static void Update()
         {
@@ -76,6 +75,16 @@ namespace ArchitectsStencilMod.Debug
         {
             _session?.Cancel();
             _session = null;
+        }
+
+        /// <summary>
+        /// Advances the active session by one step (debug stick primary use). Returns false when there is no session.
+        /// </summary>
+        public static bool TryAdvanceSession(Player player)
+        {
+            if (_session is null || player.whoAmI != Main.myPlayer)
+                return false;
+            return _session.TryAdvanceOne(player);
         }
 
         private sealed class StepperSession
@@ -128,9 +137,17 @@ namespace ArchitectsStencilMod.Debug
                     Cancel();
                     return;
                 }
+            }
 
-                if (!PlayerInput.Triggers.JustPressed.MouseLeft)
-                    return;
+            /// <summary>Runs one <see cref="IEnumerator.MoveNext"/> when the player still holds the debug stick.</summary>
+            public bool TryAdvanceOne(Player player)
+            {
+                if (_finished)
+                    return false;
+                if (_player != player || player.whoAmI != Main.myPlayer)
+                    return false;
+                if (!IsHoldingDebugStick(player))
+                    return false;
 
                 bool hasMore = _enumerator.MoveNext();
                 if (!hasMore)
@@ -139,6 +156,8 @@ namespace ArchitectsStencilMod.Debug
                     _onComplete?.Invoke();
                     _log?.Invoke("Debug stepper: complete.");
                 }
+
+                return true;
             }
         }
     }

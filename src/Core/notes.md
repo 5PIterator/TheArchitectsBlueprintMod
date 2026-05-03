@@ -1,0 +1,2 @@
+Issues:
+- Seems that there is a fundamental issue with excluded tiles. First, Projection should ignore the excluded source tiles. It should only initially copy the included states to the target tiles. Second, the inclusion control seem to have issues with changes in the selection, as sometimes the excluded overlay stays on the screen even when the selection is changed.

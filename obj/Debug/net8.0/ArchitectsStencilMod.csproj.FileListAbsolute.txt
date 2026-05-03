@@ -10,3 +10,4 @@ r:\Documents\My Games\Terraria\tModLoader\ModSources\ArchitectsStencilMod\obj\De
 r:\Documents\My Games\Terraria\tModLoader\ModSources\ArchitectsStencilMod\obj\Debug\net8.0\refint\ArchitectsStencilMod.dll
 r:\Documents\My Games\Terraria\tModLoader\ModSources\ArchitectsStencilMod\obj\Debug\net8.0\ArchitectsStencilMod.pdb
 r:\Documents\My Games\Terraria\tModLoader\ModSources\ArchitectsStencilMod\obj\Debug\net8.0\ref\ArchitectsStencilMod.dll
+r:\Documents\My Games\Terraria\tModLoader\ModSources\ArchitectsStencilMod\obj\Debug\net8.0\ArchitectsStencilMod.sourcelink.json

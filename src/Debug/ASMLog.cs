@@ -33,12 +33,12 @@ namespace ArchitectsStencilMod.Debug
         }
 
         /// <summary>
-        /// True when debug logging is enabled (ShowDebugLogs config). Use to avoid expensive string builds.
+        /// True when debug logging is enabled (<see cref="ClientLogConfig.ShowDebugLogs"/>). Use to avoid expensive string builds.
         /// </summary>
-        public static bool IsDebugEnabled => TileMappingConfig.Instance?.ShowDebugLogs ?? false;
+        public static bool IsDebugEnabled => ClientLogConfig.Instance?.ShowDebugLogs ?? false;
 
         /// <summary>
-        /// Logs a debug message. Only emitted when ShowDebugLogs is enabled.
+        /// Logs a debug message. Only emitted when client debug logs are enabled.
         /// </summary>
         public static void Debug(string message, string? category = null)
         {
@@ -47,7 +47,7 @@ namespace ArchitectsStencilMod.Debug
         }
 
         /// <summary>
-        /// Logs an info message. Only emitted when ShowDebugLogs is enabled.
+        /// Logs an info message. Only emitted when client debug logs are enabled.
         /// </summary>
         public static void Info(string message, string? category = null)
         {
@@ -86,7 +86,7 @@ namespace ArchitectsStencilMod.Debug
 
         public static void Chat(string message, string? category = null)
         {
-            if (!DebugStepper.DebugStickEquipped) return;
+            if (!IsDebugEnabled) return;
             if (Main.netMode == NetmodeID.Server) return;
 
             string full = string.IsNullOrEmpty(category) ? message : $"[{category}] {message}";

@@ -1,0 +1,110 @@
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
+using ArchitectsStencilMod.Core;
+using ArchitectsStencilMod.UI;
+using ArchitectsStencilMod.ModUtils;
+
+namespace ArchitectsStencilMod.Content.Items
+{
+	/// <summary>
+	/// SELECTION WAND: PIN / SET / RESET via action wheel. SET uses InterfaceSystem fallback (PIN when no blueprint).
+	/// </summary>
+	public class SelectionWand : ModItem
+	{
+		private ToolAction _mode = ToolAction.PIN;
+
+		public override void SetDefaults()
+		{
+			Item.width = 30;
+			Item.height = 30;
+			Item.useStyle = ItemUseStyleID.Shoot;
+			Item.useTime = 10;
+			Item.useAnimation = 10;
+			Item.rare = ItemRarityID.Orange;
+			Item.value = Item.buyPrice(gold: 1);
+			Item.autoReuse = false;
+		}
+
+		public override ModItem Clone(Item newEntity)
+		{
+			var clone = (SelectionWand)base.Clone(newEntity);
+			clone._mode = _mode;
+			return clone;
+		}
+
+		public override void SaveData(TagCompound tag) => tag["mode"] = (int)_mode;
+
+		public override void LoadData(TagCompound tag)
+		{
+			if (tag.ContainsKey("mode"))
+				_mode = (ToolAction)tag.GetInt("mode");
+		}
+
+		public override bool AltFunctionUse(Player player) => true;
+
+		public override bool CanUseItem(Player player) => !ActionWheel.IsActive && !ActionWheel.IsPendingOpen;
+
+		public override bool? UseItem(Player player)
+		{
+			if (player.whoAmI != Main.myPlayer)
+				return null;
+
+			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+
+			if (player.altFunctionUse == 0)
+			{
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftClick, player, cursorTile);
+			}
+			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
+			{
+				if (ActionWheel.IsOwnedBy(Main.myPlayer, Item.type))
+					ActionWheel.CancelActive();
+				else
+				{
+					var entries = new List<ActionWheelEntry>(3)
+					{
+						new(ToolActionDefinitions.GetActionId(ToolAction.PIN), ToolActionDefinitions.GetActionLabel(ToolAction.PIN), onSelect: () => _mode = ToolAction.PIN,
+							isSelected: () => _mode == ToolAction.PIN),
+						new(ToolActionDefinitions.GetActionId(ToolAction.SET), ToolActionDefinitions.GetActionLabel(ToolAction.SET), onSelect: () => _mode = ToolAction.SET,
+							isSelected: () => _mode == ToolAction.SET),
+						new(ToolActionDefinitions.GetActionId(ToolAction.RESET), ToolActionDefinitions.GetActionLabel(ToolAction.RESET), onSelect: () => _mode = ToolAction.RESET,
+							isSelected: () => _mode == ToolAction.RESET)
+					};
+					ActionWheel.OpenNew(Main.myPlayer, Item.type, entries);
+				}
+			}
+			return true;
+		}
+
+		public override void HoldItem(Player player)
+		{
+			if (player.whoAmI != Main.myPlayer)
+				return;
+
+			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+
+			if (Main.mouseLeft && Main.mouseRight)
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.RightClick, player, cursorTile);
+			if (Main.mouseLeft && !Main.mouseLeftRelease)
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftHold, player, cursorTile);
+			else if (!Main.mouseLeft && Main.mouseLeftRelease)
+				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+		}
+
+		public override void AddRecipes()
+		{
+			CreateRecipe()
+				.AddIngredient<PinStick>(1)
+				.AddIngredient(ItemID.Sapphire, 1)
+				.AddIngredient(ItemID.WandofFrosting, 1)
+				.AddIngredient(ItemID.Wood, 25)
+				//.AddIngredient(5710, 25) // Feywood (not in 1.4.9 ItemID)
+				.AddTile(TileID.LivingLoom)
+				.Register();
+		}
+	}
+}

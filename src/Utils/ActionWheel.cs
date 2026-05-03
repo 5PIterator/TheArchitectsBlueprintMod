@@ -11,7 +11,7 @@ using Terraria.GameContent.UI;
 using Terraria.GameInput;
 using ArchitectsStencilMod.Core;
 
-namespace ArchitectsStencilMod.Utils
+namespace ArchitectsStencilMod.ModUtils
 {
     /// <summary>
     /// Lightweight "action wheel" UI.
@@ -59,10 +59,10 @@ namespace ArchitectsStencilMod.Utils
         public static void OpenToolActionWheel(
             int ownerPlayer,
             int ownerHeldItemType,
-            IReadOnlyList<ToolActionManager.ToolAction> actions,
-            Func<ToolActionManager.ToolAction> getCurrent,
-            Action<ToolActionManager.ToolAction> setCurrent,
-            Func<ToolActionManager.ToolAction, bool> isVisibleForAction = null,
+            IReadOnlyList<ToolAction> actions,
+            Func<ToolAction> getCurrent,
+            Action<ToolAction> setCurrent,
+            Func<ToolAction, bool> isVisibleForAction = null,
             ActionWheelStyle style = null)
         {
             ArgumentNullException.ThrowIfNull(actions);
@@ -73,10 +73,10 @@ namespace ArchitectsStencilMod.Utils
             var entries = new List<ActionWheelEntry>(actions.Count);
             for (int i = 0; i < actions.Count; i++)
             {
-                ToolActionManager.ToolAction a = actions[i];
+                ToolAction a = actions[i];
                 entries.Add(new ActionWheelEntry(
-                    ToolActionManager.GetActionId(a),
-                    ToolActionManager.GetActionLabel(a),
+                    ToolActionDefinitions.GetActionId(a),
+                    ToolActionDefinitions.GetActionLabel(a),
                     onSelect: () => setCurrent(a),
                     isSelected: () => getCurrent() == a,
                     icon: null,

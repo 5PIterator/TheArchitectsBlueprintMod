@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using Microsoft.Xna.Framework;
 using ArchitectsStencilMod.Core;
 using ArchitectsStencilMod.Core.Layers;
+using ArchitectsStencilMod.Core.TileMapping;
 using Terraria;
 using Terraria.ID;
 
@@ -25,17 +26,22 @@ internal static class PasteTaskMapDebug
 
     internal static void WriteTaskMap(
         Projection projection,
+        bool applySourceClear,
         LayerPipeline pipeline,
         IReadOnlyList<Queue<ClearingTask>> clearTasksByLayer,
         IReadOnlyList<Queue<PlacingTask>> placeTasksByLayer)
     {
+        if (!TileMappingAuthority.UsesLocalMappingFilesystem())
+            return;
+
         var dto = new TaskMapDto
         {
-            ProjectionKind = projection.Kind.ToString(),
-            Bounds = Rect(projection.Bounds),
-            SourceBounds = Rect(projection.SourceArea),
-            SourceTileCount = projection.SourceAreaTiles.Count,
-            TargetTileCount = projection.TargetAreaTiles.Count,
+            ProjectionClearsSource = projection.CutSource,
+            ApplySourceClear = applySourceClear,
+            TargetArea = Rect(projection.Area),
+            SourceArea = Rect(projection.SourceArea),
+            SourceTileCount = projection.SourceTiles.Length,
+            TargetTileCount = projection.TargetTiles.Length,
             ClearTasks = BuildClearMap(pipeline, clearTasksByLayer),
             PlaceTasks = BuildPlaceMap(pipeline, placeTasksByLayer),
         };
@@ -83,9 +89,10 @@ internal static class PasteTaskMapDebug
 
     private sealed class TaskMapDto
     {
-        public string ProjectionKind { get; set; }
-        public object Bounds { get; set; }
-        public object SourceBounds { get; set; }
+        public bool ProjectionClearsSource { get; set; }
+        public bool ApplySourceClear { get; set; }
+        public object TargetArea { get; set; }
+        public object SourceArea { get; set; }
         public int SourceTileCount { get; set; }
         public int TargetTileCount { get; set; }
         public Dictionary<string, List<TaskPointDto>> ClearTasks { get; set; }

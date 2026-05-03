@@ -1,4 +1,6 @@
+using System.IO;
 using ArchitectsStencilMod.Debug;
+using ArchitectsStencilMod.Core.Server;
 using Terraria.ModLoader;
 
 namespace ArchitectsStencilMod
@@ -19,6 +21,11 @@ namespace ArchitectsStencilMod
         public override void Unload()
         {
             ASMLog.Unload();
+        }
+
+        public override void HandlePacket(BinaryReader reader, int whoAmI)
+        {
+            PasteNetworking.HandlePacket(this, reader, whoAmI);
         }
     }
 }

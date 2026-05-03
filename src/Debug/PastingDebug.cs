@@ -1,10 +1,11 @@
+using ArchitectsStencilMod.Config;
 using ArchitectsStencilMod.Core;
 using ArchitectsStencilMod.Core.TileMapping;
 
 namespace ArchitectsStencilMod.Debug;
 
 /// <summary>
-/// Pasting debug helpers. All output goes through <see cref="ASMLog"/> when ShowDebugLogs is enabled.
+/// Pasting debug helpers. All output goes through <see cref="ASMLog"/> when <see cref="ClientLogConfig.ShowDebugLogs"/> is enabled.
 /// </summary>
 internal static class PastingDebug
 {
@@ -14,7 +15,9 @@ internal static class PastingDebug
     internal static void OnPasteStart(Projection projection)
     {
         if (!ASMLog.IsDebugEnabled) return;
-        ASMLog.Debug($"Paste started: {projection.Kind}, bounds=({projection.Bounds.X},{projection.Bounds.Y}) {projection.Bounds.Width}x{projection.Bounds.Height}", "Paste");
+        ASMLog.Debug(
+            $"Paste started: sourceClear={projection.CutSource}, targetArea=({projection.Area.X},{projection.Area.Y}) {projection.Area.Width}x{projection.Area.Height}",
+            "Paste");
     }
 
     /// <summary>

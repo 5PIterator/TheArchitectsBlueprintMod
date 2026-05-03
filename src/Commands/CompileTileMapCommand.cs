@@ -1,4 +1,6 @@
 using System;
+using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace ArchitectsStencilMod.Core
@@ -17,6 +19,12 @@ namespace ArchitectsStencilMod.Core
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                caller.Reply("This command is server-only in multiplayer.");
+                return;
+            }
+
             TileMappingSystem.Compile(Mod, msg => caller.Reply(msg));
         }
     }

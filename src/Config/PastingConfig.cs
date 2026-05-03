@@ -35,15 +35,37 @@ namespace ArchitectsStencilMod.Config
         [Range(0, 5000)]
         public int PasteDelayMs;
 
-        [DefaultValue(5)]
-        [Range(1, 100)]
-        public int PasteStepSize;
+        [DefaultValue(100)]
+        [Range(1, 512)]
+        public int MaxPasteStepSize = 100;
+
+        [DefaultValue(200)]
+        [Range(1, 2000)]
+        public int MaxPasteWidth = 200;
+
+        [DefaultValue(200)]
+        [Range(1, 2000)]
+        public int MaxPasteHeight = 200;
+
+        [DefaultValue(5000)]
+        [Range(1, 500000)]
+        public int VolumeLimit = 5000;
+
+        [DefaultValue(1)]
+        [Range(1, 128)]
+        public int PlayerOperationLimit = 1;
+
+        [DefaultValue(8)]
+        [Range(1, 512)]
+        public int ServerOperationLimit = 8;
 
         [DefaultValue(false)]
         public bool CheatSweep;
 
-        [DefaultValue(true)]
-        public bool ForceTiles = true;
+        [Header("Debug")]
+
+        [DefaultValue(false)]
+        public bool EnableCutPasteProcess;
 
         [Header("LayerIdentification")]
         public LayerIdentificationSettings LayerIdentification = new();

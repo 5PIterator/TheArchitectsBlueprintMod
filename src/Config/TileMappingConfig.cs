@@ -1,24 +1,18 @@
 using System.ComponentModel;
-using ArchitectsStencilMod.Core;
-using Terraria;
 using Terraria.ModLoader.Config;
 
 namespace ArchitectsStencilMod.Config
 {
     /// <summary>
-    /// Tile mapping compilation and discovery settings.
-    /// When discovery toggles change, compilation is re-run automatically.
+    /// Which SourceMaps interaction layers are included when compiling .itr files on the server or single-player host.
     /// </summary>
     public sealed class TileMappingConfig : ModConfig
     {
-        public static TileMappingConfig Instance;
+        public static TileMappingConfig Instance = null!;
 
-        public override ConfigScope Mode => ConfigScope.ClientSide;
+        public override ConfigScope Mode => ConfigScope.ServerSide;
 
         [Header("TileMapping")]
-
-        [DefaultValue(true)]
-        public bool ShowDebugLogs;
 
         [DefaultValue(true)]
         public bool EnablePlacementDiscovery;
@@ -36,6 +30,5 @@ namespace ArchitectsStencilMod.Config
         {
             Instance = this;
         }
-
     }
 }
