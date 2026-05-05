@@ -139,7 +139,7 @@ namespace ArchitectsStencilMod.Core
 
         /// <summary>
         /// Creates a Tile data structure from a PayloadCell.
-        /// !Important: The returned Tile is a temporary tile, and will be overriddden by the next call to ToTile().
+        /// !Important: The returned Tile is a temporary tile, and will be overridden by the next call to ToTile().
         /// </summary>
         /// <param name="cell"></param>
         /// <returns>A Tile data structure from a PayloadCell.</returns>

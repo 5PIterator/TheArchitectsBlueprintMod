@@ -24,6 +24,50 @@ namespace ArchitectsStencilMod.Core
         private const int SchemaVersion = 1;
         private static readonly Regex InvalidFileNameChars = new($"[{Regex.Escape(new string(Path.GetInvalidFileNameChars()))}]", RegexOptions.Compiled);
 
+        private static readonly Projection?[] _payloadIoHighlight = new Projection[Main.maxPlayers];
+
+        /// <summary>True while <paramref name="projection"/> is the payload import/export modal target (extra overlay).</summary>
+        internal static bool TryGetPayloadIoHighlight(Player player, out Projection? projection)
+        {
+            ArgumentNullException.ThrowIfNull(player);
+            int who = player.whoAmI;
+            if ((uint)who >= _payloadIoHighlight.Length)
+            {
+                projection = null;
+                return false;
+            }
+
+            projection = _payloadIoHighlight[who];
+            return projection is not null;
+        }
+
+        private static void BeginPayloadIoHighlight(Projection projection)
+        {
+            ArgumentNullException.ThrowIfNull(projection);
+            int who = projection.Owner;
+            if ((uint)who >= _payloadIoHighlight.Length)
+                return;
+
+            _payloadIoHighlight[who] = projection;
+            projection.UpdateOverlay();
+        }
+
+        private static void EndPayloadIoHighlightForOwner(int ownerWhoAmI)
+        {
+            if ((uint)ownerWhoAmI >= _payloadIoHighlight.Length || _payloadIoHighlight[ownerWhoAmI] is null)
+                return;
+
+            _payloadIoHighlight[ownerWhoAmI] = null;
+            Player player = Main.player[ownerWhoAmI];
+            if (player.active)
+                ModContent.GetInstance<ProjectionSystem>().UpdateProjectionOverlay(player);
+        }
+
+        public override void OnWorldUnload()
+        {
+            Array.Clear(_payloadIoHighlight);
+        }
+
         /// <summary>Opens the export-name dialog for the provided projection.</summary>
         public static void BeginExport(Projection projection)
         {
@@ -33,11 +77,23 @@ namespace ArchitectsStencilMod.Core
             if (!CanUseProjection(projection, requirePayload: true))
                 return;
 
+            BeginPayloadIoHighlight(projection);
             string defaultProjectName = $"ASMPayload{DateTime.Now:yyyyMMdd_HHmmss}";
+            int owner = projection.Owner;
             PayloadFileDialogs.ShowExportNameDialog(
                 defaultProjectName,
-                projectName => ExportProjection(projection, projectName),
-                onCancel: null);
+                projectName =>
+                {
+                    try
+                    {
+                        ExportProjection(projection, projectName);
+                    }
+                    finally
+                    {
+                        EndPayloadIoHighlightForOwner(owner);
+                    }
+                },
+                onCancel: () => EndPayloadIoHighlightForOwner(owner));
         }
 
         /// <summary>Opens the import-list dialog for the provided projection.</summary>
@@ -56,10 +112,22 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
+            BeginPayloadIoHighlight(projection);
+            int owner = projection.Owner;
             PayloadFileDialogs.ShowImportListDialog(
                 entries,
-                fullPath => ImportProjection(projection, fullPath),
-                onCancel: null);
+                fullPath =>
+                {
+                    try
+                    {
+                        ImportProjection(projection, fullPath);
+                    }
+                    finally
+                    {
+                        EndPayloadIoHighlightForOwner(owner);
+                    }
+                },
+                onCancel: () => EndPayloadIoHighlightForOwner(owner));
         }
 
         /// <summary>Returns the directory where payload JSON files are stored.</summary>
@@ -103,29 +171,112 @@ namespace ArchitectsStencilMod.Core
                 string displayName = string.IsNullOrWhiteSpace(projectName)
                     ? $"ASMPayload{DateTime.Now:yyyyMMdd_HHmmss}"
                     : projectName.Trim();
-                string rawPayloadJson = projection.Payload.ToJson();
-                var wrapper = new JObject
-                {
-                    ["metadata"] = new JObject
-                    {
-                        ["format"] = PayloadFormat,
-                        ["schemaVersion"] = SchemaVersion,
-                        ["projectName"] = displayName,
-                        ["createdUtc"] = DateTime.UtcNow.ToString("O"),
-                        ["modVersion"] = ModContent.GetInstance<global::ArchitectsStencilMod.ArchitectsStencilMod>().Version.ToString(),
-                        ["width"] = projection.Payload.Width,
-                        ["height"] = projection.Payload.Height,
-                    },
-                    ["payload"] = JToken.Parse(rawPayloadJson),
-                };
-
                 string path = GetAvailablePayloadPath(displayName);
-                File.WriteAllText(path, wrapper.ToString(Formatting.Indented), Encoding.UTF8);
+                if (!TryWriteExportedWrapper(projection, displayName, path, out string? err))
+                {
+                    if (!string.IsNullOrEmpty(err))
+                        Main.NewText($"Export failed: {err}", Color.OrangeRed);
+                    return;
+                }
+
                 Main.NewText($"Exported payload: {Path.GetFileName(path)}", Color.LightGreen);
             }
             catch (Exception ex)
             {
                 Main.NewText($"Export failed: {ex.Message}", Color.OrangeRed);
+            }
+        }
+
+        /// <summary>Writes the same JSON document as <see cref="ExportProjection"/> to an explicit path (overwrite).</summary>
+        internal static bool TryWriteExportedWrapper(Projection projection, string projectDisplayName, string fullPath, out string? error)
+        {
+            error = null;
+            ArgumentNullException.ThrowIfNull(projection);
+            try
+            {
+                if (!projection.HasPayload)
+                {
+                    error = "Projection has no payload.";
+                    return false;
+                }
+
+                string displayName = string.IsNullOrWhiteSpace(projectDisplayName)
+                    ? $"ASMPayload{DateTime.Now:yyyyMMdd_HHmmss}"
+                    : projectDisplayName.Trim();
+                JObject wrapper = BuildExportWrapper(projection, displayName);
+                File.WriteAllText(fullPath, wrapper.ToString(Formatting.Indented), Encoding.UTF8);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
+        private static JObject BuildExportWrapper(Projection projection, string displayName)
+        {
+            string rawPayloadJson = projection.Payload.ToJson();
+            return new JObject
+            {
+                ["metadata"] = new JObject
+                {
+                    ["format"] = PayloadFormat,
+                    ["schemaVersion"] = SchemaVersion,
+                    ["projectName"] = displayName,
+                    ["createdUtc"] = DateTime.UtcNow.ToString("O"),
+                    ["modVersion"] = ModContent.GetInstance<global::ArchitectsStencilMod.ArchitectsStencilMod>().Version.ToString(),
+                    ["width"] = projection.Payload.Width,
+                    ["height"] = projection.Payload.Height,
+                },
+                ["payload"] = JToken.Parse(rawPayloadJson),
+            };
+        }
+
+        /// <summary>Reads a payload from a full document (metadata wrapper or raw grid JSON).</summary>
+        internal static bool TryReadPayloadFromFile(string fullPath, out Payload payload, out string? error)
+        {
+            payload = Payload.Empty;
+            error = null;
+            try
+            {
+                if (!File.Exists(fullPath))
+                {
+                    error = $"File not found: {fullPath}";
+                    return false;
+                }
+
+                string json = File.ReadAllText(fullPath, Encoding.UTF8);
+                return TryParsePayloadDocument(json, out payload, out error);
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
+        /// <summary>Parses JSON text into a <see cref="Payload"/> (metadata wrapper or raw grid).</summary>
+        internal static bool TryParsePayloadDocument(string json, out Payload payload, out string? error)
+        {
+            payload = Payload.Empty;
+            error = null;
+            try
+            {
+                string payloadJson = ExtractPayloadJson(json);
+                payload = Payload.FromJson(payloadJson);
+                if (!payload.IsDefined)
+                {
+                    error = "Document did not contain a defined tile grid.";
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
             }
         }
 
@@ -140,11 +291,11 @@ namespace ArchitectsStencilMod.Core
             try
             {
                 string json = File.ReadAllText(fullPath, Encoding.UTF8);
-                string payloadJson = ExtractPayloadJson(json);
-                Payload payload = Payload.FromJson(payloadJson);
-                if (!payload.IsDefined)
+                if (!TryParsePayloadDocument(json, out Payload payload, out string? parseError))
                 {
-                    Main.NewText("Import failed: payload file did not contain tile data.", Color.OrangeRed);
+                    Main.NewText(string.IsNullOrEmpty(parseError)
+                        ? "Import failed: payload file did not contain tile data."
+                        : $"Import failed: {parseError}", Color.OrangeRed);
                     return;
                 }
 

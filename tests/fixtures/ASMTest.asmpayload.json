@@ -1,0 +1,199 @@
+{
+  "metadata": {
+    "format": "ArchitectsStencilMod.Payload",
+    "schemaVersion": 1,
+    "projectName": "ASMTest",
+    "createdUtc": "2026-01-01T00:00:00Z",
+    "modVersion": "0.0.0.0",
+    "width": 3,
+    "height": 3
+  },
+  "payload": [
+    [
+      {
+        "TileType": {
+          "Type": 0
+        },
+        "WallType": {
+          "Type": 0
+        },
+        "LiquidData": {
+          "LiquidType": 0,
+          "Amount": 0,
+          "SkipLiquid": false,
+          "CheckingLiquid": false
+        },
+        "TWBIData": {},
+        "TWWStateData": {
+          "HasTile": true
+        },
+        "TileStyle": 0,
+        "TileAlternate": 0
+      },
+      {
+        "TileType": {
+          "Type": 0
+        },
+        "WallType": {
+          "Type": 0
+        },
+        "LiquidData": {
+          "LiquidType": 0,
+          "Amount": 0,
+          "SkipLiquid": false,
+          "CheckingLiquid": false
+        },
+        "TWBIData": {},
+        "TWWStateData": {
+          "HasTile": true
+        },
+        "TileStyle": 0,
+        "TileAlternate": 0
+      },
+      {
+        "TileType": {
+          "Type": 0
+        },
+        "WallType": {
+          "Type": 0
+        },
+        "LiquidData": {
+          "LiquidType": 0,
+          "Amount": 0,
+          "SkipLiquid": false,
+          "CheckingLiquid": false
+        },
+        "TWBIData": {},
+        "TWWStateData": {
+          "HasTile": true
+        },
+        "TileStyle": 0,
+        "TileAlternate": 0
+      }
+    ],
+    [
+      {
+        "TileType": {
+          "Type": 0
+        },
+        "WallType": {
+          "Type": 0
+        },
+        "LiquidData": {
+          "LiquidType": 0,
+          "Amount": 0,
+          "SkipLiquid": false,
+          "CheckingLiquid": false
+        },
+        "TWBIData": {},
+        "TWWStateData": {
+          "HasTile": true
+        },
+        "TileStyle": 0,
+        "TileAlternate": 0
+      },
+      {
+        "TileType": {
+          "Type": 0
+        },
+        "WallType": {
+          "Type": 0
+        },
+        "LiquidData": {
+          "LiquidType": 0,
+          "Amount": 0,
+          "SkipLiquid": false,
+          "CheckingLiquid": false
+        },
+        "TWBIData": {},
+        "TWWStateData": {
+          "HasTile": true
+        },
+        "TileStyle": 0,
+        "TileAlternate": 0
+      },
+      {
+        "TileType": {
+          "Type": 0
+        },
+        "WallType": {
+          "Type": 0
+        },
+        "LiquidData": {
+          "LiquidType": 0,
+          "Amount": 0,
+          "SkipLiquid": false,
+          "CheckingLiquid": false
+        },
+        "TWBIData": {},
+        "TWWStateData": {
+          "HasTile": true
+        },
+        "TileStyle": 0,
+        "TileAlternate": 0
+      }
+    ],
+    [
+      {
+        "TileType": {
+          "Type": 0
+        },
+        "WallType": {
+          "Type": 0
+        },
+        "LiquidData": {
+          "LiquidType": 0,
+          "Amount": 0,
+          "SkipLiquid": false,
+          "CheckingLiquid": false
+        },
+        "TWBIData": {},
+        "TWWStateData": {
+          "HasTile": true
+        },
+        "TileStyle": 0,
+        "TileAlternate": 0
+      },
+      {
+        "TileType": {
+          "Type": 0
+        },
+        "WallType": {
+          "Type": 0
+        },
+        "LiquidData": {
+          "LiquidType": 0,
+          "Amount": 0,
+          "SkipLiquid": false,
+          "CheckingLiquid": false
+        },
+        "TWBIData": {},
+        "TWWStateData": {
+          "HasTile": true
+        },
+        "TileStyle": 0,
+        "TileAlternate": 0
+      },
+      {
+        "TileType": {
+          "Type": 0
+        },
+        "WallType": {
+          "Type": 0
+        },
+        "LiquidData": {
+          "LiquidType": 0,
+          "Amount": 0,
+          "SkipLiquid": false,
+          "CheckingLiquid": false
+        },
+        "TWBIData": {},
+        "TWWStateData": {
+          "HasTile": true
+        },
+        "TileStyle": 0,
+        "TileAlternate": 0
+      }
+    ]
+  ]
+}

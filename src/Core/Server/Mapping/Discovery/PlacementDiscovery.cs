@@ -63,7 +63,8 @@ namespace ArchitectsStencilMod.Core.TileMapping
             Log($"Test position: ({testX},{testY})");
             yield return null;
 
-            var chamberState = SetupTestChamber(testX, testY);
+            var chamber = TestChamberSystem.Instance;
+            var chamberState = chamber.SetupRing(testX, testY);
             yield return null;
 
             var map = new PlacementInteractionMap();
@@ -96,7 +97,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 }
             }
 
-            TeardownTestChamber(testX, testY, chamberState);
+            chamber.TeardownRing(testX, testY, chamberState);
             yield return null;
 
             Log($"Discovered {tilesAdded} tile placements, {wallsAdded} wall placements.");
@@ -114,6 +115,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
             List<int> baseTileContext,
             Action<string> log)
         {
+            var chamber = TestChamberSystem.Instance;
             int placeStyle = item.placeStyle >= 0 ? item.placeStyle : 0;
             string itemName = ContentNameResolver.GetItemName(itemId);
             string tileName = ContentNameResolver.GetTileName(createTile);
@@ -125,7 +127,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 return 1;
             }
 
-            var saved = SaveTestTile(testX, testY);
+            var saved = chamber.SaveCell(testX, testY);
 
             SuppressTileDrop.KillTile(testX, testY);
             bool directOk = WorldGen.PlaceTile(testX, testY, createTile, mute: true, forced: true, plr: -1, style: placeStyle);
@@ -134,7 +136,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
 
             if (directSuccess)
             {
-                RestoreTestTile(testX, testY, saved);
+                chamber.RestoreCell(testX, testY, saved);
                 map.AddTile(createTile, InteractionEntry.Create("Tile", item: itemName, itemId: itemId, style: item.placeStyle >= 0 ? item.placeStyle : null));
                 return 1;
             }
@@ -142,7 +144,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
             int added = 0;
             foreach (int baseTileId in baseTileContext)
             {
-                SetTestTile(testX, testY, baseTileId);
+                chamber.ClearAndSetTile(testX, testY, baseTileId);
                 WorldGen.PlaceTile(testX, testY, createTile, mute: true, forced: true, plr: -1, style: placeStyle);
                 var tile = Main.tile[testX, testY];
                 if (tile.HasTile && tile.TileType == createTile)
@@ -158,7 +160,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 log($"    {itemPrefix}{tileName} ({createTile}) = SKIP: no valid base (direct got {directGot}, tried {baseTileContext.Count} bases)");
             }
 
-            RestoreTestTile(testX, testY, saved);
+            chamber.RestoreCell(testX, testY, saved);
             return added;
         }
 
@@ -175,30 +177,6 @@ namespace ArchitectsStencilMod.Core.TileMapping
             return FrameOperations.HasTileAnchor(tileType, 0)
                 || FrameOperations.HasWallAnchor(tileType, 0)
                 || FrameOperations.HasOtherAnchor(tileType, 0);
-        }
-
-        private static (bool HasTile, int TileType, int WallType) SaveTestTile(int x, int y)
-        {
-            var t = Main.tile[x, y];
-            return (t.HasTile, t.TileType, t.WallType);
-        }
-
-        private static void SetTestTile(int x, int y, int tileType)
-        {
-            SuppressTileDrop.KillTile(x, y);
-            WorldGen.KillWall(x, y, fail: false);
-            WorldGen.PlaceTile(x, y, tileType, mute: true, forced: true, plr: -1, style: 0);
-        }
-
-        private static void RestoreTestTile(int x, int y, (bool HasTile, int TileType, int WallType) saved)
-        {
-            if (!WorldGen.InWorld(x, y)) return;
-            SuppressTileDrop.KillTile(x, y);
-            WorldGen.KillWall(x, y, fail: false);
-            if (saved.WallType != WallID.None)
-                WorldGen.PlaceWall(x, y, (ushort)saved.WallType, mute: true);
-            if (saved.HasTile)
-                WorldGen.PlaceTile(x, y, saved.TileType, mute: true, forced: true, plr: -1, style: 0);
         }
 
         private static IEnumerable<int> LoadBaseTileContext(Mod mod, Action<string> log)

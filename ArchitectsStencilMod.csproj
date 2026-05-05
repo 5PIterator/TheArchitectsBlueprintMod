@@ -18,6 +18,9 @@
 		<EmbeddedResource Include="Content\Templates\SourceMaps\BiomeConfig.itr" />
 		<EmbeddedResource Include="Content\Templates\SourceMaps\BaseContext.itr" />
 		<EmbeddedResource Include="Content\Config\LayerOrder.json" LogicalName="ArchitectsStencilMod.LayerOrder.json" />
+		<EmbeddedResource Include="tests\fixtures\ASMTest.asmpayload.json" LogicalName="ArchitectsStencilMod.ASMTestFixture" />
+		<EmbeddedResource Include="tests\goldens\payload_clear_center.json" LogicalName="ArchitectsStencilMod.GoldenPayloadClearCenter" />
+		<EmbeddedResource Include="tests\goldens\payload_fill_center.json" LogicalName="ArchitectsStencilMod.GoldenPayloadFillCenter" />
 	</ItemGroup>
 
 </Project>
