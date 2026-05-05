@@ -1,7 +1,9 @@
 {
     "cSpell.words": [
         "Acks",
+        "asmpayload",
         "dedup",
+        "Fullbright",
         "hjson",
         "Hotbar",
         "Multipaste",
@@ -9,6 +11,7 @@
         "Prefs",
         "skipselect",
         "Spritesheet",
-        "steamid"
+        "steamid",
+        "TWBI"
     ]
 }
