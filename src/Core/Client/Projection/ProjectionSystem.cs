@@ -135,6 +135,21 @@ namespace ArchitectsStencilMod.Core
                 }
             }
 
+            if (PayloadSerialization.TryGetPayloadIoHighlight(player, out Projection? payloadIo) &&
+                payloadIo is not null &&
+                payloadIo.IsDefined &&
+                !payloadIo.Area.IsEmpty)
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (ReferenceEquals(list[i], payloadIo))
+                    {
+                        OverlaySystem.RegTileBorder("payloadIo", payloadIo.Area, ArchitectVisualPalette.PayloadIoHighlightColor, 3, family);
+                        break;
+                    }
+                }
+            }
+
             ModContent.GetInstance<InclusionControl>().UpdateExcludedTileOverlays(player);
             UpdateInventoryOverlay(player);
         }

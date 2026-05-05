@@ -38,7 +38,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 {
                     if (chamberContext.State is not null)
                     {
-                        TeardownTestChamber(chamberContext.X, chamberContext.Y, chamberContext.State);
+                        TestChamberSystem.Instance.TeardownRing(chamberContext.X, chamberContext.Y, chamberContext.State);
                         chamberContext.State = null;
                     }
                 }
@@ -53,7 +53,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
         {
             public int X { get; set; }
             public int Y { get; set; }
-            public List<(int x, int y, bool hasTile, int tileType, int wallType)>? State { get; set; }
+            public TestChamberSystem.RingSavedState? State { get; set; }
         }
 
         private static IEnumerator CreateSteppedRun(Mod mod, Player player, Action<string> msg, ChamberContext chamberContext)
@@ -98,7 +98,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
             Log($"Testing {convertibleTiles.Count} tiles × {numConversionTypes} conversion types at ({testX},{testY})...");
             yield return null;
 
-            var chamberState = SetupTestChamber(testX, testY);
+            var chamberState = TestChamberSystem.Instance.SetupRing(testX, testY);
             chamberContext.X = testX;
             chamberContext.Y = testY;
             chamberContext.State = chamberState;
@@ -249,7 +249,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 };
             }
 
-            TeardownTestChamber(testX, testY, chamberState);
+            TestChamberSystem.Instance.TeardownRing(testX, testY, chamberState);
             chamberContext.State = null;
             yield return null;
 

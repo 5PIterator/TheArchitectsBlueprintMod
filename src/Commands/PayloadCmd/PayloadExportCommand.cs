@@ -1,10 +1,11 @@
+using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
 namespace ArchitectsStencilMod.Core
 {
     /// <summary>
-    /// Opens the payload export dialog for the topmost projection under the cursor (no-op if none).
+    /// Opens the payload export dialog for the topmost projection under the cursor.
     /// Usage: /asm.export
     /// </summary>
     public sealed class PayloadExportCommand : ModCommand
@@ -38,8 +39,14 @@ namespace ArchitectsStencilMod.Core
             if (player.whoAmI != Main.myPlayer)
                 return;
 
-            if (!PayloadSerialization.TryGetProjectionForFileIo(player, out Projection? projection))
+            Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+            if (!ModContent.GetInstance<ProjectionSystem>().TryGetProjectionAt(player, cursorTile, out Projection? projection) ||
+                projection is null ||
+                !projection.IsDefined)
+            {
+                caller.Reply("Payload export: No projection under the cursor.", Color.Orange);
                 return;
+            }
 
             PayloadSerialization.BeginExport(projection);
         }

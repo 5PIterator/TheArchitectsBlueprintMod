@@ -1,0 +1,188 @@
+[
+  [
+    {
+      "TileType": {
+        "Type": 0
+      },
+      "WallType": {
+        "Type": 0
+      },
+      "LiquidData": {
+        "LiquidType": 0,
+        "Amount": 0,
+        "SkipLiquid": false,
+        "CheckingLiquid": false
+      },
+      "TWBIData": {},
+      "TWWStateData": {
+        "HasTile": true
+      },
+      "TileStyle": 0,
+      "TileAlternate": 0
+    },
+    {
+      "TileType": {
+        "Type": 0
+      },
+      "WallType": {
+        "Type": 0
+      },
+      "LiquidData": {
+        "LiquidType": 0,
+        "Amount": 0,
+        "SkipLiquid": false,
+        "CheckingLiquid": false
+      },
+      "TWBIData": {},
+      "TWWStateData": {
+        "HasTile": true
+      },
+      "TileStyle": 0,
+      "TileAlternate": 0
+    },
+    {
+      "TileType": {
+        "Type": 0
+      },
+      "WallType": {
+        "Type": 0
+      },
+      "LiquidData": {
+        "LiquidType": 0,
+        "Amount": 0,
+        "SkipLiquid": false,
+        "CheckingLiquid": false
+      },
+      "TWBIData": {},
+      "TWWStateData": {
+        "HasTile": true
+      },
+      "TileStyle": 0,
+      "TileAlternate": 0
+    }
+  ],
+  [
+    {
+      "TileType": {
+        "Type": 0
+      },
+      "WallType": {
+        "Type": 0
+      },
+      "LiquidData": {
+        "LiquidType": 0,
+        "Amount": 0,
+        "SkipLiquid": false,
+        "CheckingLiquid": false
+      },
+      "TWBIData": {},
+      "TWWStateData": {
+        "HasTile": true
+      },
+      "TileStyle": 0,
+      "TileAlternate": 0
+    },
+    {
+      "TileType": {
+        "Type": 0
+      },
+      "WallType": {
+        "Type": 0
+      },
+      "LiquidData": {
+        "LiquidType": 0,
+        "Amount": 0,
+        "SkipLiquid": false,
+        "CheckingLiquid": false
+      },
+      "TWBIData": {},
+      "TWWStateData": {
+        "HasTile": true
+      },
+      "TileStyle": 0,
+      "TileAlternate": 0
+    },
+    {
+      "TileType": {
+        "Type": 0
+      },
+      "WallType": {
+        "Type": 0
+      },
+      "LiquidData": {
+        "LiquidType": 0,
+        "Amount": 0,
+        "SkipLiquid": false,
+        "CheckingLiquid": false
+      },
+      "TWBIData": {},
+      "TWWStateData": {
+        "HasTile": true
+      },
+      "TileStyle": 0,
+      "TileAlternate": 0
+    }
+  ],
+  [
+    {
+      "TileType": {
+        "Type": 0
+      },
+      "WallType": {
+        "Type": 0
+      },
+      "LiquidData": {
+        "LiquidType": 0,
+        "Amount": 0,
+        "SkipLiquid": false,
+        "CheckingLiquid": false
+      },
+      "TWBIData": {},
+      "TWWStateData": {
+        "HasTile": true
+      },
+      "TileStyle": 0,
+      "TileAlternate": 0
+    },
+    {
+      "TileType": {
+        "Type": 0
+      },
+      "WallType": {
+        "Type": 0
+      },
+      "LiquidData": {
+        "LiquidType": 0,
+        "Amount": 0,
+        "SkipLiquid": false,
+        "CheckingLiquid": false
+      },
+      "TWBIData": {},
+      "TWWStateData": {
+        "HasTile": true
+      },
+      "TileStyle": 0,
+      "TileAlternate": 0
+    },
+    {
+      "TileType": {
+        "Type": 0
+      },
+      "WallType": {
+        "Type": 0
+      },
+      "LiquidData": {
+        "LiquidType": 0,
+        "Amount": 0,
+        "SkipLiquid": false,
+        "CheckingLiquid": false
+      },
+      "TWBIData": {},
+      "TWWStateData": {
+        "HasTile": true
+      },
+      "TileStyle": 0,
+      "TileAlternate": 0
+    }
+  ]
+]

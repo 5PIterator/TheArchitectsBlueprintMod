@@ -47,5 +47,8 @@ namespace ArchitectsStencilMod.Core
 
         /// <summary>Obsidian gray — RESET action tint.</summary>
         public static readonly Color ResetColor = new(80, 80, 80);
+
+        /// <summary>Bright cyan — projection targeted by payload import/export UI.</summary>
+        public static readonly Color PayloadIoHighlightColor = new(0, 220, 255);
     }
 }
