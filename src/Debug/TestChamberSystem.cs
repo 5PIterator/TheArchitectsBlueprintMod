@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using ArchitectsStencilMod.Utils;
+using ArchitectsBlueprintMod.Utils;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace ArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Isolated world-tile sandbox used by compilation discovery (demonite ring + single-cell scratch).

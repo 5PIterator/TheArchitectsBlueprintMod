@@ -1,26 +1,26 @@
 using System.IO;
-using ArchitectsStencilMod.Debug;
-using ArchitectsStencilMod.Core.Server;
+using ArchitectsBlueprintMod.Debug;
+using ArchitectsBlueprintMod.Core.Server;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod
+namespace ArchitectsBlueprintMod
 {
     /// <summary>
-    /// Root mod class for The Architect's Stencil.
+    /// Root mod class for Architect's Blueprint.
     /// This is intentionally minimal; core systems live under the src/Core namespace.
     /// </summary>
-    public sealed class ArchitectsStencilMod : Mod
+    public sealed class ArchitectsBlueprintMod : Mod
     {
-        public const string ModInternalName = "ArchitectsStencilMod";
+        public const string ModInternalName = "ArchitectsBlueprintMod";
 
         public override void Load()
         {
-            ASMLog.Initialize(this);
+            ABPLog.Initialize(this);
         }
 
         public override void Unload()
         {
-            ASMLog.Unload();
+            ABPLog.Unload();
         }
 
         public override void HandlePacket(BinaryReader reader, int whoAmI)

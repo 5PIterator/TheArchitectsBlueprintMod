@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using ArchitectsStencilMod.Core;
+using ArchitectsBlueprintMod.Core;
 
-namespace ArchitectsStencilMod.Core.Layers
+namespace ArchitectsBlueprintMod.Core.Layers
 {
     /// <summary>
     /// Discovers attributed custom layers and exposes tile-type ownership checks used by layer ordering and exclusions.

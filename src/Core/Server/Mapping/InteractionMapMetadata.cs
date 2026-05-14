@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace ArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Metadata for interaction map JSON files. Enables identification by content rather than file name.

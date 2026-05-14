@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using ArchitectsStencilMod.Config;
-using ArchitectsStencilMod.Core.TileMapping;
+using ArchitectsBlueprintMod.Config;
+using ArchitectsBlueprintMod.Core.TileMapping;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Orchestrates tile mapping compilation across layer sub-systems.
@@ -17,7 +17,7 @@ namespace ArchitectsStencilMod.Core
     /// </summary>
     public sealed class TileMappingSystem : ModSystem
     {
-        private const string ModDirName = "ArchitectsStencilMod";
+        private const string ModDirName = "ArchitectsBlueprintMod";
         private const string SourceMapsDir = "SourceMaps";
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Gets full path for a file in ArchitectsStencilMod root (e.g. debug logs).
+        /// Gets full path for a file in ArchitectsBlueprintMod root (e.g. debug logs).
         /// </summary>
         public static string GetPath(string fileName) => Path.Combine(GetModDirectory(), fileName);
 
@@ -46,7 +46,7 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Gets full path for a file in ArchitectsStencilMod\SourceMaps.
+        /// Gets full path for a file in ArchitectsBlueprintMod\SourceMaps.
         /// </summary>
         public static string GetSourceMapPath(string fileName)
         {

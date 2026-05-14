@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
 
-namespace ArchitectsStencilMod.Config
+namespace ArchitectsBlueprintMod.Config
 {
     /// <summary>
     /// Client-side paste planning preferences. Step size is additionally capped by <see cref="PastingConfig.MaxPasteStepSize"/> on the server.

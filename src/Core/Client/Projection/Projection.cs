@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsStencilMod.Debug;
+using ArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ObjectData;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// A movable ghost of a <see cref="Selection"/>: carries the <see cref="Core.Payload">payload</see>
@@ -198,8 +198,8 @@ namespace ArchitectsStencilMod.Core
                 CutSource = false;
                 RefreshTargetTiles();
                 UpdateOverlay();
-                if (ASMLog.IsDebugEnabled)
-                    ASMLog.Debug(
+                if (ABPLog.IsDebugEnabled)
+                    ABPLog.Debug(
                         $"Projection payload cleared [SetPayload: empty source] id={Id} owner={Owner}",
                         "Projection");
                 return;
@@ -223,8 +223,8 @@ namespace ArchitectsStencilMod.Core
                 CutSource = false;
                 RefreshTargetTiles();
                 UpdateOverlay();
-                if (ASMLog.IsDebugEnabled)
-                    ASMLog.Debug(
+                if (ABPLog.IsDebugEnabled)
+                    ABPLog.Debug(
                         $"Projection payload cleared [LoadPayloadFromWorld: empty SourceArea] id={Id} owner={Owner}",
                         "Projection");
                 return;

@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using Terraria;
 
-namespace ArchitectsStencilMod.Utils
+namespace ArchitectsBlueprintMod.Utils
 {
 	internal enum AnchorPosition
 	{

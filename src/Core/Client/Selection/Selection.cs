@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Represents the primary region in the world that The Architect's Stencil operates on.

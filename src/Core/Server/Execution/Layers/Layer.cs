@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsStencilMod.Config;
-using ArchitectsStencilMod.Core;
+using ArchitectsBlueprintMod.Config;
+using ArchitectsBlueprintMod.Core;
 using Microsoft.Xna.Framework;
 using Terraria;
 
-namespace ArchitectsStencilMod.Core.Layers
+namespace ArchitectsBlueprintMod.Core.Layers
 {
     internal enum LayerType
     {

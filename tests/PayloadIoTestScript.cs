@@ -5,33 +5,33 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Tests.Fixtures;
+using ArchitectsBlueprintMod.Core;
+using ArchitectsBlueprintMod.Tests.Fixtures;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json.Linq;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Tests
+namespace ArchitectsBlueprintMod.Tests
 {
     /// <summary>
     /// In-game payload import/export regression script (fixture, mutate center, export, JSON checks).
-    /// Invoked only from <see cref="ArchitectsStencilMod.Core.PayloadIoTestCommand"/>.
+    /// Invoked only from <see cref="ArchitectsBlueprintMod.Core.PayloadIoTestCommand"/>.
     /// </summary>
     internal static class PayloadIoTestScript
     {
-        internal const string EmbeddedFixture = "ArchitectsStencilMod.ASMTestFixture";
-        internal const string GoldenClear = "ArchitectsStencilMod.GoldenPayloadClearCenter";
-        internal const string GoldenFill = "ArchitectsStencilMod.GoldenPayloadFillCenter";
+        internal const string EmbeddedFixture = "ArchitectsBlueprintMod.ABPTestFixture";
+        internal const string GoldenClear = "ArchitectsBlueprintMod.GoldenPayloadClearCenter";
+        internal const string GoldenFill = "ArchitectsBlueprintMod.GoldenPayloadFillCenter";
 
-        internal const string DefaultFixtureFileName = "ASMTest.asmpayload.json";
+        internal const string DefaultFixtureFileName = "ABPTest.asmpayload.json";
 
         /// <summary>Runs either the clear-center or fill-center scenario.</summary>
         internal static void Run(CommandCaller caller, Player player, string scenarioArg)
         {
             bool clearMode = scenarioArg == "clear";
 
-            caller.Reply($"[asm.test.payload] Scenario: {scenarioArg}", Color.White);
+            caller.Reply($"[abp.test.payload] Scenario: {scenarioArg}", Color.White);
 
             if (!TryResolveFixtureDocument(out string fixtureText, out string? resolveErr))
             {
@@ -126,7 +126,7 @@ namespace ArchitectsStencilMod.Tests
             string goldenName = clearMode ? GoldenClear : GoldenFill;
             TryCompareEmbeddedGolden(caller, exportedPayload, goldenName);
 
-            caller.Reply($"[asm.test.payload] {scenarioArg} completed successfully.", Color.LimeGreen);
+            caller.Reply($"[abp.test.payload] {scenarioArg} completed successfully.", Color.LimeGreen);
         }
 
         private static void TryCompareEmbeddedGolden(CommandCaller caller, JToken exportedPayload, string resourceName)
@@ -213,7 +213,7 @@ namespace ArchitectsStencilMod.Tests
             }
 
             text = "";
-            error = $"No ASMTest fixture (expected {preferred} or embedded {EmbeddedFixture}).";
+            error = $"No ABPTest fixture (expected {preferred} or embedded {EmbeddedFixture}).";
             return false;
         }
 

@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace ArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Base for discovery processes. Provides shared path resolution, JSON options, and save helpers.

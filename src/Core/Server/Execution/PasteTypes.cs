@@ -1,9 +1,9 @@
 using System;
-using ArchitectsStencilMod.Config;
+using ArchitectsBlueprintMod.Config;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>Per-paste preferences from the client; step size is capped by the server when pasting in multiplayer.</summary>
     internal readonly struct ClientPreferences(bool ignoreItems, bool ignoreInvalid, bool transparentPaste, int pasteStepSize)
@@ -30,7 +30,7 @@ namespace ArchitectsStencilMod.Core
     }
 
     /// <summary>
-    /// Arguments for layer execution; <see cref="ArchitectsStencilMod.Core.Layers.Layer.Place"/> performs placement and calls <see cref="ArchitectsStencilMod.Core.Layers.Layer.Consume"/> when appropriate.
+    /// Arguments for layer execution; <see cref="ArchitectsBlueprintMod.Core.Layers.Layer.Place"/> performs placement and calls <see cref="ArchitectsBlueprintMod.Core.Layers.Layer.Consume"/> when appropriate.
     /// </summary>
     internal readonly struct PasteContext(int playerIndex, Item[]? items, PastingConfig serverConfig, ClientPreferences clientPrefs)
     {

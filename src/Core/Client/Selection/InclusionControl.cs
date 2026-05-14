@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsStencilMod.Config;
-using ArchitectsStencilMod.UI;
+using ArchitectsBlueprintMod.Config;
+using ArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Gesture handler for INCLUDE/EXCLUDE rectangle edits on a player's Selection or Projection.

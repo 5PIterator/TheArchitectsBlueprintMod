@@ -1,9 +1,9 @@
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.Systems;
+using ArchitectsBlueprintMod.Systems;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace ArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>Crafting core for Architect's Stencil; crafted at an evil altar.</summary>
 	public class BlueprintCore : ModItem

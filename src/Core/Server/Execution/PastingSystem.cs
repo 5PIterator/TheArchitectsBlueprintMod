@@ -1,16 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using ArchitectsStencilMod.Core.Server;
+using ArchitectsBlueprintMod.Core.Server;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.Config;
-using ArchitectsStencilMod.Core.TileMapping;
-using ArchitectsStencilMod.Debug;
+using ArchitectsBlueprintMod.Config;
+using ArchitectsBlueprintMod.Core.TileMapping;
+using ArchitectsBlueprintMod.Debug;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Global manager for all active paste operations.
@@ -179,15 +179,15 @@ namespace ArchitectsStencilMod.Core
 
                 if (op.Projection is null || !op.Projection.IsDefined)
                 {
-                    ASMLog.Debug("Paste ended: projection became invalid during update", "Paste");
+                    ABPLog.Debug("Paste ended: projection became invalid during update", "Paste");
                     RemoveOperationAt(i);
                     continue;
                 }
 
                 if (op.IsCompleted)
                 {
-                    ASMLog.Info($"Complete (cheatSweep={op.Context.CheatSweep})", "Paste");
-                    ASMLog.Debug("Paste ended: operation completed during update", "Paste");
+                    ABPLog.Info($"Complete (cheatSweep={op.Context.CheatSweep})", "Paste");
+                    ABPLog.Debug("Paste ended: operation completed during update", "Paste");
                     RemoveOperationAt(i);
                     continue;
                 }
@@ -203,7 +203,7 @@ namespace ArchitectsStencilMod.Core
                 anyStepped = true;
                 if (!keep)
                 {
-                    ASMLog.Debug("Paste ended: step returned no more work", "Paste");
+                    ABPLog.Debug("Paste ended: step returned no more work", "Paste");
                     RemoveOperationAt(i);
                 }
             }
@@ -431,15 +431,15 @@ namespace ArchitectsStencilMod.Core
                 var op = _operations[i];
                 if (op.Projection is null || !op.Projection.IsDefined)
                 {
-                    ASMLog.Debug("Paste ended: projection became invalid during manual step", "Paste");
+                    ABPLog.Debug("Paste ended: projection became invalid during manual step", "Paste");
                     RemoveOperationAt(i);
                     return false;
                 }
 
                 if (op.IsCompleted)
                 {
-                    ASMLog.Info($"Complete (cheatSweep={op.Context.CheatSweep})", "Paste");
-                    ASMLog.Debug("Paste ended: operation completed during manual step", "Paste");
+                    ABPLog.Info($"Complete (cheatSweep={op.Context.CheatSweep})", "Paste");
+                    ABPLog.Debug("Paste ended: operation completed during manual step", "Paste");
                     RemoveOperationAt(i);
                     return false;
                 }
@@ -449,7 +449,7 @@ namespace ArchitectsStencilMod.Core
                 bool keep = op.Context.CheatSweep ? op.Sweep() : op.Step();
                 if (!keep)
                 {
-                    ASMLog.Debug("Paste ended: manual step returned no more work", "Paste");
+                    ABPLog.Debug("Paste ended: manual step returned no more work", "Paste");
                     RemoveOperationAt(i);
                 }
                 return keep;

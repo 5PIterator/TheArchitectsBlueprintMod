@@ -4,7 +4,7 @@
 using Microsoft.Xna.Framework;
 using Terraria;
 
-namespace ArchitectsStencilMod.Tests.Fixtures
+namespace ArchitectsBlueprintMod.Tests.Fixtures
 {
     /// <summary>Shared world-bound checks for blueprint test setup.</summary>
     internal static class WorldBoundsFixture

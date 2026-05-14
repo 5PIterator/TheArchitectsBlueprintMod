@@ -4,23 +4,23 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using ArchitectsStencilMod.UI;
+using ArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Bridges projection payloads to local JSON files and the import/export UI.
     /// </summary>
     public sealed class PayloadSerialization : ModSystem
     {
-        public const string PayloadFileExtension = ".asmpayload.json";
+        public const string PayloadFileExtension = ".abp.json";
         private const string PayloadDirectoryName = "Payloads";
-        private const string PayloadFormat = "ArchitectsStencilMod.Payload";
+        private const string PayloadFormat = "ArchitectsBlueprintMod.Payload";
         private const int SchemaVersion = 1;
         private static readonly Regex InvalidFileNameChars = new($"[{Regex.Escape(new string(Path.GetInvalidFileNameChars()))}]", RegexOptions.Compiled);
 
@@ -78,7 +78,7 @@ namespace ArchitectsStencilMod.Core
                 return;
 
             BeginPayloadIoHighlight(projection);
-            string defaultProjectName = $"ASMPayload{DateTime.Now:yyyyMMdd_HHmmss}";
+            string defaultProjectName = $"ABPPayload{DateTime.Now:yyyyMMdd_HHmmss}";
             int owner = projection.Owner;
             PayloadFileDialogs.ShowExportNameDialog(
                 defaultProjectName,
@@ -108,7 +108,7 @@ namespace ArchitectsStencilMod.Core
             IReadOnlyList<PayloadImportDialogEntry> entries = DiscoverPayloadFiles();
             if (entries.Count == 0)
             {
-                Main.NewText("No payload files found in the ArchitectsStencilMod Payloads folder.", Color.Orange);
+                Main.NewText("No payload files found in the ArchitectsBlueprintMod Payloads folder.", Color.Orange);
                 return;
             }
 
@@ -169,7 +169,7 @@ namespace ArchitectsStencilMod.Core
             try
             {
                 string displayName = string.IsNullOrWhiteSpace(projectName)
-                    ? $"ASMPayload{DateTime.Now:yyyyMMdd_HHmmss}"
+                    ? $"ABPPayload{DateTime.Now:yyyyMMdd_HHmmss}"
                     : projectName.Trim();
                 string path = GetAvailablePayloadPath(displayName);
                 if (!TryWriteExportedWrapper(projection, displayName, path, out string? err))
@@ -201,7 +201,7 @@ namespace ArchitectsStencilMod.Core
                 }
 
                 string displayName = string.IsNullOrWhiteSpace(projectDisplayName)
-                    ? $"ASMPayload{DateTime.Now:yyyyMMdd_HHmmss}"
+                    ? $"ABPPayload{DateTime.Now:yyyyMMdd_HHmmss}"
                     : projectDisplayName.Trim();
                 JObject wrapper = BuildExportWrapper(projection, displayName);
                 File.WriteAllText(fullPath, wrapper.ToString(Formatting.Indented), Encoding.UTF8);
@@ -225,7 +225,7 @@ namespace ArchitectsStencilMod.Core
                     ["schemaVersion"] = SchemaVersion,
                     ["projectName"] = displayName,
                     ["createdUtc"] = DateTime.UtcNow.ToString("O"),
-                    ["modVersion"] = ModContent.GetInstance<global::ArchitectsStencilMod.ArchitectsStencilMod>().Version.ToString(),
+                    ["modVersion"] = ModContent.GetInstance<global::ArchitectsBlueprintMod.ArchitectsBlueprintMod>().Version.ToString(),
                     ["width"] = projection.Payload.Width,
                     ["height"] = projection.Payload.Height,
                 },
@@ -376,7 +376,7 @@ namespace ArchitectsStencilMod.Core
 
             string sanitized = InvalidFileNameChars.Replace(projectName, "_").Trim(' ', '.');
             return string.IsNullOrWhiteSpace(sanitized)
-                ? $"ASMPayload{DateTime.Now:yyyyMMdd_HHmmss}"
+                ? $"ABPPayload{DateTime.Now:yyyyMMdd_HHmmss}"
                 : sanitized;
         }
 

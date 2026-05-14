@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
 
-namespace ArchitectsStencilMod.Config
+namespace ArchitectsBlueprintMod.Config
 {
     /// <summary>
     /// Which SourceMaps interaction layers are included when compiling .itr files on the server or single-player host.

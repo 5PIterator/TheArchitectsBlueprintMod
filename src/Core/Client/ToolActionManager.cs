@@ -1,13 +1,13 @@
 using System;
-using ArchitectsStencilMod.Config;
-using ArchitectsStencilMod.Core.Server;
-using ArchitectsStencilMod.Debug;
+using ArchitectsBlueprintMod.Config;
+using ArchitectsBlueprintMod.Core.Server;
+using ArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Core routing point for "tool action" input.
@@ -135,7 +135,7 @@ namespace ArchitectsStencilMod.Core
             catch (Exception ex)
             {
                 // Record context-rich error for diagnostics without propagating.
-                ASMLog.Error($"Tool action failed: action={action}, key={key}, cursor=({cursorTile.X},{cursorTile.Y}), player={player?.name}", ex, "ToolAction");
+                ABPLog.Error($"Tool action failed: action={action}, key={key}, cursor=({cursorTile.X},{cursorTile.Y}), player={player?.name}", ex, "ToolAction");
             }
         }
 

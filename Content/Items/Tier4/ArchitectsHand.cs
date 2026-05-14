@@ -2,7 +2,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace ArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// ARCHITECT'S HAND: late-game accessory; Shimmer transforms into <see cref="ArchitectsBlueprint"/>.

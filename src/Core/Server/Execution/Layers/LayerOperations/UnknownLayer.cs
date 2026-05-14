@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using ArchitectsStencilMod.Core;
+using ArchitectsBlueprintMod.Core;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.Layers
+namespace ArchitectsBlueprintMod.Core.Layers
 {
     internal sealed class UnknownLayer : Layer
     {

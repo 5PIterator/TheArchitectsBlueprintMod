@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ArchitectsStencilMod.Config;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Core.TileMapping;
-using ArchitectsStencilMod.Debug;
+using ArchitectsBlueprintMod.Config;
+using ArchitectsBlueprintMod.Core;
+using ArchitectsBlueprintMod.Core.TileMapping;
+using ArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.Server
+namespace ArchitectsBlueprintMod.Core.Server
 {
-    /// <summary>Multipaste control packets; paste payload uses <see cref="PasteRequest"/> (JSON <see cref="ArchitectsStencilMod.Core.Client.PayloadImport.PayloadDocument"/>).</summary>
+    /// <summary>Multipaste control packets; paste payload uses <see cref="PasteRequest"/> (JSON <see cref="ArchitectsBlueprintMod.Core.Client.PayloadImport.PayloadDocument"/>).</summary>
     internal static class PasteNetworking
     {
         private static int _nextRequestId = 1;
@@ -119,7 +119,7 @@ namespace ArchitectsStencilMod.Core.Server
             }
             catch (Exception ex)
             {
-                ASMLog.Error("Failed to read paste request packet.", ex, "PasteNet");
+                ABPLog.Error("Failed to read paste request packet.", ex, "PasteNet");
                 SendAck(mod, whoAmI, requestId: 0, accepted: false, PasteRejectReason.InvalidPacket);
                 return;
             }

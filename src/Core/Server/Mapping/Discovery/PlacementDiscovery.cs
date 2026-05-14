@@ -5,15 +5,15 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Core.Layers;
-using ArchitectsStencilMod.Debug;
-using ArchitectsStencilMod.Utils;
+using ArchitectsBlueprintMod.Core;
+using ArchitectsBlueprintMod.Core.Layers;
+using ArchitectsBlueprintMod.Debug;
+using ArchitectsBlueprintMod.Utils;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace ArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Discovers placement interactions for items with createTile/createWall.

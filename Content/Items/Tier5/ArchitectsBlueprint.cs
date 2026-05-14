@@ -2,7 +2,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace ArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// ARCHITECT'S BLUEPRINT: late-game upgrade from Shimmering Architect's Hand.

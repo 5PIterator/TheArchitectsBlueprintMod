@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Core.TileMapping;
+using ArchitectsBlueprintMod.Core;
+using ArchitectsBlueprintMod.Core.TileMapping;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-namespace ArchitectsStencilMod.Core.Layers
+namespace ArchitectsBlueprintMod.Core.Layers
 {
     internal sealed class FallBlockLayer : Layer
     {

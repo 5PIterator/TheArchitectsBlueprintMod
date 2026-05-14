@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Single source of truth for overlay colors across all Architect's Stencil systems.

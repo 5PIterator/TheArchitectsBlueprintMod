@@ -2,19 +2,19 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Opens the payload import dialog for the topmost projection under the cursor, or a new projection from the current selection.
-    /// Usage: /asm.import
+    /// Usage: /abp.import
     /// </summary>
     public sealed class PayloadImportCommand : ModCommand
     {
         private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
-        public override string Command => "asm.import";
+        public override string Command => "abp.import";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/asm.import";
+        public override string Usage => "/abp.import";
         public override string Description => "Imports a payload JSON file onto the projection under the cursor, or onto a new projection from your selection.";
 
         public override void Action(CommandCaller caller, string input, string[] args)

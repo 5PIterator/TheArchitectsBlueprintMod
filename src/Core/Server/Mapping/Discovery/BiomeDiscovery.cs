@@ -7,14 +7,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Debug;
-using ArchitectsStencilMod.Utils;
+using ArchitectsBlueprintMod.Core;
+using ArchitectsBlueprintMod.Debug;
+using ArchitectsBlueprintMod.Utils;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace ArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Discovers biome conversion interactions by:

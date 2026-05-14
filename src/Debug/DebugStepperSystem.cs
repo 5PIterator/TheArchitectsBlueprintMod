@@ -1,7 +1,7 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Debug
+namespace ArchitectsBlueprintMod.Debug
 {
     /// <summary>
     /// Runs each frame to process debug stepper input (step/cancel).

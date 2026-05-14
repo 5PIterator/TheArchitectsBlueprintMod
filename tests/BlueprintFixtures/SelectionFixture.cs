@@ -2,11 +2,11 @@
 #nullable enable
 
 using System;
-using ArchitectsStencilMod.Core;
+using ArchitectsBlueprintMod.Core;
 using Microsoft.Xna.Framework;
 using Terraria;
 
-namespace ArchitectsStencilMod.Tests.Fixtures
+namespace ArchitectsBlueprintMod.Tests.Fixtures
 {
     /// <summary>Creates <see cref="Selection"/> regions for tests (validated against <see cref="WorldBoundsFixture"/>).</summary>
     internal static class SelectionFixture

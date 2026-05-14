@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.Json;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace ArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Compiles source .itr into layer .itr files. Loads SourceMaps into InteractionMap, then exports by layer.

@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Tile highlights for an in-progress paste (built on the server; drawn on the client).

@@ -1,4 +1,4 @@
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     internal enum PasteRejectReason : byte
     {

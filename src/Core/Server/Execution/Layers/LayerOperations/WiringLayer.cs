@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using ArchitectsStencilMod.Core;
+using ArchitectsBlueprintMod.Core;
 using Terraria;
 
-namespace ArchitectsStencilMod.Core.Layers
+namespace ArchitectsBlueprintMod.Core.Layers
 {
     internal sealed class WiringLayer : Layer
     {

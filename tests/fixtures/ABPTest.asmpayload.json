@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "format": "ArchitectsStencilMod.Payload",
+    "format": "ArchitectsBlueprintMod.Payload",
     "schemaVersion": 1,
-    "projectName": "ASMTest",
+    "projectName": "ABPTest",
     "createdUtc": "2026-01-01T00:00:00Z",
     "modVersion": "0.0.0.0",
     "width": 3,

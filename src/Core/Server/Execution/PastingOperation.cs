@@ -5,12 +5,12 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
-using ArchitectsStencilMod.Config;
-using ArchitectsStencilMod.Core.Layers;
-using ArchitectsStencilMod.Core.TileMapping;
-using ArchitectsStencilMod.Debug;
+using ArchitectsBlueprintMod.Config;
+using ArchitectsBlueprintMod.Core.Layers;
+using ArchitectsBlueprintMod.Core.TileMapping;
+using ArchitectsBlueprintMod.Debug;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// A single paste operation. Fire-and-discard; each instance builds and executes its own task queues.
@@ -106,10 +106,10 @@ namespace ArchitectsStencilMod.Core
             // Build the tile lookup.
             Lookup = BuildLookup();
             UpdateContext();
-            ASMLog.Debug(
+            ABPLog.Debug(
                 $"Paste started: sourceClear={ApplySourceClear} (projection={Projection.CutSource}, debug={config.EnableCutPasteProcess}), targetArea=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height}",
                 "Paste");
-            ASMLog.Info(
+            ABPLog.Info(
                 $"START | area=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height} | sourceClear={ApplySourceClear} | srcTiles={Projection.SourceTiles.Length} tgtTiles={Projection.TargetTiles.Length}",
                 "Paste");
 
@@ -118,9 +118,9 @@ namespace ArchitectsStencilMod.Core
             _prepIndex = new Point(0, 0);
             _preparationComplete = config.CheatSweep;
             if (_phase == Phase.Prepare)
-                ASMLog.Info("Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)", "Paste");
+                ABPLog.Info("Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)", "Paste");
             else
-                ASMLog.Info("Stage: CLEAR (cheat sweep — preparation skipped)", "Paste");
+                ABPLog.Info("Stage: CLEAR (cheat sweep — preparation skipped)", "Paste");
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace ArchitectsStencilMod.Core
                     {
                         _phase = Phase.Clear;
                         _currentLayerIndex = 0;
-                        ASMLog.Info("Stage: EXEC CLEAR — running queued clear tasks", "Paste");
+                        ABPLog.Info("Stage: EXEC CLEAR — running queued clear tasks", "Paste");
                     }
 
                     // --- Throttling (PasteDelayMs) applies only to clear/place execution, not task preparation.
@@ -163,7 +163,7 @@ namespace ArchitectsStencilMod.Core
                     SyncOverlayDoneTrackingIfNeeded();
                     var qClear = clearTasks[_currentLayerIndex];
                     var layerClear = Pipeline.ClearOrder[_currentLayerIndex];
-                    ASMLog.Debug($"Clear layer {layerClear.Id} (idx={_currentLayerIndex}) tasks={qClear.Count}", "Paste");
+                    ABPLog.Debug($"Clear layer {layerClear.Id} (idx={_currentLayerIndex}) tasks={qClear.Count}", "Paste");
                     _currentStepClearTiles.Clear();
                     _currentStepPlaceTiles.Clear();
                     ProcessClearQueue(qClear, Context, _currentStepClearTiles, _overlayDoneThisLayer);
@@ -183,7 +183,7 @@ namespace ArchitectsStencilMod.Core
                     SyncOverlayDoneTrackingIfNeeded();
                     var qPlace = placeTasks[_currentLayerIndex];
                     var layerPlace = Pipeline.PlaceOrder[_currentLayerIndex];
-                    ASMLog.Debug($"Place layer {layerPlace.Id} (idx={_currentLayerIndex}) tasks={qPlace.Count}", "Paste");
+                    ABPLog.Debug($"Place layer {layerPlace.Id} (idx={_currentLayerIndex}) tasks={qPlace.Count}", "Paste");
                     _currentStepPlaceTiles.Clear();
                     _currentStepClearTiles.Clear();
                     ProcessPlaceQueue(qPlace, Context, _currentStepPlaceTiles, _overlayDoneThisLayer);
@@ -241,7 +241,7 @@ namespace ArchitectsStencilMod.Core
             PasteContext placeContext = Context;
             LayerResult placeResult = sweep.Place(pasteTiles, in placeContext);
             if (!placeResult.Success)
-                ASMLog.Debug($"CheatSweep place incomplete: layer={sweep.Id} remaining={placeResult.RemainingTiles.Count}", "Paste");
+                ABPLog.Debug($"CheatSweep place incomplete: layer={sweep.Id} remaining={placeResult.RemainingTiles.Count}", "Paste");
 
             ClearAllTaskQueues();
             NextStepTime = 0;
@@ -335,7 +335,7 @@ namespace ArchitectsStencilMod.Core
             // Emit a progress log and yield the frame if the stages are not yet exhausted.
             if (_prepWork < PrepWorkStage.Done)
             {
-                ASMLog.Debug(
+                ABPLog.Debug(
                     $"Prep: batch stage={_prepWork} progress={FormatPrepProgress()} unitsThisFrame={prepUnitsThisCall} remainingBudget={budget}",
                     "Paste");
                 return true;
@@ -374,8 +374,8 @@ namespace ArchitectsStencilMod.Core
             _prepWork = PrepWorkStage.PlanPlace;
             _prepIndex = new Point(0, 0);
 
-            ASMLog.Info("Prep: PlaceSource — queuing place tasks from source tiles", "Paste");
-            ASMLog.Debug(
+            ABPLog.Info("Prep: PlaceSource — queuing place tasks from source tiles", "Paste");
+            ABPLog.Debug(
                 $"Prep: begin prepTileBudget={PreparePhaseTileBudget} sourceTiles={Projection.SourceTiles.Length} lookupTiles={Lookup.Count} targetTiles={Projection.TargetTiles.Length} transparent={_clientPaste.TransparentPaste} sourceAreaClear={ApplySourceClear}",
                 "Paste");
         }
@@ -565,8 +565,8 @@ namespace ArchitectsStencilMod.Core
             {
                 // Entering ClearTarget: announce the new stage.
                 case PrepWorkStage.PlanClear:
-                    ASMLog.Info("Prep: ClearTarget — queuing clears at destination", "Paste");
-                    ASMLog.Debug("Prep: stage PlaceSource -> ClearTarget", "Paste");
+                    ABPLog.Info("Prep: ClearTarget — queuing clears at destination", "Paste");
+                    ABPLog.Debug("Prep: stage PlaceSource -> ClearTarget", "Paste");
                     break;
 
                 // Entering SourceAreaClear: log transparency mode and whether a cut pass will run.
@@ -574,10 +574,10 @@ namespace ArchitectsStencilMod.Core
                 {
                     string mode = _clientPaste.TransparentPaste ? "transparent" : "opaque";
                     if (ApplySourceClear)
-                        ASMLog.Info($"Prep: SourceAreaClear — queuing cuts at source ({mode})", "Paste");
+                        ABPLog.Info($"Prep: SourceAreaClear — queuing cuts at source ({mode})", "Paste");
                     else
-                        ASMLog.Info("Prep: no source cut — finalizing queues", "Paste");
-                    ASMLog.Debug($"Prep: stage ClearTarget -> SourceAreaClear ({mode})", "Paste");
+                        ABPLog.Info("Prep: no source cut — finalizing queues", "Paste");
+                    ABPLog.Debug($"Prep: stage ClearTarget -> SourceAreaClear ({mode})", "Paste");
                     break;
                 }
 
@@ -585,12 +585,12 @@ namespace ArchitectsStencilMod.Core
                 case PrepWorkStage.Done:
                     if (ApplySourceClear)
                     {
-                        ASMLog.Info("Prep: done — source-area clear pass finished", "Paste");
-                        ASMLog.Debug("Prep: stage SourceAreaClear -> Done", "Paste");
+                        ABPLog.Info("Prep: done — source-area clear pass finished", "Paste");
+                        ABPLog.Debug("Prep: stage SourceAreaClear -> Done", "Paste");
                     }
                     else
                     {
-                        ASMLog.Debug("Prep: stage SourceAreaClear skipped (no source clear) -> Done", "Paste");
+                        ABPLog.Debug("Prep: stage SourceAreaClear skipped (no source clear) -> Done", "Paste");
                     }
                     break;
             }
@@ -610,8 +610,8 @@ namespace ArchitectsStencilMod.Core
             int clearBatches = 0;
             for (int i = 0; i < clearTasks.Count; i++)
                 clearBatches += clearTasks[i].Count;
-            ASMLog.Info($"Prep: queues ready | placeBatches={placeBatches} clearBatches={clearBatches}", "Paste");
-            ASMLog.Debug($"Prep: complete placeBatches={placeBatches} clearBatches={clearBatches}", "Paste");
+            ABPLog.Info($"Prep: queues ready | placeBatches={placeBatches} clearBatches={clearBatches}", "Paste");
+            ABPLog.Debug($"Prep: complete placeBatches={placeBatches} clearBatches={clearBatches}", "Paste");
 
             // Release planning scratch state — execution phases no longer need dedup sets.
             _preparationComplete = true;
@@ -829,7 +829,7 @@ namespace ArchitectsStencilMod.Core
             for (int i = 0; i < identifiedLayers.Count; i++)
             {
                 var identified = identifiedLayers[i];
-                ASMLog.Debug($"Identify clear layer={identified.Layer.Id} rel=({rel.X},{rel.Y}) tiles={identified.Tiles.Count}", "Paste");
+                ABPLog.Debug($"Identify clear layer={identified.Layer.Id} rel=({rel.X},{rel.Y}) tiles={identified.Tiles.Count}", "Paste");
             }
 
             for (int i = 0; i < identifiedLayers.Count; i++)
@@ -856,7 +856,7 @@ namespace ArchitectsStencilMod.Core
             for (int i = 0; i < identifiedLayers.Count; i++)
             {
                 var identified = identifiedLayers[i];
-                ASMLog.Debug($"Identify place layer={identified.Layer.Id} rel=({rel.X},{rel.Y}) tiles={identified.Tiles.Count} placementValid={identified.PlacementValid} hasItems={identified.HasRequiredItems}", "Paste");
+                ABPLog.Debug($"Identify place layer={identified.Layer.Id} rel=({rel.X},{rel.Y}) tiles={identified.Tiles.Count} placementValid={identified.PlacementValid} hasItems={identified.HasRequiredItems}", "Paste");
             }
 
             for (int i = 0; i < identifiedLayers.Count; i++)
@@ -903,7 +903,7 @@ namespace ArchitectsStencilMod.Core
             if (tiles.Count > 0)
             {
                 clearTasks[layerIndex].Enqueue(new ClearingTask(layer, tiles));
-                ASMLog.Debug($"Queued clear task layer={layer.Id} tiles={tiles.Count} queue={clearTasks[layerIndex].Count}", "Paste");
+                ABPLog.Debug($"Queued clear task layer={layer.Id} tiles={tiles.Count} queue={clearTasks[layerIndex].Count}", "Paste");
             }
         }
 
@@ -927,7 +927,7 @@ namespace ArchitectsStencilMod.Core
             if (tiles.Count > 0)
             {
                 placeTasks[layerIndex].Enqueue(new PlacingTask(layer, tiles));
-                ASMLog.Debug($"Queued place task layer={layer.Id} tiles={tiles.Count} queue={placeTasks[layerIndex].Count}", "Paste");
+                ABPLog.Debug($"Queued place task layer={layer.Id} tiles={tiles.Count} queue={placeTasks[layerIndex].Count}", "Paste");
             }
         }
 
@@ -1017,7 +1017,7 @@ namespace ArchitectsStencilMod.Core
                 {
                     q.Enqueue(task);
                     if (task.Tiles.Count > 0)
-                        ASMLog.Debug($"Requeue clear task world=({task.Tiles[0].World.X},{task.Tiles[0].World.Y}) remainingTiles={task.Tiles.Count}", "Paste");
+                        ABPLog.Debug($"Requeue clear task world=({task.Tiles[0].World.X},{task.Tiles[0].World.Y}) remainingTiles={task.Tiles.Count}", "Paste");
                 }
             }
 
@@ -1051,7 +1051,7 @@ namespace ArchitectsStencilMod.Core
                 {
                     q.Enqueue(task);
                     if (task.Tiles.Count > 0)
-                        ASMLog.Debug($"Requeue place task world=({task.Tiles[0].World.X},{task.Tiles[0].World.Y}) remainingTiles={task.Tiles.Count}", "Paste");
+                        ABPLog.Debug($"Requeue place task world=({task.Tiles[0].World.X},{task.Tiles[0].World.Y}) remainingTiles={task.Tiles.Count}", "Paste");
                 }
             }
 
@@ -1069,7 +1069,7 @@ namespace ArchitectsStencilMod.Core
             if (_phase == Phase.Clear)
             {
                 _phase = Phase.Place;
-                ASMLog.Info("Stage: EXEC PLACE — running queued place tasks", "Paste");
+                ABPLog.Info("Stage: EXEC PLACE — running queued place tasks", "Paste");
                 return HasAnyTask(placeTasks);
             }
 

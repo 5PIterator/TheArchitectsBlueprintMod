@@ -4,11 +4,11 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using ArchitectsStencilMod.Core;
-using static ArchitectsStencilMod.Core.ToolActionManager;
-using ArchitectsStencilMod.Utils;
+using ArchitectsBlueprintMod.Core;
+using static ArchitectsBlueprintMod.Core.ToolActionManager;
+using ArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace ArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// EXECUTION WAND: PASTE / RESET only (tier-2 paste branch; projection wand keeps COPY). Default is RESET so alt-use can open the mode wheel; pick PASTE to paste, then right-click is RST-equivalent.

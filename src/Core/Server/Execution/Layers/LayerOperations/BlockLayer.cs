@@ -1,13 +1,13 @@
 using System.Collections.Generic;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Core.TileMapping;
-using ArchitectsStencilMod.Debug;
+using ArchitectsBlueprintMod.Core;
+using ArchitectsBlueprintMod.Core.TileMapping;
+using ArchitectsBlueprintMod.Debug;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
-namespace ArchitectsStencilMod.Core.Layers
+namespace ArchitectsBlueprintMod.Core.Layers
 {
     /// <summary>Simple solid tiles: one cell per <see cref="Identify"/>; multi-tile objects and frames belong to other layers.</summary>
     internal sealed class BlockLayer : Layer
@@ -75,10 +75,10 @@ namespace ArchitectsStencilMod.Core.Layers
 
         public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
         {
-            if (ASMLog.IsDebugEnabled && tiles.Count > 0)
+            if (ABPLog.IsDebugEnabled && tiles.Count > 0)
             {
                 var samplePasteTile = tiles[0];
-                ASMLog.Debug(
+                ABPLog.Debug(
                     $"BlockLayer.Place batch={tiles.Count}"+
                     $"rel=({samplePasteTile.Relative.X},{samplePasteTile.Relative.Y}) "+
                     $"world=({samplePasteTile.World.X},{samplePasteTile.World.Y}) "+

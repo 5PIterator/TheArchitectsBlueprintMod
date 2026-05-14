@@ -2,11 +2,11 @@
 #nullable enable
 
 using System;
-using ArchitectsStencilMod.Core;
+using ArchitectsBlueprintMod.Core;
 using Microsoft.Xna.Framework;
 using Terraria;
 
-namespace ArchitectsStencilMod.Tests.Fixtures
+namespace ArchitectsBlueprintMod.Tests.Fixtures
 {
     /// <summary>
     /// Fluent chain for test setup: player context to tile bounds, then selection and/or projection.

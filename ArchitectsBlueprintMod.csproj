@@ -17,10 +17,10 @@
 		<EmbeddedResource Include="Content\Templates\SourceMaps\Custom.itr" />
 		<EmbeddedResource Include="Content\Templates\SourceMaps\BiomeConfig.itr" />
 		<EmbeddedResource Include="Content\Templates\SourceMaps\BaseContext.itr" />
-		<EmbeddedResource Include="Content\Config\LayerOrder.json" LogicalName="ArchitectsStencilMod.LayerOrder.json" />
-		<EmbeddedResource Include="tests\fixtures\ASMTest.asmpayload.json" LogicalName="ArchitectsStencilMod.ASMTestFixture" />
-		<EmbeddedResource Include="tests\goldens\payload_clear_center.json" LogicalName="ArchitectsStencilMod.GoldenPayloadClearCenter" />
-		<EmbeddedResource Include="tests\goldens\payload_fill_center.json" LogicalName="ArchitectsStencilMod.GoldenPayloadFillCenter" />
+		<EmbeddedResource Include="Content\Config\LayerOrder.json" LogicalName="ArchitectsBlueprintMod.LayerOrder.json" />
+		<EmbeddedResource Include="tests\fixtures\ABPTest.asmpayload.json" LogicalName="ArchitectsBlueprintMod.ABPTestFixture" />
+		<EmbeddedResource Include="tests\goldens\payload_clear_center.json" LogicalName="ArchitectsBlueprintMod.GoldenPayloadClearCenter" />
+		<EmbeddedResource Include="tests\goldens\payload_fill_center.json" LogicalName="ArchitectsBlueprintMod.GoldenPayloadFillCenter" />
 	</ItemGroup>
 
 </Project>

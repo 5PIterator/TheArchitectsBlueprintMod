@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using ArchitectsStencilMod.Config;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Debug;
+using ArchitectsBlueprintMod.Config;
+using ArchitectsBlueprintMod.Core;
+using ArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 
-namespace ArchitectsStencilMod.Core.Layers
+namespace ArchitectsBlueprintMod.Core.Layers
 {
     /// <summary>Why a <see cref="Layer"/> <see cref="Layer.Place"/> or <see cref="Layer.Clear"/> did not succeed; shared by both paths.</summary>
     internal enum LayerFailReason
@@ -92,7 +92,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
     internal static class LayerSystem
     {
-        private const string ResourceName = "ArchitectsStencilMod.LayerOrder.json";
+        private const string ResourceName = "ArchitectsBlueprintMod.LayerOrder.json";
 
         public static Layer Wall => WallLayer.Definition;
         public static Layer Block => BlockLayer.Definition;
@@ -143,7 +143,7 @@ namespace ArchitectsStencilMod.Core.Layers
             {
                 Layer layer = registry[i];
                 if (!layerById.TryAdd(layer.Id, layer))
-                    ASMLog.Warn($"Duplicate layer id '{layer.Id}' was registered. Later registrations are ignored.", "Layers");
+                    ABPLog.Warn($"Duplicate layer id '{layer.Id}' was registered. Later registrations are ignored.", "Layers");
             }
 
             // Load the layer order definition.
@@ -211,7 +211,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
                 if (!layerById.TryGetValue(id, out Layer? layer))
                 {
-                    ASMLog.Warn($"Layer id '{id}' is present in LayerOrder.json but no matching layer was registered.", "Layers");
+                    ABPLog.Warn($"Layer id '{id}' is present in LayerOrder.json but no matching layer was registered.", "Layers");
                     continue;
                 }
 
@@ -267,7 +267,7 @@ namespace ArchitectsStencilMod.Core.Layers
                     using Stream? stream = typeof(LayerSystem).Assembly.GetManifestResourceStream(ResourceName);
                     if (stream is null)
                     {
-                        ASMLog.Warn($"Layer order resource '{ResourceName}' was not found. Falling back to defaults.", "Layers");
+                        ABPLog.Warn($"Layer order resource '{ResourceName}' was not found. Falling back to defaults.", "Layers");
                         return CreateDefault();
                     }
 
@@ -278,7 +278,7 @@ namespace ArchitectsStencilMod.Core.Layers
 
                     if (definition is null)
                     {
-                        ASMLog.Warn("Layer order resource was empty. Falling back to defaults.", "Layers");
+                        ABPLog.Warn("Layer order resource was empty. Falling back to defaults.", "Layers");
                         return CreateDefault();
                     }
 
@@ -286,7 +286,7 @@ namespace ArchitectsStencilMod.Core.Layers
                 }
                 catch (Exception ex)
                 {
-                    ASMLog.Error("Failed to load layer order resource. Falling back to defaults.", ex, "Layers");
+                    ABPLog.Error("Failed to load layer order resource. Falling back to defaults.", ex, "Layers");
                     return CreateDefault();
                 }
             }

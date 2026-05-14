@@ -1,10 +1,10 @@
-# The Architect's Stencil
+# Architect's Blueprint
 
 ## Overview
-The Architect's Stencil (`ArchitectsStencil`) is a Terraria mod that lets you capture a region of the world as a *Selection* and place copies of it elsewhere using the materials you already own. It focuses on intuitive selection tools and clear visual feedback so larger builds feel fast instead of fiddly.
+Architect's Blueprint (`ArchitectsBlueprintMod`) is a Terraria mod that lets you capture a region of the world as a *Selection* and place copies of it elsewhere using the materials you already own. It focuses on intuitive selection tools and clear visual feedback so larger builds feel fast instead of fiddly.
 
 ## Core Concepts
-- **Selection**: The rectangular region you define for The Architect's Stencil to work with. Individual tiles within it can be included or excluded from operations.
+- **Selection**: The rectangular region you define for the mod's tools to work with. Individual tiles within it can be included or excluded from operations.
 - **Projection**: A movable ghost of a Selection that shows where the structure will be built.
 - **Tools**: A family of sticks and wands that handle selecting, editing, copying, and pasting structures.
 
@@ -21,7 +21,7 @@ The Architect's Stencil (`ArchitectsStencil`) is a Terraria mod that lets you ca
 
 ## Installation
 1. Ensure you have tModLoader installed.
-2. Download **The Architect's Stencil** from the in-game Mod Browser or your chosen source.
+2. Download **Architect's Blueprint** from the in-game Mod Browser or your chosen source.
 
 ## Usage
 - Use the **Pin Stick** or **Selection Wand** to define and edit the selection region.
@@ -33,4 +33,3 @@ The Architect's Stencil (`ArchitectsStencil`) is a Terraria mod that lets you ca
 ## Version History
 - **0.1.1**: Initial selection and inclusion mechanic implemented.
 - **0.1.2**: Projections and paste using inventory materials.
-- **0.1.3**: Semantic rename — Selection replaces Blueprint; Include/Exclude replace Add/Remove.

@@ -2,11 +2,11 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.Core;
-using static ArchitectsStencilMod.Core.ToolActionManager;
-using ArchitectsStencilMod.Utils;
+using ArchitectsBlueprintMod.Core;
+using static ArchitectsBlueprintMod.Core.ToolActionManager;
+using ArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace ArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// EXCLUDE STICK: excludes tiles from the current Selection.
@@ -18,7 +18,7 @@ namespace ArchitectsStencilMod.Content.Items
 	public class ExcludeStick : ModItem
 	{
 
-		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.ArchitectsStencilMod.hjson' file.
+		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.ArchitectsBlueprintMod.hjson' file.
 		/// <summary>Configures size, use timing, and rarity for the exclude-selection stick.</summary>
 		public override void SetDefaults()
 		{

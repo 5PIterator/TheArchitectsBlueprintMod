@@ -6,13 +6,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Debug;
+using ArchitectsBlueprintMod.Core;
+using ArchitectsBlueprintMod.Debug;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace ArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Discovers shimmer transformation results via ItemID.Sets.ShimmerTransformToItem and recipe decrafting.

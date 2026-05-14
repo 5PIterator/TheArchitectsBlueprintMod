@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
 
-namespace ArchitectsStencilMod.Config
+namespace ArchitectsBlueprintMod.Config
 {
     /// <summary>Per-layer toggles for paste task building. When false, that layer is not identified and generates no clear/place tasks.</summary>
     public sealed class LayerIdentificationSettings

@@ -5,11 +5,11 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using ArchitectsStencilMod.Core;
-using static ArchitectsStencilMod.Core.ToolActionManager;
-using ArchitectsStencilMod.Utils;
+using ArchitectsBlueprintMod.Core;
+using static ArchitectsBlueprintMod.Core.ToolActionManager;
+using ArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace ArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// PROJECTION WAND: COPY / PASTE / RESET via action wheel. Hold/release only for COPY.

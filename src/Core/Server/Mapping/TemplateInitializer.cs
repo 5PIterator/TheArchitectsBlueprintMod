@@ -1,10 +1,10 @@
 using System;
 using System.IO;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Debug;
+using ArchitectsBlueprintMod.Core;
+using ArchitectsBlueprintMod.Debug;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace ArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Copies template files from Content/Templates to the mod output directories at launch.
@@ -70,7 +70,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 }
                 catch (Exception ex)
                 {
-                    ASMLog.Warn($"Failed to copy template {name}: {ex.Message}", "Template");
+                    ABPLog.Warn($"Failed to copy template {name}: {ex.Message}", "Template");
                 }
             }
         }

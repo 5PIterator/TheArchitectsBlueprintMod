@@ -1,20 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ArchitectsStencilMod;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Core.Client;
+using ArchitectsBlueprintMod.Core;
+using ArchitectsBlueprintMod.Core.Client;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.Net;
 
-namespace ArchitectsStencilMod.Core.Server
+namespace ArchitectsBlueprintMod.Core.Server
 {
     /// <summary>
     /// Syncs in-progress paste highlight tiles (world coordinates only). Tile data for a paste is sent via
-    /// <see cref="PasteRequest"/> as compact <see cref="ArchitectsStencilMod.Core.Client.PayloadImport.PayloadDocument"/> JSON.
+    /// <see cref="PasteRequest"/> as compact <see cref="ArchitectsBlueprintMod.Core.Client.PayloadImport.PayloadDocument"/> JSON.
     /// </summary>
     internal static class PasteOverlayNetworking
     {
@@ -35,7 +34,7 @@ namespace ArchitectsStencilMod.Core.Server
 
             _lastSentSnapshotCountByPlayer ??= new int[Main.maxPlayers];
 
-            Mod mod = ModContent.GetInstance<ArchitectsStencilMod>()!;
+            Mod mod = ModContent.GetInstance<global::ArchitectsBlueprintMod.ArchitectsBlueprintMod>()!;
             for (int i = 0; i < Main.maxPlayers; i++)
             {
                 if (!Main.player[i].active || !Netplay.Clients[i].IsConnected())

@@ -5,13 +5,13 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Xna.Framework;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Core.Layers;
-using ArchitectsStencilMod.Core.TileMapping;
+using ArchitectsBlueprintMod.Core;
+using ArchitectsBlueprintMod.Core.Layers;
+using ArchitectsBlueprintMod.Core.TileMapping;
 using Terraria;
 using Terraria.ID;
 
-namespace ArchitectsStencilMod.Debug;
+namespace ArchitectsBlueprintMod.Debug;
 
 /// <summary>
 /// Writes the task map built at the start of a PastingOperation to a debug JSON file.

@@ -2,10 +2,10 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.Core;
-using static ArchitectsStencilMod.Core.ToolActionManager;
+using ArchitectsBlueprintMod.Core;
+using static ArchitectsBlueprintMod.Core.ToolActionManager;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace ArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// PIN STICK: pins a new Selection bounds.
@@ -20,7 +20,7 @@ namespace ArchitectsStencilMod.Content.Items
 	public class PinStick : ModItem
 	{
 
-		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.ArchitectsStencilMod.hjson' file.
+		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.ArchitectsBlueprintMod.hjson' file.
 		/// <summary>Configures size, use timing, sound, and rarity for the pin stick.</summary>
 		public override void SetDefaults()
 		{

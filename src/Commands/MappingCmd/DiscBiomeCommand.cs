@@ -1,22 +1,22 @@
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.Core.TileMapping;
+using ArchitectsBlueprintMod.Core.TileMapping;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Chat/console command to run biome conversion discovery.
     /// Finds items that perform biome conversion, tiles/walls that can be converted,
     /// and tests WorldGen.Convert for each combination. Output: Biome.itr
-    /// Usage: /asm.discBiome
+    /// Usage: /abp.discBiome
     /// </summary>
     public sealed class DiscBiomeCommand : ModCommand
     {
-        public override string Command => "asm.discBiome";
+        public override string Command => "abp.discBiome";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/asm.discBiome";
+        public override string Usage => "/abp.discBiome";
         public override string Description => "Runs biome conversion discovery and writes Biome.itr.";
 
         public override void Action(CommandCaller caller, string input, string[] args)

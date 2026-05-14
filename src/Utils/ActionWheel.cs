@@ -9,9 +9,9 @@ using Terraria.UI;
 using Terraria.ModLoader;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
-using ArchitectsStencilMod.Core;
+using ArchitectsBlueprintMod.Core;
 
-namespace ArchitectsStencilMod.Utils
+namespace ArchitectsBlueprintMod.Utils
 {
     /// <summary>
     /// Lightweight "action wheel" UI.
@@ -561,7 +561,7 @@ namespace ArchitectsStencilMod.Utils
             }
 
             layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
-                "ArchitectsStencilMod: ActionWheel",
+                "ArchitectsBlueprintMod: ActionWheel",
                 DrawInterface,
                 InterfaceScaleType.UI
             ));

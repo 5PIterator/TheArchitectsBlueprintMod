@@ -1,22 +1,22 @@
 #if DEBUG
 #nullable enable
 
-using ArchitectsStencilMod.Tests;
+using ArchitectsBlueprintMod.Tests;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Debug-only chat trigger for <see cref="PayloadIoTestScript"/>.
     /// </summary>
     public sealed class PayloadIoTestCommand : ModCommand
     {
-        public override string Command => "asm.test.payload";
+        public override string Command => "abp.test.payload";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/asm.test.payload clear|fill";
+        public override string Usage => "/abp.test.payload clear|fill";
         public override string Description => "[Debug] Runs payload fixture tests (implementation in tests/PayloadIoTestScript.cs).";
 
         public override void Action(CommandCaller caller, string input, string[] args)
@@ -42,7 +42,7 @@ namespace ArchitectsStencilMod.Core
 
             if (args.Length < 1 || (args[0] != "clear" && args[0] != "fill"))
             {
-                caller.Reply("Usage: /asm.test.payload clear|fill", Color.Orange);
+                caller.Reply("Usage: /abp.test.payload clear|fill", Color.Orange);
                 return;
             }
 

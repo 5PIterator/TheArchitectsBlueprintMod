@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using ArchitectsStencilMod.Debug;
-using ArchitectsStencilMod.Core.Layers;
+using ArchitectsBlueprintMod.Debug;
+using ArchitectsBlueprintMod.Core.Layers;
 using Microsoft.Xna.Framework;
 using Terraria;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     internal interface IPastingTask
     {
@@ -70,7 +70,7 @@ namespace ArchitectsStencilMod.Core
 
             // Execute the clearing operation. If it fails, return false and requeue the task.
             var res = _layer.Clear(_tiles, in context);
-            ASMLog.Debug($"Clear execute layer={_layer.Id} world=({_tiles[0].World.X},{_tiles[0].World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
+            ABPLog.Debug($"Clear execute layer={_layer.Id} world=({_tiles[0].World.X},{_tiles[0].World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
             if (!res.Success)
             {
                 if (res.FailReason == LayerFailReason.InsufficientPickaxePower)
@@ -138,13 +138,13 @@ namespace ArchitectsStencilMod.Core
                 return true;
 
             var head = _tiles[0];
-            ASMLog.Debug(
+            ABPLog.Debug(
                 $"Place begin layer={_layer.Id} batch={_tiles.Count} rel=({head.Relative.X},{head.Relative.Y}) world=({head.World.X},{head.World.Y}) payload[hasTile={head.PayloadCell.HasTile()} type={head.PayloadCell.Block.Type} frame=({head.PayloadCell.Block.FrameX},{head.PayloadCell.Block.FrameY})] source[hasTile={head.Source.HasTile} type={head.Source.TileType}] target[hasTile={head.Target.HasTile} type={head.Target.TileType}]",
                 "Paste");
 
             // Execute the placing operation. If it fails, return false and requeue the task.
             var res = _layer.Place(_tiles, in context);
-            ASMLog.Debug($"Place execute layer={_layer.Id} world=({_tiles[0].World.X},{_tiles[0].World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
+            ABPLog.Debug($"Place execute layer={_layer.Id} world=({_tiles[0].World.X},{_tiles[0].World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
             if (!res.Success)
             {
                 if (context.IgnoreItems && res.FailReason == LayerFailReason.MissingItems)

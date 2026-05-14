@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using ArchitectsStencilMod.Core;
+using ArchitectsBlueprintMod.Core;
 using Terraria;
 using Terraria.ID;
 
-namespace ArchitectsStencilMod.Core.Layers
+namespace ArchitectsBlueprintMod.Core.Layers
 {
     internal sealed class SweepLayer : Layer
     {

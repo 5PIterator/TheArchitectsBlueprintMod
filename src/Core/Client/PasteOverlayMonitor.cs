@@ -4,10 +4,10 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.UI;
-using ArchitectsStencilMod.Core;
+using ArchitectsBlueprintMod.UI;
+using ArchitectsBlueprintMod.Core;
 
-namespace ArchitectsStencilMod.Core.Client
+namespace ArchitectsBlueprintMod.Core.Client
 {
     /// <summary>
     /// Client-only: registers paste progress overlays from local <see cref="PastingSystem"/> (single player / host)

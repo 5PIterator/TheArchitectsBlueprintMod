@@ -1,21 +1,21 @@
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.Core.TileMapping;
+using ArchitectsBlueprintMod.Core.TileMapping;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Chat/console command to run placement discovery.
     /// Scans items with createTile/createWall and writes Placement.itr.
-    /// Usage: /asm.discPlace
+    /// Usage: /abp.discPlace
     /// </summary>
     public sealed class DiscPlacementCommand : ModCommand
     {
-        public override string Command => "asm.discPlace";
+        public override string Command => "abp.discPlace";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/asm.discPlace";
+        public override string Usage => "/abp.discPlace";
         public override string Description => "Runs placement discovery and writes Placement.itr.";
 
         public override void Action(CommandCaller caller, string input, string[] args)

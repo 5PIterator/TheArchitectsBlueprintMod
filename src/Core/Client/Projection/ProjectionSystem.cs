@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsStencilMod.UI;
+using ArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Owns each player's projection list and <see cref="ActiveProjection"/>.

@@ -1,23 +1,23 @@
 using System;
-using ArchitectsStencilMod.Config;
+using ArchitectsBlueprintMod.Config;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Debug
+namespace ArchitectsBlueprintMod.Debug
 {
     /// <summary>
     /// Centralized logging for the mod. Uses tModLoader's Mod.Logger (log4net).
     /// Logs go to Documents/My Games/Terraria/tModLoader/Logs/Mods/.
     /// Initialize in mod Load(); Unload in mod Unload().
     /// </summary>
-    internal static class ASMLog
+    internal static class ABPLog
     {
         private static Mod? _mod;
 
         /// <summary>
-        /// Call from ArchitectsStencilMod.Load(). Required before any logging.
+        /// Call from ArchitectsBlueprintMod.Load(). Required before any logging.
         /// </summary>
         public static void Initialize(Mod mod)
         {
@@ -25,7 +25,7 @@ namespace ArchitectsStencilMod.Debug
         }
 
         /// <summary>
-        /// Call from ArchitectsStencilMod.Unload(). Clears the Mod reference.
+        /// Call from ArchitectsBlueprintMod.Unload(). Clears the Mod reference.
         /// </summary>
         public static void Unload()
         {

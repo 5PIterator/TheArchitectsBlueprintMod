@@ -1,10 +1,10 @@
 using System;
-using ArchitectsStencilMod.UI;
+using ArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Owns each player's active Selection for the world.

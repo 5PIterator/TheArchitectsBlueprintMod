@@ -1,12 +1,12 @@
-# The Architect's Stencil / ArchitectsStencilMod (TAS)
+# Architect's Blueprint / ArchitectsBlueprintMod (ABP)
 
-TAS is a Terraria mod that allows players to copy and paste structures using the materials they have.
+ABP is a Terraria mod that allows players to copy and paste structures using the materials they have.
 
 ## Definitions
 
-- **Blueprint:** Data structure representing a user-selected region TAS will work with. It is a 2D grid of tiles that are included or excluded.
-- **Selection:** An instance of a Blueprint, acting as a selected region of the world that TAS will consider as a source of tiles to copy.
-- **Projection:** An instance of a Blueprint, acting as a movable ghost of a Selection that TAS will consider as a target of tiles to paste.
+- **Blueprint:** Data structure representing a user-selected region ABP will work with. It is a 2D grid of tiles that are included or excluded.
+- **Selection:** An instance of a Blueprint, acting as a selected region of the world that ABP will consider as a source of tiles to copy.
+- **Projection:** An instance of a Blueprint, acting as a movable ghost of a Selection that ABP will consider as a target of tiles to paste.
 
 **CUT**: When enabled, a paste also clears tiles in the Selection's source area, so the operation behaves like a move instead of a duplicate.
 
@@ -107,7 +107,7 @@ TAS is a Terraria mod that allows players to copy and paste structures using the
     - 6: PASTE (start pasting on the projection)
     - 7: RESET (clear the Blueprint or Projection that is clicked)
 
-- **ARCHITECT'S SOUL:** A consumable item that permanently unlocks the Architect's Stencil GUI. (work in progress)
+- **ARCHITECT'S SOUL:** A consumable item that permanently unlocks the Architect's Blueprint GUI. (work in progress)
 
 ## Notes / future optimizations
 
