@@ -60,11 +60,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\ArchitectsStencilMod\\ArchitectsStencilMod.csproj",
+      "projectUniqueName": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\ArchitectsBlueprintlMod\\ArchitectsStencilMod.csproj",
       "projectName": "ArchitectsStencilMod",
-      "projectPath": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\ArchitectsStencilMod\\ArchitectsStencilMod.csproj",
+      "projectPath": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\ArchitectsBlueprintlMod\\ArchitectsStencilMod.csproj",
       "packagesPath": "C:\\Users\\theiterator\\.nuget\\packages\\",
-      "outputPath": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\ArchitectsStencilMod\\obj\\",
+      "outputPath": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\ArchitectsBlueprintlMod\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\theiterator\\AppData\\Roaming\\NuGet\\NuGet.Config"
