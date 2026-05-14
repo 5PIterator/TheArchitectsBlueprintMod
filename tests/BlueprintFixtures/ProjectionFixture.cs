@@ -16,7 +16,7 @@ namespace ArchitectsStencilMod.Tests.Fixtures
             ArgumentNullException.ThrowIfNull(selection);
             try
             {
-                projection = new Projection(selection, cutSource);
+                projection = new Projection(selection.Owner, selection, cutSource);
                 return true;
             }
             catch (Exception ex)
@@ -36,7 +36,7 @@ namespace ArchitectsStencilMod.Tests.Fixtures
             if (!TryCreate(selection, cutSource, out projection, out error))
                 return false;
 
-            projection.ApplyImportedPayload(payload);
+            projection.SetPayload(payload, discardSelection: true);
             return true;
         }
     }

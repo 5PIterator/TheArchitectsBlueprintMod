@@ -52,12 +52,10 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            if (!BlueprintSystem.TryGetTopmostBlueprintAt(player, cursorTile, out Blueprint? top) || top is null)
+            if (!BlueprintSystem.GetTopmostBlueprintAt(cursorTile, out Blueprint top))
             {
                 return;
             }
-
-            var sys = ProjectionSystem;
 
             switch (top)
             {
@@ -67,8 +65,7 @@ namespace ArchitectsStencilMod.Core
                         return;
                     }
 
-                    sys.SetActiveProjection(player, topmost);
-                    sys.BringProjectionToFront(player, topmost);
+                    BlueprintSystem.BringBlueprintToFront(topmost);
                     state.Mode = Mode.Drag;
                     state.DragKind = DragKind.Move;
                     state.DraggingProjection = topmost;
@@ -78,7 +75,7 @@ namespace ArchitectsStencilMod.Core
 
                 case Selection:
                 {
-                    Projection projection = sys.NewProjection(player, cursorTile);
+                        Projection projection = ProjectionSystem.NewProjection(player, cursorTile);
                     if (projection is null)
                     {
                         return;
@@ -161,25 +158,15 @@ namespace ArchitectsStencilMod.Core
             ArgumentNullException.ThrowIfNull(player);
             ArgumentNullException.ThrowIfNull(removed);
 
-            int i = player.whoAmI;
-            if ((uint)i >= (uint)_states.Length)
+            var state = GetState(player);
+            if (state.Mode != Mode.Drag || !ReferenceEquals(state.DraggingProjection, removed))
             {
                 return;
             }
 
-            if (_states[i] is not { } gs)
-            {
-                return;
-            }
-
-            if (gs.Mode != Mode.Drag || !ReferenceEquals(gs.DraggingProjection, removed))
-            {
-                return;
-            }
-
-            gs.Mode = Mode.None;
-            gs.DragKind = DragKind.None;
-            gs.DraggingProjection = null;
+            state.Mode = Mode.None;
+            state.DragKind = DragKind.None;
+            state.DraggingProjection = null;
         }
 
         /// <summary>Clears COPY gesture state for every player slot (world unload).</summary>

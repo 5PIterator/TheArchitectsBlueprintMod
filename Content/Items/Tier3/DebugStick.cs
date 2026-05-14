@@ -16,6 +16,8 @@ namespace ArchitectsStencilMod.Content.Items
 	/// </summary>
 	public class DebugStick : ModItem
 	{
+		private static ProjectionSystem ProjectionSystem => ModContent.GetInstance<ProjectionSystem>();
+		private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
 		private enum DebugStickAction
 		{
 			ToggleProjectionCutSource = 0,
@@ -105,35 +107,19 @@ namespace ArchitectsStencilMod.Content.Items
 			switch (_mode)
 			{
 				case DebugStickAction.ToggleProjectionCutSource:
-					TryToggleCutSource(player, cursorTile);
+
+					ProjectionSystem.ToggleCutSource(cursorTile);
 					return;
 				case DebugStickAction.StepPaste:
-					TryBeginPasteStepSession(player, cursorTile);
+					BeginPasteStepSession(player, cursorTile);
 					return;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(_mode), _mode, "Unknown debug stick action.");
 			}
 		}
-
-		private static void TryToggleCutSource(Player player, Point cursorTile)
+		private void BeginPasteStepSession(Player player, Point cursorTile)
 		{
-			var projections = ModContent.GetInstance<ProjectionSystem>();
-			if (!projections.ToggleCutSource(player, cursorTile, out Projection projection))
-			{
-				Main.NewText("Debug: no projection at cursor, or it is locked by an active paste.", Color.OrangeRed);
-				return;
-			}
-
-			Main.NewText(
-				projection.CutSource
-					? "Debug: CutSource ON for projection (paste will clear source area)."
-					: "Debug: CutSource OFF for projection.",
-				Color.Cyan);
-		}
-
-		private static void TryBeginPasteStepSession(Player player, Point cursorTile)
-		{
-			if (!ModContent.GetInstance<ProjectionSystem>().TryGetProjectionAt(player, cursorTile, out Projection projection) ||
+			if (!BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection projection) ||
 			    projection is null ||
 			    !projection.IsDefined)
 			{

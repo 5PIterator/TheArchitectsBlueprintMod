@@ -26,18 +26,19 @@ namespace ArchitectsStencilMod.Core
 
         public int Owner { get; } = owner;
 
+        /// <summary>Number of tile cells in bounds; zero if undefined.</summary>
+        public int TileCount => IsDefined ? Area.Width * Area.Height : 0;
+
         /// <summary>
         /// Whether this blueprint currently has non-empty bounds.
         /// </summary>
         public bool IsDefined => !Area.IsEmpty;
+
         /// <summary>
         /// World-space bounds in tile coordinates.
         /// </summary>
         public Rectangle Area { get; protected set; } = Rectangle.Empty;
         public BlueprintCell[,] Tiles { get; set; } = new BlueprintCell[0, 0];
-
-        /// <summary>Number of tile cells in bounds; zero if undefined.</summary>
-        public int TileCount => IsDefined ? Area.Width * Area.Height : 0;
 
         /// <summary>Inclusive tile rectangle from two corner tiles (order-independent).</summary>
         public static Rectangle FromPoints(Point a, Point b)
@@ -59,7 +60,6 @@ namespace ArchitectsStencilMod.Core
 
             if (Area.IsEmpty)
             {
-                OnAfterDefine();
                 return;
             }
 
@@ -83,7 +83,6 @@ namespace ArchitectsStencilMod.Core
                 }
             }
 
-            OnAfterDefine();
         }
 
         public virtual void Define(Point pointA, Point pointB)
@@ -91,21 +90,10 @@ namespace ArchitectsStencilMod.Core
             Define(FromPoints(pointA, pointB));
         }
 
-        /// <summary>Called after <see cref="Area"/> and <see cref="Tiles"/> are updated by <see cref="Define"/> or cleared.</summary>
-        protected virtual void OnAfterDefine()
-        {
-        }
-
         public virtual void Clear()
         {
             Area = Rectangle.Empty;
             Tiles = null;
-            OnAfterDefine();
-        }
-
-        public bool IsTileIncluded(Point world)
-        {
-            return TryWorldToRelative(world, out var rel) && TryGetTileByRelative(rel, out var t) && t.Included;
         }
 
         public bool TryGetTile(Point world, out BlueprintCell boundedTile)

@@ -13,9 +13,9 @@ namespace ArchitectsStencilMod.Core
     /// </summary>
     public sealed class SelectionSystem : ModSystem
     {
+        private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
         private sealed class PlayerSelectionState
         {
-            public Selection Selection = null!;
             public bool HasPointA;
             public bool HasPointB;
             public Point PointA;
@@ -24,9 +24,9 @@ namespace ArchitectsStencilMod.Core
 
         private readonly PlayerSelectionState[] _playerStates = new PlayerSelectionState[Main.maxPlayers];
 
-        public Selection GetSelection(Player player)
+        public Selection GetSelection()
         {
-            return GetState(player).Selection;
+            return BlueprintSystem.GetTopmostSelection();
         }
 
         public bool TryGetPointA(Player player, out Point pointA)
@@ -76,12 +76,14 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         public void NewSelection(Player player)
         {
+            Selection selection = new Selection(player.whoAmI);
             var state = GetState(player);
-            state.Selection = new Selection(player.whoAmI);
             state.HasPointA = false;
             state.HasPointB = false;
             state.PointA = default;
             state.PointB = default;
+
+            BlueprintSystem.RegisterBlueprint(selection);
             UpdateSelectionOverlay(player);
         }
 
@@ -93,8 +95,8 @@ namespace ArchitectsStencilMod.Core
             int who = player.whoAmI;
             string family = $"selection:{who}";
 
-            Selection selection = GetSelection(player);
-            if (!selection.IsDefined)
+            Selection selection = BlueprintSystem.GetTopmostSelection();
+            if (selection is null || !selection.IsDefined)
             {
                 OverlaySystem.UnregisterFamily(family);
                 return;
@@ -118,26 +120,27 @@ namespace ArchitectsStencilMod.Core
 
         private static void UpdateSelection(PlayerSelectionState state)
         {
+            Selection selection = BlueprintSystem.GetTopmostSelection();
             // Invariant: Selection.Area should always reflect whichever endpoints have been provided.
             if (state.HasPointA && state.HasPointB)
             {
-                state.Selection.Define(state.PointA, state.PointB);
+                selection.Define(state.PointA, state.PointB);
                 return;
             }
 
             if (state.HasPointA)
             {
-                state.Selection.Define(new Rectangle(state.PointA.X, state.PointA.Y, 1, 1));
+                selection.Define(new Rectangle(state.PointA.X, state.PointA.Y, 1, 1));
                 return;
             }
 
             if (state.HasPointB)
             {
-                state.Selection.Define(new Rectangle(state.PointB.X, state.PointB.Y, 1, 1));
+                selection.Define(new Rectangle(state.PointB.X, state.PointB.Y, 1, 1));
                 return;
             }
 
-            state.Selection.Clear();
+            selection.Clear();
         }
 
         /// <summary>
@@ -145,12 +148,13 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         public void ClearSelection(Player player)
         {
+            Selection selection = BlueprintSystem.GetTopmostSelection();
             var state = GetState(player);
             state.HasPointA = false;
             state.HasPointB = false;
             state.PointA = default;
             state.PointB = default;
-            state.Selection.Clear();
+            selection.Clear();
             UpdateSelectionOverlay(player);
         }
 
@@ -211,6 +215,11 @@ namespace ArchitectsStencilMod.Core
 
         public override void OnWorldUnload()
         {
+            foreach (Selection selection in BlueprintSystem.GetSelections())
+            {
+                BlueprintSystem.UnregisterBlueprint(selection);
+                selection.Clear();
+            }
             for (int i = 0; i < _playerStates.Length; i++)
             {
                 if (_playerStates[i] is not { } state)
@@ -220,7 +229,6 @@ namespace ArchitectsStencilMod.Core
                 state.HasPointB = false;
                 state.PointA = default;
                 state.PointB = default;
-                state.Selection.Clear();
             }
         }
 
@@ -237,7 +245,6 @@ namespace ArchitectsStencilMod.Core
             if (_playerStates[index] is not { } state)
             {
                 state = new PlayerSelectionState();
-                state.Selection = new Selection(player.whoAmI);
                 _playerStates[index] = state;
             }
 

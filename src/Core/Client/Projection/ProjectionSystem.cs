@@ -15,61 +15,8 @@ namespace ArchitectsStencilMod.Core
     public sealed class ProjectionSystem : ModSystem
     {
 
-        private sealed class PlayerProjectionState
-        {
-            public readonly List<Projection> Projections = [];
-            public Projection ActiveProjection;
-        }
-
-        private readonly PlayerProjectionState[] _playerStates = new PlayerProjectionState[Main.maxPlayers];
-
-        public Projection GetActiveProjection(Player player)
-        {
-            return GetState(player).ActiveProjection;
-        }
-
-        public IReadOnlyList<Projection> GetProjections(Player player)
-        {
-            return GetState(player).Projections;
-        }
-
-        /// <summary>Topmost projection whose bounds contain <paramref name="cursorTile"/>, if any.</summary>
-        public bool TryGetProjectionAt(Player player, Point cursorTile, out Projection? projection)
-        {
-            var state = GetState(player);
-            int index = FindTopmostIndexAt(state, cursorTile);
-            if (index < 0)
-            {
-                projection = null;
-                return false;
-            }
-
-            projection = state.Projections[index];
-            return true;
-        }
-
-        /// <summary>
-        /// Sets which projection is considered active for paste and toggles (topmost under cursor is typical).
-        /// </summary>
-        public void SetActiveProjection(Player player, Projection projection)
-        {
-            GetState(player).ActiveProjection = projection;
-        }
-
-        /// <summary>
-        /// Moves <paramref name="projection"/> to the end of the player's list (topmost for hit-test and draw).
-        /// </summary>
-        public void BringProjectionToFront(Player player, Projection projection)
-        {
-            var list = GetState(player).Projections;
-            if (!list.Remove(projection))
-            {
-                return;
-            }
-
-            list.Add(projection);
-            projection.UpdateOverlay();
-        }
+        private BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
+        private ProjectionControl ProjectionControl => ModContent.GetInstance<ProjectionControl>();
 
         /// <summary>
         /// Creates a projection from the player's selection when the cursor lies inside it; returns null on failure.
@@ -78,25 +25,104 @@ namespace ArchitectsStencilMod.Core
         public Projection NewProjection(Player player, Point cursorTile)
         {
             // Get the selection from the selection system
-            var selectionSystem = ModContent.GetInstance<SelectionSystem>();
-            Selection selection = selectionSystem.GetSelection(player);
+            if (!BlueprintSystem.GetTopmostSelectionAt(cursorTile, out Selection selection))
+            {
+                return null;
+            }
 
             if (!selection.IsDefined || !selection.Area.Contains(cursorTile))
             {
                 return null;
             }
 
-            var projection = new Projection(selection, cutSource: false);
+            var projection = new Projection(player.whoAmI, selection, cutSource: false);
 
             // Load the payload from the world
             projection.LoadPayloadFromWorld();
-
-            // Add the projection to the player's list and set the active projection
-            var state = GetState(player);
-            state.Projections.Add(projection);
-            state.ActiveProjection = projection;
+            BlueprintSystem.RegisterBlueprint(projection);
             projection.UpdateOverlay();
             return projection;
+        }
+
+        public bool RemoveProjectionAt(Player player, Point cursorTile)
+        {
+            if (!BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection projection))
+            {
+                return false;
+            }
+
+            if (projection.IsLocked)
+            {
+                return false;
+            }
+
+            ProjectionControl.InvalidateGestureIfDragging(player, projection);
+            UpdateProjectionOverlay(player);
+            BlueprintSystem.UnregisterBlueprint(projection);
+            return true;
+        }
+
+        public bool GetProjectionByCorrelationId(int correlationId, out Projection projection)
+        {
+            foreach (Projection proj in BlueprintSystem.GetProjections())
+            {
+                if (proj.Id == correlationId)
+                {
+                    projection = proj;
+                    return true;
+                }
+            }
+            projection = null;
+            return false;
+        }
+
+        public int CountPendingOperations()
+        {
+            int count = 0;
+            foreach (Projection proj in BlueprintSystem.GetProjections())
+            {
+                if (proj.Id > 0)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Toggles the cut source for the projection at the cursor tile. Returns true if the cut source was toggled, false otherwise.
+        /// </summary>
+        public bool ToggleCutSource(Point cursorTile)
+        {
+            if (!BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection projection))
+            {
+                return false;
+            }
+            return projection.ToggleCut();
+        }
+
+        /// <summary>
+        /// Draws outlines for each rectangle in <see cref="Projection.Inventories"/>.
+        /// </summary>
+        private void UpdateInventoryOverlay(Player player)
+        {
+            int who = player.whoAmI;
+            string family = $"inventory:{who}";
+            OverlaySystem.UnregisterFamily(family);
+
+            foreach (Projection proj in BlueprintSystem.GetProjections())
+            {
+                bool locked = proj.IsLocked;
+                IEnumerable<Rectangle> inventories = proj.Inventories;
+                foreach (Rectangle inventory in inventories)
+                {
+                    Color c = ArchitectVisualPalette.InventoryOutlineColor;
+                    if (locked)
+                        OverlaySystem.RegTileBorder($"c:{proj.Id}", inventory, c, 2, family);
+                    else
+                        OverlaySystem.RegTileBounds($"c:{proj.Id}", inventory, c, 2, family);
+                }
+            }
         }
 
         /// <summary>
@@ -111,26 +137,24 @@ namespace ArchitectsStencilMod.Core
             OverlaySystem.UnregisterFamily(family);
 
             // For each projection, draw the bounds and the unselected tiles
-            IReadOnlyList<Projection> list = GetProjections(player);
-            for (int i = 0; i < list.Count; i++)
+            foreach (Projection proj in BlueprintSystem.GetProjections())
             {
                 // If projection is defined, draw the bounds
-                Projection proj = list[i];
                 if (!proj.Area.IsEmpty)
                 {
                     // CUT vs COPY: border color. Locked: outline only (transparent interior); unlocked: border + tinted fill.
                     Color c = proj.CutSource ? ArchitectVisualPalette.ProjectionCutColor : ArchitectVisualPalette.ProjectionCopyColor;
                     if (proj.IsLocked)
-                        OverlaySystem.RegTileBorder($"{i}:b", proj.Area, c, 2, family);
+                        OverlaySystem.RegTileBorder($"{proj.Id}:b", proj.Area, c, 2, family);
                     else
-                        OverlaySystem.RegTileBounds($"{i}:b", proj.Area, c, 2, family);
+                        OverlaySystem.RegTileBounds($"{proj.Id}:b", proj.Area, c, 2, family);
 
                     if (proj.CutSource)
                     {
                         if (proj.IsLocked)
-                            OverlaySystem.RegTileBorder($"{i}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
+                            OverlaySystem.RegTileBorder($"{proj.Id}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
                         else
-                            OverlaySystem.RegTileBounds($"{i}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
+                            OverlaySystem.RegTileBounds($"{proj.Id}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
                     }
                 }
             }
@@ -140,9 +164,9 @@ namespace ArchitectsStencilMod.Core
                 payloadIo.IsDefined &&
                 !payloadIo.Area.IsEmpty)
             {
-                for (int i = 0; i < list.Count; i++)
+                foreach (Projection proj in BlueprintSystem.GetProjections())
                 {
-                    if (ReferenceEquals(list[i], payloadIo))
+                    if (ReferenceEquals(proj, payloadIo))
                     {
                         OverlaySystem.RegTileBorder("payloadIo", payloadIo.Area, ArchitectVisualPalette.PayloadIoHighlightColor, 3, family);
                         break;
@@ -154,172 +178,15 @@ namespace ArchitectsStencilMod.Core
             UpdateInventoryOverlay(player);
         }
 
-        /// <summary>
-        /// Draws outlines for each rectangle in <see cref="Projection.Inventories"/>.
-        /// </summary>
-        private void UpdateInventoryOverlay(Player player)
-        {
-            int who = player.whoAmI;
-            string family = $"inventory:{who}";
-            OverlaySystem.UnregisterFamily(family);
-
-            IReadOnlyList<Projection> list = GetProjections(player);
-            int idx = 0;
-            for (int i = 0; i < list.Count; i++)
-            {
-                bool locked = list[i].IsLocked;
-                IReadOnlyList<Rectangle> inventories = list[i].Inventories;
-                for (int j = 0; j < inventories.Count; j++)
-                {
-                    Color c = ArchitectVisualPalette.InventoryOutlineColor;
-                    if (locked)
-                        OverlaySystem.RegTileBorder($"c:{idx}", inventories[j], c, 2, family);
-                    else
-                        OverlaySystem.RegTileBounds($"c:{idx}", inventories[j], c, 2, family);
-                    idx++;
-                }
-            }
-        }
-
-        public void ClearActiveProjection(Player player)
-        {
-            var state = GetState(player);
-            if (state.ActiveProjection is null)
-            {
-                return;
-            }
-
-            var toRemove = state.ActiveProjection;
-            state.Projections.Remove(state.ActiveProjection);
-            state.ActiveProjection = null;
-            ModContent.GetInstance<ProjectionControl>().InvalidateGestureIfDragging(player, toRemove);
-            UpdateProjectionOverlay(player);
-        }
-
-        private static int FindTopmostIndexAt(PlayerProjectionState state, Point cursorTile)
-        {
-            for (int i = state.Projections.Count - 1; i >= 0; i--)
-            {
-                Projection p = state.Projections[i];
-                if (p.IsDefined && p.Area.Contains(cursorTile))
-                {
-                    return i;
-                }
-            }
-
-            return -1;
-        }
-
-        private static void RemoveProjectionAtIndex(Player player, PlayerProjectionState state, int index)
-        {
-            Projection p = state.Projections[index];
-
-            if (ReferenceEquals(state.ActiveProjection, p))
-            {
-                state.ActiveProjection = null;
-            }
-
-            state.Projections.RemoveAt(index);
-            ModContent.GetInstance<ProjectionControl>().InvalidateGestureIfDragging(player, p);
-            ModContent.GetInstance<ProjectionSystem>().UpdateProjectionOverlay(player);
-        }
-
-        public bool RemoveProjectionAt(Player player, Point cursorTile)
-        {
-            var state = GetState(player);
-            int index = FindTopmostIndexAt(state, cursorTile);
-            if (index < 0)
-            {
-                return false;
-            }
-
-            if (state.Projections[index].IsLocked)
-            {
-                return false;
-            }
-
-            RemoveProjectionAtIndex(player, state, index);
-            return true;
-        }
-
-
-        public bool TryGetProjectionByCorrelationId(Player player, int correlationId, out Projection projection)
-        {
-            var state = GetState(player);
-            for (int i = state.Projections.Count - 1; i >= 0; i--)
-            {
-                var p = state.Projections[i];
-                if (p.Id == correlationId)
-                {
-                    projection = p;
-                    return true;
-                }
-            }
-
-            projection = null;
-            return false;
-        }
-
-        public int CountPendingOperations(Player player)
-        {
-            var state = GetState(player);
-            int count = 0;
-            for (int i = 0; i < state.Projections.Count; i++)
-            {
-                if (state.Projections[i].Id > 0)
-                {
-                    count++;
-                }
-            }
-            return count;
-        }
-
-        public bool ToggleCutSource(Player player, Point cursorTile, out Projection projection)
-        {
-            var state = GetState(player);
-            int index = FindTopmostIndexAt(state, cursorTile);
-            if (index >= 0)
-            {
-                projection = state.Projections[index];
-                if (projection.IsLocked)
-                {
-                    return false;
-                }
-
-                projection.ToggleCut();
-                state.ActiveProjection = projection;
-                return true;
-            }
-
-            projection = null;
-            return false;
-        }
-
         public override void OnWorldUnload()
         {
-            for (int i = 0; i < _playerStates.Length; i++)
+            foreach (Projection proj in BlueprintSystem.GetProjections())
             {
-                if (_playerStates[i] is not { } state)
-                    continue;
-
-                state.Projections.Clear();
-                state.ActiveProjection = null;
+                BlueprintSystem.UnregisterBlueprint(proj);
+                proj.Clear();
             }
 
             ModContent.GetInstance<ProjectionControl>().ClearAllGestureSlots();
-        }
-
-        private PlayerProjectionState GetState(Player player)
-        {
-            ArgumentNullException.ThrowIfNull(player);
-
-            int index = player.whoAmI;
-            if (index < 0 || index >= _playerStates.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(player), $"Invalid player index: {index}");
-            }
-
-            return _playerStates[index] ??= new PlayerProjectionState();
         }
     }
 }

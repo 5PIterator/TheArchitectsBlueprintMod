@@ -16,6 +16,7 @@ namespace ArchitectsStencilMod.Core
     /// </summary>
     public sealed class ToolActionManager : ModSystem
     {
+        private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
         /// <summary>
         /// High-level actions that tools can request.
         /// </summary>
@@ -171,15 +172,12 @@ namespace ArchitectsStencilMod.Core
             switch (key)
             {
                 case ToolActionKey.LeftClick:
-                    var selection = SelectionSystem.GetSelection(player);
-                    if (!selection.IsDefined)
+                    if (!BlueprintSystem.GetTopmostSelectionAt(cursorTile, out Selection selection))
                     {
                         SelectionControl.BeginPin(player, cursorTile);
+                        return;
                     }
-                    else
-                    {
-                        SelectionControl.BeginSet(player, cursorTile);
-                    }
+                    SelectionControl.BeginSet(player, cursorTile);
                     return;
 
                 case ToolActionKey.LeftHold:
@@ -264,7 +262,7 @@ namespace ArchitectsStencilMod.Core
             ArgumentNullException.ThrowIfNull(player);
             if (player.whoAmI != Main.myPlayer)
                 return;
-            if (!ProjectionSystem.TryGetProjectionAt(player, cursorTile, out var projection) || projection is null || !projection.IsDefined)
+            if (!BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection projection))
                 return;
 
             // check ToolActionKey first, then handle per Netmode
@@ -316,7 +314,10 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            ProjectionSystem.TryGetProjectionAt(player, cursorTile, out var projection); // returns false if no projection, but we still want to check selection in that case, so ignore the bool result.
+            if (!BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection projection))
+            {
+                return;
+            }
 
             switch (action)
             {
@@ -339,7 +340,7 @@ namespace ArchitectsStencilMod.Core
                     else
                     {
                         // If the projection is not defined, clear the selection under the cursor.
-                        if (SelectionSystem.GetSelection(player).IsDefined && SelectionSystem.GetSelection(player).Area.Contains(cursorTile))
+                        if (SelectionSystem.GetSelection().IsDefined && SelectionSystem.GetSelection().Area.Contains(cursorTile))
                         {
                             SelectionSystem.ClearSelection(player);
                         }
@@ -359,7 +360,7 @@ namespace ArchitectsStencilMod.Core
                 // PIN/SET: Clear the selection.
                 case ToolAction.PIN:
                 case ToolAction.SET:
-                    if (SelectionSystem.GetSelection(player).IsDefined && SelectionSystem.GetSelection(player).Area.Contains(cursorTile))
+                    if (SelectionSystem.GetSelection().IsDefined && SelectionSystem.GetSelection().Area.Contains(cursorTile))
                     {
                         SelectionSystem.ClearSelection(player);
                     }

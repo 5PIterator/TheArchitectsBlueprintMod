@@ -79,7 +79,7 @@ namespace ArchitectsStencilMod.Tests
             }
 
             Payload mutated = clearMode ? BuildClearedCenterPayload(projection.Payload) : BuildFilledCenterPayload(projection.Payload);
-            projection.ApplyImportedPayload(mutated);
+            projection.SetPayload(mutated, discardSelection: true);
 
             bool mutateOk = clearMode
                 ? projection.Payload.TryGetCell(new Point(1, 1), out PayloadCell cen) && !cen.HasTile()

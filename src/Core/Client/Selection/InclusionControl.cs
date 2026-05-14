@@ -38,13 +38,12 @@ namespace ArchitectsStencilMod.Core
 
         private void BeginGesture(Player player, Mode mode, Point cursorTile)
         {
-            if (!BlueprintSystem.TryGetTopmostBlueprintAt(player, cursorTile, out Blueprint? target))
+            if (!BlueprintSystem.GetTopmostBlueprintAt(cursorTile, out Blueprint target))
                 return;
 
             var state = GetState(player);
             state.Mode = mode;
             state.Target = target;
-            // Anchor/Current stored in tile coordinates; converted to a rectangle on demand.
             state.Anchor = cursorTile;
             state.Current = cursorTile;
             RefreshGestureOverlay(player);
@@ -127,13 +126,11 @@ namespace ArchitectsStencilMod.Core
             string family = $"projection:deselect:{who}";
             OverlaySystem.UnregisterFamily(family);
 
-            var projectionSystem = ModContent.GetInstance<ProjectionSystem>();
-            IReadOnlyList<Projection> list = projectionSystem.GetProjections(player);
-            for (int i = 0; i < list.Count; i++)
+            foreach (Projection proj in BlueprintSystem.GetProjections())
             {
-                Point[] excluded = list[i].BuildExcludedTilePoints();
+                Point[] excluded = proj.BuildExcludedTilePoints();
                 if (excluded.Length > 0)
-                    OverlaySystem.RegTileFill($"{i}:u", excluded, Color.Black * 0.25f, family);
+                    OverlaySystem.RegTileFill($"{proj.Id}:u", excluded, Color.Black * 0.25f, family);
             }
         }
 
@@ -177,7 +174,7 @@ namespace ArchitectsStencilMod.Core
         private static void UpdateTargetOverlay(Player player, Blueprint target)
         {
             var selectionSystem = ModContent.GetInstance<SelectionSystem>();
-            if (ReferenceEquals(target, selectionSystem.GetSelection(player)))
+            if (ReferenceEquals(target, BlueprintSystem.GetTopmostSelection()))
                 selectionSystem.UpdateSelectionOverlay(player);
             else
                 ModContent.GetInstance<ProjectionSystem>().UpdateProjectionOverlay(player);

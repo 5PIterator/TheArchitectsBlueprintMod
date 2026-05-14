@@ -176,7 +176,7 @@ namespace ArchitectsStencilMod.Core.Server
             var shell = new Selection(shellOwner.whoAmI);
             shell.Define(Bounds);
 
-            projection = new Projection(shell, cutSource: !SourceArea.IsEmpty && CutSource)
+            projection = new Projection(ownerPlayerIndex, shell, cutSource: !SourceArea.IsEmpty && CutSource)
             {
                 Id = RequestId,
             };

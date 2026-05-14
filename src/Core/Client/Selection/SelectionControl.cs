@@ -93,7 +93,7 @@ namespace ArchitectsStencilMod.Core
         {
             var state = GetState(player);
 
-            Selection selection = SelectionSystem.GetSelection(player);
+            Selection selection = SelectionSystem.GetSelection();
 
             if (selection.IsDefined)
             {
@@ -115,7 +115,7 @@ namespace ArchitectsStencilMod.Core
         {
             var state = GetState(player);
 
-            Selection selection = SelectionSystem.GetSelection(player);
+            Selection selection = SelectionSystem.GetSelection();
             UpdateDrag(state, selection, player, cursorTile);
         }
 
@@ -139,7 +139,7 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            var selection = SelectionSystem.GetSelection(player);
+            var selection = SelectionSystem.GetSelection();
 
             if (state.Mode == Mode.EdgeSelection)
             {

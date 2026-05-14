@@ -299,7 +299,7 @@ namespace ArchitectsStencilMod.Core
                     return;
                 }
 
-                projection.ApplyImportedPayload(payload);
+                projection.SetPayload(payload, discardSelection: true);
                 Main.NewText($"Imported payload: {Path.GetFileName(fullPath)}", Color.LightGreen);
             }
             catch (Exception ex)

@@ -10,6 +10,7 @@ namespace ArchitectsStencilMod.Core
     /// </summary>
     public sealed class PayloadExportCommand : ModCommand
     {
+        private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
         public override string Command => "asm.export";
         public override CommandType Type => CommandType.Chat;
 
@@ -40,15 +41,15 @@ namespace ArchitectsStencilMod.Core
                 return;
 
             Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
-            if (!ModContent.GetInstance<ProjectionSystem>().TryGetProjectionAt(player, cursorTile, out Projection? projection) ||
-                projection is null ||
-                !projection.IsDefined)
+            switch (BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection? atCursor) ? atCursor : null)
             {
-                caller.Reply("Payload export: No projection under the cursor.", Color.Orange);
-                return;
+                case Projection projection:
+                    PayloadSerialization.BeginExport(projection);
+                    break;
+                default:
+                    caller.Reply("Payload export: No projection under the cursor.", Color.Orange);
+                    return;
             }
-
-            PayloadSerialization.BeginExport(projection);
         }
     }
 }

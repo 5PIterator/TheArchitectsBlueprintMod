@@ -169,7 +169,7 @@ namespace ArchitectsStencilMod.Core.Server
             RemoveClientPendingAck(ack.RequestId);
 
             var projectionSystem = ModContent.GetInstance<ProjectionSystem>();
-            if (!projectionSystem.TryGetProjectionByCorrelationId(Main.LocalPlayer, ack.RequestId, out var projection))
+            if (!projectionSystem.GetProjectionByCorrelationId(ack.RequestId, out var projection))
             {
                 return;
             }
@@ -241,7 +241,7 @@ namespace ArchitectsStencilMod.Core.Server
 
                 ClientPendingAcks.RemoveAt(i);
 
-                if (!projectionSystem.TryGetProjectionByCorrelationId(Main.LocalPlayer, p.RequestId, out var projection))
+                if (!projectionSystem.GetProjectionByCorrelationId(p.RequestId, out var projection))
                     continue;
 
                 projection.Unlock();

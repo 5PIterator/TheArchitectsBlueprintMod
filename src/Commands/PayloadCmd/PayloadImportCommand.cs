@@ -10,6 +10,7 @@ namespace ArchitectsStencilMod.Core
     /// </summary>
     public sealed class PayloadImportCommand : ModCommand
     {
+        private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
         public override string Command => "asm.import";
         public override CommandType Type => CommandType.Chat;
 
@@ -39,21 +40,20 @@ namespace ArchitectsStencilMod.Core
             if (player.whoAmI != Main.myPlayer)
                 return;
 
-            var sys = ModContent.GetInstance<ProjectionSystem>();
             Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
-            Projection? projection = null;
-            if (sys.TryGetProjectionAt(player, cursorTile, out Projection? atCursor) && atCursor is not null && atCursor.IsDefined)
-                projection = atCursor;
-            else
-                projection = sys.NewProjection(player, cursorTile);
-
-            if (projection is null || !projection.IsDefined)
+            switch (BlueprintSystem.GetTopmostBlueprintAt(cursorTile, out Blueprint? atCursor) ? atCursor : null)
             {
-                caller.Reply("Payload import: No projection or selection under the cursor.", Color.Orange);
-                return;
+                case Projection projection:
+                    PayloadSerialization.BeginImport(projection);
+                    break;
+                case Selection selection:
+                    PayloadSerialization.BeginImport(new Projection(player.whoAmI, selection, cutSource: false));
+                    break;
+                default:
+                    caller.Reply("Payload import: No projection or selection under the cursor.", Color.Orange);
+                    return;
             }
 
-            PayloadSerialization.BeginImport(projection);
         }
     }
 }
