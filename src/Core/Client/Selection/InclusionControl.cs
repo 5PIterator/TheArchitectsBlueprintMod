@@ -1,11 +1,11 @@
 using System;
-using ArchitectsBlueprintMod.Config;
-using ArchitectsBlueprintMod.UI;
+using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Gesture handler for INCLUDE/EXCLUDE rectangle edits on the client <see cref="Selection"/> or <see cref="Projection"/>.

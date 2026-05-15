@@ -2,12 +2,12 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Systems
+namespace TheArchitectsBlueprintMod.Systems
 {
 	/// <summary>Shared <see cref="RecipeGroup"/> ids for cross-evil crafting.</summary>
 	public sealed class ArchitectRecipeGroups : ModSystem
 	{
-		public const string EvilBossSummonGroupName = "ArchitectsBlueprintMod:EvilBossSummon";
+		public const string EvilBossSummonGroupName = "TheArchitectsBlueprintMod:EvilBossSummon";
 
 		public override void AddRecipeGroups()
 		{

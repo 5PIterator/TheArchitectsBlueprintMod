@@ -1,11 +1,11 @@
-using ArchitectsBlueprintMod.Config;
-using ArchitectsBlueprintMod.Core;
-using ArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 
-namespace ArchitectsBlueprintMod.Debug;
+namespace TheArchitectsBlueprintMod.Debug;
 
 /// <summary>
-/// Pasting debug helpers. All output goes through <see cref="ABPLog"/> when <see cref="ClientLogConfig.ShowDebugLogs"/> is enabled.
+/// Pasting debug helpers. All output goes through <see cref="TABLog"/> when <see cref="ClientLogConfig.ShowDebugLogs"/> is enabled.
 /// </summary>
 internal static class PastingDebug
 {
@@ -14,8 +14,8 @@ internal static class PastingDebug
     /// </summary>
     internal static void OnPasteStart(Projection projection)
     {
-        if (!ABPLog.IsDebugEnabled) return;
-        ABPLog.Debug(
+        if (!TABLog.IsDebugEnabled) return;
+        TABLog.Debug(
             $"Paste started: sourceClear={projection.CutSource}, targetArea=({projection.Area.X},{projection.Area.Y}) {projection.Area.Width}x{projection.Area.Height}",
             "Paste");
     }
@@ -25,8 +25,8 @@ internal static class PastingDebug
     /// </summary>
     internal static void OnPasteEnd()
     {
-        if (!ABPLog.IsDebugEnabled) return;
-        ABPLog.Debug("Paste ended", "Paste");
+        if (!TABLog.IsDebugEnabled) return;
+        TABLog.Debug("Paste ended", "Paste");
     }
 
     /// <summary>
@@ -41,14 +41,14 @@ internal static class PastingDebug
         bool success,
         string phase)
     {
-        if (!ABPLog.IsDebugEnabled) return;
+        if (!TABLog.IsDebugEnabled) return;
 
         string tileName = ContentNameResolver.GetTileName(tileType) ?? $"Tile{tileType}";
         string mode = baseTileId.HasValue ? "conversion" : "direct";
         string baseName = baseTileId.HasValue ? (ContentNameResolver.GetTileName(baseTileId.Value) ?? $"Tile{baseTileId}") : "-";
         string result = success ? "OK" : "FAIL";
 
-        ABPLog.Debug($"Place [{phase}] ({x},{y}) {tileName} style={style} mode={mode} base={baseName} => {result}", "Paste");
+        TABLog.Debug($"Place [{phase}] ({x},{y}) {tileName} style={style} mode={mode} base={baseName} => {result}", "Paste");
     }
 
     /// <summary>
@@ -56,10 +56,10 @@ internal static class PastingDebug
     /// </summary>
     internal static void LogInteractionLookup(ushort tileType, int style, int? baseTileId, string? firstItem)
     {
-        if (!ABPLog.IsDebugEnabled) return;
+        if (!TABLog.IsDebugEnabled) return;
 
         string tileName = ContentNameResolver.GetTileName(tileType) ?? $"Tile{tileType}";
         string mode = baseTileId.HasValue ? "conversion" : "direct";
-        ABPLog.Debug($"Interaction lookup: {tileName} style={style} => first={firstItem ?? "?"} mode={mode}", "Paste");
+        TABLog.Debug($"Interaction lookup: {tileName} style={style} => first={firstItem ?? "?"} mode={mode}", "Paste");
     }
 }

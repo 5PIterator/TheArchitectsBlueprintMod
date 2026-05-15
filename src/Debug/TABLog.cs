@@ -1,23 +1,23 @@
 using System;
-using ArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Config;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Debug
+namespace TheArchitectsBlueprintMod.Debug
 {
     /// <summary>
     /// Centralized logging for the mod. Uses tModLoader's Mod.Logger (log4net).
     /// Logs go to Documents/My Games/Terraria/tModLoader/Logs/Mods/.
     /// Initialize in mod Load(); Unload in mod Unload().
     /// </summary>
-    internal static class ABPLog
+    internal static class TABLog
     {
         private static Mod? _mod;
 
         /// <summary>
-        /// Call from ArchitectsBlueprintMod.Load(). Required before any logging.
+        /// Call from TheArchitectsBlueprintMod.Load(). Required before any logging.
         /// </summary>
         public static void Initialize(Mod mod)
         {
@@ -25,7 +25,7 @@ namespace ArchitectsBlueprintMod.Debug
         }
 
         /// <summary>
-        /// Call from ArchitectsBlueprintMod.Unload(). Clears the Mod reference.
+        /// Call from TheArchitectsBlueprintMod.Unload(). Clears the Mod reference.
         /// </summary>
         public static void Unload()
         {

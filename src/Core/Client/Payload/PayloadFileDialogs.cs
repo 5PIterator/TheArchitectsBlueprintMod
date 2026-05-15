@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsBlueprintMod.Utils;
+using TheArchitectsBlueprintMod.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -11,7 +11,7 @@ using Terraria.GameInput;
 using Terraria.ModLoader;
 using Terraria.UI;
 
-namespace ArchitectsBlueprintMod.UI
+namespace TheArchitectsBlueprintMod.UI
 {
     /// <summary>
     /// Display data for one payload file shown in the import dialog.
@@ -130,7 +130,7 @@ namespace ArchitectsBlueprintMod.UI
                 mouseTextIndex = layers.Count;
 
             layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
-                "ArchitectsBlueprintMod: PayloadFileDialogs",
+                "TheArchitectsBlueprintMod: PayloadFileDialogs",
                 DrawInterface,
                 InterfaceScaleType.UI));
         }

@@ -19,7 +19,7 @@ Todo:
 - The Architect Blueprint GUI: TODO
 - Rename the mod to The Architect's Blueprint?: DONE
 - Extract Selection/Projection backend into a Blueprint data structure: TODO
-- ABP Items: In Progress - Tier 1-3 Implemented. Tier 4-5 waits for GUI.
+- TAB Items: In Progress - Tier 1-3 Implemented. Tier 4-5 waits for GUI.
 Tier 1 have temporary sprites, other tiers do not fit.
 - Add Metadata to the export json files: TODO
 - Importing remote structures: TODO - Remote files through discord??

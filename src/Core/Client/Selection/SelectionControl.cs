@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Camera-mode-like interactive gesture handler for the client <see cref="Selection"/> bounds.

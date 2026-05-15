@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
-using ArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
 
     internal enum PasteSubject

@@ -4,11 +4,11 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using ArchitectsBlueprintMod.Core;
-using static ArchitectsBlueprintMod.Core.ToolActionManager;
-using ArchitectsBlueprintMod.Utils;
+using TheArchitectsBlueprintMod.Core;
+using static TheArchitectsBlueprintMod.Core.ToolActionManager;
+using TheArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsBlueprintMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// SELECTION WAND: PIN / SET / RESET via action wheel. SET uses ToolActionManager fallback (PIN when no blueprint).

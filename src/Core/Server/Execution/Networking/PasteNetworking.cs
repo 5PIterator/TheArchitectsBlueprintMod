@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ArchitectsBlueprintMod.Config;
-using ArchitectsBlueprintMod.Core;
-using ArchitectsBlueprintMod.Core.TileMapping;
-using ArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core.Server
+namespace TheArchitectsBlueprintMod.Core.Server
 {
-    /// <summary>Multipaste control packets; paste payload uses <see cref="PasteRequest"/> (JSON <see cref="ArchitectsBlueprintMod.Core.Client.PayloadImport.PayloadDocument"/>).</summary>
+    /// <summary>Multipaste control packets; paste payload uses <see cref="PasteRequest"/> (JSON <see cref="TheArchitectsBlueprintMod.Core.Client.PayloadImport.PayloadDocument"/>).</summary>
     internal static class PasteNetworking
     {
         private static int _nextRequestId = 1;
@@ -119,7 +119,7 @@ namespace ArchitectsBlueprintMod.Core.Server
             }
             catch (Exception ex)
             {
-                ABPLog.Error("Failed to read paste request packet.", ex, "PasteNet");
+                TABLog.Error("Failed to read paste request packet.", ex, "PasteNet");
                 SendAck(mod, whoAmI, requestId: 0, accepted: false, PasteRejectReason.InvalidPacket);
                 return;
             }

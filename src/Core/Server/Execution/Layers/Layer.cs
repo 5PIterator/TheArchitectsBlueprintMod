@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsBlueprintMod.Config;
-using ArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core;
 using Microsoft.Xna.Framework;
 using Terraria;
 
-namespace ArchitectsBlueprintMod.Core.Layers
+namespace TheArchitectsBlueprintMod.Core.Layers
 {
     internal enum LayerType
     {

@@ -2,11 +2,11 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsBlueprintMod.Core;
-using static ArchitectsBlueprintMod.Core.ToolActionManager;
-using ArchitectsBlueprintMod.Utils;
+using TheArchitectsBlueprintMod.Core;
+using static TheArchitectsBlueprintMod.Core.ToolActionManager;
+using TheArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsBlueprintMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// INCLUDE STICK: includes tiles back into the current Selection.
@@ -18,7 +18,7 @@ namespace ArchitectsBlueprintMod.Content.Items
 	public class IncludeStick : ModItem
 	{
 		private bool _leftDragSeenDown;
-		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.ArchitectsBlueprintMod.hjson' file.
+		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.TheArchitectsBlueprintMod.hjson' file.
 		/// <summary>Configures size, use timing, and rarity for the include-selection stick.</summary>
 		public override void SetDefaults()
 		{

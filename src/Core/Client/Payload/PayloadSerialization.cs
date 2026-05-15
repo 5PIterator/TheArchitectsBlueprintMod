@@ -4,23 +4,23 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using ArchitectsBlueprintMod.UI;
+using TheArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Bridges projection payloads to local JSON files and the import/export UI.
     /// </summary>
     public sealed class PayloadSerialization : ModSystem
     {
-        public const string PayloadFileExtension = ".abp.json";
+        public const string PayloadFileExtension = ".tab.json";
         private const string PayloadDirectoryName = "Payloads";
-        private const string PayloadFormat = "ArchitectsBlueprintMod.Payload";
+        private const string PayloadFormat = "TheArchitectsBlueprintMod.Payload";
         private const int SchemaVersion = 1;
         private static readonly Regex InvalidFileNameChars = new($"[{Regex.Escape(new string(Path.GetInvalidFileNameChars()))}]", RegexOptions.Compiled);
 
@@ -78,7 +78,7 @@ namespace ArchitectsBlueprintMod.Core
                 return;
 
             BeginPayloadIoHighlight(projection);
-            string defaultProjectName = $"ABPPayload{DateTime.Now:yyyyMMdd_HHmmss}";
+            string defaultProjectName = $"TABPayload{DateTime.Now:yyyyMMdd_HHmmss}";
             int owner = projection.Owner;
             PayloadFileDialogs.ShowExportNameDialog(
                 defaultProjectName,
@@ -112,7 +112,7 @@ namespace ArchitectsBlueprintMod.Core
             IReadOnlyList<PayloadImportDialogEntry> entries = DiscoverPayloadFiles();
             if (entries.Count == 0)
             {
-                Main.NewText("No payload files found in the ArchitectsBlueprintMod Payloads folder.", Color.Orange);
+                Main.NewText("No payload files found in TheArchitectsBlueprintMod\\Payloads folder.", Color.Orange);
                 onImportDialogCancelled?.Invoke();
                 return;
             }
@@ -178,7 +178,7 @@ namespace ArchitectsBlueprintMod.Core
             try
             {
                 string displayName = string.IsNullOrWhiteSpace(projectName)
-                    ? $"ABPPayload{DateTime.Now:yyyyMMdd_HHmmss}"
+                    ? $"TABPayload{DateTime.Now:yyyyMMdd_HHmmss}"
                     : projectName.Trim();
                 string path = GetAvailablePayloadPath(displayName);
                 if (!TryWriteExportedWrapper(projection, displayName, path, out string? err))
@@ -210,7 +210,7 @@ namespace ArchitectsBlueprintMod.Core
                 }
 
                 string displayName = string.IsNullOrWhiteSpace(projectDisplayName)
-                    ? $"ABPPayload{DateTime.Now:yyyyMMdd_HHmmss}"
+                    ? $"TABPayload{DateTime.Now:yyyyMMdd_HHmmss}"
                     : projectDisplayName.Trim();
                 JObject wrapper = BuildExportWrapper(projection, displayName);
                 File.WriteAllText(fullPath, wrapper.ToString(Formatting.Indented), Encoding.UTF8);
@@ -234,7 +234,7 @@ namespace ArchitectsBlueprintMod.Core
                     ["schemaVersion"] = SchemaVersion,
                     ["projectName"] = displayName,
                     ["createdUtc"] = DateTime.UtcNow.ToString("O"),
-                    ["modVersion"] = ModContent.GetInstance<global::ArchitectsBlueprintMod.ArchitectsBlueprintMod>().Version.ToString(),
+                    ["modVersion"] = ModContent.GetInstance<global::TheArchitectsBlueprintMod.TheArchitectsBlueprintMod>().Version.ToString(),
                     ["width"] = projection.Payload.Width,
                     ["height"] = projection.Payload.Height,
                 },
@@ -385,7 +385,7 @@ namespace ArchitectsBlueprintMod.Core
 
             string sanitized = InvalidFileNameChars.Replace(projectName, "_").Trim(' ', '.');
             return string.IsNullOrWhiteSpace(sanitized)
-                ? $"ABPPayload{DateTime.Now:yyyyMMdd_HHmmss}"
+                ? $"TABPayload{DateTime.Now:yyyyMMdd_HHmmss}"
                 : sanitized;
         }
 

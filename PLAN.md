@@ -1,12 +1,12 @@
-# Architect's Blueprint / ArchitectsBlueprintMod (ABP)
+# The Architect's Blueprint / TheArchitectsBlueprintMod (TAB)
 
-ABP is a Terraria mod that allows players to copy and paste structures using the materials they have.
+TAB is a Terraria mod that allows players to copy and paste structures using the materials they have.
 
 ## Definitions
 
-- **Blueprint:** Data structure representing a user-selected region ABP will work with. It is a 2D grid of tiles that are included or excluded.
-- **Selection:** An instance of a Blueprint, acting as a selected region of the world that ABP will consider as a source of tiles to copy.
-- **Projection:** An instance of a Blueprint, acting as a movable ghost of a Selection that ABP will consider as a target of tiles to paste.
+- **Blueprint:** Data structure representing a user-selected region TAB will work with. It is a 2D grid of tiles that are included or excluded.
+- **Selection:** An instance of a Blueprint, acting as a selected region of the world that TAB will consider as a source of tiles to copy.
+- **Projection:** An instance of a Blueprint, acting as a movable ghost of a Selection that TAB will consider as a target of tiles to paste.
 
 **CUT**: When enabled, a paste also clears tiles in the Selection's source area, so the operation behaves like a move instead of a duplicate.
 

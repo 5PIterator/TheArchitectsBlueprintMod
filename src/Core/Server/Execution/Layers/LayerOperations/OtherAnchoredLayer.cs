@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using ArchitectsBlueprintMod.Core;
-using ArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 using Terraria;
-namespace ArchitectsBlueprintMod.Core.Layers
+namespace TheArchitectsBlueprintMod.Core.Layers
 {
     internal sealed class OtherAnchoredLayer : Layer
     {

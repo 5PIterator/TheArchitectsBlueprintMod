@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using ArchitectsBlueprintMod.Config;
-using ArchitectsBlueprintMod.Core;
-using ArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Debug;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core.TileMapping
+namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Low-level .itr file parsing. Parses metadata+data wrapper and extracts item-first root.
@@ -76,7 +76,7 @@ namespace ArchitectsBlueprintMod.Core.TileMapping
         }
 
         /// <summary>
-        /// Gets full path for a file in ArchitectsBlueprintMod\CompiledMaps.
+        /// Gets full path for a file in TheArchitectsBlueprintMod\CompiledMaps.
         /// </summary>
         public static string GetCompiledMapPath(string fileName) =>
             Path.Combine(GetCompiledMapsDirectory(), fileName);
@@ -296,14 +296,14 @@ namespace ArchitectsBlueprintMod.Core.TileMapping
                 var normLayer = ContentNameResolver.NormalizeLayer(interactionLayer ?? layer);
                 if (normLayer is null)
                 {
-                    ABPLog.Warn($"Interaction skipped: layer missing (main={main}, item={item})", "InteractionMap");
+                    TABLog.Warn($"Interaction skipped: layer missing (main={main}, item={item})", "InteractionMap");
                     continue;
                 }
 
                 var itemId = ContentNameResolver.ResolveItem(item);
                 if (!itemId.HasValue || itemId.Value <= 0)
                 {
-                    ABPLog.Warn($"Interaction skipped: item unresolved (layer={normLayer}, main={main}, item={item})", "InteractionMap");
+                    TABLog.Warn($"Interaction skipped: item unresolved (layer={normLayer}, main={main}, item={item})", "InteractionMap");
                     continue;
                 }
 
@@ -362,7 +362,7 @@ namespace ArchitectsBlueprintMod.Core.TileMapping
                 var itemId = ContentNameResolver.ResolveItem(name);
                 if (!itemId.HasValue || itemId.Value <= 0)
                 {
-                    ABPLog.Warn($"Interaction skipped: item unresolved (layer={normLayer}, main={main}, item={name})", "InteractionMap");
+                    TABLog.Warn($"Interaction skipped: item unresolved (layer={normLayer}, main={main}, item={name})", "InteractionMap");
                     continue;
                 }
 

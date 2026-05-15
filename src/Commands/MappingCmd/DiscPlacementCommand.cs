@@ -1,21 +1,21 @@
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Chat/console command to run placement discovery.
     /// Scans items with createTile/createWall and writes Placement.itr.
-    /// Usage: /abp.discPlace
+    /// Usage: /tab.discPlace
     /// </summary>
     public sealed class DiscPlacementCommand : ModCommand
     {
-        public override string Command => "abp.discPlace";
+        public override string Command => "tab.discPlace";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/abp.discPlace";
+        public override string Usage => "/tab.discPlace";
         public override string Description => "Runs placement discovery and writes Placement.itr.";
 
         public override void Action(CommandCaller caller, string input, string[] args)

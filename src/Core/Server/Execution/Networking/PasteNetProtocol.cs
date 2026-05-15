@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ArchitectsBlueprintMod.Config;
-using ArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core.Server
+namespace TheArchitectsBlueprintMod.Core.Server
 {
     internal enum PasteNetPacketType : byte
     {

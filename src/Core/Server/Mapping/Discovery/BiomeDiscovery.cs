@@ -7,14 +7,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json;
-using ArchitectsBlueprintMod.Core;
-using ArchitectsBlueprintMod.Debug;
-using ArchitectsBlueprintMod.Utils;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Utils;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core.TileMapping
+namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Discovers biome conversion interactions by:

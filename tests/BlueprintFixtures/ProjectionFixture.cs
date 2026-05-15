@@ -2,9 +2,9 @@
 #nullable enable
 
 using System;
-using ArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core;
 
-namespace ArchitectsBlueprintMod.Tests.Fixtures
+namespace TheArchitectsBlueprintMod.Tests.Fixtures
 {
     /// <summary>Creates <see cref="Projection"/> instances from an existing selection.</summary>
     internal static class ProjectionFixture

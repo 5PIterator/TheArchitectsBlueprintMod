@@ -5,9 +5,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
-using ArchitectsBlueprintMod.Utils;
+using TheArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsBlueprintMod.UI
+namespace TheArchitectsBlueprintMod.UI
 {
     /// <summary>
     /// Context computed at draw time. <see cref="OverlaySystem"/> uses this to adapt (e.g. skip when map is open).
@@ -286,7 +286,7 @@ namespace ArchitectsBlueprintMod.UI
             if (insertIndex == -1) insertIndex = 0;
 
             layers.Insert(insertIndex, new LegacyGameInterfaceLayer(
-                "ArchitectsBlueprint: Overlay",
+                "TheArchitectsBlueprint: Overlay",
                 () => { DrawOverlay(); return true; },
                 InterfaceScaleType.Game)
             );

@@ -5,33 +5,33 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ArchitectsBlueprintMod.Core;
-using ArchitectsBlueprintMod.Tests.Fixtures;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Tests.Fixtures;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json.Linq;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Tests
+namespace TheArchitectsBlueprintMod.Tests
 {
     /// <summary>
     /// In-game payload import/export regression script (fixture, mutate center, export, JSON checks).
-    /// Invoked only from <see cref="ArchitectsBlueprintMod.Core.PayloadIoTestCommand"/>.
+    /// Invoked only from <see cref="TheArchitectsBlueprintMod.Core.PayloadIoTestCommand"/>.
     /// </summary>
     internal static class PayloadIoTestScript
     {
-        internal const string EmbeddedFixture = "ArchitectsBlueprintMod.ABPTestFixture";
-        internal const string GoldenClear = "ArchitectsBlueprintMod.GoldenPayloadClearCenter";
-        internal const string GoldenFill = "ArchitectsBlueprintMod.GoldenPayloadFillCenter";
+        internal const string EmbeddedFixture = "TheArchitectsBlueprintMod.TABTestFixture";
+        internal const string GoldenClear = "TheArchitectsBlueprintMod.GoldenPayloadClearCenter";
+        internal const string GoldenFill = "TheArchitectsBlueprintMod.GoldenPayloadFillCenter";
 
-        internal const string DefaultFixtureFileName = "ABPTest.asmpayload.json";
+        internal const string DefaultFixtureFileName = "TABTest.tab.json";
 
         /// <summary>Runs either the clear-center or fill-center scenario.</summary>
         internal static void Run(CommandCaller caller, Player player, string scenarioArg)
         {
             bool clearMode = scenarioArg == "clear";
 
-            caller.Reply($"[abp.test.payload] Scenario: {scenarioArg}", Color.White);
+            caller.Reply($"[tab.test.payload] Scenario: {scenarioArg}", Color.White);
 
             if (!TryResolveFixtureDocument(out string fixtureText, out string? resolveErr))
             {
@@ -96,7 +96,7 @@ namespace ArchitectsBlueprintMod.Tests
 
             string outPath = Path.Combine(
                 PayloadSerialization.GetPayloadDirectory(),
-                clearMode ? "_TestExport_clear.asmpayload.json" : "_TestExport_fill.asmpayload.json");
+                clearMode ? "_TestExport_clear.tab.json" : "_TestExport_fill.tab.json");
 
             if (!PayloadSerialization.TryWriteExportedWrapper(projection, "_TestExport", outPath, out string? writeErr))
             {
@@ -126,7 +126,7 @@ namespace ArchitectsBlueprintMod.Tests
             string goldenName = clearMode ? GoldenClear : GoldenFill;
             TryCompareEmbeddedGolden(caller, exportedPayload, goldenName);
 
-            caller.Reply($"[abp.test.payload] {scenarioArg} completed successfully.", Color.LimeGreen);
+            caller.Reply($"[tab.test.payload] {scenarioArg} completed successfully.", Color.LimeGreen);
         }
 
         private static void TryCompareEmbeddedGolden(CommandCaller caller, JToken exportedPayload, string resourceName)
@@ -213,7 +213,7 @@ namespace ArchitectsBlueprintMod.Tests
             }
 
             text = "";
-            error = $"No ABPTest fixture (expected {preferred} or embedded {EmbeddedFixture}).";
+            error = $"No TABTest fixture (expected {preferred} or embedded {EmbeddedFixture}).";
             return false;
         }
 

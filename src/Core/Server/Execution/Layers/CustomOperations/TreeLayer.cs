@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsBlueprintMod.Core;
-using ArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-namespace ArchitectsBlueprintMod.Core.Layers
+namespace TheArchitectsBlueprintMod.Core.Layers
 {
     [CustomPasteLayer]
     internal sealed class TreeLayer : Layer

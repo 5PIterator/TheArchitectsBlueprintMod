@@ -1,8 +1,8 @@
 {
   "metadata": {
-    "format": "ArchitectsBlueprintMod.Payload",
+    "format": "TheArchitectsBlueprintMod.Payload",
     "schemaVersion": 1,
-    "projectName": "ABPTest",
+    "projectName": "TABTest",
     "createdUtc": "2026-01-01T00:00:00Z",
     "modVersion": "0.0.0.0",
     "width": 3,

@@ -11,7 +11,7 @@ using Terraria.GameContent;
 using Terraria.GameContent.Events;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Utils
+namespace TheArchitectsBlueprintMod.Utils
 {
 	internal static class ModUtils
 	{

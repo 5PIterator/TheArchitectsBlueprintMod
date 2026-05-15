@@ -2,11 +2,11 @@
 
 using System;
 using System.Collections;
-using ArchitectsBlueprintMod.Content.Items;
+using TheArchitectsBlueprintMod.Content.Items;
 using Terraria;
 using Terraria.GameInput;
 
-namespace ArchitectsBlueprintMod.Debug
+namespace TheArchitectsBlueprintMod.Debug
 {
     /// <summary>
     /// Manages step-through execution of long-running processes (e.g. discovery, stepped paste).

@@ -5,11 +5,11 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using ArchitectsBlueprintMod.Core;
-using ArchitectsBlueprintMod.Debug;
-using ArchitectsBlueprintMod.Utils;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsBlueprintMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// DEBUG STICK: action wheel plus stepped sessions via <see cref="DebugStepper"/> (discovery, stepped paste).

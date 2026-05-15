@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using Terraria;
-using ArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 using Microsoft.Xna.Framework;
 using System;
 using Terraria.ID;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Represents an inventory.

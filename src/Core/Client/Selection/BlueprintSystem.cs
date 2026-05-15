@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core;
+namespace TheArchitectsBlueprintMod.Core;
 
 /// <summary>
 /// Central place to enumerate and resolve all client <see cref="Blueprint"/> instances for a player:

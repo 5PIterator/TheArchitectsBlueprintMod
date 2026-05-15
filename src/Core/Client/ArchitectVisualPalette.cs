@@ -1,9 +1,9 @@
 using Microsoft.Xna.Framework;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Single source of truth for overlay colors across all Architect's Stencil systems.
+    /// Single source of truth for overlay colors across all Architect's Blueprint systems.
     /// Colors map to the gem/material theme defined in notes.md (PIN=diamond, SET=sapphire,
     /// CPY=amethyst, INC=topaz, EXC=amber, CUT=ruby, PST=emerald, RST=obsidian).
     /// </summary>

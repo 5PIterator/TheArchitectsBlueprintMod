@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsBlueprintMod.Core;
-using ArchitectsBlueprintMod.Core.TileMapping;
-using ArchitectsBlueprintMod.Utils;
-using ArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Utils;
+using TheArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.DataStructures;
@@ -12,7 +12,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
-namespace ArchitectsBlueprintMod.Core.Layers
+namespace TheArchitectsBlueprintMod.Core.Layers
 {
 
     internal static class TileComparison

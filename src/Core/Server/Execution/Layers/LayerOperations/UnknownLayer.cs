@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using ArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core.Layers
+namespace TheArchitectsBlueprintMod.Core.Layers
 {
     internal sealed class UnknownLayer : Layer
     {

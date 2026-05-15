@@ -1,10 +1,10 @@
 using System;
 using System.IO;
-using ArchitectsBlueprintMod.Core;
-using ArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Debug;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core.TileMapping
+namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Copies template files from Content/Templates to the mod output directories at launch.
@@ -70,7 +70,7 @@ namespace ArchitectsBlueprintMod.Core.TileMapping
                 }
                 catch (Exception ex)
                 {
-                    ABPLog.Warn($"Failed to copy template {name}: {ex.Message}", "Template");
+                    TABLog.Warn($"Failed to copy template {name}: {ex.Message}", "Template");
                 }
             }
         }

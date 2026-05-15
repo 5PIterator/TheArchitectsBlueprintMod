@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
 
-namespace ArchitectsBlueprintMod.Config
+namespace TheArchitectsBlueprintMod.Config
 {
     /// <summary>
     /// Client-only logging preferences. Does not change paste behavior or tile-map compilation on the server.

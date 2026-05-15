@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using ArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 
-namespace ArchitectsBlueprintMod.Core.Layers
+namespace TheArchitectsBlueprintMod.Core.Layers
 {
     internal sealed class FluidLayer : Layer
     {

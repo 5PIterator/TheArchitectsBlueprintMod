@@ -1,16 +1,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using ArchitectsBlueprintMod.Core.Server;
+using TheArchitectsBlueprintMod.Core.Server;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsBlueprintMod.Config;
-using ArchitectsBlueprintMod.Core.TileMapping;
-using ArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Debug;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Global manager for all active paste operations.
@@ -179,15 +179,15 @@ namespace ArchitectsBlueprintMod.Core
 
                 if (op.Projection is null || !op.Projection.IsDefined)
                 {
-                    ABPLog.Debug("Paste ended: projection became invalid during update", "Paste");
+                    TABLog.Debug("Paste ended: projection became invalid during update", "Paste");
                     RemoveOperationAt(i);
                     continue;
                 }
 
                 if (op.IsCompleted)
                 {
-                    ABPLog.Info($"Complete (cheatSweep={op.Context.CheatSweep})", "Paste");
-                    ABPLog.Debug("Paste ended: operation completed during update", "Paste");
+                    TABLog.Info($"Complete (cheatSweep={op.Context.CheatSweep})", "Paste");
+                    TABLog.Debug("Paste ended: operation completed during update", "Paste");
                     RemoveOperationAt(i);
                     continue;
                 }
@@ -203,7 +203,7 @@ namespace ArchitectsBlueprintMod.Core
                 anyStepped = true;
                 if (!keep)
                 {
-                    ABPLog.Debug("Paste ended: step returned no more work", "Paste");
+                    TABLog.Debug("Paste ended: step returned no more work", "Paste");
                     RemoveOperationAt(i);
                 }
             }
@@ -431,15 +431,15 @@ namespace ArchitectsBlueprintMod.Core
                 var op = _operations[i];
                 if (op.Projection is null || !op.Projection.IsDefined)
                 {
-                    ABPLog.Debug("Paste ended: projection became invalid during manual step", "Paste");
+                    TABLog.Debug("Paste ended: projection became invalid during manual step", "Paste");
                     RemoveOperationAt(i);
                     return false;
                 }
 
                 if (op.IsCompleted)
                 {
-                    ABPLog.Info($"Complete (cheatSweep={op.Context.CheatSweep})", "Paste");
-                    ABPLog.Debug("Paste ended: operation completed during manual step", "Paste");
+                    TABLog.Info($"Complete (cheatSweep={op.Context.CheatSweep})", "Paste");
+                    TABLog.Debug("Paste ended: operation completed during manual step", "Paste");
                     RemoveOperationAt(i);
                     return false;
                 }
@@ -449,7 +449,7 @@ namespace ArchitectsBlueprintMod.Core
                 bool keep = op.Context.CheatSweep ? op.Sweep() : op.Step();
                 if (!keep)
                 {
-                    ABPLog.Debug("Paste ended: manual step returned no more work", "Paste");
+                    TABLog.Debug("Paste ended: manual step returned no more work", "Paste");
                     RemoveOperationAt(i);
                 }
                 return keep;

@@ -1,7 +1,7 @@
-# Architect's Blueprint
+# The Architect's Blueprint
 
 ## Overview
-Architect's Blueprint (`ArchitectsBlueprintMod`) is a Terraria mod that lets you capture a region of the world as a *Selection* and place copies of it elsewhere using the materials you already own. It focuses on intuitive selection tools and clear visual feedback so larger builds feel fast instead of fiddly.
+The Architect's Blueprint (`TheArchitectsBlueprintMod`) is a Terraria mod that lets you capture a region of the world as a *Selection* and place copies of it elsewhere using the materials you already own. It focuses on intuitive selection tools and clear visual feedback so larger builds feel fast instead of fiddly.
 
 ## Core Concepts
 - **Selection**: The rectangular region you define for the mod's tools to work with. Individual tiles within it can be included or excluded from operations.
@@ -21,7 +21,7 @@ Architect's Blueprint (`ArchitectsBlueprintMod`) is a Terraria mod that lets you
 
 ## Installation
 1. Ensure you have tModLoader installed.
-2. Download **Architect's Blueprint** from the in-game Mod Browser or your chosen source.
+2. Download **The Architect's Blueprint** from the in-game Mod Browser or your chosen source.
 
 ## Usage
 - Use the **Pin Stick** or **Selection Wand** to define and edit the selection region.

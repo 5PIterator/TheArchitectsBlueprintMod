@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core.TileMapping
+namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Metadata for interaction map JSON files. Enables identification by content rather than file name.
@@ -17,7 +17,7 @@ namespace ArchitectsBlueprintMod.Core.TileMapping
         /// <summary>Map type: "placement" | "biome" | "custom" | "tilemap" | "shimmer".</summary>
         [JsonPropertyName("mapType")]
         public string? MapType { get; set; }
-        /// <summary>Architect's Stencil mod version when generated.</summary>
+        /// <summary>The Architect's Blueprint mod version when generated.</summary>
         [JsonPropertyName("modVersion")]
         public string? ModVersion { get; set; }
         /// <summary>Terraria/tModLoader version when generated.</summary>

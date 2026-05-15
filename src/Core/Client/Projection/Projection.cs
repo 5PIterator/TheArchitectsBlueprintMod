@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using ArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ObjectData;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// A movable ghost of a <see cref="Selection"/>: carries the <see cref="Core.Payload">payload</see>
@@ -101,8 +101,8 @@ namespace ArchitectsBlueprintMod.Core
             if (IsLocked)
                 return;
             IsLocked = true;
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug($"Projection.Lock: id={Id} owner={Owner}", "Projection");
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"Projection.Lock: id={Id} owner={Owner}", "Projection");
             UpdateOverlay();
         }
 
@@ -114,8 +114,8 @@ namespace ArchitectsBlueprintMod.Core
             if (!IsLocked)
                 return;
             IsLocked = false;
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug($"Projection.Unlock: id={Id} owner={Owner}", "Projection");
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"Projection.Unlock: id={Id} owner={Owner}", "Projection");
             UpdateOverlay();
         }
 
@@ -131,8 +131,8 @@ namespace ArchitectsBlueprintMod.Core
             Translate(delta);
             RefreshTargetTiles();
             RefreshInventories();
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug(
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
                     $"Projection.MoveTo: id={Id} owner={Owner} origin=({targetAreaOrigin.X},{targetAreaOrigin.Y}) delta=({delta.X},{delta.Y})",
                     "Projection");
             UpdateOverlay();
@@ -147,8 +147,8 @@ namespace ArchitectsBlueprintMod.Core
             if (CutSource == want)
                 return;
             CutSource = want;
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug($"Projection.SetCut: id={Id} owner={Owner} cutSource={CutSource} hasPayload={HasPayload}", "Projection");
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"Projection.SetCut: id={Id} owner={Owner} cutSource={CutSource} hasPayload={HasPayload}", "Projection");
             UpdateOverlay();
         }
 
@@ -160,8 +160,8 @@ namespace ArchitectsBlueprintMod.Core
             if (!HasPayload)
             {
                 SetCut(false);
-                if (ABPLog.IsDebugEnabled)
-                    ABPLog.Debug($"Projection.ToggleCut: id={Id} owner={Owner} skipped (no payload)", "Projection");
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug($"Projection.ToggleCut: id={Id} owner={Owner} skipped (no payload)", "Projection");
                 return false;
             }
 
@@ -178,8 +178,8 @@ namespace ArchitectsBlueprintMod.Core
             _selection = selection.Clone();
             Define(_selection.Area);
             RefreshTargetTiles();
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug(
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
                     $"Projection.AssignSelection (init): id={Id} owner={Owner} area=({Area.X},{Area.Y}) {Area.Width}x{Area.Height}",
                     "Projection");
         }
@@ -199,8 +199,8 @@ namespace ArchitectsBlueprintMod.Core
                 CutSource = false;
                 RefreshTargetTiles();
                 UpdateOverlay();
-                if (ABPLog.IsDebugEnabled)
-                    ABPLog.Debug(
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug(
                         $"Projection payload cleared [SetPayload: empty source] id={Id} owner={Owner}",
                         "Projection");
                 return;
@@ -218,8 +218,8 @@ namespace ArchitectsBlueprintMod.Core
             Define(newBounds);
             RefreshTargetTiles();
             UpdateOverlay();
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug(
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
                     $"Projection.SetPayload: applied id={Id} owner={Owner} payload={_payload.Width}x{_payload.Height} " +
                     $"targetOrigin=({Area.X},{Area.Y}) cutSource={CutSource}",
                     "Projection");
@@ -234,8 +234,8 @@ namespace ArchitectsBlueprintMod.Core
             _payload = Payload.FromWorld(SourceArea);
             RefreshTargetTiles();
             UpdateOverlay();
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug(
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
                     $"Projection.LoadPayloadFromWorld: id={Id} owner={Owner} source=({SourceArea.X},{SourceArea.Y}) " +
                     $"{SourceArea.Width}x{SourceArea.Height} payloadDefined={_payload.IsDefined} payload={_payload.Width}x{_payload.Height}",
                     "Projection");
@@ -387,8 +387,8 @@ namespace ArchitectsBlueprintMod.Core
                 tile.Included = _selection.Tiles[tile.Relative.X, tile.Relative.Y].Included;
             }
 
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug($"Projection.SyncInclusion: id={Id} owner={Owner} grid={Area.Width}x{Area.Height}", "Projection");
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"Projection.SyncInclusion: id={Id} owner={Owner} grid={Area.Width}x{Area.Height}", "Projection");
         }
 
         /// <summary>

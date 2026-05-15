@@ -1,14 +1,14 @@
 using System;
 using System.Linq;
-using ArchitectsBlueprintMod.Config;
-using ArchitectsBlueprintMod.Core.Server;
-using ArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core.Server;
+using TheArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Core routing point for "tool action" input.
@@ -136,7 +136,7 @@ namespace ArchitectsBlueprintMod.Core
             catch (Exception ex)
             {
                 // Record context-rich error for diagnostics without propagating.
-                ABPLog.Error($"Tool action failed: action={action}, key={key}, cursor=({cursorTile.X},{cursorTile.Y}), player={player?.name}", ex, "ToolAction");
+                TABLog.Error($"Tool action failed: action={action}, key={key}, cursor=({cursorTile.X},{cursorTile.Y}), player={player?.name}", ex, "ToolAction");
             }
         }
 

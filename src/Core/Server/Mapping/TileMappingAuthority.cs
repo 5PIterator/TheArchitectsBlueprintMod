@@ -1,7 +1,7 @@
 using Terraria;
 using Terraria.ID;
 
-namespace ArchitectsBlueprintMod.Core.TileMapping
+namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Defines which processes may treat local SourceMaps / CompiledMaps on disk as authoritative.

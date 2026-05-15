@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using ArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core;
 
-namespace ArchitectsBlueprintMod.Core.Layers
+namespace TheArchitectsBlueprintMod.Core.Layers
 {
     /// <summary>
     /// Discovers attributed custom layers and exposes tile-type ownership checks used by layer ordering and exclusions.

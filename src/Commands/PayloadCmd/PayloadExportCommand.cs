@@ -2,19 +2,19 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Opens the payload export dialog for the topmost projection under the cursor.
-    /// Usage: /abp.export
+    /// Usage: /tab.export
     /// </summary>
     public sealed class PayloadExportCommand : ModCommand
     {
         private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
-        public override string Command => "abp.export";
+        public override string Command => "tab.export";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/abp.export";
+        public override string Usage => "/tab.export";
         public override string Description => "Exports the projection payload under the cursor to a JSON file.";
 
         public override void Action(CommandCaller caller, string input, string[] args)

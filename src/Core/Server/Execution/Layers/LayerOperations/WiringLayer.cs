@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using ArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core;
 using Terraria;
 
-namespace ArchitectsBlueprintMod.Core.Layers
+namespace TheArchitectsBlueprintMod.Core.Layers
 {
     internal sealed class WiringLayer : Layer
     {

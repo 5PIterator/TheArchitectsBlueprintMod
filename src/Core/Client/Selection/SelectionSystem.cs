@@ -1,12 +1,12 @@
 using System;
 using System.Linq;
-using ArchitectsBlueprintMod.Debug;
-using ArchitectsBlueprintMod.UI;
+using TheArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Owns each player's active Selection for the world.
@@ -94,8 +94,8 @@ namespace ArchitectsBlueprintMod.Core
 
             BlueprintSystem.RegisterBlueprint(selection);
             UpdateSelectionOverlay(player);
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug($"SelectionSystem.NewSelection: owner={player.whoAmI}", "SelectionSystem");
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"SelectionSystem.NewSelection: owner={player.whoAmI}", "SelectionSystem");
         }
 
         /// <summary>
@@ -170,8 +170,8 @@ namespace ArchitectsBlueprintMod.Core
             selection.Clear();
             BlueprintSystem.UnregisterBlueprint(selection);
             UpdateSelectionOverlay(player);
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug($"SelectionSystem.ClearSelection: owner={player.whoAmI}", "SelectionSystem");
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"SelectionSystem.ClearSelection: owner={player.whoAmI}", "SelectionSystem");
         }
 
         /// <summary>
@@ -184,10 +184,10 @@ namespace ArchitectsBlueprintMod.Core
             state.HasPointA = true;
             UpdateSelection(state);
             UpdateSelectionOverlay(player);
-            if (ABPLog.IsDebugEnabled)
+            if (TABLog.IsDebugEnabled)
             {
                 var sel = BlueprintSystem.GetTopmostSelection();
-                ABPLog.Debug(
+                TABLog.Debug(
                     $"SelectionSystem.SetPointA: owner={player.whoAmI} tile=({tilePosition.X},{tilePosition.Y}) " +
                     $"areaDefined={sel?.IsDefined == true}",
                     "SelectionSystem");
@@ -204,10 +204,10 @@ namespace ArchitectsBlueprintMod.Core
             state.HasPointB = true;
             UpdateSelection(state);
             UpdateSelectionOverlay(player);
-            if (ABPLog.IsDebugEnabled)
+            if (TABLog.IsDebugEnabled)
             {
                 var sel = BlueprintSystem.GetTopmostSelection();
-                ABPLog.Debug(
+                TABLog.Debug(
                     $"SelectionSystem.SetPointB: owner={player.whoAmI} tile=({tilePosition.X},{tilePosition.Y}) " +
                     $"areaDefined={sel?.IsDefined == true}",
                     "SelectionSystem");
@@ -226,10 +226,10 @@ namespace ArchitectsBlueprintMod.Core
             state.HasPointB = true;
             UpdateSelection(state);
             UpdateSelectionOverlay(player);
-            if (ABPLog.IsDebugEnabled)
+            if (TABLog.IsDebugEnabled)
             {
                 var sel = BlueprintSystem.GetTopmostSelection();
-                ABPLog.Debug(
+                TABLog.Debug(
                     $"SelectionSystem.SetPoints: owner={player.whoAmI} A=({pointA.X},{pointA.Y}) B=({pointB.X},{pointB.Y}) " +
                     $"area={(sel is { IsDefined: true } s ? $"({s.Area.X},{s.Area.Y}) {s.Area.Width}x{s.Area.Height}" : "empty")}",
                     "SelectionSystem");
@@ -249,8 +249,8 @@ namespace ArchitectsBlueprintMod.Core
 
             var a = new Point(bounds.Left, bounds.Top);
             var b = new Point(bounds.Right - 1, bounds.Bottom - 1);
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug(
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
                     $"SelectionSystem.SetBounds: owner={player.whoAmI} bounds=({bounds.X},{bounds.Y}) {bounds.Width}x{bounds.Height}",
                     "SelectionSystem");
             SetPoints(player, a, b);
@@ -266,8 +266,8 @@ namespace ArchitectsBlueprintMod.Core
                 n++;
             }
 
-            if (ABPLog.IsDebugEnabled && n > 0)
-                ABPLog.Debug($"SelectionSystem.OnWorldUnload: cleared {n} selection blueprint(s)", "SelectionSystem");
+            if (TABLog.IsDebugEnabled && n > 0)
+                TABLog.Debug($"SelectionSystem.OnWorldUnload: cleared {n} selection blueprint(s)", "SelectionSystem");
 
             for (int i = 0; i < _playerStates.Length; i++)
             {

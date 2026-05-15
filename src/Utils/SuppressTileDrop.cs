@@ -1,7 +1,7 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Utils
+namespace TheArchitectsBlueprintMod.Utils
 {
     /// <summary>
     /// Honors <see cref="SuppressTileDrop"/> while tile kills run (including nested framing/drop work on the same stack).

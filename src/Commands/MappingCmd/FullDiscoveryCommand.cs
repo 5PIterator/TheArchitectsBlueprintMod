@@ -3,21 +3,21 @@ using System.Collections;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsBlueprintMod.Core.TileMapping;
-using ArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Debug;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Runs all discovery steps (placement, biome, shimmer) and then compiles the tile map.
-    /// Usage: /abp.discAll. When holding Debug Stick: left-click to step through each phase, right-click to cancel.
+    /// Usage: /tab.discAll. When holding Debug Stick: left-click to step through each phase, right-click to cancel.
     /// </summary>
     public sealed class FullDiscoveryCommand : ModCommand
     {
-        public override string Command => "abp.discAll";
+        public override string Command => "tab.discAll";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/abp.discAll";
+        public override string Usage => "/tab.discAll";
         public override string Description => "Runs all discovery steps and compiles the tile map.";
 
         public override void Action(CommandCaller caller, string input, string[] args)

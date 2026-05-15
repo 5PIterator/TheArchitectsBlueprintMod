@@ -5,11 +5,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "C#: ArchitectsBlueprint [Terraria]",
+            "name": "C#: TheArchitectsBlueprint [Terraria]",
             "type": "dotnet",
             "request": "launch",
-            "projectPath": "${workspaceFolder}\\ArchitectsBlueprintMod.csproj",
-            "launchConfigurationId": "TargetFramework=;Terraria",
+            "projectPath": "${workspaceFolder}\\TheArchitectsBlueprintMod.csproj",
+            "launchConfigurationId": "TargetFramework=;Terraria"
         }
     ]
 }

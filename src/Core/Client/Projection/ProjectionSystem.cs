@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsBlueprintMod.Debug;
-using ArchitectsBlueprintMod.UI;
+using TheArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Owns each player's projection list and <see cref="ActiveProjection"/>.
@@ -28,8 +28,8 @@ namespace ArchitectsBlueprintMod.Core
             // Get the selection from the selection system
             if (!BlueprintSystem.GetTopmostSelectionAt(cursorTile, out Selection selection))
             {
-                if (ABPLog.IsDebugEnabled)
-                    ABPLog.Debug(
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug(
                         $"ProjectionSystem.NewProjection(cursor): no selection under cursor owner={player.whoAmI} tile=({cursorTile.X},{cursorTile.Y})",
                         "ProjectionSystem");
                 return null;
@@ -37,8 +37,8 @@ namespace ArchitectsBlueprintMod.Core
 
             if (!selection.IsDefined || !selection.Area.Contains(cursorTile))
             {
-                if (ABPLog.IsDebugEnabled)
-                    ABPLog.Debug(
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug(
                         $"ProjectionSystem.NewProjection(cursor): selection invalid or cursor outside owner={player.whoAmI} " +
                         $"defined={selection.IsDefined} cursor=({cursorTile.X},{cursorTile.Y}) area={selection.Area}",
                         "ProjectionSystem");
@@ -51,8 +51,8 @@ namespace ArchitectsBlueprintMod.Core
             projection.LoadPayloadFromWorld();
             BlueprintSystem.RegisterBlueprint(projection);
             projection.UpdateOverlay();
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug(
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
                     $"ProjectionSystem.NewProjection(cursor): created id={projection.Id} owner={player.whoAmI} " +
                     $"area=({projection.Area.X},{projection.Area.Y}) {projection.Area.Width}x{projection.Area.Height}",
                     "ProjectionSystem");
@@ -72,8 +72,8 @@ namespace ArchitectsBlueprintMod.Core
             projection.LoadPayloadFromWorld();
             BlueprintSystem.RegisterBlueprint(projection);
             projection.UpdateOverlay();
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug(
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
                     $"ProjectionSystem.NewProjection(selection): created id={projection.Id} owner={player.whoAmI} " +
                     $"area=({projection.Area.X},{projection.Area.Y}) {projection.Area.Width}x{projection.Area.Height}",
                     "ProjectionSystem");
@@ -87,15 +87,15 @@ namespace ArchitectsBlueprintMod.Core
         {
             if (projection == null)
             {
-                if (ABPLog.IsDebugEnabled)
-                    ABPLog.Debug("ProjectionSystem.RemoveProjection: null projection", "ProjectionSystem");
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug("ProjectionSystem.RemoveProjection: null projection", "ProjectionSystem");
                 return false;
             }
 
             if (projection.IsLocked)
             {
-                if (ABPLog.IsDebugEnabled)
-                    ABPLog.Debug(
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug(
                         $"ProjectionSystem.RemoveProjection: refused (locked) id={projection.Id} owner={projection.Owner}",
                         "ProjectionSystem");
                 return false;
@@ -104,8 +104,8 @@ namespace ArchitectsBlueprintMod.Core
             BlueprintSystem.UnregisterBlueprint(projection);
             ProjectionControl.InvalidateGestureIfDragging(projection);
             UpdateProjectionOverlay(Main.player[projection.Owner]);
-            if (ABPLog.IsDebugEnabled)
-                ABPLog.Debug(
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
                     $"ProjectionSystem.RemoveProjection: unregistered id={projection.Id} owner={projection.Owner}",
                     "ProjectionSystem");
             return true;
@@ -241,8 +241,8 @@ namespace ArchitectsBlueprintMod.Core
                 n++;
             }
 
-            if (ABPLog.IsDebugEnabled && n > 0)
-                ABPLog.Debug($"ProjectionSystem.OnWorldUnload: cleared {n} projection(s)", "ProjectionSystem");
+            if (TABLog.IsDebugEnabled && n > 0)
+                TABLog.Debug($"ProjectionSystem.OnWorldUnload: cleared {n} projection(s)", "ProjectionSystem");
 
             ModContent.GetInstance<ProjectionControl>().ClearAllGestureSlots();
         }

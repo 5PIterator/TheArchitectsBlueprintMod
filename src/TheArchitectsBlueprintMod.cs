@@ -1,26 +1,26 @@
 using System.IO;
-using ArchitectsBlueprintMod.Debug;
-using ArchitectsBlueprintMod.Core.Server;
+using TheArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Core.Server;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod
+namespace TheArchitectsBlueprintMod
 {
     /// <summary>
-    /// Root mod class for Architect's Blueprint.
+    /// Root mod class for The Architect's Blueprint.
     /// This is intentionally minimal; core systems live under the src/Core namespace.
     /// </summary>
-    public sealed class ArchitectsBlueprintMod : Mod
+    public sealed class TheArchitectsBlueprintMod : Mod
     {
-        public const string ModInternalName = "ArchitectsBlueprintMod";
+        public const string ModInternalName = "TheArchitectsBlueprintMod";
 
         public override void Load()
         {
-            ABPLog.Initialize(this);
+            TABLog.Initialize(this);
         }
 
         public override void Unload()
         {
-            ABPLog.Unload();
+            TABLog.Unload();
         }
 
         public override void HandlePacket(BinaryReader reader, int whoAmI)

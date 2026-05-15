@@ -1,11 +1,11 @@
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsBlueprintMod.Systems;
+using TheArchitectsBlueprintMod.Systems;
 
-namespace ArchitectsBlueprintMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
-	/// <summary>Crafting core for Architect's Stencil; crafted at an evil altar.</summary>
+	/// <summary>Crafting core for The Architect's Blueprint; crafted at an evil altar.</summary>
 	public class BlueprintCore : ModItem
 	{
 		public override void SetDefaults()

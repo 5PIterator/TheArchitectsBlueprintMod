@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Tile highlights for an in-progress paste (built on the server; drawn on the client).

@@ -1,4 +1,4 @@
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     internal enum PasteRejectReason : byte
     {

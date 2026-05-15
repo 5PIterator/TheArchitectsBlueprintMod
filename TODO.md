@@ -8,54 +8,54 @@ Issues:
 - [#] New BlueprintSystem lookup system is incorrectly handling creation of a new projection. Instead of a new projection, the last projection is being targeted.
 
 - [ ] Pasting a projection created from an import starts the pasting operation, but nothing happens:
-[20:53:50.807] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3205,322) 7x8
-ArchitectsBlueprintMod: [20:53:50.807] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3205,322) 7x8
-[20:53:50.809] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] START | area=(3205,322) 7x8 | sourceClear=False | srcTiles=56 tgtTiles=56
-ArchitectsBlueprintMod: [20:53:50.809] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] START | area=(3205,322) 7x8 | sourceClear=False | srcTiles=56 tgtTiles=56
-[20:53:50.810] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)
-ArchitectsBlueprintMod: [20:53:50.810] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)
-[20:53:50.813] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: begin prepTileBudget=50 sourceTiles=56 lookupTiles=56 targetTiles=56 transparent=False sourceAreaClear=False
-ArchitectsBlueprintMod: [20:53:50.813] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: begin prepTileBudget=50 sourceTiles=56 lookupTiles=56 targetTiles=56 transparent=False sourceAreaClear=False
-[20:53:50.819] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Prep: ClearTarget — queuing clears at destination
-ArchitectsBlueprintMod: [20:53:50.819] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Prep: ClearTarget — queuing clears at destination
-[20:53:50.820] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage PlaceSource -> ClearTarget
-ArchitectsBlueprintMod: [20:53:50.820] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage PlaceSource -> ClearTarget
-[20:53:50.821] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: batch stage=PlanClear progress=2x6 unitsThisFrame=50 remainingBudget=0
-ArchitectsBlueprintMod: [20:53:50.821] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: batch stage=PlanClear progress=2x6 unitsThisFrame=50 remainingBudget=0
-[20:53:50.823] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage ClearTarget -> SourceAreaClear (opaque)
-ArchitectsBlueprintMod: [20:53:50.823] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage ClearTarget -> SourceAreaClear (opaque)
-[20:53:50.824] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
-ArchitectsBlueprintMod: [20:53:50.824] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
-[20:53:50.825] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Prep: queues ready | placeBatches=0 clearBatches=0
-ArchitectsBlueprintMod: [20:53:50.825] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Prep: queues ready | placeBatches=0 clearBatches=0
-[20:53:50.826] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: complete placeBatches=0 clearBatches=0
-ArchitectsBlueprintMod: [20:53:50.826] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: complete placeBatches=0 clearBatches=0
-[20:53:50.844] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Stage: EXEC CLEAR — running queued clear tasks
-ArchitectsBlueprintMod: [20:53:50.844] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Stage: EXEC CLEAR — running queued clear tasks
-[20:54:20.381] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3194,332) 7x8
-ArchitectsBlueprintMod: [20:54:20.381] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3194,332) 7x8
-[20:54:20.382] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] START | area=(3194,332) 7x8 | sourceClear=False | srcTiles=56 tgtTiles=56
-ArchitectsBlueprintMod: [20:54:20.382] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] START | area=(3194,332) 7x8 | sourceClear=False | srcTiles=56 tgtTiles=56
-[20:54:20.383] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)
-ArchitectsBlueprintMod: [20:54:20.383] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)
-[20:54:20.386] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: begin prepTileBudget=50 sourceTiles=56 lookupTiles=56 targetTiles=56 transparent=False sourceAreaClear=False
-ArchitectsBlueprintMod: [20:54:20.386] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: begin prepTileBudget=50 sourceTiles=56 lookupTiles=56 targetTiles=56 transparent=False sourceAreaClear=False
-[20:54:20.389] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Prep: ClearTarget — queuing clears at destination
-ArchitectsBlueprintMod: [20:54:20.389] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Prep: ClearTarget — queuing clears at destination
-[20:54:20.390] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage PlaceSource -> ClearTarget
-ArchitectsBlueprintMod: [20:54:20.390] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage PlaceSource -> ClearTarget
-[20:54:20.391] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: batch stage=PlanClear progress=2x6 unitsThisFrame=50 remainingBudget=0
-ArchitectsBlueprintMod: [20:54:20.391] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: batch stage=PlanClear progress=2x6 unitsThisFrame=50 remainingBudget=0
-[20:54:20.407] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage ClearTarget -> SourceAreaClear (opaque)
-ArchitectsBlueprintMod: [20:54:20.407] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage ClearTarget -> SourceAreaClear (opaque)
-[20:54:20.408] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
-ArchitectsBlueprintMod: [20:54:20.408] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
-[20:54:20.409] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Prep: queues ready | placeBatches=0 clearBatches=0
-ArchitectsBlueprintMod: [20:54:20.409] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Prep: queues ready | placeBatches=0 clearBatches=0
-[20:54:20.410] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: complete placeBatches=0 clearBatches=0
-ArchitectsBlueprintMod: [20:54:20.410] [Main Thread/DEBUG] [ArchitectsBlueprintMod]: [Paste] Prep: complete placeBatches=0 clearBatches=0
-[20:54:20.411] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Stage: EXEC CLEAR — running queued clear tasks
-ArchitectsBlueprintMod: [20:54:20.411] [Main Thread/INFO] [ArchitectsBlueprintMod]: [Paste] Stage: EXEC CLEAR — running queued clear tasks
+[20:53:50.807] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3205,322) 7x8
+TheArchitectsBlueprintMod: [20:53:50.807] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3205,322) 7x8
+[20:53:50.809] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] START | area=(3205,322) 7x8 | sourceClear=False | srcTiles=56 tgtTiles=56
+TheArchitectsBlueprintMod: [20:53:50.809] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] START | area=(3205,322) 7x8 | sourceClear=False | srcTiles=56 tgtTiles=56
+[20:53:50.810] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)
+TheArchitectsBlueprintMod: [20:53:50.810] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)
+[20:53:50.813] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: begin prepTileBudget=50 sourceTiles=56 lookupTiles=56 targetTiles=56 transparent=False sourceAreaClear=False
+TheArchitectsBlueprintMod: [20:53:50.813] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: begin prepTileBudget=50 sourceTiles=56 lookupTiles=56 targetTiles=56 transparent=False sourceAreaClear=False
+[20:53:50.819] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Prep: ClearTarget — queuing clears at destination
+TheArchitectsBlueprintMod: [20:53:50.819] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Prep: ClearTarget — queuing clears at destination
+[20:53:50.820] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage PlaceSource -> ClearTarget
+TheArchitectsBlueprintMod: [20:53:50.820] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage PlaceSource -> ClearTarget
+[20:53:50.821] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: batch stage=PlanClear progress=2x6 unitsThisFrame=50 remainingBudget=0
+TheArchitectsBlueprintMod: [20:53:50.821] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: batch stage=PlanClear progress=2x6 unitsThisFrame=50 remainingBudget=0
+[20:53:50.823] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage ClearTarget -> SourceAreaClear (opaque)
+TheArchitectsBlueprintMod: [20:53:50.823] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage ClearTarget -> SourceAreaClear (opaque)
+[20:53:50.824] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+TheArchitectsBlueprintMod: [20:53:50.824] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+[20:53:50.825] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Prep: queues ready | placeBatches=0 clearBatches=0
+TheArchitectsBlueprintMod: [20:53:50.825] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Prep: queues ready | placeBatches=0 clearBatches=0
+[20:53:50.826] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: complete placeBatches=0 clearBatches=0
+TheArchitectsBlueprintMod: [20:53:50.826] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: complete placeBatches=0 clearBatches=0
+[20:53:50.844] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC CLEAR — running queued clear tasks
+TheArchitectsBlueprintMod: [20:53:50.844] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC CLEAR — running queued clear tasks
+[20:54:20.381] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3194,332) 7x8
+TheArchitectsBlueprintMod: [20:54:20.381] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3194,332) 7x8
+[20:54:20.382] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] START | area=(3194,332) 7x8 | sourceClear=False | srcTiles=56 tgtTiles=56
+TheArchitectsBlueprintMod: [20:54:20.382] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] START | area=(3194,332) 7x8 | sourceClear=False | srcTiles=56 tgtTiles=56
+[20:54:20.383] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)
+TheArchitectsBlueprintMod: [20:54:20.383] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)
+[20:54:20.386] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: begin prepTileBudget=50 sourceTiles=56 lookupTiles=56 targetTiles=56 transparent=False sourceAreaClear=False
+TheArchitectsBlueprintMod: [20:54:20.386] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: begin prepTileBudget=50 sourceTiles=56 lookupTiles=56 targetTiles=56 transparent=False sourceAreaClear=False
+[20:54:20.389] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Prep: ClearTarget — queuing clears at destination
+TheArchitectsBlueprintMod: [20:54:20.389] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Prep: ClearTarget — queuing clears at destination
+[20:54:20.390] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage PlaceSource -> ClearTarget
+TheArchitectsBlueprintMod: [20:54:20.390] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage PlaceSource -> ClearTarget
+[20:54:20.391] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: batch stage=PlanClear progress=2x6 unitsThisFrame=50 remainingBudget=0
+TheArchitectsBlueprintMod: [20:54:20.391] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: batch stage=PlanClear progress=2x6 unitsThisFrame=50 remainingBudget=0
+[20:54:20.407] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage ClearTarget -> SourceAreaClear (opaque)
+TheArchitectsBlueprintMod: [20:54:20.407] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage ClearTarget -> SourceAreaClear (opaque)
+[20:54:20.408] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+TheArchitectsBlueprintMod: [20:54:20.408] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+[20:54:20.409] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Prep: queues ready | placeBatches=0 clearBatches=0
+TheArchitectsBlueprintMod: [20:54:20.409] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Prep: queues ready | placeBatches=0 clearBatches=0
+[20:54:20.410] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: complete placeBatches=0 clearBatches=0
+TheArchitectsBlueprintMod: [20:54:20.410] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: complete placeBatches=0 clearBatches=0
+[20:54:20.411] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC CLEAR — running queued clear tasks
+TheArchitectsBlueprintMod: [20:54:20.411] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC CLEAR — running queued clear tasks
 
 
 Todo:
@@ -74,7 +74,7 @@ Todo:
 - [ ] The Architect Blueprint GUI: TODO
 - [#] Rename the mod to The Architect's Blueprint?: DONE
 - [#] Extract Selection/Projection backend into a Blueprint data structure: DONE
-- [ ] ABP Items: In Progress - Tier 1-3 Implemented. Tier 4-5 waits for GUI.
+- [ ] TAB Items: In Progress - Tier 1-3 Implemented. Tier 4-5 waits for GUI.
 Tier 1 have temporary sprites, other tiers do not fit.
 - [ ] Add Metadata to the export json files: TODO
 - [ ] Importing remote structures: TODO - Remote files through discord??

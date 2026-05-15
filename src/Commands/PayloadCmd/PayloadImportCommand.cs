@@ -2,20 +2,20 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Opens the payload import dialog for the topmost projection under the cursor, or a new projection from the current selection.
-    /// Usage: /abp.import
+    /// Usage: /tab.import
     /// </summary>
     public sealed class PayloadImportCommand : ModCommand
     {
         private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
         private static ProjectionSystem ProjectionSystem => ModContent.GetInstance<ProjectionSystem>();
-        public override string Command => "abp.import";
+        public override string Command => "tab.import";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/abp.import";
+        public override string Usage => "/tab.import";
         public override string Description => "Imports a payload JSON file onto the projection under the cursor, or onto a new projection from your selection.";
 
         public override void Action(CommandCaller caller, string input, string[] args)

@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using ArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Debug;
 
-namespace ArchitectsBlueprintMod.Core.TileMapping
+namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Unified per-interaction format for all layers. Layer determines how Main/Base are interpreted.
@@ -110,7 +110,7 @@ namespace ArchitectsBlueprintMod.Core.TileMapping
             var normLayer = ContentNameResolver.NormalizeLayer(entry.Layer);
             if (normLayer is null)
             {
-                ABPLog.Warn($"Interaction skipped: layer missing or invalid (main={entry.Main}, item={entry.Item})", "InteractionMap");
+                TABLog.Warn($"Interaction skipped: layer missing or invalid (main={entry.Main}, item={entry.Item})", "InteractionMap");
                 return;
             }
             entry.Layer = normLayer;
@@ -119,12 +119,12 @@ namespace ArchitectsBlueprintMod.Core.TileMapping
             var mainId = entry.MainId ?? -1;
             if (mainId < 0)
             {
-                ABPLog.Warn($"Interaction skipped: main unresolved (layer={normLayer}, main={entry.Main}, item={entry.Item})", "InteractionMap");
+                TABLog.Warn($"Interaction skipped: main unresolved (layer={normLayer}, main={entry.Main}, item={entry.Item})", "InteractionMap");
                 return;
             }
             if (!entry.ItemId.HasValue || entry.ItemId.Value <= 0)
             {
-                ABPLog.Warn($"Interaction skipped: item unresolved (layer={normLayer}, main={entry.Main}, item={entry.Item})", "InteractionMap");
+                TABLog.Warn($"Interaction skipped: item unresolved (layer={normLayer}, main={entry.Main}, item={entry.Item})", "InteractionMap");
                 return;
             }
 
