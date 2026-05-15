@@ -17,6 +17,7 @@ namespace ArchitectsBlueprintMod.Content.Items
 	public class ProjectionWand : ModItem
 	{
 		private ToolAction _mode = ToolAction.COPY;
+		private bool _leftDragSeenDown;
 
 
 		/// <summary>Sets channeling wand defaults suited to dragging copy projections.</summary>
@@ -118,10 +119,16 @@ namespace ArchitectsBlueprintMod.Content.Items
 
 			if (Main.mouseLeft && Main.mouseRight)
 				actionManager.Handle(_mode, ToolActionKey.RightClick, player, cursorTile);
-			if (Main.mouseLeft && !Main.mouseLeftRelease)
+			else if (Main.mouseLeft && !Main.mouseLeftRelease)
 				actionManager.Handle(_mode, ToolActionKey.LeftHold, player, cursorTile);
-			else if (!Main.mouseLeft && Main.mouseLeftRelease)
+			else if (_leftDragSeenDown && !Main.mouseLeft)
+			{
 				actionManager.Handle(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+				_leftDragSeenDown = false;
+			}
+
+			if (Main.mouseLeft)
+				_leftDragSeenDown = true;
 		}
 
 		public override void AddRecipes()

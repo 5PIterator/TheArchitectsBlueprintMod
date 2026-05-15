@@ -11,6 +11,7 @@ namespace ArchitectsBlueprintMod.Core
     public sealed class PayloadImportCommand : ModCommand
     {
         private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
+        private static ProjectionSystem ProjectionSystem => ModContent.GetInstance<ProjectionSystem>();
         public override string Command => "abp.import";
         public override CommandType Type => CommandType.Chat;
 
@@ -47,8 +48,11 @@ namespace ArchitectsBlueprintMod.Core
                     PayloadSerialization.BeginImport(projection);
                     break;
                 case Selection selection:
-                    PayloadSerialization.BeginImport(new Projection(player.whoAmI, selection, cutSource: false));
+                {
+                    Projection projection = ProjectionSystem.NewProjection(player, selection);
+                    PayloadSerialization.BeginImport(projection);
                     break;
+                }
                 default:
                     caller.Reply("Payload import: No projection or selection under the cursor.", Color.Orange);
                     return;

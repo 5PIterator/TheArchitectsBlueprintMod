@@ -8,8 +8,8 @@ Todo:
 - System executing the pasting: DONE Pasting System, Pasting Operation, Pasting Tasks, PasteTiles, Layer System.
 - System determining the user selection: DONE Blueprint, Projection
 - Change tile storage to a 2D array: DONE (Selection, Projection snapshot mask, Payload)
-- split forceTiles config into ignoreItems, ignoreInvalid: TODO
-- Importing local structures: TODO - Selection UI listing local files.
+- split forceTiles config into ignoreItems, ignoreInvalid: DONE
+- Importing local structures: DONE - Selection UI listing local files.
 - Implement a proper testing pipeline: TODO
     - Commands that import a structure, and do various operations on it. Debug stick only runs these commands.
 - Implement Map Compatibility: TODO - Map overlay compatibility.

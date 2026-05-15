@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using ArchitectsBlueprintMod.Debug;
 using ArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -76,7 +78,14 @@ namespace ArchitectsBlueprintMod.Core
         /// </summary>
         public void NewSelection(Player player)
         {
-            Selection selection = new Selection(player.whoAmI);
+            int who = player.whoAmI;
+            foreach (Selection existing in BlueprintSystem.GetSelections().ToList())
+            {
+                if (existing.Owner == who)
+                    BlueprintSystem.UnregisterBlueprint(existing);
+            }
+
+            Selection selection = new Selection(who);
             var state = GetState(player);
             state.HasPointA = false;
             state.HasPointB = false;
@@ -85,6 +94,8 @@ namespace ArchitectsBlueprintMod.Core
 
             BlueprintSystem.RegisterBlueprint(selection);
             UpdateSelectionOverlay(player);
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug($"SelectionSystem.NewSelection: owner={player.whoAmI}", "SelectionSystem");
         }
 
         /// <summary>
@@ -148,14 +159,19 @@ namespace ArchitectsBlueprintMod.Core
         /// </summary>
         public void ClearSelection(Player player)
         {
-            Selection selection = BlueprintSystem.GetTopmostSelection();
+            Selection? selection = BlueprintSystem.GetTopmostSelection();
+            if (selection is null || selection.Owner != player.whoAmI)
+                return;
             var state = GetState(player);
             state.HasPointA = false;
             state.HasPointB = false;
             state.PointA = default;
             state.PointB = default;
             selection.Clear();
+            BlueprintSystem.UnregisterBlueprint(selection);
             UpdateSelectionOverlay(player);
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug($"SelectionSystem.ClearSelection: owner={player.whoAmI}", "SelectionSystem");
         }
 
         /// <summary>
@@ -168,6 +184,14 @@ namespace ArchitectsBlueprintMod.Core
             state.HasPointA = true;
             UpdateSelection(state);
             UpdateSelectionOverlay(player);
+            if (ABPLog.IsDebugEnabled)
+            {
+                var sel = BlueprintSystem.GetTopmostSelection();
+                ABPLog.Debug(
+                    $"SelectionSystem.SetPointA: owner={player.whoAmI} tile=({tilePosition.X},{tilePosition.Y}) " +
+                    $"areaDefined={sel?.IsDefined == true}",
+                    "SelectionSystem");
+            }
         }
 
         /// <summary>
@@ -180,10 +204,17 @@ namespace ArchitectsBlueprintMod.Core
             state.HasPointB = true;
             UpdateSelection(state);
             UpdateSelectionOverlay(player);
+            if (ABPLog.IsDebugEnabled)
+            {
+                var sel = BlueprintSystem.GetTopmostSelection();
+                ABPLog.Debug(
+                    $"SelectionSystem.SetPointB: owner={player.whoAmI} tile=({tilePosition.X},{tilePosition.Y}) " +
+                    $"areaDefined={sel?.IsDefined == true}",
+                    "SelectionSystem");
+            }
         }
 
         /// <summary>
-        /// Sets both points A and B in one call (tile coordinates).
         /// Useful for interactive resize/move so we only rebuild once.
         /// </summary>
         public void SetPoints(Player player, Point pointA, Point pointB)
@@ -195,6 +226,14 @@ namespace ArchitectsBlueprintMod.Core
             state.HasPointB = true;
             UpdateSelection(state);
             UpdateSelectionOverlay(player);
+            if (ABPLog.IsDebugEnabled)
+            {
+                var sel = BlueprintSystem.GetTopmostSelection();
+                ABPLog.Debug(
+                    $"SelectionSystem.SetPoints: owner={player.whoAmI} A=({pointA.X},{pointA.Y}) B=({pointB.X},{pointB.Y}) " +
+                    $"area={(sel is { IsDefined: true } s ? $"({s.Area.X},{s.Area.Y}) {s.Area.Width}x{s.Area.Height}" : "empty")}",
+                    "SelectionSystem");
+            }
         }
 
         /// <summary>
@@ -210,16 +249,26 @@ namespace ArchitectsBlueprintMod.Core
 
             var a = new Point(bounds.Left, bounds.Top);
             var b = new Point(bounds.Right - 1, bounds.Bottom - 1);
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug(
+                    $"SelectionSystem.SetBounds: owner={player.whoAmI} bounds=({bounds.X},{bounds.Y}) {bounds.Width}x{bounds.Height}",
+                    "SelectionSystem");
             SetPoints(player, a, b);
         }
 
         public override void OnWorldUnload()
         {
+            int n = 0;
             foreach (Selection selection in BlueprintSystem.GetSelections())
             {
                 BlueprintSystem.UnregisterBlueprint(selection);
                 selection.Clear();
+                n++;
             }
+
+            if (ABPLog.IsDebugEnabled && n > 0)
+                ABPLog.Debug($"SelectionSystem.OnWorldUnload: cleared {n} selection blueprint(s)", "SelectionSystem");
+
             for (int i = 0; i < _playerStates.Length; i++)
             {
                 if (_playerStates[i] is not { } state)

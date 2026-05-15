@@ -36,7 +36,7 @@ namespace ArchitectsBlueprintMod.Tests.Fixtures
             if (!TryCreate(selection, cutSource, out projection, out error))
                 return false;
 
-            projection.SetPayload(payload, discardSelection: true);
+            projection.SetPayload(payload);
             return true;
         }
     }

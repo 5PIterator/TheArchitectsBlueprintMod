@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using ArchitectsBlueprintMod.Config;
 using ArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
@@ -9,7 +8,7 @@ using Terraria.ModLoader;
 namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Gesture handler for INCLUDE/EXCLUDE rectangle edits on a player's Selection or Projection.
+    /// Gesture handler for INCLUDE/EXCLUDE rectangle edits on the client <see cref="Selection"/> or <see cref="Projection"/>.
     /// Driven by <see cref="ToolActionManager"/> via <see cref="BeginInc"/>/<see cref="BeginExc"/>;
     /// hold/release/cancel routing matches <see cref="SelectionControl"/> and <see cref="ProjectionControl"/>.
     /// <para/>
@@ -20,7 +19,10 @@ namespace ArchitectsBlueprintMod.Core
         private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
         private enum Mode { None, Include, Exclude }
 
-        private sealed class PlayerState
+        private const string InclusionGestureFamily = "inclusion:gesture";
+        private const string ProjectionExcludedTilesFamily = "projection:excluded-tiles";
+
+        private sealed class GestureState
         {
             public Mode Mode;
             public Point Anchor;
@@ -28,7 +30,7 @@ namespace ArchitectsBlueprintMod.Core
             public Blueprint Target;
         }
 
-        private readonly PlayerState[] _states = new PlayerState[Main.maxPlayers];
+        private readonly GestureState _gesture = new();
 
         /// <summary>Begins an INCLUDE rectangle gesture (left click).</summary>
         public void BeginInc(Player player, Point cursorTile) => BeginGesture(player, Mode.Include, cursorTile);
@@ -74,7 +76,7 @@ namespace ArchitectsBlueprintMod.Core
             {
                 state.Mode = Mode.None;
                 state.Target = null;
-                ClearGestureOverlay(player);
+                ClearGestureOverlay();
                 return;
             }
 
@@ -87,7 +89,7 @@ namespace ArchitectsBlueprintMod.Core
 
             state.Mode = Mode.None;
             state.Target = null;
-            ClearGestureOverlay(player);
+            ClearGestureOverlay();
             UpdateTargetOverlay(player, target);
         }
 
@@ -100,21 +102,15 @@ namespace ArchitectsBlueprintMod.Core
 
             state.Mode = Mode.None;
             state.Target = null;
-            ClearGestureOverlay(player);
+            ClearGestureOverlay();
         }
 
         public override void OnWorldUnload()
         {
-            for (int i = 0; i < _states.Length; i++)
-            {
-                if (_states[i] is not { } state)
-                    continue;
-
-                state.Mode = Mode.None;
-                state.Anchor = default;
-                state.Current = default;
-                state.Target = null;
-            }
+            _gesture.Mode = Mode.None;
+            _gesture.Anchor = default;
+            _gesture.Current = default;
+            _gesture.Target = null;
         }
 
         /// <summary>
@@ -122,29 +118,27 @@ namespace ArchitectsBlueprintMod.Core
         /// </summary>
         internal void UpdateExcludedTileOverlays(Player player)
         {
-            int who = player.whoAmI;
-            string family = $"projection:deselect:{who}";
-            OverlaySystem.UnregisterFamily(family);
+            _ = player;
+            OverlaySystem.UnregisterFamily(ProjectionExcludedTilesFamily);
 
             foreach (Projection proj in BlueprintSystem.GetProjections())
             {
                 Point[] excluded = proj.BuildExcludedTilePoints();
                 if (excluded.Length > 0)
-                    OverlaySystem.RegTileFill($"{proj.Id}:u", excluded, Color.Black * 0.25f, family);
+                    OverlaySystem.RegTileFill($"{proj.OverlayInstanceKey}:u", excluded, Color.Black * 0.25f, ProjectionExcludedTilesFamily);
             }
         }
 
-        private PlayerState GetState(Player player)
+        private GestureState GetState(Player player)
         {
             ArgumentNullException.ThrowIfNull(player);
 
-            int index = player.whoAmI;
-            if (index < 0 || index >= _states.Length)
+            if (player.whoAmI != Main.myPlayer || Main.gameMenu)
             {
-                throw new ArgumentOutOfRangeException(nameof(player), $"Invalid player index: {index}");
+                throw new InvalidOperationException("Player is not valid");
             }
 
-            return _states[index] ??= new PlayerState();
+            return _gesture;
         }
 
         private void RefreshGestureOverlay(Player player)
@@ -152,7 +146,7 @@ namespace ArchitectsBlueprintMod.Core
             var state = GetState(player);
             if (state.Mode == Mode.None || state.Target is null || !state.Target.IsDefined)
             {
-                ClearGestureOverlay(player);
+                ClearGestureOverlay();
                 return;
             }
 
@@ -162,13 +156,12 @@ namespace ArchitectsBlueprintMod.Core
                 ? ArchitectVisualPalette.IncludePreviewColor
                 : ArchitectVisualPalette.ExcludePreviewColor;
             Rectangle clamped = Rectangle.Intersect(targetBounds, rect);
-            int who = player.whoAmI;
-            OverlaySystem.RegTileBounds("preview", clamped, c, 2, $"inclusion:{who}");
+            OverlaySystem.RegTileBounds("preview", clamped, c, 2, InclusionGestureFamily);
         }
 
-        private static void ClearGestureOverlay(Player player)
+        private static void ClearGestureOverlay()
         {
-            OverlaySystem.UnregisterFamily($"inclusion:{player.whoAmI}");
+            OverlaySystem.UnregisterFamily(InclusionGestureFamily);
         }
 
         private static void UpdateTargetOverlay(Player player, Blueprint target)

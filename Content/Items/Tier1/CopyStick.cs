@@ -17,6 +17,7 @@ namespace ArchitectsBlueprintMod.Content.Items
 	/// </summary>
 	public class CopyStick : ModItem
 	{
+		private bool _leftDragSeenDown;
 		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.ArchitectsBlueprintMod.hjson' file.
 		/// <summary>Configures size, use timing, and rarity for the copy-projection stick.</summary>
 		public override void SetDefaults()
@@ -79,9 +80,14 @@ namespace ArchitectsBlueprintMod.Content.Items
 			// If the left button is held and was also down in the previous tick, emit a hold event.
 			else if (Main.mouseLeft && !Main.mouseLeftRelease)
 				actionManager.Handle(ToolAction.COPY, ToolActionKey.LeftHold, player, cursorTile);
-			// If the left button was released (transitioned from down to up), emit a release event.
-			else if (!Main.mouseLeft && Main.mouseLeftRelease)
+			else if (_leftDragSeenDown && !Main.mouseLeft)
+			{
 				actionManager.Handle(ToolAction.COPY, ToolActionKey.LeftRelease, player, cursorTile);
+				_leftDragSeenDown = false;
+			}
+
+			if (Main.mouseLeft)
+				_leftDragSeenDown = true;
 		}
 
 		public override void AddRecipes()

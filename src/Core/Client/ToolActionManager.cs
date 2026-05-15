@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using ArchitectsBlueprintMod.Config;
 using ArchitectsBlueprintMod.Core.Server;
 using ArchitectsBlueprintMod.Debug;
@@ -172,7 +173,8 @@ namespace ArchitectsBlueprintMod.Core
             switch (key)
             {
                 case ToolActionKey.LeftClick:
-                    if (!BlueprintSystem.GetTopmostSelectionAt(cursorTile, out Selection selection))
+                    // If there are no selections, fall back to PIN behavior.
+                    if (BlueprintSystem.GetSelection() is null)
                     {
                         SelectionControl.BeginPin(player, cursorTile);
                         return;
@@ -314,17 +316,14 @@ namespace ArchitectsBlueprintMod.Core
                 return;
             }
 
-            if (!BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection projection))
-            {
-                return;
-            }
+            _ = BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection projection);
 
             switch (action)
             {
                 // RESET: Reset based on priority (paste > projection > selection)
                 case ToolAction.RESET:
 
-                    if (projection != null && projection.IsDefined)
+                    if (projection is { IsDefined: true })
                     {
                         // If the projection is locked (Paste is in progress), Stop the paste.
                         if (projection.IsLocked)
@@ -334,33 +333,32 @@ namespace ArchitectsBlueprintMod.Core
                         // Otherwise, remove the projection.
                         else
                         {
-                            ProjectionSystem.RemoveProjectionAt(player, cursorTile);
+                            ProjectionSystem.RemoveProjection(projection);
                         }
                     }
-                    else
+                    else if (BlueprintSystem.GetTopmostSelectionAt(cursorTile, out Selection selection) && selection.IsDefined)
                     {
-                        // If the projection is not defined, clear the selection under the cursor.
-                        if (SelectionSystem.GetSelection().IsDefined && SelectionSystem.GetSelection().Area.Contains(cursorTile))
-                        {
-                            SelectionSystem.ClearSelection(player);
-                        }
+                        SelectionSystem.ClearSelection(player);
                     }
                     break;
                 // PASTE: Stop the paste.
                 case ToolAction.PASTE:
-                    if (projection != null && projection.IsDefined)
+                    if (projection is { IsDefined: true })
                     {
                         PastingSystem.StopPaste(projection);
                     }
                     break;
                 // COPY: Remove the projection at the cursor.
                 case ToolAction.COPY:
-                    ProjectionSystem.RemoveProjectionAt(player, cursorTile);
+                    if (projection is { IsDefined: true })
+                    {
+                        ProjectionSystem.RemoveProjection(projection);
+                    }
                     break;
                 // PIN/SET: Clear the selection.
                 case ToolAction.PIN:
                 case ToolAction.SET:
-                    if (SelectionSystem.GetSelection().IsDefined && SelectionSystem.GetSelection().Area.Contains(cursorTile))
+                    if (BlueprintSystem.GetTopmostSelectionAt(cursorTile, out Selection sel) && sel.IsDefined)
                     {
                         SelectionSystem.ClearSelection(player);
                     }

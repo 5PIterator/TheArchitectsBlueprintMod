@@ -16,6 +16,7 @@ namespace ArchitectsBlueprintMod.Content.Items
 	public class InclusionWand : ModItem
 	{
 		private ToolAction _mode = ToolAction.INCLUDE;
+		private bool _leftDragSeenDown;
 
 		public override void SetDefaults()
 		{
@@ -99,8 +100,14 @@ namespace ArchitectsBlueprintMod.Content.Items
 				actionManager.Handle(_mode, ToolActionKey.RightClick, player, cursorTile);
 			else if (Main.mouseLeft && !Main.mouseLeftRelease)
 				actionManager.Handle(_mode, ToolActionKey.LeftHold, player, cursorTile);
-			else if (!Main.mouseLeft && Main.mouseLeftRelease)
+			else if (_leftDragSeenDown && !Main.mouseLeft)
+			{
 				actionManager.Handle(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+				_leftDragSeenDown = false;
+			}
+
+			if (Main.mouseLeft)
+				_leftDragSeenDown = true;
 		}
 
 		public override void AddRecipes()

@@ -737,10 +737,10 @@ namespace ArchitectsBlueprintMod.Core
                     // Validate payload
                     if (!Projection.Payload.TryGetCell(rel, out PayloadCell cell) || cell.IsEmpty)
                         continue;
-                    // Validate source
+                    // Validate source.
                     if (!Projection.TryGetSourceTile(rel, out Tile sourceTile))
                         continue;
-
+                    // Validate target.
                     if (!Projection.TryGetTargetTile(rel, out Tile targetTile))
                         continue;
 

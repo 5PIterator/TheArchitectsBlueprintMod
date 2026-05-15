@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using ArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -10,33 +11,35 @@ namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// A movable ghost of a <see cref="Selection"/>: carries the <see cref="Core.Payload">payload</see>
-    /// (detached <c>TileData</c> snapshots per cell), aligned with <see cref="SourceArea"/> / <see cref="TargetArea"/>,
-    /// <see cref="SourceTiles"/> is the original capture region (fixed clone); <see cref="TargetTiles"/> is this projection’s
-    /// grid (moves with the ghost) and is the only place where include/exclude is stored after construction.
-    /// <see cref="SourceArea"/> and the initial capture bounds are fixed when the projection is constructed;
-    /// fill <see cref="Payload"/> afterward via <see cref="LoadPayloadFromWorld"/> or <see cref="SetPayload"/>.
+    /// (detached <c>TileData</c> snapshots per cell), aligned with <see cref="SourceArea"/> / <see cref="TargetArea"/>.
+    /// <see cref="SourceTiles"/> is a snapshot of the capture region (clone); <see cref="TargetTiles"/> is this projection’s
+    /// grid (moves with the ghost) and is where include/exclude is edited after construction.
+    /// A projection always retains a selection snapshot; <see cref="SetPayload"/> resizes both target and source footprints
+    /// to the payload grid at the current ghost anchor when applying a defined payload.
+    /// Fill <see cref="Payload"/> via <see cref="LoadPayloadFromWorld"/> or <see cref="SetPayload"/>.
     /// </summary>
     /// <param name="selection">Selection blueprint used to seed initial target bounds and inclusion mask.</param>
-    /// <param name="cutSource">Initial cut-from-source flag (still clamped when there is no payload or no source area).</param>
-    /// <param name="sourceArea">World rectangle for world capture / source clear; omit or empty when not tied to a capture region (e.g. JSON-only).</param>
-    /// <param name="pendingSnapshotOverride">Optional sparse snapshot override (payload-relative) used to build the initial source walk.</param>
+    /// <param name="cutSource">Initial cut-from-source flag (clamped when there is no payload).</param>
     public class Projection : Blueprint
     {
+        private static int _nextOverlayInstanceKey;
+
         private Payload _payload = Payload.Empty;
-        private Selection? _selection;
+        private Selection _selection = null!;
+
+        /// <summary>
+        /// Per-instance value for <c>OverlaySystem</c> registration keys. <see cref="Id"/> is often 0 for multiple live projections.
+        /// </summary>
+        internal int OverlayInstanceKey { get; } = Interlocked.Increment(ref _nextOverlayInstanceKey);
 
         /// <summary>
         /// Builds a projection from a selection snapshot (e.g. server paste shell). Does not apply client cursor/size gates;
-        /// use <see cref="FromSelection"/> for in-world copy from the current selection.
+        /// use <see cref="ProjectionSystem.NewProjection"/> for in-world copy from the current selection.
         /// </summary>
-        public Projection(int owner, Selection? selection, bool cutSource = false) : base(owner)
+        public Projection(int owner, Selection selection, bool cutSource = false) : base(owner)
         {
-            // Run headless projection in case selection is not required.
-            if (selection is null)
-                DiscardSelection();
-            else
-                AssignSelection(selection);
-
+            ArgumentNullException.ThrowIfNull(selection);
+            AssignSelection(selection);
             RefreshTargetTiles();
         }
 
@@ -59,16 +62,12 @@ namespace ArchitectsBlueprintMod.Core
         public bool IsLocked { get; private set; }
 
         /// <summary>
-        /// True when this projection has no selection snapshot assigned.
+        /// World rectangle for live <c>Main.tile</c> under the source snapshot (cut / source clear). Kept in lockstep with
+        /// <see cref="TargetArea"/> when <see cref="SetPayload"/> applies a defined payload.
         /// </summary>
-        public bool IsHeadless => _selection is null;
+        public Rectangle SourceArea => _selection.SourceArea;
 
-        /// <summary>
-        /// World rectangle that was captured into the payload (live <c>Main.tile</c> under this region
-        /// for cut / source clear). Distinct from <see cref="TargetArea"/>.
-        /// </summary>
-        public Rectangle SourceArea => IsHeadless ? Rectangle.Empty : _selection.SourceArea;
-        public BlueprintCell[,] SourceTiles => IsHeadless ? new BlueprintCell[0, 0] : _selection.SourceTiles;
+        public BlueprintCell[,] SourceTiles => _selection.SourceTiles;
 
         /// <summary>
         /// World rectangle where the ghost is placed — same as <see cref="Blueprint.Area"/>.
@@ -102,6 +101,8 @@ namespace ArchitectsBlueprintMod.Core
             if (IsLocked)
                 return;
             IsLocked = true;
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug($"Projection.Lock: id={Id} owner={Owner}", "Projection");
             UpdateOverlay();
         }
 
@@ -113,6 +114,8 @@ namespace ArchitectsBlueprintMod.Core
             if (!IsLocked)
                 return;
             IsLocked = false;
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug($"Projection.Unlock: id={Id} owner={Owner}", "Projection");
             UpdateOverlay();
         }
 
@@ -128,6 +131,10 @@ namespace ArchitectsBlueprintMod.Core
             Translate(delta);
             RefreshTargetTiles();
             RefreshInventories();
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug(
+                    $"Projection.MoveTo: id={Id} owner={Owner} origin=({targetAreaOrigin.X},{targetAreaOrigin.Y}) delta=({delta.X},{delta.Y})",
+                    "Projection");
             UpdateOverlay();
         }
 
@@ -136,10 +143,12 @@ namespace ArchitectsBlueprintMod.Core
         /// </summary>
         public void SetCut(bool cutFromSource)
         {
-            bool want = cutFromSource && !IsHeadless && HasPayload;
+            bool want = cutFromSource && HasPayload;
             if (CutSource == want)
                 return;
             CutSource = want;
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug($"Projection.SetCut: id={Id} owner={Owner} cutSource={CutSource} hasPayload={HasPayload}", "Projection");
             UpdateOverlay();
         }
 
@@ -148,49 +157,41 @@ namespace ArchitectsBlueprintMod.Core
         /// </summary>
         public bool ToggleCut()
         {
-            if (IsHeadless || !HasPayload)
+            if (!HasPayload)
             {
                 SetCut(false);
+                if (ABPLog.IsDebugEnabled)
+                    ABPLog.Debug($"Projection.ToggleCut: id={Id} owner={Owner} skipped (no payload)", "Projection");
                 return false;
             }
-            else
-            {
-                SetCut(!CutSource);
-                return true;
-            }
+
+            SetCut(!CutSource);
+            return true;
         }
 
         /// <summary>
-        /// Discards the selection snapshot, making this projection headless.
-        /// </summary>
-        internal void DiscardSelection()
-        {
-            _selection = null;
-            Define(Rectangle.Empty);
-            RefreshTargetTiles();
-            UpdateOverlay();
-        }
-
-        /// <summary>
-        /// Sets the selection snapshot, making this projection headful.
+        /// Sets the selection snapshot (replaces the frozen source footprint).
         /// </summary>
         internal void AssignSelection(Selection selection)
         {
+            ArgumentNullException.ThrowIfNull(selection);
             _selection = selection.Clone();
             Define(_selection.Area);
             RefreshTargetTiles();
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug(
+                    $"Projection.AssignSelection (init): id={Id} owner={Owner} area=({Area.X},{Area.Y}) {Area.Width}x{Area.Height}",
+                    "Projection");
         }
 
         /// <summary>
         /// Replaces the payload grid from a prepared <see cref="Core.Payload"/> (stores an independent copy).
-        /// Optionally invalidates the projection's source area.
+        /// When <paramref name="source"/> is defined, resizes the projection target and the selection snapshot to the payload
+        /// size at the current top-left anchor so source and target footprints stay aligned.
         /// </summary>
-        internal void SetPayload(Payload source, bool discardSelection = false)
+        internal void SetPayload(Payload source)
         {
             ArgumentNullException.ThrowIfNull(source);
-
-            if (discardSelection)
-                DiscardSelection();
 
             if (!source.IsDefined)
             {
@@ -206,9 +207,22 @@ namespace ArchitectsBlueprintMod.Core
             }
 
             _payload = Payload.FromClone(source);
-            CutSource = CutSource && !IsHeadless && HasPayload;
+            CutSource = CutSource && HasPayload;
+
+            var newBounds = new Rectangle(Area.X, Area.Y, _payload.Width, _payload.Height);
+
+            Selection resized = _selection.Clone();
+            resized.Define(newBounds);
+            _selection = resized;
+
+            Define(newBounds);
             RefreshTargetTiles();
             UpdateOverlay();
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug(
+                    $"Projection.SetPayload: applied id={Id} owner={Owner} payload={_payload.Width}x{_payload.Height} " +
+                    $"targetOrigin=({Area.X},{Area.Y}) cutSource={CutSource}",
+                    "Projection");
         }
 
         /// <summary>
@@ -217,22 +231,14 @@ namespace ArchitectsBlueprintMod.Core
         /// </summary>
         public void LoadPayloadFromWorld()
         {
-            if (IsHeadless)
-            {
-                _payload = Payload.Empty;
-                CutSource = false;
-                RefreshTargetTiles();
-                UpdateOverlay();
-                if (ABPLog.IsDebugEnabled)
-                    ABPLog.Debug(
-                        $"Projection payload cleared [LoadPayloadFromWorld: empty SourceArea] id={Id} owner={Owner}",
-                        "Projection");
-                return;
-            }
-
             _payload = Payload.FromWorld(SourceArea);
             RefreshTargetTiles();
             UpdateOverlay();
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug(
+                    $"Projection.LoadPayloadFromWorld: id={Id} owner={Owner} source=({SourceArea.X},{SourceArea.Y}) " +
+                    $"{SourceArea.Width}x{SourceArea.Height} payloadDefined={_payload.IsDefined} payload={_payload.Width}x{_payload.Height}",
+                    "Projection");
         }
 
         /// <summary>
@@ -259,11 +265,11 @@ namespace ArchitectsBlueprintMod.Core
         }
 
         /// <summary>
-        /// Live <c>Main.tile</c> under <see cref="SourceArea"/> at <paramref name="relative"/> (original capture region).
+        /// Live <c>Main.tile</c> under <see cref="SourceArea"/> at <paramref name="relative"/> (source snapshot region).
         /// </summary>
         public bool TryGetSourceTile(Point relative, out Tile sourceTile)
         {
-            if (IsHeadless || SourceTiles is null
+            if (SourceTiles is null
                 || (uint)relative.X >= (uint)SourceArea.Width
                 || (uint)relative.Y >= (uint)SourceArea.Height)
             {
@@ -371,7 +377,7 @@ namespace ArchitectsBlueprintMod.Core
         /// </summary>
         public void SyncInclusion()
         {
-            if (IsHeadless || _selection.Tiles is null || Tiles is null)
+            if (_selection.Tiles is null || Tiles is null)
             {
                 return;
             }
@@ -380,6 +386,9 @@ namespace ArchitectsBlueprintMod.Core
             {
                 tile.Included = _selection.Tiles[tile.Relative.X, tile.Relative.Y].Included;
             }
+
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug($"Projection.SyncInclusion: id={Id} owner={Owner} grid={Area.Width}x{Area.Height}", "Projection");
         }
 
         /// <summary>

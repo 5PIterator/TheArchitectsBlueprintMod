@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using ArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 
@@ -60,6 +61,10 @@ namespace ArchitectsBlueprintMod.Core
 
             if (Area.IsEmpty)
             {
+                if (ABPLog.IsDebugEnabled)
+                    ABPLog.Debug(
+                        $"{GetType().Name}.Define: cleared bounds (empty rect) owner={Owner} hadGrid={previous is not null}",
+                        "Blueprint");
                 return;
             }
 
@@ -83,6 +88,11 @@ namespace ArchitectsBlueprintMod.Core
                 }
             }
 
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug(
+                    $"{GetType().Name}.Define: owner={Owner} area=({Area.X},{Area.Y}) {Area.Width}x{Area.Height} " +
+                    $"prev={oldWidth}x{oldHeight} carriedInclusion={(previous is not null && oldWidth > 0 && oldHeight > 0)}",
+                    "Blueprint");
         }
 
         public virtual void Define(Point pointA, Point pointB)
@@ -92,8 +102,11 @@ namespace ArchitectsBlueprintMod.Core
 
         public virtual void Clear()
         {
+            bool had = IsDefined;
             Area = Rectangle.Empty;
             Tiles = null;
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug($"{GetType().Name}.Clear: owner={Owner} hadBounds={had}", "Blueprint");
         }
 
         public bool TryGetTile(Point world, out BlueprintCell boundedTile)
@@ -172,6 +185,10 @@ namespace ArchitectsBlueprintMod.Core
 
             Area = new Rectangle(Area.X + delta.X, Area.Y + delta.Y, Area.Width, Area.Height);
             SyncTileWorlds();
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug(
+                    $"{GetType().Name}.Translate: owner={Owner} delta=({delta.X},{delta.Y}) origin=({Area.X},{Area.Y})",
+                    "Blueprint");
         }
 
         private void SyncTileWorlds()

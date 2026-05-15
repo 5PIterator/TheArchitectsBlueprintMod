@@ -17,7 +17,8 @@ namespace ArchitectsBlueprintMod.Content.Items
 	public class ArchitectsStencil : ModItem
 	{
 		private ToolAction _mode = ToolAction.PIN;
-
+		/// <summary>True after left has been seen down this drag; cleared on one-shot <see cref="ToolActionKey.LeftRelease"/>.</summary>
+		private bool _leftDragSeenDown;
 
 		/// <summary>Sets endgame stencil stats; single UseItem per click, HoldItem drives drags.</summary>
 		public override void SetDefaults()
@@ -118,8 +119,14 @@ namespace ArchitectsBlueprintMod.Content.Items
 				actionManager.Handle(_mode, ToolActionKey.RightClick, player, cursorTile);
 			else if (Main.mouseLeft && !Main.mouseLeftRelease)
 				actionManager.Handle(_mode, ToolActionKey.LeftHold, player, cursorTile);
-			else if (!Main.mouseLeft && Main.mouseLeftRelease)
+			else if (_leftDragSeenDown && !Main.mouseLeft)
+			{
 				actionManager.Handle(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+				_leftDragSeenDown = false;
+			}
+
+			if (Main.mouseLeft)
+				_leftDragSeenDown = true;
 		}
 
 		public override void AddRecipes()

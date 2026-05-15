@@ -79,7 +79,7 @@ namespace ArchitectsBlueprintMod.Tests
             }
 
             Payload mutated = clearMode ? BuildClearedCenterPayload(projection.Payload) : BuildFilledCenterPayload(projection.Payload);
-            projection.SetPayload(mutated, discardSelection: true);
+            projection.SetPayload(mutated);
 
             bool mutateOk = clearMode
                 ? projection.Payload.TryGetCell(new Point(1, 1), out PayloadCell cen) && !cen.HasTile()

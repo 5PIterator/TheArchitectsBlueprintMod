@@ -97,18 +97,23 @@ namespace ArchitectsBlueprintMod.Core
         }
 
         /// <summary>Opens the import-list dialog for the provided projection.</summary>
-        public static void BeginImport(Projection projection)
+        /// <param name="onImportDialogCancelled">Invoked when the user closes the dialog without importing (e.g. Escape).</param>
+        public static void BeginImport(Projection projection, Action? onImportDialogCancelled = null)
         {
             // --- Discover local payload files, then delegate selection to the UI layer.
 
             ArgumentNullException.ThrowIfNull(projection);
             if (!CanUseProjection(projection, requirePayload: false))
+            {
+                onImportDialogCancelled?.Invoke();
                 return;
+            }
 
             IReadOnlyList<PayloadImportDialogEntry> entries = DiscoverPayloadFiles();
             if (entries.Count == 0)
             {
                 Main.NewText("No payload files found in the ArchitectsBlueprintMod Payloads folder.", Color.Orange);
+                onImportDialogCancelled?.Invoke();
                 return;
             }
 
@@ -127,7 +132,11 @@ namespace ArchitectsBlueprintMod.Core
                         EndPayloadIoHighlightForOwner(owner);
                     }
                 },
-                onCancel: () => EndPayloadIoHighlightForOwner(owner));
+                onCancel: () =>
+                {
+                    EndPayloadIoHighlightForOwner(owner);
+                    onImportDialogCancelled?.Invoke();
+                });
         }
 
         /// <summary>Returns the directory where payload JSON files are stored.</summary>
@@ -299,7 +308,7 @@ namespace ArchitectsBlueprintMod.Core
                     return;
                 }
 
-                projection.SetPayload(payload, discardSelection: true);
+                projection.SetPayload(payload);
                 Main.NewText($"Imported payload: {Path.GetFileName(fullPath)}", Color.LightGreen);
             }
             catch (Exception ex)

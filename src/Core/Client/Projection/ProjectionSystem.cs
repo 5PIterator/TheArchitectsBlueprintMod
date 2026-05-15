@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ArchitectsBlueprintMod.Debug;
 using ArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -27,11 +28,20 @@ namespace ArchitectsBlueprintMod.Core
             // Get the selection from the selection system
             if (!BlueprintSystem.GetTopmostSelectionAt(cursorTile, out Selection selection))
             {
+                if (ABPLog.IsDebugEnabled)
+                    ABPLog.Debug(
+                        $"ProjectionSystem.NewProjection(cursor): no selection under cursor owner={player.whoAmI} tile=({cursorTile.X},{cursorTile.Y})",
+                        "ProjectionSystem");
                 return null;
             }
 
             if (!selection.IsDefined || !selection.Area.Contains(cursorTile))
             {
+                if (ABPLog.IsDebugEnabled)
+                    ABPLog.Debug(
+                        $"ProjectionSystem.NewProjection(cursor): selection invalid or cursor outside owner={player.whoAmI} " +
+                        $"defined={selection.IsDefined} cursor=({cursorTile.X},{cursorTile.Y}) area={selection.Area}",
+                        "ProjectionSystem");
                 return null;
             }
 
@@ -41,24 +51,63 @@ namespace ArchitectsBlueprintMod.Core
             projection.LoadPayloadFromWorld();
             BlueprintSystem.RegisterBlueprint(projection);
             projection.UpdateOverlay();
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug(
+                    $"ProjectionSystem.NewProjection(cursor): created id={projection.Id} owner={player.whoAmI} " +
+                    $"area=({projection.Area.X},{projection.Area.Y}) {projection.Area.Width}x{projection.Area.Height}",
+                    "ProjectionSystem");
+            return projection;
+        }
+        /// <summary>
+        /// Creates a projection from a selection; returns null on failure.
+        /// Adds the projection to the player's list and sets <see cref="ActiveProjection"/>.
+        /// </summary>
+        public Projection NewProjection(Player player, Selection selection)
+        {
+            ArgumentNullException.ThrowIfNull(selection);
+
+            var projection = new Projection(player.whoAmI, selection, cutSource: false);
+
+            // Load the payload from the world
+            projection.LoadPayloadFromWorld();
+            BlueprintSystem.RegisterBlueprint(projection);
+            projection.UpdateOverlay();
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug(
+                    $"ProjectionSystem.NewProjection(selection): created id={projection.Id} owner={player.whoAmI} " +
+                    $"area=({projection.Area.X},{projection.Area.Y}) {projection.Area.Width}x{projection.Area.Height}",
+                    "ProjectionSystem");
             return projection;
         }
 
-        public bool RemoveProjectionAt(Player player, Point cursorTile)
+        /// <summary>
+        /// Removes a projection from the player's list and clears the overlay.
+        /// </summary>
+        public bool RemoveProjection(Projection projection)
         {
-            if (!BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection projection))
+            if (projection == null)
             {
+                if (ABPLog.IsDebugEnabled)
+                    ABPLog.Debug("ProjectionSystem.RemoveProjection: null projection", "ProjectionSystem");
                 return false;
             }
 
             if (projection.IsLocked)
             {
+                if (ABPLog.IsDebugEnabled)
+                    ABPLog.Debug(
+                        $"ProjectionSystem.RemoveProjection: refused (locked) id={projection.Id} owner={projection.Owner}",
+                        "ProjectionSystem");
                 return false;
             }
 
-            ProjectionControl.InvalidateGestureIfDragging(player, projection);
-            UpdateProjectionOverlay(player);
             BlueprintSystem.UnregisterBlueprint(projection);
+            ProjectionControl.InvalidateGestureIfDragging(projection);
+            UpdateProjectionOverlay(Main.player[projection.Owner]);
+            if (ABPLog.IsDebugEnabled)
+                ABPLog.Debug(
+                    $"ProjectionSystem.RemoveProjection: unregistered id={projection.Id} owner={projection.Owner}",
+                    "ProjectionSystem");
             return true;
         }
 
@@ -114,13 +163,16 @@ namespace ArchitectsBlueprintMod.Core
             {
                 bool locked = proj.IsLocked;
                 IEnumerable<Rectangle> inventories = proj.Inventories;
+                int invIndex = 0;
                 foreach (Rectangle inventory in inventories)
                 {
                     Color c = ArchitectVisualPalette.InventoryOutlineColor;
+                    string invKey = $"c:{proj.OverlayInstanceKey}:{invIndex}";
                     if (locked)
-                        OverlaySystem.RegTileBorder($"c:{proj.Id}", inventory, c, 2, family);
+                        OverlaySystem.RegTileBorder(invKey, inventory, c, 2, family);
                     else
-                        OverlaySystem.RegTileBounds($"c:{proj.Id}", inventory, c, 2, family);
+                        OverlaySystem.RegTileBounds(invKey, inventory, c, 2, family);
+                    invIndex++;
                 }
             }
         }
@@ -144,17 +196,18 @@ namespace ArchitectsBlueprintMod.Core
                 {
                     // CUT vs COPY: border color. Locked: outline only (transparent interior); unlocked: border + tinted fill.
                     Color c = proj.CutSource ? ArchitectVisualPalette.ProjectionCutColor : ArchitectVisualPalette.ProjectionCopyColor;
+                    string k = proj.OverlayInstanceKey.ToString();
                     if (proj.IsLocked)
-                        OverlaySystem.RegTileBorder($"{proj.Id}:b", proj.Area, c, 2, family);
+                        OverlaySystem.RegTileBorder($"{k}:b", proj.Area, c, 2, family);
                     else
-                        OverlaySystem.RegTileBounds($"{proj.Id}:b", proj.Area, c, 2, family);
+                        OverlaySystem.RegTileBounds($"{k}:b", proj.Area, c, 2, family);
 
                     if (proj.CutSource)
                     {
                         if (proj.IsLocked)
-                            OverlaySystem.RegTileBorder($"{proj.Id}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
+                            OverlaySystem.RegTileBorder($"{k}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
                         else
-                            OverlaySystem.RegTileBounds($"{proj.Id}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
+                            OverlaySystem.RegTileBounds($"{k}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
                     }
                 }
             }
@@ -180,11 +233,16 @@ namespace ArchitectsBlueprintMod.Core
 
         public override void OnWorldUnload()
         {
+            int n = 0;
             foreach (Projection proj in BlueprintSystem.GetProjections())
             {
                 BlueprintSystem.UnregisterBlueprint(proj);
                 proj.Clear();
+                n++;
             }
+
+            if (ABPLog.IsDebugEnabled && n > 0)
+                ABPLog.Debug($"ProjectionSystem.OnWorldUnload: cleared {n} projection(s)", "ProjectionSystem");
 
             ModContent.GetInstance<ProjectionControl>().ClearAllGestureSlots();
         }

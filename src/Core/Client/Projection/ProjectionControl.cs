@@ -8,7 +8,7 @@ namespace ArchitectsBlueprintMod.Core
     /// <summary>
     /// COPY-tool gestures for projections: create from selection, pick up and move, cancel restores start-of-drag position.
     /// Hit-testing uses <see cref="BlueprintSystem"/> (same topmost order as INCLUDE/EXCLUDE).
-    /// Mirrors <see cref="SelectionControl"/> (gesture state here; list data in <see cref="ProjectionSystem"/>).
+    /// Mirrors <see cref="SelectionControl"/> (client-only gesture state here; list data in <see cref="ProjectionSystem"/>).
     /// Future: handles, resize, and on-projection buttons follow the same Control vs System split.
     /// </summary>
     public sealed class ProjectionControl : ModSystem
@@ -25,7 +25,7 @@ namespace ArchitectsBlueprintMod.Core
             Move,
         }
 
-        private sealed class PlayerState
+        private sealed class GestureState
         {
             public Mode Mode;
             public DragKind DragKind;
@@ -34,7 +34,7 @@ namespace ArchitectsBlueprintMod.Core
             public Rectangle DragStartBounds;
         }
 
-        private readonly PlayerState[] _states = new PlayerState[Main.maxPlayers];
+        private readonly GestureState _gesture = new();
 
         public static ProjectionSystem ProjectionSystem => ModContent.GetInstance<ProjectionSystem>();
 
@@ -46,7 +46,7 @@ namespace ArchitectsBlueprintMod.Core
         /// </summary>
         public void BeginCopy(Player player, Point cursorTile)
         {
-            var state = GetState(player);
+            GestureState state = GetGesture(player);
             if (state.Mode != Mode.None)
             {
                 return;
@@ -73,9 +73,9 @@ namespace ArchitectsBlueprintMod.Core
                     state.DragOffsetFromCursor = new Point(cursorTile.X - topmost.Area.X, cursorTile.Y - topmost.Area.Y);
                     break;
 
-                case Selection:
+                case Selection topmost:
                 {
-                        Projection projection = ProjectionSystem.NewProjection(player, cursorTile);
+                    Projection projection = ProjectionSystem.NewProjection(player, topmost);
                     if (projection is null)
                     {
                         return;
@@ -104,7 +104,7 @@ namespace ArchitectsBlueprintMod.Core
         /// <summary>Updates an in-progress COPY drag while the left button is held.</summary>
         public void UpdateGesture(Player player, Point cursorTile)
         {
-            var state = GetState(player);
+            GestureState state = GetGesture(player);
             if (state.Mode != Mode.Drag || state.DraggingProjection is null || !state.DraggingProjection.IsDefined)
             {
                 return;
@@ -117,7 +117,7 @@ namespace ArchitectsBlueprintMod.Core
         /// <summary>Ends the current left-button COPY gesture (release).</summary>
         public void EndGesture(Player player)
         {
-            var state = GetState(player);
+            GestureState state = GetGesture(player);
             state.Mode = Mode.None;
             state.DragKind = DragKind.None;
             state.DraggingProjection = null;
@@ -128,7 +128,7 @@ namespace ArchitectsBlueprintMod.Core
         /// </summary>
         public bool CancelGesture(Player player)
         {
-            var state = GetState(player);
+            GestureState state = GetGesture(player);
             if (state.Mode != Mode.Drag || state.DraggingProjection is null || !state.DraggingProjection.IsDefined)
             {
                 return false;
@@ -142,50 +142,38 @@ namespace ArchitectsBlueprintMod.Core
         /// <summary>True while the local player is mid-COPY drag.</summary>
         public bool IsActivelyDragging(Player player)
         {
-            if (player?.whoAmI is not int i || i < 0 || i >= _states.Length)
+            if (player is null || player.whoAmI != Main.myPlayer || Main.gameMenu)
             {
                 return false;
             }
 
-            return _states[i] is { Mode: Mode.Drag, DraggingProjection: not null };
+            return _gesture is { Mode: Mode.Drag, DraggingProjection: not null };
         }
 
         /// <summary>
         /// Called when a <see cref="Projection"/> is removed from the world list; clears COPY gesture if it referenced that instance.
         /// </summary>
-        internal void InvalidateGestureIfDragging(Player player, Projection removed)
+        internal void InvalidateGestureIfDragging(Projection removed)
         {
-            ArgumentNullException.ThrowIfNull(player);
-            ArgumentNullException.ThrowIfNull(removed);
-
-            var state = GetState(player);
-            if (state.Mode != Mode.Drag || !ReferenceEquals(state.DraggingProjection, removed))
+            if (_gesture.Mode != Mode.Drag || !ReferenceEquals(_gesture.DraggingProjection, removed))
             {
                 return;
             }
 
-            state.Mode = Mode.None;
-            state.DragKind = DragKind.None;
-            state.DraggingProjection = null;
+            _gesture.Mode = Mode.None;
+            _gesture.DragKind = DragKind.None;
+            _gesture.DraggingProjection = null;
         }
 
-        /// <summary>Clears COPY gesture state for every player slot (world unload).</summary>
+        /// <summary>Clears COPY gesture state (world unload).</summary>
         internal void ClearAllGestureSlots()
         {
-            for (int i = 0; i < _states.Length; i++)
-            {
-                if (_states[i] is not { } gs)
-                {
-                    continue;
-                }
-
-                gs.Mode = Mode.None;
-                gs.DragKind = DragKind.None;
-                gs.DraggingProjection = null;
-            }
+            _gesture.Mode = Mode.None;
+            _gesture.DragKind = DragKind.None;
+            _gesture.DraggingProjection = null;
         }
 
-        private PlayerState GetState(Player player)
+        private GestureState GetGesture(Player player)
         {
             ArgumentNullException.ThrowIfNull(player);
 
@@ -194,13 +182,7 @@ namespace ArchitectsBlueprintMod.Core
                 throw new InvalidOperationException("Player is not valid");
             }
 
-            int index = player.whoAmI;
-            if (index < 0 || index >= _states.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(player), $"Invalid player index: {index}");
-            }
-
-            return _states[index] ??= new PlayerState();
+            return _gesture;
         }
     }
 }

@@ -51,6 +51,7 @@ public sealed class BlueprintSystem : ModSystem
     IEnumerable<BlueprintEntry> GetAdditionalEntries() => GetBlueprintEntries().Where(e => e.Type == BlueprintType.Additional);
 
     public IEnumerable<Blueprint> GetBlueprints() => GetBlueprintEntries().Select(e => e.Blueprint);
+    public Selection GetSelection() => GetSelectionEntries().LastOrDefault()?.Blueprint as Selection;
     public IEnumerable<Selection> GetSelections() => GetSelectionEntries().Select(e => e.Blueprint as Selection);
     public IEnumerable<Projection> GetProjections() => GetProjectionEntries().Select(e => e.Blueprint as Projection);
     public IEnumerable<Blueprint> GetAdditionalBlueprints() => GetAdditionalEntries().Select(e => e.Blueprint);
@@ -61,19 +62,22 @@ public sealed class BlueprintSystem : ModSystem
 
     public bool GetTopmostBlueprintAt(Point cursorTile, out Blueprint? blueprint)
     {
-        blueprint = GetBlueprintEntries().LastOrDefault(e => e.Hits(cursorTile))?.Blueprint;
+        var entry = GetBlueprintEntries().LastOrDefault(e => e.Hits(cursorTile));
+        blueprint = entry?.Blueprint;
         return blueprint is not null;
     }
 
     public bool GetTopmostSelectionAt(Point cursorTile, out Selection? selection)
     {
-        selection = GetSelectionEntries().LastOrDefault(e => e.Hits(cursorTile))?.Blueprint as Selection;
+        var entry = GetSelectionEntries().LastOrDefault(e => e.Hits(cursorTile));
+        selection = entry?.Blueprint as Selection;
         return selection is not null;
     }
 
     public bool GetTopmostProjectionAt(Point cursorTile, out Projection? projection)
     {
-        projection = GetProjectionEntries().LastOrDefault(e => e.Hits(cursorTile))?.Blueprint as Projection;
+        var entry = GetProjectionEntries().LastOrDefault(e => e.Hits(cursorTile));
+        projection = entry?.Blueprint as Projection;
         return projection is not null;
     }
 

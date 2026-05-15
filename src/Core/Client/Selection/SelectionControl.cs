@@ -6,7 +6,7 @@ using Terraria.ModLoader;
 namespace ArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Camera-mode-like interactive gesture handler for a player's Selection bounds.
+    /// Camera-mode-like interactive gesture handler for the client <see cref="Selection"/> bounds.
     /// Driven by <see cref="ToolActionManager"/> for PIN/SET left-click/hold/release; right-click cancel is handled there.
     /// <para/>
     /// In-progress gestures can be canceled via <see cref="CancelGesture"/> (e.g. tool right-click).
@@ -57,7 +57,7 @@ namespace ArchitectsBlueprintMod.Core
             Inside,
         }
 
-        private sealed class PlayerState
+        private sealed class GestureState
         {
             public Mode Mode;
             public DragKind DragKind;
@@ -70,7 +70,7 @@ namespace ArchitectsBlueprintMod.Core
             public Point DragStartPointB;
         }
 
-        private readonly PlayerState[] _states = new PlayerState[Main.maxPlayers];
+        private readonly GestureState _gesture = new();
 
         public static SelectionSystem SelectionSystem => ModContent.GetInstance<SelectionSystem>();
 
@@ -95,7 +95,7 @@ namespace ArchitectsBlueprintMod.Core
 
             Selection selection = SelectionSystem.GetSelection();
 
-            if (selection.IsDefined)
+            if (selection is { IsDefined: true })
             {
                 Rectangle screenBounds = selection.GetScreenPixelBounds(Main.screenPosition, TilePixelSize);
                 Point mouse = new(Main.mouseX, Main.mouseY);
@@ -149,7 +149,7 @@ namespace ArchitectsBlueprintMod.Core
                 return;
             }
 
-            if (state.Mode == Mode.Drag && selection.IsDefined)
+            if (state.Mode == Mode.Drag && selection is { IsDefined: true })
             {
                 SelectionSystem.SetBounds(player, state.DragStartBounds);
                 SelectionSystem.SetPoints(player, state.DragStartPointA, state.DragStartPointB);
@@ -161,7 +161,7 @@ namespace ArchitectsBlueprintMod.Core
             state.DragKind = DragKind.None;
         }
 
-        private static void BeginDrag(PlayerState state, DragKind kind, Player player, Selection selection, Point cursorTile)
+        private static void BeginDrag(GestureState state, DragKind kind, Player player, Selection selection, Point cursorTile)
         {
             state.Mode = Mode.Drag;
             state.DragKind = kind;
@@ -181,7 +181,7 @@ namespace ArchitectsBlueprintMod.Core
             }
         }
 
-        private static void UpdateDrag(PlayerState state, Selection selection, Player player, Point cursorTile)
+        private static void UpdateDrag(GestureState state, Selection selection, Player player, Point cursorTile)
         {
 
             if (state.Mode == Mode.EdgeSelection)
@@ -350,7 +350,7 @@ namespace ArchitectsBlueprintMod.Core
             return new Rectangle(left, top, right - left + 1, bottom - top + 1);
         }
 
-        private PlayerState GetState(Player player)
+        private GestureState GetState(Player player)
         {
             ArgumentNullException.ThrowIfNull(player);
 
@@ -359,13 +359,7 @@ namespace ArchitectsBlueprintMod.Core
                 throw new InvalidOperationException("Player is not valid");
             }
 
-            int index = player.whoAmI;
-            if (index < 0 || index >= _states.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(player), $"Invalid player index: {index}");
-            }
-
-            return _states[index] ??= new PlayerState();
+            return _gesture;
         }
     }
 }

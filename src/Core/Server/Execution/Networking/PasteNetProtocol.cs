@@ -182,14 +182,6 @@ namespace ArchitectsBlueprintMod.Core.Server
             };
 
             projection.SetPayload(payload);
-
-            Rectangle targetRect = Bounds;
-            if (payload.IsDefined && (Bounds.Width != payload.Width || Bounds.Height != payload.Height))
-            {
-                targetRect = new Rectangle(Bounds.X, Bounds.Y, payload.Width, payload.Height);
-            }
-
-            projection.Define(targetRect);
             return true;
         }
 
