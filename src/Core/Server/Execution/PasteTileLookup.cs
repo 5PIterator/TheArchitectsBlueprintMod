@@ -9,13 +9,17 @@ namespace TheArchitectsBlueprintMod.Core
 
     internal enum PasteSubject
     {
+        /// <summary>Placement intent from <see cref="PasteTile.PayloadTile"/>.</summary>
+        Payload,
+        /// <summary>Live world at the capture/source area; used for source-area cut clears only.</summary>
         Source,
-        Target
+        /// <summary>Live world at the paste destination (clear-at-target planning).</summary>
+        Target,
     }
 
     /// <summary>
-    /// One relative index in a paste: <see cref="InteractionEntry"/>, source payload tile, source-side and target-side <see cref="Tile"/> views, and coordinates. See <see cref="Projection"/>.
-    /// <see cref="GetTileForIdentify"/> selects which face <see cref="Layer.Identify"/> uses (source intent vs world to clear).
+    /// One relative index in a paste: <see cref="InteractionEntry"/>, payload intent, optional source-area world view, and target world view.
+    /// <see cref="GetTileForIdentify"/> selects which face <see cref="Layer.Identify"/> uses.
     /// </summary>
     internal readonly struct PasteTile(
         PayloadCell payloadCell,
@@ -29,7 +33,7 @@ namespace TheArchitectsBlueprintMod.Core
         public readonly PayloadCell PayloadCell = payloadCell;
         /// <summary>What is required to place <see cref="Target"/> (items, wiring, etc.) for the active layer.</summary>
         public readonly InteractionEntry Interaction = interaction;
-        /// <summary>Match/clear “intent” vs <see cref="Target"/> (empty after cut on source clears). Prefer <see cref="PayloadCell"/> for blueprint fields; materialize via <see cref="PasteTile.PayloadTile"/> only when an API needs <see cref="Tile"/>.</summary>
+        /// <summary>Live world at the source/capture area (<see cref="Projection.TryGetSourceTile"/>). Used for source-area cut clears, not placement intent.</summary>
         public readonly Tile Source = source;
         /// <summary>Target tile: live world tile in the target area at <see cref="World"/> (<see cref="Projection.TryGetTargetTile"/>).</summary>
         public readonly Tile Target = target;
@@ -44,9 +48,13 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Shorthand for <see cref="Relative"/>.Y (not world; use <see cref="World"/> for <see cref="Main.tile"/>).</summary>
         public int Y => Relative.Y;
 
-        /// <summary>Source (blueprint) or target (world) <see cref="Tile"/> for <see cref="Layer.Identify"/> (placement vs clear planning is chosen by the caller, not stored on the struct).</summary>
-        public static Tile GetTileForIdentify(in PasteTile tile, PasteSubject mode) =>
-            mode == PasteSubject.Source ? tile.Source : tile.Target;
+        /// <summary>Payload intent, source-area world, or destination world for <see cref="Layer.Identify"/>.</summary>
+        public static Tile GetTileForIdentify(in PasteTile tile, PasteSubject mode) => mode switch
+        {
+            PasteSubject.Payload => tile.PayloadTile,
+            PasteSubject.Source => tile.Source,
+            _ => tile.Target,
+        };
     }
 
     /// <summary>

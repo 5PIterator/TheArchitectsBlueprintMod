@@ -1,23 +1,23 @@
 #if DEBUG
 #nullable enable
 
+using System.Linq;
 using TheArchitectsBlueprintMod.Tests;
+using TheArchitectsBlueprintMod.Tests.Samples;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
 namespace TheArchitectsBlueprintMod.Core
 {
-    /// <summary>
-    /// Debug-only chat trigger for <see cref="PayloadIoTestScript"/>.
-    /// </summary>
+    /// <summary>Debug-only chat trigger for payload IO scenarios.</summary>
     public sealed class PayloadIoTestCommand : ModCommand
     {
         public override string Command => "tab.test.payload";
         public override CommandType Type => CommandType.Chat;
 
         public override string Usage => "/tab.test.payload clear|fill";
-        public override string Description => "[Debug] Runs payload fixture tests (implementation in tests/PayloadIoTestScript.cs).";
+        public override string Description => "[Debug] Runs payload_io_clear or payload_io_fill scenarios.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
@@ -46,7 +46,9 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            PayloadIoTestScript.Run(caller, pl, args[0]);
+            string slug = TestScenarioRegistry.Samples[0].Slug;
+            string scenarioId = args[0] == "clear" ? $"payload_io_clear_{slug}" : $"payload_io_fill_{slug}";
+            BlueprintTestRunner.RunScenario(new CommandTestReporter(caller), pl, scenarioId);
         }
     }
 }

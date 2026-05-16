@@ -1,4 +1,7 @@
 *.png
+tests/Results/latest.txt
+tests/Results/latest.json
+tests/Results/run_*
 obj/**
 obj/Debug/net8.0/TheArchitectsBlueprintMod.AssemblyInfo.cs
 obj/Release/net8.0/TheArchitectsBlueprintMod.AssemblyInfo.cs

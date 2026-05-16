@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
     internal sealed class FallBlockLayer : Layer
@@ -12,7 +14,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private FallBlockLayer() : base("FallBlock", LayerType.Block) { }
 
-        public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
+        public override bool Match(in PasteTile tile) => TileComparison.MatchForPaste(in tile);
 
         public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
         {
@@ -22,33 +24,43 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 !TileID.Sets.Falling[subjectTile.TileType])
                 return [];
 
+            // Cut-at-source: anchor Target is live capture; lookup.Target is the offset paste destination (often empty).
+            // Walk the column using lookup.Source (capture-area snapshot) and source-area world coords.
+            bool sourceCut = TileComparison.IsSourceCutIntent(in tile);
+            PasteSubject columnSubject = sourceCut ? PasteSubject.Source : identifySubject;
+
             var list = new List<Blueprint.BlueprintCell>();
             for (int dy = 0; ; dy--)
             {
-                var p = new Microsoft.Xna.Framework.Point(tile.Relative.X, tile.Relative.Y + dy);
+                var p = new Point(tile.Relative.X, tile.Relative.Y + dy);
                 if (!lookup.TryGetPasteTile(p, out PasteTile lookupTile))
                     break;
-                Tile t = PasteTile.GetTileForIdentify(in lookupTile, identifySubject);
+                Tile t = PasteTile.GetTileForIdentify(in lookupTile, columnSubject);
                 if (!t.HasTile ||
                     t.TileType >= TileLoader.TileCount ||
                     !TileID.Sets.Falling[t.TileType])
                     break;
-                list.Insert(0, new Blueprint.BlueprintCell(p, lookupTile.World, true));
+                list.Insert(0, new Blueprint.BlueprintCell(p, CellWorld(in tile, p, in lookupTile, sourceCut), true));
             }
             for (int dy = 1; ; dy++)
             {
-                var p = new Microsoft.Xna.Framework.Point(tile.Relative.X, tile.Relative.Y + dy);
+                var p = new Point(tile.Relative.X, tile.Relative.Y + dy);
                 if (!lookup.TryGetPasteTile(p, out PasteTile lookupTile))
                     break;
-                Tile t = PasteTile.GetTileForIdentify(in lookupTile, identifySubject);
+                Tile t = PasteTile.GetTileForIdentify(in lookupTile, columnSubject);
                 if (!t.HasTile ||
                     t.TileType >= TileLoader.TileCount ||
                     !TileID.Sets.Falling[t.TileType])
                     break;
-                list.Add(new Blueprint.BlueprintCell(p, lookupTile.World, true));
+                list.Add(new Blueprint.BlueprintCell(p, CellWorld(in tile, p, in lookupTile, sourceCut), true));
             }
             return list.Count > 0 ? list : [];
         }
+
+        private static Point CellWorld(in PasteTile anchor, Point relative, in PasteTile lookupTile, bool sourceCut) =>
+            sourceCut
+                ? new Point(anchor.World.X + relative.X - anchor.Relative.X, anchor.World.Y + relative.Y - anchor.Relative.Y)
+                : lookupTile.World;
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].HasTile;

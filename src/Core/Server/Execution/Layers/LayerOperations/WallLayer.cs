@@ -46,7 +46,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         }
 
         public override bool Match(in PasteTile tile) =>
-            tile.Source.WallType == tile.Target.WallType;
+            TileComparison.IsSourceCutIntent(in tile)
+                ? tile.Source.WallType == tile.Target.WallType
+                : tile.PayloadTile.WallType == tile.Target.WallType;
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile)
         {

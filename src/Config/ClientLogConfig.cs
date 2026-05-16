@@ -14,7 +14,7 @@ namespace TheArchitectsBlueprintMod.Config
 
         [Header("Logging")]
 
-        [DefaultValue(true)]
+        [DefaultValue(false)]
         public bool ShowDebugLogs;
 
         public override void OnLoaded()

@@ -24,12 +24,11 @@ namespace TheArchitectsBlueprintMod.Tests.Fixtures
             return true;
         }
 
-        internal static Rectangle TileRectFromPlayerCenter(Player player, int width, int height, int offsetYTiles = 0)
+        /// <summary>Tile rectangle centered on <see cref="Main.MouseWorld"/> so tests avoid the player body.</summary>
+        internal static Rectangle TileRectAtCursor(int width, int height)
         {
-            Point o = Terraria.Utils.ToTileCoordinates(player.Center);
-            if (offsetYTiles != 0)
-                o.Y -= offsetYTiles;
-            return new Rectangle(o.X, o.Y, width, height);
+            Point center = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+            return new Rectangle(center.X - width / 2, center.Y - height / 2, width, height);
         }
     }
 }

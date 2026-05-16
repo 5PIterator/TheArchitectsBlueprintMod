@@ -42,24 +42,25 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool Match(in PasteTile tile)
         {
-            if (tile.Source.HasTile != tile.Target.HasTile) return false;
-            if (tile.Source.WallType != tile.Target.WallType) return false;
-            if (tile.Source.LiquidAmount != tile.Target.LiquidAmount || tile.Source.LiquidType != tile.Target.LiquidType) return false;
-            if (tile.Source.RedWire != tile.Target.RedWire || tile.Source.BlueWire != tile.Target.BlueWire
-                || tile.Source.GreenWire != tile.Target.GreenWire || tile.Source.YellowWire != tile.Target.YellowWire)
+            Tile intent = TileComparison.IsSourceCutIntent(in tile) ? tile.Source : tile.PayloadTile;
+            if (intent.HasTile != tile.Target.HasTile) return false;
+            if (intent.WallType != tile.Target.WallType) return false;
+            if (intent.LiquidAmount != tile.Target.LiquidAmount || intent.LiquidType != tile.Target.LiquidType) return false;
+            if (intent.RedWire != tile.Target.RedWire || intent.BlueWire != tile.Target.BlueWire
+                || intent.GreenWire != tile.Target.GreenWire || intent.YellowWire != tile.Target.YellowWire)
                 return false;
-            if (tile.Source.HasActuator != tile.Target.HasActuator || tile.Source.IsActuated != tile.Target.IsActuated)
+            if (intent.HasActuator != tile.Target.HasActuator || intent.IsActuated != tile.Target.IsActuated)
                 return false;
-            if (tile.Source.TileColor != tile.Target.TileColor || tile.Source.WallColor != tile.Target.WallColor)
+            if (intent.TileColor != tile.Target.TileColor || intent.WallColor != tile.Target.WallColor)
                 return false;
-            if (tile.Source.BlockType != tile.Target.BlockType)
+            if (intent.BlockType != tile.Target.BlockType)
                 return false;
-            if (!tile.Source.HasTile)
+            if (!intent.HasTile)
                 return true;
 
-            return tile.Source.TileType == tile.Target.TileType
-                && tile.Source.TileFrameX == tile.Target.TileFrameX
-                && tile.Source.TileFrameY == tile.Target.TileFrameY;
+            return intent.TileType == tile.Target.TileType
+                && intent.TileFrameX == tile.Target.TileFrameX
+                && intent.TileFrameY == tile.Target.TileFrameY;
         }
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;

@@ -18,7 +18,7 @@
 		<EmbeddedResource Include="Content\Templates\SourceMaps\BiomeConfig.itr" />
 		<EmbeddedResource Include="Content\Templates\SourceMaps\BaseContext.itr" />
 		<EmbeddedResource Include="Content\Config\LayerOrder.json" LogicalName="TheArchitectsBlueprintMod.LayerOrder.json" />
-		<EmbeddedResource Include="tests\fixtures\TABTest.asmpayload.json" LogicalName="TheArchitectsBlueprintMod.TABTestFixture" />
+		<EmbeddedResource Include="tests\Samples\*.tab.json" />
 		<EmbeddedResource Include="tests\goldens\payload_clear_center.json" LogicalName="TheArchitectsBlueprintMod.GoldenPayloadClearCenter" />
 		<EmbeddedResource Include="tests\goldens\payload_fill_center.json" LogicalName="TheArchitectsBlueprintMod.GoldenPayloadFillCenter" />
 	</ItemGroup>

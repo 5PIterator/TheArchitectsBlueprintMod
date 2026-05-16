@@ -26,8 +26,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool Consume(in PasteTile tile, in PasteContext context) => true;
 
-        public override bool Match(in PasteTile tile) =>
-            tile.Source.LiquidAmount == tile.Target.LiquidAmount && tile.Source.LiquidType == tile.Target.LiquidType;
+        public override bool Match(in PasteTile tile)
+        {
+            if (TileComparison.IsSourceCutIntent(in tile))
+                return tile.Source.LiquidAmount == tile.Target.LiquidAmount && tile.Source.LiquidType == tile.Target.LiquidType;
+            Tile intent = tile.PayloadTile;
+            return intent.LiquidAmount == tile.Target.LiquidAmount && intent.LiquidType == tile.Target.LiquidType;
+        }
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
 

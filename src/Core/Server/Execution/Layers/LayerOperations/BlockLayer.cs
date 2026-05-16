@@ -16,7 +16,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private BlockLayer() : base("Block", LayerType.Block) { }
 
-        public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
+        public override bool Match(in PasteTile tile) => TileComparison.MatchForPaste(in tile);
 
         /// <summary>At most one <see cref="Blueprint.BlueprintCell"/> (this relative only). No multi-cell frame expansion.</summary>
         public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject) =>
@@ -39,14 +39,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
-            if (!IsBlock(tile.Source)) return true;
+            if (!IsBlock(tile.PayloadTile)) return true;
             return PlacementValidSingle(in tile, in context);
         }
 
         public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
             if (!context.NeedsItems || context.Items is null || context.CheatSweep) return true;
-            if (!IsBlock(tile.Source)) return true;
+            if (!IsBlock(tile.PayloadTile)) return true;
             return HasRequiredItemsSingle(in tile, in context);
         }
 
@@ -64,10 +64,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile)
         {
-            Tile sourceTile = tile.Source;
-            if (!sourceTile.HasTile) return null;
+            Tile intent = tile.PayloadTile;
+            if (!intent.HasTile) return null;
             int style = tile.PayloadCell.Detail.Style;
-            return InteractionMapProvider.GetTileItemIds(sourceTile.TileType, style);
+            return InteractionMapProvider.GetTileItemIds(intent.TileType, style);
         }
 
         public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context) =>
@@ -101,13 +101,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         private static bool PlacementValidSingle(in PasteTile tile, in PasteContext context)
         {
             int x = tile.World.X, y = tile.World.Y;
-            if (!tile.Source.HasTile) return true;
+            Tile intent = tile.PayloadTile;
+            if (!intent.HasTile) return true;
 
-            ushort tileType = tile.Source.TileType;
+            ushort tileType = intent.TileType;
             if (tileType >= TileLoader.TileCount) return false;
 
-            int style = 0, alternate = 0;
-            TileObjectData.GetTileInfo(tile.Source, ref style, ref alternate);
+            int style = tile.PayloadCell.Detail.Style;
+            int alternate = tile.PayloadCell.Detail.Alternate;
             int? baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
             Tile targetTile = Main.tile[x, y];
 
@@ -130,13 +131,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         private static bool HasRequiredItemsSingle(in PasteTile tile, in PasteContext context)
         {
             int x = tile.World.X, y = tile.World.Y;
-            if (!tile.Source.HasTile) return true;
+            Tile intent = tile.PayloadTile;
+            if (!intent.HasTile) return true;
 
-            ushort tileType = tile.Source.TileType;
+            ushort tileType = intent.TileType;
             if (tileType >= TileLoader.TileCount) return true;
 
-            int style = 0, alternate = 0;
-            TileObjectData.GetTileInfo(tile.Source, ref style, ref alternate);
+            int style = tile.PayloadCell.Detail.Style;
+            int alternate = tile.PayloadCell.Detail.Alternate;
             int? baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
             Tile targetTile = Main.tile[x, y];
 

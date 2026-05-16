@@ -32,12 +32,12 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public LayerType LayerType { get; } = layerType;
 
         /// <summary>
-        /// Whether the target already matches placement intent (<see cref="PasteTile.Source"/> vs <see cref="PasteTile.Target"/>; cut clears use empty <see cref="PasteTile.Source"/>).
+        /// Whether the target already matches intent (<see cref="PasteTile.PayloadTile"/> vs <see cref="PasteTile.Target"/>; source cut uses empty <see cref="PasteTile.Source"/> vs live source).
         /// </summary>
         public abstract bool Match(in PasteTile tile);
 
         /// <summary>
-        /// Classifies tiles for this layer. Use <see cref="PasteTile.GetTileForIdentify"/> with <paramref name="identifySubject"/> (blueprint <see cref="PasteTile.Source"/> when placing, live <see cref="PasteTile.Target"/> when clearing).
+        /// Classifies tiles for this layer. Use <see cref="PasteTile.GetTileForIdentify"/> with <paramref name="identifySubject"/> (<see cref="PasteSubject.Payload"/> when placing, <see cref="PasteSubject.Target"/> when clearing at destination).
         /// </summary>
         public abstract IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject);
 

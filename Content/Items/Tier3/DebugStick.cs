@@ -8,6 +8,9 @@ using Terraria.ModLoader.IO;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.Utils;
+#if DEBUG
+using TheArchitectsBlueprintMod.Tests;
+#endif
 
 namespace TheArchitectsBlueprintMod.Content.Items
 {
@@ -22,6 +25,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 		{
 			ToggleProjectionCutSource = 0,
 			StepPaste = 1,
+			RunBlueprintTests = 2,
 		}
 
 		private DebugStickAction _mode = DebugStickAction.ToggleProjectionCutSource;
@@ -99,6 +103,13 @@ namespace TheArchitectsBlueprintMod.Content.Items
 					"STP",
 					onSelect: () => _mode = DebugStickAction.StepPaste,
 					isSelected: () => _mode == DebugStickAction.StepPaste),
+#if DEBUG
+				new ActionWheelEntry(
+					"run_tests",
+					"TST",
+					onSelect: () => _mode = DebugStickAction.RunBlueprintTests,
+					isSelected: () => _mode == DebugStickAction.RunBlueprintTests),
+#endif
 			];
 		}
 
@@ -113,6 +124,11 @@ namespace TheArchitectsBlueprintMod.Content.Items
 				case DebugStickAction.StepPaste:
 					BeginPasteStepSession(player, cursorTile);
 					return;
+#if DEBUG
+				case DebugStickAction.RunBlueprintTests:
+					BlueprintTestRunner.RunAll(player, (msg, color) => Main.NewText(msg, color));
+					return;
+#endif
 				default:
 					throw new ArgumentOutOfRangeException(nameof(_mode), _mode, "Unknown debug stick action.");
 			}

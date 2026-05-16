@@ -34,9 +34,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool Consume(in PasteTile tile, in PasteContext context) => true;
 
-        public override bool Match(in PasteTile tile) =>
-            tile.Source.TileColor == tile.Target.TileColor
-            && tile.Source.WallColor == tile.Target.WallColor;
+        public override bool Match(in PasteTile tile)
+        {
+            if (TileComparison.IsSourceCutIntent(in tile))
+                return tile.Source.TileColor == tile.Target.TileColor && tile.Source.WallColor == tile.Target.WallColor;
+            Tile intent = tile.PayloadTile;
+            return intent.TileColor == tile.Target.TileColor && intent.WallColor == tile.Target.WallColor;
+        }
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
 

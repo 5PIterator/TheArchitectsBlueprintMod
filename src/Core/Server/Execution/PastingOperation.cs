@@ -216,7 +216,7 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             PasteTile anchorPasteTile = Lookup.PasteTiles[0, 0];
-            IReadOnlyList<Blueprint.BlueprintCell> identified = sweep.Identify(in anchorPasteTile, in Lookup, PasteSubject.Source);
+            IReadOnlyList<Blueprint.BlueprintCell> identified = sweep.Identify(in anchorPasteTile, in Lookup, PasteSubject.Payload);
             if (identified.Count == 0)
             {
                 ClearAllTaskQueues();
@@ -727,23 +727,19 @@ namespace TheArchitectsBlueprintMod.Core
             int h = size.Y;
             var list = new PasteTile[w, h];
 
-            // For each source-relative tile, resolve the payload, source intent, and target world tile, along with interaction metadata for layer logic.
+            // Payload + target are required; source-area world is optional (imported payloads may not mirror capture).
 
             for (int x = 0; x < w; x++)
             {
                 for (int y = 0; y < h; y++)
                 {
                     Point rel = new(x, y);
-                    // Validate payload
                     if (!Projection.Payload.TryGetCell(rel, out PayloadCell cell) || cell.IsEmpty)
                         continue;
-                    // Validate source.
-                    if (!Projection.TryGetSourceTile(rel, out Tile sourceTile))
-                        continue;
-                    // Validate target.
                     if (!Projection.TryGetTargetTile(rel, out Tile targetTile))
                         continue;
 
+                    Projection.TryGetSourceTile(rel, out Tile sourceTile);
                     Point world = Projection.RelativeToWorld(rel);
                     InteractionEntry interaction = ResolveInteraction(cell.ToTile());
                     list[x, y] = new PasteTile(
@@ -798,7 +794,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
 
             Point world = new(Projection.SourceArea.X + rel.X, Projection.SourceArea.Y + rel.Y);
-            Tile clearedIntent = new Tile();
+            Tile clearedIntent = default;
             tile = new PasteTile(
                 payloadCell: baseTile.PayloadCell,
                 interaction: baseTile.Interaction,
@@ -850,9 +846,9 @@ namespace TheArchitectsBlueprintMod.Core
             HashSet<Point>[] queuedPlaceByLayer,
             HashSet<Point> allowedPlaceRelatives)
         {
-            // --- Identify place candidates from the source payload / selection intent.
+            // --- Identify place candidates from the payload intent.
 
-            var identifiedLayers = LayerSystem.Identify(in tile, in lookup, Pipeline, planningContext, PasteConfig, PasteSubject.Source);
+            var identifiedLayers = LayerSystem.Identify(in tile, in lookup, Pipeline, planningContext, PasteConfig, PasteSubject.Payload);
             for (int i = 0; i < identifiedLayers.Count; i++)
             {
                 var identified = identifiedLayers[i];
@@ -899,7 +895,15 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
 
             PasteTileResolver resolver = useSourceAreaWorld ? TryGetSourceAreaPasteTile : lookup.TryGetPasteTile;
-            var tiles = CreatePasteTiles(layer, clamped, queuedClearByLayer[layerIndex], resolver, forClearQueue: true, in lookup, in identifyContext);
+            var tiles = CreatePasteTiles(
+                layer,
+                clamped,
+                queuedClearByLayer[layerIndex],
+                resolver,
+                forClearQueue: true,
+                skipMatchForSourceCut: useSourceAreaWorld,
+                in lookup,
+                in identifyContext);
             if (tiles.Count > 0)
             {
                 clearTasks[layerIndex].Enqueue(new ClearingTask(layer, tiles));
@@ -923,7 +927,15 @@ namespace TheArchitectsBlueprintMod.Core
             if (layerIndex < 0)
                 return;
 
-            var tiles = CreatePasteTiles(layer, identified, queuedPlaceByLayer[layerIndex], lookup.TryGetPasteTile, forClearQueue: false, in lookup, in schedulingContext);
+            var tiles = CreatePasteTiles(
+                layer,
+                identified,
+                queuedPlaceByLayer[layerIndex],
+                lookup.TryGetPasteTile,
+                forClearQueue: false,
+                skipMatchForSourceCut: false,
+                in lookup,
+                in schedulingContext);
             if (tiles.Count > 0)
             {
                 placeTasks[layerIndex].Enqueue(new PlacingTask(layer, tiles));
@@ -967,6 +979,7 @@ namespace TheArchitectsBlueprintMod.Core
             HashSet<Point> queuedWorldTiles,
             PasteTileResolver resolver,
             bool forClearQueue,
+            bool skipMatchForSourceCut,
             in PasteTileLookup lookup,
             in PasteContext context)
         {
@@ -978,7 +991,8 @@ namespace TheArchitectsBlueprintMod.Core
                 Point frameRel = identified[i].Relative;
                 if (!resolver(frameRel, out PasteTile pasteTile))
                     continue;
-                if (layer.Match(in pasteTile))
+                // Source-area cut: payload still describes the block, so payload-vs-target Match would skip the clear.
+                if (!skipMatchForSourceCut && layer.Match(in pasteTile))
                     continue;
                 if (forClearQueue && !layer.CanClear(in pasteTile, in lookup, in context))
                     continue;

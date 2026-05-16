@@ -49,12 +49,21 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return TileOperations.Consume(in tile, in context);
         }
 
-        public override bool Match(in PasteTile tile) =>
-            tile.Source.RedWire == tile.Target.RedWire
-            && tile.Source.BlueWire == tile.Target.BlueWire
-            && tile.Source.GreenWire == tile.Target.GreenWire
-            && tile.Source.YellowWire == tile.Target.YellowWire
-            && tile.Source.HasActuator == tile.Target.HasActuator;
+        public override bool Match(in PasteTile tile)
+        {
+            if (TileComparison.IsSourceCutIntent(in tile))
+                return tile.Source.RedWire == tile.Target.RedWire
+                    && tile.Source.BlueWire == tile.Target.BlueWire
+                    && tile.Source.GreenWire == tile.Target.GreenWire
+                    && tile.Source.YellowWire == tile.Target.YellowWire
+                    && tile.Source.HasActuator == tile.Target.HasActuator;
+            Tile intent = tile.PayloadTile;
+            return intent.RedWire == tile.Target.RedWire
+                && intent.BlueWire == tile.Target.BlueWire
+                && intent.GreenWire == tile.Target.GreenWire
+                && intent.YellowWire == tile.Target.YellowWire
+                && intent.HasActuator == tile.Target.HasActuator;
+        }
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile) =>
             DetailOperations.GetMechanismItems(in tile.PayloadCell);

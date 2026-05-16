@@ -13,8 +13,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public static bool IsUnknownTileType(ushort tileType) => tileType >= TileLoader.TileCount;
 
-        public override bool Match(in PasteTile tile) =>
-            tile.Source.HasTile == tile.Target.HasTile && (!tile.Source.HasTile || tile.Source.TileType == tile.Target.TileType);
+        public override bool Match(in PasteTile tile)
+        {
+            if (TileComparison.IsSourceCutIntent(in tile))
+                return tile.Source.HasTile == tile.Target.HasTile && (!tile.Source.HasTile || tile.Source.TileType == tile.Target.TileType);
+            Tile intent = tile.PayloadTile;
+            return intent.HasTile == tile.Target.HasTile && (!intent.HasTile || intent.TileType == tile.Target.TileType);
+        }
 
         public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
         {

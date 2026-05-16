@@ -30,10 +30,10 @@ namespace TheArchitectsBlueprintMod.Tests.Fixtures
             return new TestBlueprintChain(player, Rectangle.Empty);
         }
 
-        /// <summary>Set world tile bounds from the player’s tile position (optional vertical offset in tiles).</summary>
-        internal TestBlueprintChain WithTileBoundsFromPlayerCenter(int width, int height, int offsetYTiles = 0)
+        /// <summary>Set world tile bounds centered on the cursor tile.</summary>
+        internal TestBlueprintChain WithTileBoundsAtCursor(int width, int height)
         {
-            Rectangle r = SelectionFixture.TileRectFromPlayerCenter(Player, width, height, offsetYTiles);
+            Rectangle r = SelectionFixture.TileRectAtCursor(width, height);
             return new TestBlueprintChain(Player, r);
         }
 
@@ -41,13 +41,13 @@ namespace TheArchitectsBlueprintMod.Tests.Fixtures
         internal TestBlueprintChain WithWorldTileBounds(Rectangle worldTileRectangle) =>
             new(Player, worldTileRectangle);
 
-        /// <summary>Set bounds to match a payload’s width and height anchored at the player’s tile.</summary>
-        internal TestBlueprintChain WithTileBoundsFromPlayerForPayload(Payload payload, int offsetYTiles = 0)
+        /// <summary>Set bounds to match a payload’s width and height, centered on the cursor tile.</summary>
+        internal TestBlueprintChain WithTileBoundsAtCursorForPayload(Payload payload)
         {
             ArgumentNullException.ThrowIfNull(payload);
             if (!payload.IsDefined)
                 throw new ArgumentException("Payload is not defined.", nameof(payload));
-            return WithTileBoundsFromPlayerCenter(payload.Width, payload.Height, offsetYTiles);
+            return WithTileBoundsAtCursor(payload.Width, payload.Height);
         }
 
         internal bool HasBounds => !WorldTileBounds.IsEmpty;

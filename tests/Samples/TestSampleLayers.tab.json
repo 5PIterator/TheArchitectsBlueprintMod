@@ -1,0 +1,2958 @@
+﻿{
+    "metadata":  {
+                     "format":  "TheArchitectsBlueprintMod.Payload",
+                     "schemaVersion":  1,
+                     "projectName":  "TABLayerSample",
+                     "createdUtc":  "2026-05-15T00:00:00Z",
+                     "modVersion":  "0.0.0.0",
+                     "width":  11,
+                     "height":  9
+                 },
+    "payload":  [
+                    [
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        }
+                    ],
+                    [
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  53
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  2,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  53
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  18,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  2,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  53
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  144,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  2,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  true,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  true,
+                                                 "BlueWire":  true,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        }
+                    ],
+                    [
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  2
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  36,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  1,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  4
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  4
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  18,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  135
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        }
+                    ],
+                    [
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  33
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  33
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  18,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  true,
+                                                 "YellowWire":  true,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        }
+                    ],
+                    [
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+                                             "Data":  0,
+                                             "IsTileInvisible":  false,
+                                             "IsWallInvisible":  false,
+                                             "IsTileFullbright":  false,
+                                             "IsWallFullbright":  false
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  7,
+                                                 "WallColor":  8,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  42
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  18,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  2,
+                                                 "WallFrameX":  180,
+                                                 "WallFrameY":  108,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        }
+                    ],
+                    [
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  103
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  246
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  108,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  true,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  3,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  59
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  72,
+                                                 "TileFrameY":  72,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  2,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        }
+                    ],
+                    [
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  103
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  18,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  246
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  18,
+                                                 "TileFrameY":  108,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  3,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  60
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  54,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        }
+                    ],
+                    [
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  103
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  36,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  255,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  1,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        }
+                    ],
+                    [
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  330
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  144,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  2,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  330
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  144,
+                                                 "TileFrameY":  54,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  2,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  true,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  1
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        }
+                    ],
+                    [
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  1
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  0,
+                                                 "TileFrameY":  0,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  330
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  90,
+                                                 "TileFrameY":  18,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  1,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  246
+                                         },
+                            "WallType":  {
+                                             "Type":  4
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "TileFrameX":  36,
+                                                 "TileFrameY":  108,
+                                                 "HasTile":  true,
+                                                 "IsActuated":  false,
+                                                 "HasActuator":  false,
+                                                 "TileColor":  0,
+                                                 "WallColor":  0,
+                                                 "TileFrameNumber":  0,
+                                                 "WallFrameNumber":  0,
+                                                 "WallFrameX":  0,
+                                                 "WallFrameY":  0,
+                                                 "IsHalfBlock":  false,
+                                                 "Slope":  0,
+                                                 "WireData":  0,
+                                                 "RedWire":  false,
+                                                 "BlueWire":  false,
+                                                 "GreenWire":  false,
+                                                 "YellowWire":  false,
+                                                 "NonFrameBits":  1,
+                                                 "BlockType":  0
+                                             },
+                            "TileStyle":  3,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        }
+                    ],
+                    [
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        },
+                        {
+                            "TileType":  {
+                                             "Type":  0
+                                         },
+                            "WallType":  {
+                                             "Type":  0
+                                         },
+                            "LiquidData":  {
+                                               "Amount":  0,
+                                               "LiquidType":  0,
+                                               "SkipLiquid":  false,
+                                               "CheckingLiquid":  false
+                                           },
+                            "TWBIData":  {
+
+                                         },
+                            "TWWStateData":  {
+                                                 "HasTile":  false
+                                             },
+                            "TileStyle":  0,
+                            "TileAlternate":  0
+                        }
+                    ]
+                ]
+}

@@ -34,8 +34,8 @@ namespace TheArchitectsBlueprintMod.Config
         /// <summary>
         /// Target tiles processed per paste step. The effective value is at most the server's maximum.
         /// </summary>
-        [DefaultValue(5)]
-        [Range(1, 512)]
-        public int PasteStepSize = 5;
+        [DefaultValue(1)]
+        [Range(1, 15)]
+        public int PasteStepSize = 1;
     }
 }

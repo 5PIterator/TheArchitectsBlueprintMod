@@ -32,9 +32,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool Consume(in PasteTile tile, in PasteContext context) => true;
 
-        public override bool Match(in PasteTile tile) =>
-            tile.Source.IsActuated == tile.Target.IsActuated
-            && tile.Source.BlockType == tile.Target.BlockType;
+        public override bool Match(in PasteTile tile)
+        {
+            if (TileComparison.IsSourceCutIntent(in tile))
+                return tile.Source.IsActuated == tile.Target.IsActuated && tile.Source.BlockType == tile.Target.BlockType;
+            Tile intent = tile.PayloadTile;
+            return intent.IsActuated == tile.Target.IsActuated && intent.BlockType == tile.Target.BlockType;
+        }
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
 

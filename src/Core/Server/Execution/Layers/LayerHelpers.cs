@@ -17,24 +17,45 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
     internal static class TileComparison
     {
-        public static bool MatchTileType(in PasteTile tile)
+        /// <summary>Cut-at-source tiles use an empty <see cref="PasteTile.Source"/> and live <see cref="PasteTile.Target"/> at the capture area.</summary>
+        public static bool IsSourceCutIntent(in PasteTile tile) =>
+            tile.PayloadCell.HasTile() && !tile.Source.HasTile && tile.Target.HasTile;
+
+        public static bool MatchForPaste(in PasteTile tile) =>
+            IsSourceCutIntent(in tile) ? MatchSourceToTargetTileType(in tile) : MatchPayloadToTargetTileType(in tile);
+
+        public static bool MatchPayloadToTargetTileType(in PasteTile tile)
         {
-            if (tile.PayloadCell.HasTile() != tile.Target.HasTile) return false;
-            // No source "intent" (e.g. cut-source Clear uses empty Source; destination clears use the capture).
-            // Matched = no block to reconcile only when the target is also free of a block, not "vacuously true" while
-            // Target still has a tile (which would skip queuing a clear for source cut and similar).
-            if (!tile.Source.HasTile)
-                return !tile.Target.HasTile;
+            Tile intent = tile.PayloadTile;
+            if (intent.HasTile != tile.Target.HasTile) return false;
+            if (!intent.HasTile) return !tile.Target.HasTile;
+            return intent.TileType == tile.Target.TileType;
+        }
+
+        public static bool MatchSourceToTargetTileType(in PasteTile tile)
+        {
+            if (!tile.Source.HasTile) return !tile.Target.HasTile;
             return tile.Source.TileType == tile.Target.TileType;
         }
 
+        public static bool MatchTileType(in PasteTile tile) => MatchForPaste(in tile);
+
         public static bool MatchExact(in PasteTile tile)
         {
-            if (!MatchTileType(tile)) return false;
-            if (!tile.Source.HasTile) return true;
-            return tile.Source.TileType == tile.Target.TileType
-                && tile.Source.TileFrameX == tile.Target.TileFrameX
-                && tile.Source.TileFrameY == tile.Target.TileFrameY;
+            if (!MatchForPaste(in tile)) return false;
+            if (IsSourceCutIntent(in tile))
+            {
+                if (!tile.Source.HasTile) return true;
+                return tile.Source.TileType == tile.Target.TileType
+                    && tile.Source.TileFrameX == tile.Target.TileFrameX
+                    && tile.Source.TileFrameY == tile.Target.TileFrameY;
+            }
+
+            Tile intent = tile.PayloadTile;
+            if (!intent.HasTile) return true;
+            return intent.TileType == tile.Target.TileType
+                && intent.TileFrameX == tile.Target.TileFrameX
+                && intent.TileFrameY == tile.Target.TileFrameY;
         }
     }
 

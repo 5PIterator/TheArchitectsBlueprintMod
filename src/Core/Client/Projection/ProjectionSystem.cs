@@ -194,9 +194,17 @@ namespace TheArchitectsBlueprintMod.Core
                 // If projection is defined, draw the bounds
                 if (!proj.Area.IsEmpty)
                 {
+                    string k = proj.OverlayInstanceKey.ToString();
+
+                    // Sprites first so projection tint/borders (registered after) stay visible on top.
+                    if (!proj.IsLocked && proj.HasPayload)
+                    {
+                        Projection capture = proj;
+                        OverlaySystem.RegScreen($"{k}:sprites", () => ProjectionPayloadPreview.Draw(capture), family);
+                    }
+
                     // CUT vs COPY: border color. Locked: outline only (transparent interior); unlocked: border + tinted fill.
                     Color c = proj.CutSource ? ArchitectVisualPalette.ProjectionCutColor : ArchitectVisualPalette.ProjectionCopyColor;
-                    string k = proj.OverlayInstanceKey.ToString();
                     if (proj.IsLocked)
                         OverlaySystem.RegTileBorder($"{k}:b", proj.Area, c, 2, family);
                     else
