@@ -111,13 +111,15 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             Point origin = new(cursorTile.X - state.DragOffsetFromCursor.X, cursorTile.Y - state.DragOffsetFromCursor.Y);
-            state.DraggingProjection.MoveTo(origin);
+            state.DraggingProjection.MoveTo(origin, isDragFrame: true);
         }
 
         /// <summary>Ends the current left-button COPY gesture (release).</summary>
         public void EndGesture(Player player)
         {
             GestureState state = GetGesture(player);
+            Projection? dragged = state.DraggingProjection;
+            dragged?.CommitDragRefresh();
             state.Mode = Mode.None;
             state.DragKind = DragKind.None;
             state.DraggingProjection = null;

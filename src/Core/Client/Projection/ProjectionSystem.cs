@@ -62,14 +62,14 @@ namespace TheArchitectsBlueprintMod.Core
         /// Creates a projection from a selection; returns null on failure.
         /// Adds the projection to the player's list and sets <see cref="ActiveProjection"/>.
         /// </summary>
-        public Projection NewProjection(Player player, Selection selection)
+        public Projection NewProjection(Player player, Selection selection, bool captureWorldPayload = true)
         {
             ArgumentNullException.ThrowIfNull(selection);
 
             var projection = new Projection(player.whoAmI, selection, cutSource: false);
 
-            // Load the payload from the world
-            projection.LoadPayloadFromWorld();
+            if (captureWorldPayload)
+                projection.LoadPayloadFromWorld();
             BlueprintSystem.RegisterBlueprint(projection);
             projection.UpdateOverlay();
             if (TABLog.IsDebugEnabled)
@@ -197,10 +197,13 @@ namespace TheArchitectsBlueprintMod.Core
                     string k = proj.OverlayInstanceKey.ToString();
 
                     // Sprites first so projection tint/borders (registered after) stay visible on top.
-                    if (!proj.IsLocked && proj.HasPayload)
+                    bool skipSpritePreview = ModContent.GetInstance<ProjectionControl>().IsActivelyDragging(player)
+                        && proj.HasPayload
+                        && proj.Payload.Width * proj.Payload.Height > 50_000;
+                    if (!proj.IsLocked && proj.HasPayload && !skipSpritePreview)
                     {
                         Projection capture = proj;
-                        OverlaySystem.RegScreen($"{k}:sprites", () => ProjectionPayloadPreview.Draw(capture), family);
+                        OverlaySystem.RegScreen($"{k}:sprites", () => PayloadPreview.Draw(capture), family);
                     }
 
                     // CUT vs COPY: border color. Locked: outline only (transparent interior); unlocked: border + tinted fill.

@@ -12,9 +12,9 @@ using TheArchitectsBlueprintMod.Core;
 namespace TheArchitectsBlueprintMod.UI
 {
     /// <summary>
-    /// Draws semi-transparent tile/wall/liquid sprites for an unlocked projection payload (PaintTools-style preview).
+    /// Draws semi-transparent tile/wall/liquid sprites for payload previews (in-world projection overlay and UI thumbnails).
     /// </summary>
-    internal static class ProjectionPayloadPreview
+    internal static class PayloadPreview
     {
         private const int TilePixelSize = 16;
         private static readonly Color PreviewTint = new(255, 255, 255, 160);
@@ -38,64 +38,117 @@ namespace TheArchitectsBlueprintMod.UI
                 return;
 
             Vector2 origin = new Vector2(proj.Area.X * TilePixelSize, proj.Area.Y * TilePixelSize) - Main.screenPosition;
-            SpriteBatch sb = Main.spriteBatch;
+            bool IncludeCell(Point p) => TryGetIncludedCell(proj, payload, p, out _);
 
-            sb.End();
-            sb.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                SamplerState.PointClamp,
-                DepthStencilState.None,
-                RasterizerState.CullCounterClockwise,
-                null,
-                Main.GameViewMatrix.ZoomMatrix);
-
-            // Walls use 32×32 sprites centered on the cell and bleed into neighbors; draw all walls
-            // before any tiles so corner overhang stays behind adjacent block sprites.
-            for (int y = minY; y < maxY; y++)
-            {
-                for (int x = minX; x < maxX; x++)
-                {
-                    if (!TryGetIncludedCell(proj, payload, x, y, out PayloadCell cell))
-                        continue;
-                    DrawWall(sb, cell, origin, x, y);
-                }
-            }
-
-            for (int y = minY; y < maxY; y++)
-            {
-                for (int x = minX; x < maxX; x++)
-                {
-                    if (!TryGetIncludedCell(proj, payload, x, y, out PayloadCell cell))
-                        continue;
-                    DrawLiquid(sb, cell, origin, x, y);
-                }
-            }
-
-            for (int y = minY; y < maxY; y++)
-            {
-                for (int x = minX; x < maxX; x++)
-                {
-                    if (!TryGetIncludedCell(proj, payload, x, y, out PayloadCell cell))
-                        continue;
-                    DrawTile(sb, cell, origin, x, y);
-                }
-            }
-
-            sb.End();
-            sb.Begin(
-                SpriteSortMode.Deferred,
-                BlendState.AlphaBlend,
-                SamplerState.LinearClamp,
-                DepthStencilState.None,
-                RasterizerState.CullCounterClockwise,
-                null,
-                Main.UIScaleMatrix);
+            DrawPayloadRegion(Main.spriteBatch, payload, minX, maxX, minY, maxY, origin, 1f, IncludeCell);
         }
 
-        private static bool TryGetIncludedCell(Projection proj, Payload payload, int x, int y, out PayloadCell cell)
+        /// <summary>Bakes a square preview texture for UI thumbnails. Caller must Dispose the result.</summary>
+        public static Texture2D? MakeThumbnail(Payload payload, int size = 100)
         {
-            var relative = new Point(x, y);
+            if (!payload.IsDefined)
+                return null;
+
+            int w = payload.Width;
+            int h = payload.Height;
+            if (w <= 0 || h <= 0)
+                return null;
+
+            ComputeThumbnailFit(w * TilePixelSize, h * TilePixelSize, size, out float scale, out Vector2 offset);
+
+            var renderTarget = new RenderTarget2D(Main.graphics.GraphicsDevice, size, size);
+            Main.instance.GraphicsDevice.SetRenderTarget(renderTarget);
+            Main.instance.GraphicsDevice.Clear(Color.Transparent);
+            Main.spriteBatch.Begin();
+
+            DrawPayloadRegion(Main.spriteBatch, payload, 0, w, 0, h, offset, scale);
+
+            Main.spriteBatch.End();
+            Main.instance.GraphicsDevice.SetRenderTarget(null);
+
+            var mergedTexture = new Texture2D(Main.graphics.GraphicsDevice, size, size);
+            var content = new Color[size * size];
+            renderTarget.GetData(content);
+            mergedTexture.SetData(content);
+            renderTarget.Dispose();
+            return mergedTexture;
+        }
+
+        private static void ComputeThumbnailFit(int actualPixelWidth, int actualPixelHeight, int desiredSize, out float scale, out Vector2 offset)
+        {
+            scale = 1f;
+            offset = Vector2.Zero;
+
+            if (actualPixelWidth <= desiredSize && actualPixelHeight <= desiredSize)
+                return;
+
+            if (actualPixelHeight > actualPixelWidth)
+            {
+                scale = (float)desiredSize / actualPixelHeight;
+                offset.X = (desiredSize - actualPixelWidth * scale) / 2f;
+            }
+            else
+            {
+                scale = (float)desiredSize / actualPixelWidth;
+                offset.Y = (desiredSize - actualPixelHeight * scale) / 2f;
+            }
+
+            offset /= scale;
+        }
+
+        private static void DrawPayloadRegion(
+            SpriteBatch sb,
+            Payload payload,
+            int minX,
+            int maxX,
+            int minY,
+            int maxY,
+            Vector2 position,
+            float scale,
+            Func<Point, bool>? includeCell = null)
+        {
+            for (int y = minY; y < maxY; y++)
+            {
+                for (int x = minX; x < maxX; x++)
+                {
+                    var point = new Point(x, y);
+                    if (includeCell is not null && !includeCell(point))
+                        continue;
+                    if (!payload.TryGetCell(point, out PayloadCell cell) || cell.IsEmpty)
+                        continue;
+                    DrawWall(sb, cell, position, x, y, scale);
+                }
+            }
+
+            for (int y = minY; y < maxY; y++)
+            {
+                for (int x = minX; x < maxX; x++)
+                {
+                    var point = new Point(x, y);
+                    if (includeCell is not null && !includeCell(point))
+                        continue;
+                    if (!payload.TryGetCell(point, out PayloadCell cell) || cell.IsEmpty)
+                        continue;
+                    DrawLiquid(sb, cell, position, x, y, scale);
+                }
+            }
+
+            for (int y = minY; y < maxY; y++)
+            {
+                for (int x = minX; x < maxX; x++)
+                {
+                    var point = new Point(x, y);
+                    if (includeCell is not null && !includeCell(point))
+                        continue;
+                    if (!payload.TryGetCell(point, out PayloadCell cell) || cell.IsEmpty)
+                        continue;
+                    DrawTile(sb, cell, position, x, y, scale);
+                }
+            }
+        }
+
+        private static bool TryGetIncludedCell(Projection proj, Payload payload, Point relative, out PayloadCell cell)
+        {
             if (!proj.TryGetTileByRelative(relative, out Blueprint.BlueprintCell tile) || !tile.Included
                 || !payload.TryGetCell(relative, out cell) || cell.IsEmpty)
             {
@@ -106,7 +159,7 @@ namespace TheArchitectsBlueprintMod.UI
             return true;
         }
 
-        private static void DrawWall(SpriteBatch sb, PayloadCell cell, Vector2 origin, int x, int y)
+        private static void DrawWall(SpriteBatch sb, PayloadCell cell, Vector2 position, int x, int y, float scale)
         {
             if (cell.Wall.Type == 0 || cell.Paint.WallInvisible)
                 return;
@@ -116,11 +169,11 @@ namespace TheArchitectsBlueprintMod.UI
             Texture2D textureWall = GetWallDrawTexture(wallType, cell.Paint.WallColor);
             int wallFrame = Main.wallFrame[wallType] * 180;
             var source = new Rectangle(cell.Wall.FrameX, cell.Wall.FrameY + wallFrame, 32, 32);
-            Vector2 pos = origin + new Vector2(x * TilePixelSize - 8, y * TilePixelSize - 8);
-            sb.Draw(textureWall, pos, source, PreviewTint);
+            Vector2 pos = position + new Vector2(x * TilePixelSize - 8, y * TilePixelSize - 8);
+            sb.Draw(textureWall, pos * scale, source, PreviewTint, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
-        private static void DrawLiquid(SpriteBatch sb, PayloadCell cell, Vector2 origin, int x, int y)
+        private static void DrawLiquid(SpriteBatch sb, PayloadCell cell, Vector2 position, int x, int y, float scale)
         {
             if (cell.Liquid.Amount <= 14)
                 return;
@@ -133,11 +186,11 @@ namespace TheArchitectsBlueprintMod.UI
             };
             int waterSize = (cell.Liquid.Amount + 1) / 16;
             var source = new Rectangle(16, 48 + 16 - waterSize, 16, waterSize);
-            Vector2 pos = origin + new Vector2(x * TilePixelSize, y * TilePixelSize + (TilePixelSize - waterSize));
-            sb.Draw(textureWater, pos, source, PreviewTint);
+            Vector2 pos = position + new Vector2(x * TilePixelSize, y * TilePixelSize + (TilePixelSize - waterSize));
+            sb.Draw(textureWater, pos * scale, source, PreviewTint, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
-        private static void DrawTile(SpriteBatch sb, PayloadCell cell, Vector2 origin, int x, int y)
+        private static void DrawTile(SpriteBatch sb, PayloadCell cell, Vector2 position, int x, int y, float scale)
         {
             if (!cell.Detail.HasTile || cell.Paint.TileInvisible)
                 return;
@@ -146,8 +199,8 @@ namespace TheArchitectsBlueprintMod.UI
             Main.instance.LoadTiles(tileType);
             Texture2D texture = TextureAssets.Tile[tileType].Value;
             var source = new Rectangle(cell.Block.FrameX, cell.Block.FrameY, TilePixelSize, TilePixelSize);
-            Vector2 pos = origin + new Vector2(x * TilePixelSize, y * TilePixelSize);
-            sb.Draw(texture, pos, source, PreviewTint);
+            Vector2 pos = position + new Vector2(x * TilePixelSize, y * TilePixelSize);
+            sb.Draw(texture, pos * scale, source, PreviewTint, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
         private static Texture2D GetWallDrawTexture(ushort wallType, byte wallColor)

@@ -1,15 +1,17 @@
 
 Simple Issues:
-- [ ] Export logic should allow selecting a selection the same way Import logic does.
+-> [#] Export logic should allow selecting a selection the same way Import logic does.
 
 High Priority Issues:
+- [#] TAB is not very mod resistant. There is a need for a payload metadata field that tracks what mods the payload has been created with. For now, only mark mods at the time of export. In the future, each tile will be checked for modded content.
+    - [ ] Make TAB resistant to missing mods. It should be able to fully process the payload with only skipping the tiles with missing mods. And if forced by cheat sweep, the missing tiles should be handled by UnknownLayer that places tmodloader's missing tiles. Most preferably, the payload should be checked before being assigned to a projection, and checked for incompatibilities and replaced with the tmod's missing tiles that will store the tile's data.
+
 - [ ] Initial calculation of operations causes lag. The current implementation is very inefficient.
+    - Most likely cause is the identification process.
 - [ ] Looks like plants are attempted to be placed during the block layer, or at the very least blue mushrooms. It is possible that single-plants are being mistaken for tiles, instead of being treated as tile-anchored entities. (Similar issue has been observed with candle objects.)
 
 Low Priority Issues:
-- [ ] TAB is not very mod resistant. There is a need for a payload metadata field that tracks what mods the payload has been created with. For now, only mark mods at the time of export. In the future, each tile will be checked for modded content.
-    - [ ] Make TAB resistant to missing mods. It should be able to fully process the payload with only skipping the tiles with missing mods. And if forced by cheat sweep, the missing tiles should be handled by UnknownLayer that places tmodloader's missing tiles. Most preferably, the payload should be checked before being assigned to a projection, and checked for incompatibilities and replaced with the tmod's missing tiles that will store the tile's data.
-- [ ] During export, the input field does not react to key strokes. Making it impossible to choose the name of the project.
+- [#] During export, the input field does not react to key strokes. Making it impossible to choose the name of the project.
     - [#] New issue, when used command line export, hitting enter immediately confirms the export, without allowing to choose the name of the file.
     - [ ] Works just fine, only the UI needs to be adjusted. Not a priority.
 - [ ] At greater scales, moving or scaling projection or selection causes severe lag. Export does the same. tested with a payload of 548x339 (213mb)

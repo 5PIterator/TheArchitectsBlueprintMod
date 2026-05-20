@@ -1,8 +1,9 @@
 {
   "metadata": {
     "format": "TheArchitectsBlueprintMod.Payload",
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "projectName": "TABTest",
+    "playerName": "TestPlayer",
     "createdUtc": "2026-01-01T00:00:00Z",
     "modVersion": "0.0.0.0",
     "width": 3,

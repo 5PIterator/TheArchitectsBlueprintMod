@@ -30,36 +30,74 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             return null;
         }
 
-        public static int? ResolveTile(string name)
+        public static int? ResolveTile(string name) => ResolveTileFullName(name);
+
+        public static int? ResolveWall(string name) => ResolveWallFullName(name);
+
+        /// <summary>Resolves a tile by FullName (<c>ModName:InternalName</c>), search name, internal name, or <c>Tile_{id}</c>.</summary>
+        public static int? ResolveTileFullName(string name)
         {
             if (string.IsNullOrEmpty(name)) return null;
-            // Tile_{id} format for compatibility with GetTileName fallback
             if (name.StartsWith("Tile_", StringComparison.OrdinalIgnoreCase) && int.TryParse(name.AsSpan(5), out int parsedId))
                 return parsedId >= 0 && parsedId < TileLoader.TileCount ? parsedId : null;
             if (TileID.Search.TryGetId(name, out int id))
                 return id;
-            // Mod tiles: linear search (no cache)
+            if (TrySplitModContentName(name, out string modName, out string internalName))
+            {
+                Mod? mod = ModLoader.TryGetMod(modName, out Mod? m) ? m : null;
+                if (mod is not null && ModContent.TryFind(mod.Name, internalName, out ModTile? modTile))
+                    return modTile.Type;
+            }
+
             for (int i = (int)TileID.Count; i < TileLoader.TileCount; i++)
             {
-                if (string.Equals(TileLoader.GetTile(i)?.Name, name, StringComparison.OrdinalIgnoreCase))
+                ModTile? mt = TileLoader.GetTile(i);
+                if (mt is null) continue;
+                if (string.Equals(mt.FullName, name, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(mt.Name, name, StringComparison.OrdinalIgnoreCase))
                     return i;
             }
+
             return null;
         }
 
-        public static int? ResolveWall(string name)
+        /// <summary>Resolves a wall by FullName, search name, internal name, or <c>Wall_{id}</c>.</summary>
+        public static int? ResolveWallFullName(string name)
         {
             if (string.IsNullOrEmpty(name)) return null;
             if (name.StartsWith("Wall_", StringComparison.OrdinalIgnoreCase) && int.TryParse(name.AsSpan(5), out int parsedId))
                 return parsedId >= 0 && parsedId < WallLoader.WallCount ? parsedId : null;
             if (WallID.Search.TryGetId(name, out int id))
                 return id;
+            if (TrySplitModContentName(name, out string modName, out string internalName))
+            {
+                Mod? mod = ModLoader.TryGetMod(modName, out Mod? m) ? m : null;
+                if (mod is not null && ModContent.TryFind(mod.Name, internalName, out ModWall? modWall))
+                    return modWall.Type;
+            }
+
             for (int i = (int)WallID.Count; i < WallLoader.WallCount; i++)
             {
-                if (string.Equals(WallLoader.GetWall(i)?.Name, name, StringComparison.OrdinalIgnoreCase))
+                ModWall? mw = WallLoader.GetWall(i);
+                if (mw is null) continue;
+                if (string.Equals(mw.FullName, name, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(mw.Name, name, StringComparison.OrdinalIgnoreCase))
                     return i;
             }
+
             return null;
+        }
+
+        private static bool TrySplitModContentName(string name, out string modName, out string internalName)
+        {
+            modName = string.Empty;
+            internalName = string.Empty;
+            int colon = name.IndexOf(':');
+            if (colon <= 0 || colon >= name.Length - 1)
+                return false;
+            modName = name[..colon];
+            internalName = name[(colon + 1)..];
+            return true;
         }
 
         public static string GetItemName(int id)
@@ -72,20 +110,26 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             return item.ModItem?.FullName ?? item.Name ?? Lang.GetItemNameValue(id)?.ToString() ?? $"Item_{id}";
         }
 
-        public static string GetTileName(int id)
+        public static string GetTileName(int id) => GetTileFullName(id);
+
+        public static string GetWallName(int id) => GetWallFullName(id);
+
+        /// <summary>Stable export name: Terraria search id for vanilla; <see cref="ModTile.FullName"/> for mod tiles.</summary>
+        public static string GetTileFullName(int id)
         {
             if (id < 0 || id >= TileLoader.TileCount) return $"Tile_{id}";
             if (TileID.Search.TryGetName(id, out string name))
                 return name;
-            return TileLoader.GetTile(id)?.Name ?? $"Tile_{id}";
+            return TileLoader.GetTile(id)?.FullName ?? $"Tile_{id}";
         }
 
-        public static string GetWallName(int id)
+        /// <summary>Stable export name: Terraria search id for vanilla; <see cref="ModWall.FullName"/> for mod walls.</summary>
+        public static string GetWallFullName(int id)
         {
             if (id < 0 || id >= WallLoader.WallCount) return $"Wall_{id}";
             if (WallID.Search.TryGetName(id, out string name))
                 return name;
-            return WallLoader.GetWall(id)?.Name ?? $"Wall_{id}";
+            return WallLoader.GetWall(id)?.FullName ?? $"Wall_{id}";
         }
 
         public static string GetLiquidTypeName(int type)

@@ -6,8 +6,8 @@ using Newtonsoft.Json;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 using Terraria.ObjectData;
-
 namespace TheArchitectsBlueprintMod.Core
 {
 
@@ -316,7 +316,7 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>
-        /// Decodes a sparse payload: width, height, count, then (x, y, json) tuples.
+        /// Decodes a sparse payload: width, height, count, then (x, y, cellTagBytes) tuples.
         /// </summary>
         public static Payload FromNetwork(BinaryReader reader)
         {
@@ -332,13 +332,24 @@ namespace TheArchitectsBlueprintMod.Core
             {
                 int x = reader.ReadInt32();
                 int y = reader.ReadInt32();
-                string json = reader.ReadString();
-                PayloadCell cell = PayloadCell.FromJson(json);
-                if (!cell.IsEmpty)
-                    entries.Add(new Entry(new Point(x, y), cell));
+                int byteLen = reader.ReadInt32();
+                if (byteLen < 0 || byteLen > 1024 * 1024)
+                    continue;
+
+                byte[] cellBytes = reader.ReadBytes(byteLen);
+                if (!PayloadTagIO.TryCellFromBytes(cellBytes, out PayloadCell cell) || cell.IsEmpty)
+                    continue;
+
+                entries.Add(new Entry(new Point(x, y), cell));
             }
 
             return FromSparse(entries, width, height);
+        }
+
+        /// <summary>Loads a payload from a schema 3–4 TagCompound document root.</summary>
+        public static bool TryFromTagDocument(TagCompound root, out Payload payload, out PayloadDocumentInfo info, out string? error)
+        {
+            return PayloadTagIO.TryReadDocument(root, out payload, out info, out error);
         }
 
         /// <summary>Independent copy of <paramref name="other"/> (same cells; new 2D array).</summary>
@@ -358,7 +369,7 @@ namespace TheArchitectsBlueprintMod.Core
         public static PayloadCell CellFromTile(Tile tile) => PayloadCell.FromTile(tile);
 
         /// <summary>
-        /// Encodes a payload: width, height, count, then (x, y, json) tuples for non-air cells.
+        /// Encodes a payload: width, height, count, then (x, y, cellTagBytes) tuples for non-air cells.
         /// </summary>
         public void ToNetwork(BinaryWriter writer)
         {
@@ -387,9 +398,11 @@ namespace TheArchitectsBlueprintMod.Core
                     if (cell.IsEmpty)
                         continue;
 
+                    byte[] cellBytes = PayloadTagIO.CellTagToBytes(PayloadTagIO.CellBodyToTag(cell));
                     writer.Write(x);
                     writer.Write(y);
-                    writer.Write(cell.ToJson());
+                    writer.Write(cellBytes.Length);
+                    writer.Write(cellBytes);
                 }
             }
         }

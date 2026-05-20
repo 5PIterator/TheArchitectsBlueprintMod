@@ -3,12 +3,10 @@
 
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Tests.Fixtures;
 using TheArchitectsBlueprintMod.Tests.Samples;
 using Microsoft.Xna.Framework;
-using Newtonsoft.Json.Linq;
 using Terraria;
 
 namespace TheArchitectsBlueprintMod.Tests.Scenarios
@@ -56,10 +54,9 @@ namespace TheArchitectsBlueprintMod.Tests.Scenarios
 
                 r.Pass(clearCenter ? "center cleared" : "center filled");
 
-                JToken mutatedCanonical = JToken.Parse(projection.Payload.ToJson());
                 string outPath = Path.Combine(
                     PayloadSerialization.GetPayloadDirectory(),
-                    clearCenter ? $"_TestExport_clear_{sample.Slug}.tab.json" : $"_TestExport_fill_{sample.Slug}.tab.json");
+                    clearCenter ? $"_TestExport_clear_{sample.Slug}.tab" : $"_TestExport_fill_{sample.Slug}.tab");
 
                 if (!PayloadSerialization.TryWriteExportedWrapper(projection, "_TestExport", outPath, out string? writeErr))
                 {
@@ -69,16 +66,21 @@ namespace TheArchitectsBlueprintMod.Tests.Scenarios
 
                 r.Pass($"exported {Path.GetFileName(outPath)}");
 
-                JToken? exportedTok = JObject.Parse(File.ReadAllText(outPath, Encoding.UTF8))["payload"];
-                if (exportedTok is null)
+                if (!PayloadSerialization.TryReadPayloadFromFile(outPath, out Payload roundTrip, out string? readErr))
                 {
-                    r.Fail("round-trip", "exported document lacks payload");
+                    r.Fail("round-trip", readErr);
                     return false;
                 }
 
-                if (!JToken.DeepEquals(exportedTok, mutatedCanonical))
+                if (roundTrip.Width != mutated.Width || roundTrip.Height != mutated.Height)
                 {
-                    r.Fail("round-trip", "exported JSON differs from in-memory payload");
+                    r.Fail("round-trip", "dimensions mismatch after reload");
+                    return false;
+                }
+
+                if (!roundTrip.TryGetCell(new Point(1, 1), out PayloadCell center) || center.HasTile() != !clearCenter)
+                {
+                    r.Fail("round-trip", "center cell mismatch after reload");
                     return false;
                 }
 

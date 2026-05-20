@@ -29,6 +29,8 @@ namespace TheArchitectsBlueprintMod.UI
         private readonly Color _color = color;
         private readonly int _borderWidth = borderWidth;
 
+        public OverlayDrawableKind Kind => _kind;
+
         public void Draw()
         {
             switch (_kind)
@@ -133,7 +135,7 @@ namespace TheArchitectsBlueprintMod.UI
             _drawOrder.Clear();
         }
 
-        public void Draw()
+        public void Draw(OverlayDrawableKind? onlyKind = null, OverlayDrawableKind? skipKind = null)
         {
             List<string>? expired = null;
             for (int i = 0; i < _drawOrder.Count; i++)
@@ -145,6 +147,13 @@ namespace TheArchitectsBlueprintMod.UI
                     (expired ??= []).Add(key);
                     continue;
                 }
+
+                OverlayDrawableKind kind = item.Drawable.Kind;
+                if (onlyKind.HasValue && kind != onlyKind.Value)
+                    continue;
+                if (skipKind.HasValue && kind == skipKind.Value)
+                    continue;
+
                 item.Drawable.Draw();
             }
 
@@ -287,22 +296,45 @@ namespace TheArchitectsBlueprintMod.UI
 
             layers.Insert(insertIndex, new LegacyGameInterfaceLayer(
                 "TheArchitectsBlueprint: Overlay",
-                () => { DrawOverlay(); return true; },
+                () => { DrawOverlayEarly(); return true; },
+                InterfaceScaleType.Game)
+            );
+
+            int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
+            if (mouseTextIndex == -1)
+                mouseTextIndex = layers.Count;
+
+            layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
+                "TheArchitectsBlueprint: OverlayFills",
+                () => { DrawOverlayLate(); return true; },
                 InterfaceScaleType.Game)
             );
         }
 
-        private static void DrawOverlay()
+        private static void DrawOverlayEarly()
+        {
+            if (!ShouldDrawWorldOverlay())
+                return;
+
+            Instance._catalog.Draw(skipKind: OverlayDrawableKind.TileFill);
+        }
+
+        private static void DrawOverlayLate()
+        {
+            if (!ShouldDrawWorldOverlay())
+                return;
+
+            Instance._catalog.Draw(onlyKind: OverlayDrawableKind.TileFill);
+        }
+
+        private static bool ShouldDrawWorldOverlay()
         {
             var ctx = new OverlayContext
             {
                 IsGameMenu = Main.gameMenu,
                 IsMapFullscreen = Main.mapFullscreen
             };
-            if (!ctx.ShouldDrawWorldOverlay)
-                return;
-
-            Instance._catalog.Draw();
+            return ctx.ShouldDrawWorldOverlay;
         }
 
         internal static void DrawPoints(Point[] points, Color color)

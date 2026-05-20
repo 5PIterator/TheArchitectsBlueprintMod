@@ -18,6 +18,8 @@
         "Spritesheet",
         "steamid",
         "tilemap",
+        "Tmod",
+        "toggleable",
         "TWBI"
     ]
 }

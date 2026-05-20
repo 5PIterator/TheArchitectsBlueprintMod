@@ -1,0 +1,189 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Xna.Framework;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+
+namespace TheArchitectsBlueprintMod.Core
+{
+    internal enum PayloadPrepareMode
+    {
+        ValidateOnly,
+        SkipIncompatible,
+    }
+
+    internal readonly struct PayloadCompatibilityReport(
+        int totalNonEmptyCells,
+        int incompatibleCells,
+        IReadOnlyList<string> missingModsFromMetadata)
+    {
+        public int TotalNonEmptyCells { get; } = totalNonEmptyCells;
+        public int IncompatibleCells { get; } = incompatibleCells;
+        public IReadOnlyList<string> MissingModsFromMetadata { get; } = missingModsFromMetadata;
+    }
+
+    /// <summary>Validates and sanitizes payloads before projection assignment.</summary>
+    internal static class PayloadCompatibility
+    {
+        public static bool IsTileResolvable(ushort type)
+        {
+            if (type == 0)
+                return true;
+            if (type >= TileLoader.TileCount)
+                return false;
+            if (type < TileID.Count)
+                return true;
+            return TileLoader.GetTile(type) is not null;
+        }
+
+        public static bool IsWallResolvable(ushort type)
+        {
+            if (type == 0)
+                return true;
+            if (type >= WallLoader.WallCount)
+                return false;
+            if (type < WallID.Count)
+                return true;
+            return WallLoader.GetWall(type) is not null;
+        }
+
+        public static bool IsCellCompatible(PayloadCell cell)
+        {
+            if (cell.IsEmpty)
+                return true;
+
+            if (cell.Detail.HasTile && cell.Block.Type > 0 && !IsTileResolvable(cell.Block.Type))
+                return false;
+
+            if (cell.Wall.Type > 0 && !IsWallResolvable(cell.Wall.Type))
+                return false;
+
+            return true;
+        }
+
+        public static Payload Prepare(
+            Payload source,
+            PayloadPrepareMode mode,
+            IReadOnlyList<string>? metadataModsLoaded,
+            out PayloadCompatibilityReport report)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+            var missingMods = ComputeMissingMods(metadataModsLoaded);
+            if (!source.IsDefined || mode == PayloadPrepareMode.ValidateOnly)
+            {
+                int total = CountNonEmpty(source);
+                int incompatible = CountIncompatible(source);
+                report = new PayloadCompatibilityReport(total, incompatible, missingMods);
+                return source;
+            }
+
+            var entries = new List<Payload.Entry>();
+            int totalCells = 0;
+            int incompatibleCells = 0;
+
+            for (int y = 0; y < source.Height; y++)
+            {
+                for (int x = 0; x < source.Width; x++)
+                {
+                    if (!source.TryGetCell(new Point(x, y), out PayloadCell cell) || cell.IsEmpty)
+                        continue;
+
+                    totalCells++;
+                    if (IsCellCompatible(cell))
+                    {
+                        entries.Add(new Payload.Entry(new Point(x, y), cell));
+                        continue;
+                    }
+
+                    incompatibleCells++;
+                    if (TrySanitizeCell(cell, out PayloadCell sanitized) && !sanitized.IsEmpty)
+                        entries.Add(new Payload.Entry(new Point(x, y), sanitized));
+                }
+            }
+
+            report = new PayloadCompatibilityReport(totalCells, incompatibleCells, missingMods);
+            return Payload.FromSparse(entries, source.Width, source.Height);
+        }
+
+        internal static IReadOnlyList<string> ComputeMissingMods(IReadOnlyList<string>? metadataModsLoaded)
+        {
+            if (metadataModsLoaded is null || metadataModsLoaded.Count == 0)
+                return [];
+
+            var current = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            try
+            {
+                for (int i = 0; i < ModLoader.Mods.Length; i++)
+                {
+                    Mod? m = ModLoader.Mods[i];
+                    if (m is not null && !string.IsNullOrEmpty(m.Name))
+                        current.Add(m.Name);
+                }
+            }
+            catch
+            {
+                return [];
+            }
+
+            return metadataModsLoaded.Where(m => !current.Contains(m)).ToList();
+        }
+
+        private static int CountNonEmpty(Payload payload)
+        {
+            int count = 0;
+            foreach (PayloadCell cell in payload.Cells)
+            {
+                if (!cell.IsEmpty)
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static int CountIncompatible(Payload payload)
+        {
+            int count = 0;
+            foreach (PayloadCell cell in payload.Cells)
+            {
+                if (!cell.IsEmpty && !IsCellCompatible(cell))
+                    count++;
+            }
+
+            return count;
+        }
+
+        private static bool TrySanitizeCell(PayloadCell cell, out PayloadCell sanitized)
+        {
+            sanitized = default;
+            if (cell.IsEmpty)
+                return false;
+
+            var data = cell.Data!;
+            bool changed = false;
+
+            if (data.TWWStateData.HasTile && data.TileType.Type > 0 && !IsTileResolvable(data.TileType.Type))
+            {
+                data.TileType.Type = 0;
+                data.TWWStateData.HasTile = false;
+                changed = true;
+            }
+
+            if (data.WallType.Type > 0 && !IsWallResolvable(data.WallType.Type))
+            {
+                data.WallType.Type = 0;
+                changed = true;
+            }
+
+            if (!changed && IsCellCompatible(cell))
+            {
+                sanitized = cell;
+                return true;
+            }
+
+            sanitized = PayloadCell.FromData(data);
+            return !sanitized.IsEmpty;
+        }
+    }
+}

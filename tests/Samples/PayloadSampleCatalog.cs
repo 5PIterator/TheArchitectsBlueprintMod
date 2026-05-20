@@ -26,6 +26,14 @@ namespace TheArchitectsBlueprintMod.Tests.Samples
         internal static bool TryLoad(PayloadSample sample, out Payload payload, out string? error)
         {
             payload = default!;
+            if (IsBinaryTab(sample.FileName))
+            {
+                if (!TryLoadDocumentBytes(sample, out byte[] bytes, out error))
+                    return false;
+
+                return PayloadSerialization.TryParsePayloadDocument(bytes, out payload, out _, out error);
+            }
+
             if (!TryLoadDocument(sample, out string text, out error))
                 return false;
 
@@ -35,26 +43,28 @@ namespace TheArchitectsBlueprintMod.Tests.Samples
         internal static string SlugFromFileName(string fileName)
         {
             string name = Path.GetFileNameWithoutExtension(fileName);
+            if (name.EndsWith(".tab", StringComparison.OrdinalIgnoreCase))
+                name = Path.GetFileNameWithoutExtension(name);
             return name.ToLowerInvariant();
         }
 
         private static PayloadSample[] Discover()
         {
-            var byFile = new Dictionary<string, PayloadSample>(StringComparer.OrdinalIgnoreCase);
+            var bySlug = new Dictionary<string, PayloadSample>(StringComparer.OrdinalIgnoreCase);
 
-            RegisterEmbeddedSamples(byFile);
-            RegisterDiskSamples(byFile);
+            RegisterEmbeddedSamples(bySlug);
+            RegisterDiskSamples(bySlug);
 
-            if (byFile.Count == 0)
+            if (bySlug.Count == 0)
             {
                 throw new InvalidOperationException(
-                    "No payload samples found. Add *.tab.json under tests/Samples and embed them in the csproj.");
+                    "No payload samples found. Add *.tab or *.tab.json under tests/Samples and embed them in the csproj.");
             }
 
-            return byFile.Values.OrderBy(s => s.FileName, StringComparer.OrdinalIgnoreCase).ToArray();
+            return bySlug.Values.OrderBy(s => s.FileName, StringComparer.OrdinalIgnoreCase).ToArray();
         }
 
-        private static void RegisterEmbeddedSamples(Dictionary<string, PayloadSample> byFile)
+        private static void RegisterEmbeddedSamples(Dictionary<string, PayloadSample> bySlug)
         {
             foreach (string resourceName in typeof(PayloadSampleCatalog).Assembly.GetManifestResourceNames())
             {
@@ -62,14 +72,14 @@ namespace TheArchitectsBlueprintMod.Tests.Samples
                     continue;
 
                 string fileName = ResourceNameToFileName(resourceName);
-                if (!TryParseSampleDocument(fileName, null, resourceName, out _))
+                if (!TryValidateSample(fileName, null, resourceName, out _))
                     continue;
 
-                byFile[fileName] = new PayloadSample(fileName, SlugFromFileName(fileName), resourceName);
+                RegisterSample(bySlug, fileName, resourceName);
             }
         }
 
-        private static void RegisterDiskSamples(Dictionary<string, PayloadSample> byFile)
+        private static void RegisterDiskSamples(Dictionary<string, PayloadSample> bySlug)
         {
             string? samplesDir = TryFindSamplesDirectory();
             if (samplesDir is null)
@@ -78,32 +88,77 @@ namespace TheArchitectsBlueprintMod.Tests.Samples
             foreach (string path in Directory.EnumerateFiles(samplesDir, "*.tab.json"))
             {
                 string fileName = Path.GetFileName(path);
-                if (!TryParseSampleDocument(fileName, path, null, out _))
+                if (!TryValidateSample(fileName, path, null, out _))
                     continue;
 
-                byFile[fileName] = new PayloadSample(fileName, SlugFromFileName(fileName), null);
+                RegisterSample(bySlug, fileName, null);
+            }
+
+            foreach (string path in Directory.EnumerateFiles(samplesDir, "*.tab"))
+            {
+                if (path.EndsWith(".tab.json", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                string fileName = Path.GetFileName(path);
+                if (!TryValidateSample(fileName, path, null, out _))
+                    continue;
+
+                RegisterSample(bySlug, fileName, null);
             }
         }
 
-        private static bool IsEmbeddedSampleResource(string resourceName) =>
-            resourceName.EndsWith(".tab.json", StringComparison.OrdinalIgnoreCase)
-            && resourceName.Contains(".tests.Samples.", StringComparison.OrdinalIgnoreCase);
-
-        private static bool TryParseSampleDocument(
-            string fileName,
-            string? diskPath,
-            string? embeddedResourceName,
-            out string text)
+        private static void RegisterSample(Dictionary<string, PayloadSample> bySlug, string fileName, string? embeddedResourceName)
         {
-            if (!TryLoadDocumentText(fileName, diskPath, embeddedResourceName, out text, out _))
+            string slug = SlugFromFileName(fileName);
+            bool isBinary = IsBinaryTab(fileName);
+            if (bySlug.TryGetValue(slug, out PayloadSample? existing))
+            {
+                bool existingBinary = IsBinaryTab(existing.FileName);
+                if (existingBinary && !isBinary)
+                    return;
+            }
+
+            bySlug[slug] = new PayloadSample(fileName, slug, embeddedResourceName);
+        }
+
+        private static bool IsBinaryTab(string fileName) =>
+            fileName.EndsWith(".tab", StringComparison.OrdinalIgnoreCase)
+            && !fileName.EndsWith(".tab.json", StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsEmbeddedSampleResource(string resourceName)
+        {
+            if (!resourceName.Contains(".tests.Samples.", StringComparison.OrdinalIgnoreCase))
                 return false;
 
-            return PayloadSerialization.TryParsePayloadDocument(text, out Payload payload, out _)
-                && payload.IsDefined;
+            return resourceName.EndsWith(".tab.json", StringComparison.OrdinalIgnoreCase)
+                || (resourceName.EndsWith(".tab", StringComparison.OrdinalIgnoreCase)
+                    && !resourceName.EndsWith(".tab.json", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private static bool TryValidateSample(string fileName, string? diskPath, string? embeddedResourceName, out string? error)
+        {
+            error = null;
+            if (IsBinaryTab(fileName))
+            {
+                if (!TryLoadDocumentBytes(fileName, GetDiskPath(fileName, diskPath), embeddedResourceName, out byte[] bytes, out error))
+                    return false;
+
+                return PayloadSerialization.TryParsePayloadDocument(bytes, out Payload binaryPayload, out _, out error)
+                    && binaryPayload.IsDefined;
+            }
+
+            if (!TryLoadDocumentText(fileName, diskPath, embeddedResourceName, out string text, out error))
+                return false;
+
+            return PayloadSerialization.TryParsePayloadDocument(text, out Payload jsonPayload, out error)
+                && jsonPayload.IsDefined;
         }
 
         internal static bool TryLoadDocument(PayloadSample sample, out string text, out string? error) =>
-            TryLoadDocumentText(sample.FileName, GetDiskPath(sample.FileName), sample.EmbeddedResourceName, out text, out error);
+            TryLoadDocumentText(sample.FileName, GetDiskPath(sample.FileName, null), sample.EmbeddedResourceName, out text, out error);
+
+        private static bool TryLoadDocumentBytes(PayloadSample sample, out byte[] bytes, out string? error) =>
+            TryLoadDocumentBytes(sample.FileName, GetDiskPath(sample.FileName, null), sample.EmbeddedResourceName, out bytes, out error);
 
         private static bool TryLoadDocumentText(
             string fileName,
@@ -113,9 +168,10 @@ namespace TheArchitectsBlueprintMod.Tests.Samples
             out string? error)
         {
             error = null;
-            if (diskPath is not null && File.Exists(diskPath))
+            string? path = GetDiskPath(fileName, diskPath);
+            if (path is not null && File.Exists(path))
             {
-                text = File.ReadAllText(diskPath, Encoding.UTF8);
+                text = File.ReadAllText(path, Encoding.UTF8);
                 return true;
             }
 
@@ -132,6 +188,39 @@ namespace TheArchitectsBlueprintMod.Tests.Samples
             }
 
             text = "";
+            error = $"Sample '{fileName}' not found (tests/Samples or embedded resource).";
+            return false;
+        }
+
+        private static bool TryLoadDocumentBytes(
+            string fileName,
+            string? diskPath,
+            string? embeddedResourceName,
+            out byte[] bytes,
+            out string? error)
+        {
+            error = null;
+            string? path = GetDiskPath(fileName, diskPath);
+            if (path is not null && File.Exists(path))
+            {
+                bytes = File.ReadAllBytes(path);
+                return true;
+            }
+
+            string? resource = embeddedResourceName ?? FindEmbeddedResourceForFile(fileName);
+            if (resource is not null)
+            {
+                using Stream? stream = typeof(PayloadSampleCatalog).Assembly.GetManifestResourceStream(resource);
+                if (stream is not null)
+                {
+                    using var ms = new MemoryStream();
+                    stream.CopyTo(ms);
+                    bytes = ms.ToArray();
+                    return true;
+                }
+            }
+
+            bytes = [];
             error = $"Sample '{fileName}' not found (tests/Samples or embedded resource).";
             return false;
         }
@@ -158,8 +247,11 @@ namespace TheArchitectsBlueprintMod.Tests.Samples
             return resourceName;
         }
 
-        private static string? GetDiskPath(string fileName)
+        private static string? GetDiskPath(string fileName, string? explicitPath)
         {
+            if (explicitPath is not null)
+                return explicitPath;
+
             string? dir = TryFindSamplesDirectory();
             return dir is null ? null : Path.Combine(dir, fileName);
         }

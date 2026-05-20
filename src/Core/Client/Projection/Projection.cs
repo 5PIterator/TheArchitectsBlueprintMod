@@ -4,6 +4,7 @@ using System.Threading;
 using TheArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.ID;
 using Terraria.ObjectData;
 using Terraria.ModLoader;
 
@@ -120,21 +121,39 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>Moves the ghost so <see cref="TargetArea"/> top-left is <paramref name="targetAreaOrigin"/>.</summary>
-        public void MoveTo(Point targetAreaOrigin)
+        /// <param name="isDragFrame">When true, skips expensive inventory/overlay refresh until <see cref="CommitDragRefresh"/>.</param>
+        public void MoveTo(Point targetAreaOrigin, bool isDragFrame = false)
         {
             if (!IsDefined)
+                return;
+
+            var delta = new Point(targetAreaOrigin.X - Area.X, targetAreaOrigin.Y - Area.Y);
+            if (delta.X == 0 && delta.Y == 0)
+                return;
+
+            Translate(delta);
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
+                    $"Projection.MoveTo: id={Id} owner={Owner} origin=({targetAreaOrigin.X},{targetAreaOrigin.Y}) delta=({delta.X},{delta.Y}) drag={isDragFrame}",
+                    "Projection");
+
+            if (isDragFrame)
             {
+                UpdateOverlay();
                 return;
             }
 
-            var delta = new Point(targetAreaOrigin.X - Area.X, targetAreaOrigin.Y - Area.Y);
-            Translate(delta);
-            RefreshTargetTiles();
             RefreshInventories();
-            if (TABLog.IsDebugEnabled)
-                TABLog.Debug(
-                    $"Projection.MoveTo: id={Id} owner={Owner} origin=({targetAreaOrigin.X},{targetAreaOrigin.Y}) delta=({delta.X},{delta.Y})",
-                    "Projection");
+            UpdateOverlay();
+        }
+
+        /// <summary>Runs deferred work after a COPY-tool drag ends (inventories + overlay).</summary>
+        internal void CommitDragRefresh()
+        {
+            if (!IsDefined)
+                return;
+
+            RefreshInventories();
             UpdateOverlay();
         }
 
@@ -189,7 +208,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// When <paramref name="source"/> is defined, resizes the projection target and the selection snapshot to the payload
         /// size at the current top-left anchor so source and target footprints stay aligned.
         /// </summary>
-        internal void SetPayload(Payload source)
+        internal void SetPayload(Payload source, IReadOnlyList<string>? metadataModsLoaded = null)
         {
             ArgumentNullException.ThrowIfNull(source);
 
@@ -206,7 +225,21 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            _payload = Payload.FromClone(source);
+            Payload prepared = PayloadCompatibility.Prepare(
+                source,
+                PayloadPrepareMode.SkipIncompatible,
+                metadataModsLoaded,
+                out PayloadCompatibilityReport report);
+
+            if (report.IncompatibleCells > 0 && Main.netMode != NetmodeID.Server)
+            {
+                string msg = $"Payload: {report.IncompatibleCells} of {report.TotalNonEmptyCells} cells skipped (unresolvable tile/wall).";
+                if (report.MissingModsFromMetadata.Count > 0)
+                    msg += $" Missing mods: {string.Join(", ", report.MissingModsFromMetadata)}.";
+                Main.NewText(msg, Microsoft.Xna.Framework.Color.Orange);
+            }
+
+            _payload = Payload.FromClone(prepared);
             CutSource = CutSource && HasPayload;
 
             var newBounds = new Rectangle(Area.X, Area.Y, _payload.Width, _payload.Height);

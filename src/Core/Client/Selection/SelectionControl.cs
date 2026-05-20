@@ -208,9 +208,12 @@ namespace TheArchitectsBlueprintMod.Core
                 case DragKind.Move:
                 {
                     Point delta = new(cursorTile.X - state.DragStartCursorTile.X, cursorTile.Y - state.DragStartCursorTile.Y);
-                    Rectangle b = state.DragStartBounds;
-                    var moved = new Rectangle(b.X + delta.X, b.Y + delta.Y, b.Width, b.Height);
-                    SelectionSystem.SetBounds(player, moved);
+                    if (delta.X != 0 || delta.Y != 0)
+                    {
+                        SelectionSystem.TranslateSelection(player, delta);
+                        state.DragStartCursorTile = cursorTile;
+                    }
+
                     return;
                 }
 

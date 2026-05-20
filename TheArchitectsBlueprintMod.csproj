@@ -6,6 +6,7 @@
 	<!-- General -->
 	<PropertyGroup>
 		<NoWarn>$(NoWarn);CS8632;CS8604;CS0169;CS0649</NoWarn>
+		<DefaultItemExcludes>$(DefaultItemExcludes);tools\**</DefaultItemExcludes>
 	</PropertyGroup>
 
 	<!-- References -->
@@ -19,6 +20,7 @@
 		<EmbeddedResource Include="Content\Templates\SourceMaps\BaseContext.itr" />
 		<EmbeddedResource Include="Content\Config\LayerOrder.json" LogicalName="TheArchitectsBlueprintMod.LayerOrder.json" />
 		<EmbeddedResource Include="tests\Samples\*.tab.json" />
+		<EmbeddedResource Include="tests\Samples\*.tab" />
 		<EmbeddedResource Include="tests\goldens\payload_clear_center.json" LogicalName="TheArchitectsBlueprintMod.GoldenPayloadClearCenter" />
 		<EmbeddedResource Include="tests\goldens\payload_fill_center.json" LogicalName="TheArchitectsBlueprintMod.GoldenPayloadFillCenter" />
 	</ItemGroup>

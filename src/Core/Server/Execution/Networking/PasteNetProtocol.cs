@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
 using Microsoft.Xna.Framework;
@@ -57,7 +56,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
 
     internal sealed class PasteRequest
     {
-        private const int MaxPasteRequestJsonBytes = 32 * 1024 * 1024;
+        private const int MaxPasteRequestPayloadBytes = 32 * 1024 * 1024;
 
         public int RequestId { get; private set; }
         public Rectangle Bounds { get; private set; } = Rectangle.Empty;
@@ -67,7 +66,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
         public bool IgnoreInvalid { get; private set; }
         public bool TransparentPaste { get; private set; }
         public int PasteStepSize { get; private set; }
-        public string Json { get; private set; } = string.Empty;
+        public byte[] PayloadBytes { get; private set; } = [];
 
         private PasteRequest() { }
 
@@ -89,9 +88,8 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 return false;
             }
 
-            // TODO: Implement Project and Player name from projection.
-            string json = projection.Payload.ToJson();
-            if (string.IsNullOrEmpty(json))
+            byte[] payloadBytes = PayloadSerialization.BuildExportDocumentBytes(projection, $"Paste_{requestId}");
+            if (payloadBytes.Length == 0)
             {
                 reason = PasteRejectReason.InvalidPayload;
                 return false;
@@ -99,7 +97,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
 
             request.RequestId = requestId;
             request.Bounds = projection.Area;
-            request.Json = json;
+            request.PayloadBytes = payloadBytes;
             var clientCfg = ModContent.GetInstance<ClientPasteConfig>();
             var serverCfg = ModContent.GetInstance<PastingConfig>();
             request.IgnoreItems = clientCfg.IgnoreItems;
@@ -114,11 +112,8 @@ namespace TheArchitectsBlueprintMod.Core.Server
 
         public void Write(BinaryWriter writer)
         {
-            byte[] utf8 = Encoding.UTF8.GetBytes(Json);
-            if (utf8.Length > MaxPasteRequestJsonBytes)
-            {
-                throw new InvalidOperationException("Paste request payload JSON exceeds max size.");
-            }
+            if (PayloadBytes.Length > MaxPasteRequestPayloadBytes)
+                throw new InvalidOperationException("Paste request payload exceeds max size.");
 
             writer.Write(RequestId);
             WriteRectangle(writer, Bounds);
@@ -128,8 +123,8 @@ namespace TheArchitectsBlueprintMod.Core.Server
             writer.Write(IgnoreInvalid);
             writer.Write(TransparentPaste);
             writer.Write(PasteStepSize);
-            writer.Write(utf8.Length);
-            writer.Write(utf8);
+            writer.Write(PayloadBytes.Length);
+            writer.Write(PayloadBytes);
         }
 
         public static PasteRequest Read(BinaryReader reader)
@@ -147,15 +142,11 @@ namespace TheArchitectsBlueprintMod.Core.Server
             request.TransparentPaste = reader.ReadBoolean();
             request.PasteStepSize = reader.ReadInt32();
 
-            int jsonLen = reader.ReadInt32();
-            if (jsonLen < 0 || jsonLen > MaxPasteRequestJsonBytes)
-            {
-                throw new InvalidDataException("Paste request has invalid JSON length.");
-            }
+            int payloadLen = reader.ReadInt32();
+            if (payloadLen < 0 || payloadLen > MaxPasteRequestPayloadBytes)
+                throw new InvalidDataException("Paste request has invalid payload length.");
 
-            byte[] utf8 = reader.ReadBytes(jsonLen);
-            string json = Encoding.UTF8.GetString(utf8);
-            request.Json = json;
+            request.PayloadBytes = reader.ReadBytes(payloadLen);
             return request;
         }
 
@@ -164,13 +155,18 @@ namespace TheArchitectsBlueprintMod.Core.Server
             projection = null;
             reason = PasteRejectReason.None;
 
-            if (Bounds.IsEmpty || string.IsNullOrEmpty(Json))
+            if (Bounds.IsEmpty || PayloadBytes.Length == 0)
             {
                 reason = PasteRejectReason.InvalidPacket;
                 return false;
             }
 
-            var payload = Payload.FromJson(Json);
+            if (!PayloadSerialization.TryParsePayloadDocument(PayloadBytes, out Payload payload, out PayloadDocumentInfo docInfo, out string? parseError)
+                || !payload.IsDefined)
+            {
+                reason = PasteRejectReason.InvalidPacket;
+                return false;
+            }
 
             Player? shellOwner = (uint)ownerPlayerIndex < (uint)Main.maxPlayers ? Main.player[ownerPlayerIndex] : null;
             var shell = new Selection(shellOwner.whoAmI);
@@ -181,7 +177,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 Id = RequestId,
             };
 
-            projection.SetPayload(payload);
+            projection.SetPayload(payload, docInfo.ModsLoaded);
             return true;
         }
 

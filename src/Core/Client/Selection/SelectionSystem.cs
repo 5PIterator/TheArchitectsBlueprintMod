@@ -236,6 +236,20 @@ namespace TheArchitectsBlueprintMod.Core
             }
         }
 
+        /// <summary>Moves the selection by a tile delta without reallocating the inclusion grid.</summary>
+        public void TranslateSelection(Player player, Point delta)
+        {
+            Selection? selection = BlueprintSystem.GetTopmostSelection();
+            if (selection is null || !selection.IsDefined)
+                return;
+
+            selection.Translate(delta);
+            var state = GetState(player);
+            state.PointA = new Point(selection.Area.Left, selection.Area.Top);
+            state.PointB = new Point(selection.Area.Right - 1, selection.Area.Bottom - 1);
+            UpdateSelectionOverlay(player);
+        }
+
         /// <summary>
         /// Defines the selection bounds directly (tile coordinates, inclusive sizing like <see cref="Blueprint.Area"/>).
         /// </summary>

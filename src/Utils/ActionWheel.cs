@@ -10,6 +10,7 @@ using Terraria.ModLoader;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.UI.TmodGUI;
 
 namespace TheArchitectsBlueprintMod.Utils
 {
@@ -140,6 +141,12 @@ namespace TheArchitectsBlueprintMod.Utils
 
         internal static void ConsumePendingOpenIfAny()
         {
+            if (TmodGUI.IsBlockingInput)
+            {
+                _pendingOpen = null;
+                return;
+            }
+
             if (_pendingOpen == null)
             {
                 return;

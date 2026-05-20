@@ -3,7 +3,7 @@
 
 namespace TheArchitectsBlueprintMod.Tests.Samples
 {
-    /// <summary>One <c>tests/Samples/*.tab.json</c> document; scenarios inspect payload content at runtime.</summary>
+    /// <summary>One <c>tests/Samples/*.tab</c> or <c>*.tab.json</c> document; scenarios inspect payload content at runtime.</summary>
     internal sealed class PayloadSample(string fileName, string slug, string? embeddedResourceName)
     {
         public string FileName { get; } = fileName;
