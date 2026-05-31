@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -21,7 +24,8 @@ namespace TheArchitectsBlueprintMod.Core
         private const string KeyFormat = "format";
         private const string KeySchemaVersion = "schemaVersion";
         private const string KeyMetadata = "metadata";
-        private const string KeyCells = "cells";
+        private const string KeyPayload = "payload";
+        private const string KeyLegacyCells = "cells";
         private const string KeyCellBody = "c";
         private const string KeyThumbnailPng = "thumbnailPng";
 
@@ -109,20 +113,17 @@ namespace TheArchitectsBlueprintMod.Core
             var cellEntries = new List<TagCompound>();
             if (payload.IsDefined)
             {
-                for (int y = 0; y < payload.Height; y++)
+                IReadOnlyList<Payload.Entry> entries = payload.Entries;
+                for (int i = 0; i < entries.Count; i++)
                 {
-                    for (int x = 0; x < payload.Width; x++)
+                    Payload.Entry entry = entries[i];
+                    Point rel = entry.Relative;
+                    cellEntries.Add(new TagCompound
                     {
-                        if (!payload.TryGetCell(new Point(x, y), out PayloadCell cell) || cell.IsEmpty)
-                            continue;
-
-                        cellEntries.Add(new TagCompound
-                        {
-                            ["x"] = x,
-                            ["y"] = y,
-                            [KeyCellBody] = CellBodyToTag(cell),
-                        });
-                    }
+                        ["x"] = rel.X,
+                        ["y"] = rel.Y,
+                        [KeyCellBody] = CellBodyToTag(entry.Cell),
+                    });
                 }
             }
 
@@ -131,13 +132,108 @@ namespace TheArchitectsBlueprintMod.Core
                 [KeyFormat] = FormatId,
                 [KeySchemaVersion] = SchemaVersion,
                 [KeyMetadata] = MetadataToTag(meta, payload.Width, payload.Height),
-                [KeyCells] = cellEntries,
+                [KeyPayload] = cellEntries,
             };
         }
 
         public static void WriteDocument(Stream stream, Payload payload, PayloadExportMetadata meta)
         {
             TagIO.ToStream(BuildDocument(payload, meta), stream, compress: true);
+        }
+
+        public static void WriteJsonDocument(Stream stream, Payload payload, PayloadExportMetadata meta)
+        {
+            PayloadExportMetadata stripped = new(
+                meta.ProjectName,
+                meta.PlayerName,
+                meta.CreatedUtc,
+                meta.ModVersion,
+                meta.TerrariaVersion,
+                meta.ModsLoaded,
+                thumbnailPng: null);
+            TagCompound document = BuildDocument(payload, stripped);
+            JObject json = TagCompoundToJObject(document);
+            using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), bufferSize: 4096, leaveOpen: true);
+            writer.Write(json.ToString(Formatting.Indented));
+        }
+
+        public static bool TryReadJsonDocument(string json, out Payload payload, out PayloadDocumentInfo info, out string? error)
+        {
+            payload = Payload.Empty;
+            info = default;
+            error = null;
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    error = "Empty document.";
+                    return false;
+                }
+
+                if (JToken.Parse(json) is not JObject root)
+                {
+                    error = "Root must be a JSON object.";
+                    return false;
+                }
+
+                if (!PayloadMetadata.IsMirrorJsonRoot(root))
+                {
+                    error = "Not a mirror payload JSON document.";
+                    return false;
+                }
+
+                if (LooksLikeLegacySparsePayload(root))
+                {
+                    error = "Mirror payload list contains legacy tile snapshots.";
+                    return false;
+                }
+
+                TagCompound tagRoot = JObjectToTagCompound(root);
+                return TryReadDocument(tagRoot, out payload, out info, out error);
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+        }
+
+        public static bool TryReadJsonDocumentInfo(string json, out PayloadDocumentInfo info, out string? error)
+        {
+            info = default;
+            error = null;
+            try
+            {
+                if (string.IsNullOrWhiteSpace(json))
+                {
+                    error = "Empty document.";
+                    return false;
+                }
+
+                if (JToken.Parse(json) is not JObject root)
+                {
+                    error = "Root must be a JSON object.";
+                    return false;
+                }
+
+                if (!PayloadMetadata.IsMirrorJsonRoot(root))
+                {
+                    error = "Not a mirror payload JSON document.";
+                    return false;
+                }
+
+                TagCompound tagRoot = JObjectToTagCompound(root);
+                if (!TryValidateDocumentRoot(tagRoot, out _, out error))
+                    return false;
+
+                TagCompound metaTag = GetMetadataTag(tagRoot);
+                return TryResolveDocumentInfo(tagRoot, metaTag, out info, out error);
+            }
+            catch (Exception ex)
+            {
+                error = ex.Message;
+                return false;
+            }
         }
 
         public static bool TryReadDocument(Stream stream, out Payload payload, out PayloadDocumentInfo info, out string? error)
@@ -171,16 +267,9 @@ namespace TheArchitectsBlueprintMod.Core
             if (!TryResolveDocumentInfo(root, metaTag, out info, out error))
                 return false;
 
-            if (!root.ContainsKey(KeyCells))
+            if (!TryGetPayloadListTag(root, out IList<TagCompound>? cellList) || cellList is null)
             {
-                error = "Document missing cells.";
-                return false;
-            }
-
-            IList<TagCompound> cellList = root.GetList<TagCompound>(KeyCells);
-            if (cellList is null)
-            {
-                error = "Document missing cells.";
+                error = "Document missing payload.";
                 return false;
             }
 
@@ -193,7 +282,7 @@ namespace TheArchitectsBlueprintMod.Core
                 if (!entryTag.ContainsKey(KeyCellBody) || entryTag[KeyCellBody] is not TagCompound body)
                     continue;
 
-                if (!TryCellFromTag(body, out PayloadCell cell) || cell.IsEmpty)
+                if (!TryCellFromTag(body, out PayloadCell cell) || !cell.HasSparseContent)
                     continue;
 
                 entries.Add(new Payload.Entry(new Point(x, y), cell));
@@ -256,9 +345,9 @@ namespace TheArchitectsBlueprintMod.Core
             int height = info.Height;
             if (width <= 0 || height <= 0)
             {
-                if (!TryInferDimensionsFromCells(root, out width, out height))
+                if (!TryInferDimensionsFromPayload(root, out width, out height))
                 {
-                    error = "Could not resolve payload dimensions from metadata or cells.";
+                    error = "Could not resolve payload dimensions from metadata or payload list.";
                     return false;
                 }
             }
@@ -270,20 +359,36 @@ namespace TheArchitectsBlueprintMod.Core
                 width,
                 height,
                 info.ModsLoaded,
-                info.ThumbnailPng);
+                info.ThumbnailPng,
+                info.ModVersion,
+                info.TerrariaVersion);
             return true;
         }
 
-        private static bool TryInferDimensionsFromCells(TagCompound root, out int width, out int height)
+        private static bool TryGetPayloadListTag(TagCompound root, out IList<TagCompound>? cellList)
+        {
+            if (root.ContainsKey(KeyPayload))
+            {
+                cellList = root.GetList<TagCompound>(KeyPayload);
+                return cellList is not null;
+            }
+
+            if (root.ContainsKey(KeyLegacyCells))
+            {
+                cellList = root.GetList<TagCompound>(KeyLegacyCells);
+                return cellList is not null;
+            }
+
+            cellList = null;
+            return false;
+        }
+
+        private static bool TryInferDimensionsFromPayload(TagCompound root, out int width, out int height)
         {
             width = 0;
             height = 0;
 
-            if (!root.ContainsKey(KeyCells))
-                return false;
-
-            IList<TagCompound>? cellList = root.GetList<TagCompound>(KeyCells);
-            if (cellList is null or { Count: 0 })
+            if (!TryGetPayloadListTag(root, out IList<TagCompound>? cellList) || cellList is null or { Count: 0 })
                 return false;
 
             int maxX = 0;
@@ -292,6 +397,9 @@ namespace TheArchitectsBlueprintMod.Core
             {
                 TagCompound entryTag = cellList[i];
                 if (!entryTag.ContainsKey("x") || !entryTag.ContainsKey("y"))
+                    continue;
+
+                if (!entryTag.ContainsKey(KeyCellBody) || entryTag[KeyCellBody] is not TagCompound body || body.Count == 0)
                     continue;
 
                 maxX = Math.Max(maxX, entryTag.GetInt("x"));
@@ -303,10 +411,42 @@ namespace TheArchitectsBlueprintMod.Core
             return width > 0 && height > 0;
         }
 
-        public static TagCompound CellBodyToTag(PayloadCell cell)
+        internal static bool CellHasBodyContent(PayloadCell cell)
         {
             if (cell.IsEmpty)
-                throw new InvalidOperationException("Cannot serialize empty cell.");
+                return false;
+
+            if (cell.Detail.HasTile)
+                return true;
+            if (cell.Wall.Type > 0)
+                return true;
+            if (cell.Liquid.Type != 0)
+                return true;
+            if (cell.Liquid.Amount > 0)
+                return true;
+            if (cell.Block.FrameX != 0 || cell.Block.FrameY != 0 || cell.Block.FrameNumber != 0)
+                return true;
+            if (cell.Wall.FrameX != 0 || cell.Wall.FrameY != 0 || cell.Wall.FrameNumber != 0)
+                return true;
+
+            PayloadCell.TileData data = cell.Data!;
+            if (data.TileStyle != 0 || data.TileAlternate != 0)
+                return true;
+            if (data.TWWStateData.Slope != SlopeType.Solid)
+                return true;
+            if (data.TWWStateData.BlockType != BlockType.Solid)
+                return true;
+            if (cell.Paint.TileColor != 0 || cell.Paint.WallColor != 0)
+                return true;
+            if (cell.Wire.Data != 0)
+                return true;
+            return PackFlags(cell) != 0;
+        }
+
+        public static TagCompound CellBodyToTag(PayloadCell cell)
+        {
+            if (!CellHasBodyContent(cell))
+                throw new InvalidOperationException("Cannot serialize vacant cell.");
 
             var data = cell.Data!;
             var tag = new TagCompound();
@@ -364,9 +504,22 @@ namespace TheArchitectsBlueprintMod.Core
             return tag;
         }
 
+        internal static bool TryCellFromJObject(JObject body, out PayloadCell cell)
+        {
+            cell = default;
+            if (body.Count == 0)
+                return false;
+
+            TagCompound tag = JObjectToTagCompound(body);
+            return TryCellFromTag(tag, out cell);
+        }
+
         public static bool TryCellFromTag(TagCompound tag, out PayloadCell cell)
         {
             cell = default;
+            if (tag.Count == 0)
+                return false;
+
             try
             {
                 var data = new PayloadCell.TileData
@@ -405,46 +558,46 @@ namespace TheArchitectsBlueprintMod.Core
                         data.LiquidData.LiquidType = resolved.Value;
                 }
 
-                if (tag.ContainsKey("lAmt"))
-                    data.LiquidData.Amount = tag.GetByte("lAmt");
+                if (tag.ContainsKey("lAmt") && TryGetByte(tag, "lAmt", out byte lAmt))
+                    data.LiquidData.Amount = lAmt;
 
-                if (tag.ContainsKey("tFX"))
-                    data.TWWStateData.TileFrameX = tag.GetShort("tFX");
-                if (tag.ContainsKey("tFY"))
-                    data.TWWStateData.TileFrameY = tag.GetShort("tFY");
-                if (tag.ContainsKey("tFN"))
-                    data.TWWStateData.TileFrameNumber = tag.GetInt("tFN");
+                if (tag.ContainsKey("tFX") && TryGetInt16(tag, "tFX", out short tFx))
+                    data.TWWStateData.TileFrameX = tFx;
+                if (tag.ContainsKey("tFY") && TryGetInt16(tag, "tFY", out short tFy))
+                    data.TWWStateData.TileFrameY = tFy;
+                if (tag.ContainsKey("tFN") && TryGetInt32(tag, "tFN", out int tFn))
+                    data.TWWStateData.TileFrameNumber = tFn;
 
-                if (tag.ContainsKey("wFX"))
-                    data.TWWStateData.WallFrameX = tag.GetInt("wFX");
-                if (tag.ContainsKey("wFY"))
-                    data.TWWStateData.WallFrameY = tag.GetInt("wFY");
-                if (tag.ContainsKey("wFN"))
-                    data.TWWStateData.WallFrameNumber = tag.GetInt("wFN");
+                if (tag.ContainsKey("wFX") && TryGetInt32(tag, "wFX", out int wFx))
+                    data.TWWStateData.WallFrameX = wFx;
+                if (tag.ContainsKey("wFY") && TryGetInt32(tag, "wFY", out int wFy))
+                    data.TWWStateData.WallFrameY = wFy;
+                if (tag.ContainsKey("wFN") && TryGetInt32(tag, "wFN", out int wFn))
+                    data.TWWStateData.WallFrameNumber = wFn;
 
-                if (tag.ContainsKey("style"))
-                    data.TileStyle = tag.GetInt("style");
-                if (tag.ContainsKey("alt"))
-                    data.TileAlternate = tag.GetInt("alt");
+                if (tag.ContainsKey("style") && TryGetInt32(tag, "style", out int style))
+                    data.TileStyle = style;
+                if (tag.ContainsKey("alt") && TryGetInt32(tag, "alt", out int alt))
+                    data.TileAlternate = alt;
 
-                if (tag.ContainsKey("slope"))
-                    data.TWWStateData.Slope = (SlopeType)tag.GetByte("slope");
-                if (tag.ContainsKey("bType"))
-                    data.TWWStateData.BlockType = (BlockType)tag.GetByte("bType");
+                if (tag.ContainsKey("slope") && TryGetByte(tag, "slope", out byte slope))
+                    data.TWWStateData.Slope = (SlopeType)slope;
+                if (tag.ContainsKey("bType") && TryGetByte(tag, "bType", out byte bType))
+                    data.TWWStateData.BlockType = (BlockType)bType;
 
-                if (tag.ContainsKey("paintT"))
-                    data.TWWStateData.TileColor = tag.GetByte("paintT");
-                if (tag.ContainsKey("paintW"))
-                    data.TWWStateData.WallColor = tag.GetByte("paintW");
+                if (tag.ContainsKey("paintT") && TryGetByte(tag, "paintT", out byte paintT))
+                    data.TWWStateData.TileColor = paintT;
+                if (tag.ContainsKey("paintW") && TryGetByte(tag, "paintW", out byte paintW))
+                    data.TWWStateData.WallColor = paintW;
 
-                if (tag.ContainsKey("wire"))
-                    data.TWWStateData.WireData = tag.GetInt("wire");
+                if (tag.ContainsKey("wire") && TryGetInt32(tag, "wire", out int wire))
+                    data.TWWStateData.WireData = wire;
 
-                if (tag.ContainsKey("flags"))
-                    UnpackFlags(tag.GetInt("flags"), ref data);
+                if (tag.ContainsKey("flags") && TryGetInt32(tag, "flags", out int flags))
+                    UnpackFlags(flags, ref data);
 
                 cell = PayloadCell.FromData(data);
-                return !cell.IsEmpty;
+                return cell.HasSparseContent;
             }
             catch
             {
@@ -529,7 +682,19 @@ namespace TheArchitectsBlueprintMod.Core
                 }
             }
 
-            return new PayloadDocumentInfo(projectName, playerName, createdUtc, width, height, modsLoaded, thumbnailPng);
+            string? modVersion = metaTag.ContainsKey("modVersion") ? metaTag.GetString("modVersion") : null;
+            string? terrariaVersion = metaTag.ContainsKey("terrariaVersion") ? metaTag.GetString("terrariaVersion") : null;
+
+            return new PayloadDocumentInfo(
+                projectName,
+                playerName,
+                createdUtc,
+                width,
+                height,
+                modsLoaded,
+                thumbnailPng,
+                modVersion,
+                terrariaVersion);
         }
 
         private static int PackFlags(PayloadCell cell)
@@ -582,6 +747,186 @@ namespace TheArchitectsBlueprintMod.Core
                 data.TWWStateData.GreenWire = true;
             if ((flags & (int)CellFlags.YellowWire) != 0)
                 data.TWWStateData.YellowWire = true;
+        }
+
+        private static bool LooksLikeLegacySparsePayload(JObject root)
+        {
+            JToken? listToken = root[KeyPayload] ?? root[KeyLegacyCells];
+            if (listToken is not JArray { Count: > 0 } list)
+                return false;
+
+            if (list[0] is JArray)
+                return true;
+
+            if (list[0] is not JObject first)
+                return false;
+
+            return first.ContainsKey("TileType") || first.ContainsKey("WallType");
+        }
+
+        private static JObject TagCompoundToJObject(TagCompound tag)
+        {
+            var obj = new JObject();
+            foreach (KeyValuePair<string, object> pair in tag)
+                obj[pair.Key] = TagValueToJToken(pair.Value);
+            return obj;
+        }
+
+        private static JToken TagValueToJToken(object value)
+        {
+            switch (value)
+            {
+                case string s:
+                    return s;
+                case int i:
+                    return i;
+                case float f:
+                    return f;
+                case double d:
+                    return d;
+                case bool b:
+                    return b;
+                case byte b:
+                    return b;
+                case short s:
+                    return s;
+                case long l:
+                    return l;
+                case TagCompound compound:
+                    return TagCompoundToJObject(compound);
+                case IList<string> strings:
+                {
+                    var array = new JArray();
+                    for (int i = 0; i < strings.Count; i++)
+                        array.Add(strings[i]);
+                    return array;
+                }
+                case IList<int> ints:
+                {
+                    var array = new JArray();
+                    for (int i = 0; i < ints.Count; i++)
+                        array.Add(ints[i]);
+                    return array;
+                }
+                case IList<TagCompound> tags:
+                {
+                    var array = new JArray();
+                    for (int i = 0; i < tags.Count; i++)
+                        array.Add(TagCompoundToJObject(tags[i]));
+                    return array;
+                }
+                default:
+                    return JValue.CreateNull();
+            }
+        }
+
+        private static TagCompound JObjectToTagCompound(JObject obj)
+        {
+            var tag = new TagCompound();
+            foreach (JProperty property in obj.Properties())
+            {
+                object? converted = JTokenToTagValue(property.Value);
+                if (converted is not null)
+                    tag[property.Name] = converted;
+            }
+
+            return tag;
+        }
+
+        private static object? JTokenToTagValue(JToken token)
+        {
+            return token.Type switch
+            {
+                JTokenType.String => token.Value<string>(),
+                JTokenType.Integer => token.Value<int>(),
+                JTokenType.Float => token.Value<float>(),
+                JTokenType.Boolean => token.Value<bool>(),
+                JTokenType.Object => JObjectToTagCompound((JObject)token),
+                JTokenType.Array => JArrayToTagList((JArray)token),
+                _ => null,
+            };
+        }
+
+        private static object JArrayToTagList(JArray array)
+        {
+            if (array.Count == 0)
+                return new List<TagCompound>();
+
+            if (array[0] is JObject)
+            {
+                var compounds = new List<TagCompound>(array.Count);
+                foreach (JToken item in array)
+                {
+                    if (item is JObject obj)
+                        compounds.Add(JObjectToTagCompound(obj));
+                }
+
+                return compounds;
+            }
+
+            if (array[0].Type == JTokenType.String)
+            {
+                var strings = new List<string>(array.Count);
+                foreach (JToken item in array)
+                    strings.Add(item.Type == JTokenType.String ? item.Value<string>() ?? string.Empty : item.ToString());
+                return strings;
+            }
+
+            if (array[0].Type == JTokenType.Integer)
+            {
+                var ints = new List<int>(array.Count);
+                foreach (JToken item in array)
+                    ints.Add(item.Type == JTokenType.Integer ? item.Value<int>() : 0);
+                return ints;
+            }
+
+            return new List<TagCompound>();
+        }
+
+        private static bool TryGetInt32(TagCompound tag, string key, out int value)
+        {
+            value = 0;
+            if (!tag.ContainsKey(key))
+                return false;
+
+            object raw = tag[key];
+            switch (raw)
+            {
+                case int i:
+                    value = i;
+                    return true;
+                case short s:
+                    value = s;
+                    return true;
+                case byte b:
+                    value = b;
+                    return true;
+                case long l:
+                    value = (int)l;
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static bool TryGetInt16(TagCompound tag, string key, out short value)
+        {
+            value = 0;
+            if (!TryGetInt32(tag, key, out int i))
+                return false;
+
+            value = (short)i;
+            return true;
+        }
+
+        private static bool TryGetByte(TagCompound tag, string key, out byte value)
+        {
+            value = 0;
+            if (!TryGetInt32(tag, key, out int i))
+                return false;
+
+            value = (byte)i;
+            return true;
         }
     }
 }

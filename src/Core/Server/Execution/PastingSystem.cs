@@ -318,18 +318,16 @@ namespace TheArchitectsBlueprintMod.Core
             if (projection is null || !projection.HasPayload)
                 return (tileIds, wallIds);
 
-            // Walk all payload cells (order matches foreach on the payload grid; only IDs are collected).
-            foreach (PayloadCell cell in projection.Payload.Cells)
+            IReadOnlyList<Payload.Entry> entries = projection.Payload.Entries;
+            for (int i = 0; i < entries.Count; i++)
             {
-                // If the cell is empty, skip it.
+                PayloadCell cell = entries[i].Cell;
                 if (cell.IsEmpty)
                     continue;
 
-                // If the cell has a tile, add the tile type to the tile IDs.
                 if (cell.Detail.HasTile)
                     tileIds.Add(cell.Block.Type);
 
-                // If the cell has a wall, add the wall type to the wall IDs.
                 if (cell.Wall.Type != WallID.None)
                     wallIds.Add(cell.Wall.Type);
             }

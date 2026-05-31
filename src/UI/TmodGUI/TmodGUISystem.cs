@@ -12,6 +12,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI
     {
         private UserInterface? _ui;
         private GameTime? _lastUpdateUiGameTime;
+        private bool _closeAllPending;
 
         public override void Load()
         {
@@ -23,6 +24,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI
 
         public override void Unload()
         {
+            _closeAllPending = false;
             TmodGUI.CloseAll();
             _ui = null;
             _lastUpdateUiGameTime = null;
@@ -30,8 +32,11 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI
 
         public override void OnWorldUnload()
         {
-            TmodGUI.CloseAll();
+            RequestCloseAllOnMainThread();
         }
+
+        /// <summary>Defer GUI teardown to <see cref="UpdateUI"/> so texture disposal stays on the main thread.</summary>
+        private void RequestCloseAllOnMainThread() => _closeAllPending = true;
 
         internal void SetActiveWidget(TmodWidgetBase? widget)
         {
@@ -41,6 +46,12 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI
         public override void UpdateUI(GameTime gameTime)
         {
             _lastUpdateUiGameTime = gameTime;
+
+            if (_closeAllPending)
+            {
+                _closeAllPending = false;
+                TmodGUI.CloseAll();
+            }
 
             if (Main.gameMenu)
             {
@@ -52,22 +63,15 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI
                 return;
 
             _ui.Update(gameTime);
-
-            if (_ui.CurrentState is TmodWidgetBase widget &&
-                widget.WantsMouseCapture &&
-                Main.LocalPlayer != null)
-            {
-                Main.LocalPlayer.mouseInterface = true;
-            }
         }
 
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
-            int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
-            if (mouseTextIndex == -1)
-                mouseTextIndex = layers.Count;
+            int insertIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
+            if (insertIndex == -1)
+                insertIndex = layers.Count;
 
-            layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
+            layers.Insert(insertIndex, new LegacyGameInterfaceLayer(
                 "TheArchitectsBlueprintMod: TmodGUI",
                 DrawInterface,
                 InterfaceScaleType.UI));

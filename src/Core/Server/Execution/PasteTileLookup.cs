@@ -70,16 +70,27 @@ namespace TheArchitectsBlueprintMod.Core
         public PasteTileLookup(PasteTile[,] pasteTiles)
         {
             _pasteTiles = pasteTiles ?? throw new ArgumentNullException(nameof(pasteTiles));
-            int n = pasteTiles.Length;
-            _byRelative = new Dictionary<Point, PasteTile>(n);
-            _byWorld = new Dictionary<Point, PasteTile>(n);
+            int width = pasteTiles.GetLength(0);
+            int height = pasteTiles.GetLength(1);
+            _byRelative = new Dictionary<Point, PasteTile>();
+            _byWorld = new Dictionary<Point, PasteTile>();
 
-            foreach (var pasteTile in pasteTiles)
+            for (int x = 0; x < width; x++)
             {
-                if (!_byRelative.TryAdd(pasteTile.Relative, pasteTile))
-                    throw new InvalidOperationException($"Duplicate paste Relative ({pasteTile.Relative.X},{pasteTile.Relative.Y}); each cell must appear once.");
-                if (!_byWorld.TryAdd(pasteTile.World, pasteTile))
-                    throw new InvalidOperationException($"Duplicate paste World ({pasteTile.World.X},{pasteTile.World.Y}); each target cell must appear once.");
+                for (int y = 0; y < height; y++)
+                {
+                    PasteTile pasteTile = pasteTiles[x, y];
+                    if (pasteTile.Relative.X != x || pasteTile.Relative.Y != y)
+                        continue;
+
+                    if (pasteTile.PayloadCell.IsEmpty)
+                        continue;
+
+                    if (!_byRelative.TryAdd(pasteTile.Relative, pasteTile))
+                        throw new InvalidOperationException($"Duplicate paste Relative ({pasteTile.Relative.X},{pasteTile.Relative.Y}); each cell must appear once.");
+                    if (!_byWorld.TryAdd(pasteTile.World, pasteTile))
+                        throw new InvalidOperationException($"Duplicate paste World ({pasteTile.World.X},{pasteTile.World.Y}); each target cell must appear once.");
+                }
             }
         }
 
@@ -90,7 +101,21 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>True if <paramref name="relative"/> is part of this paste.</summary>
         public bool IsInPasteScope(Point relative) => _byRelative.ContainsKey(relative);
 
-        public bool TryGetPasteTile(Point relative, out PasteTile pasteTile) => _byRelative.TryGetValue(relative, out pasteTile);
+        public bool TryGetPasteTile(Point relative, out PasteTile pasteTile)
+        {
+            if (_byRelative.TryGetValue(relative, out pasteTile))
+                return true;
+
+            if ((uint)relative.X < (uint)_pasteTiles.GetLength(0) && (uint)relative.Y < (uint)_pasteTiles.GetLength(1))
+            {
+                pasteTile = _pasteTiles[relative.X, relative.Y];
+                if (pasteTile.Relative == relative)
+                    return true;
+            }
+
+            pasteTile = default;
+            return false;
+        }
 
         public bool TryGetPasteTileByWorld(Point world, out PasteTile pasteTile) => _byWorld.TryGetValue(world, out pasteTile);
 

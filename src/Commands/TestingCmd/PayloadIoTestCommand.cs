@@ -1,9 +1,7 @@
 #if DEBUG
 #nullable enable
 
-using System.Linq;
-using TheArchitectsBlueprintMod.Tests;
-using TheArchitectsBlueprintMod.Tests.Samples;
+using TheArchitectsBlueprintMod.Core.ScenarioTests;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -17,7 +15,7 @@ namespace TheArchitectsBlueprintMod.Core
         public override CommandType Type => CommandType.Chat;
 
         public override string Usage => "/tab.test.payload clear|fill";
-        public override string Description => "[Debug] Runs payload_io_clear or payload_io_fill scenarios.";
+        public override string Description => "[Debug] Runs payload IO scenarios (sc9/sc10).";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
@@ -46,9 +44,8 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            string slug = TestScenarioRegistry.Samples[0].Slug;
-            string scenarioId = args[0] == "clear" ? $"payload_io_clear_{slug}" : $"payload_io_fill_{slug}";
-            BlueprintTestRunner.RunScenario(new CommandTestReporter(caller), pl, scenarioId);
+            string scenarioId = args[0] == "clear" ? "sc9" : "sc10";
+            ScenarioTestRunner.RunScenario(new CommandScenarioTestReporter(caller), pl, scenarioId);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
 {
     /// <summary>
     /// Syncs in-progress paste highlight tiles (world coordinates only). Tile data for a paste is sent via
-    /// <see cref="PasteRequest"/> as compact <see cref="TheArchitectsBlueprintMod.Core.Client.PayloadImport.PayloadDocument"/> JSON.
+    /// <see cref="PasteRequest"/> as canonical sparse payload JSON (see <see cref="PayloadTagIO"/> / <see cref="PayloadJsonImport"/>).
     /// </summary>
     internal static class PasteOverlayNetworking
     {

@@ -186,8 +186,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 if (tiles.Count == 0)
                     continue;
 
-                bool placementValid = layer.PlacementValid(in pasteTile, in identifyLookup, in context);
-                bool hasRequiredItems = layer.HasRequiredItems(in pasteTile, in identifyLookup, in context);
+                bool placementValid = pasteTile.PayloadCell.IsEmpty
+                    ? identifySubject != PasteSubject.Payload
+                    : layer.PlacementValid(in pasteTile, in identifyLookup, in context);
+                bool hasRequiredItems = pasteTile.PayloadCell.IsEmpty || layer.HasRequiredItems(in pasteTile, in identifyLookup, in context);
                 identifiedLayers.Add(new LayerIdentifyResult(layer, tiles, placementValid, hasRequiredItems));
                 claimedTypes.Add(layer.LayerType);
             }
@@ -303,6 +305,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "OtherAnchored",
                     "Tree",
                     "Unknown",
+                    "Deco",
                     "Fluid",
                     "Paint",
                     "Wiring",
@@ -315,6 +318,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Detail",
                     "Wiring",
                     "Paint",
+                    "Deco",
                     "Unknown",
                     "Tree",
                     "OtherAnchored",
@@ -329,6 +333,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Wall",
                     "Unknown",
                     "Tree",
+                    "Deco",
                     "OtherAnchored",
                     "WallAnchored",
                     "TileAnchored",

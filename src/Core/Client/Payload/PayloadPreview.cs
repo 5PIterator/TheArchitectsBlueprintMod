@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -107,44 +108,53 @@ namespace TheArchitectsBlueprintMod.UI
             float scale,
             Func<Point, bool>? includeCell = null)
         {
-            for (int y = minY; y < maxY; y++)
+            IReadOnlyList<Payload.Entry> entries = payload.Entries;
+            foreach (Payload.Entry entry in entries)
             {
-                for (int x = minX; x < maxX; x++)
-                {
-                    var point = new Point(x, y);
-                    if (includeCell is not null && !includeCell(point))
-                        continue;
-                    if (!payload.TryGetCell(point, out PayloadCell cell) || cell.IsEmpty)
-                        continue;
-                    DrawWall(sb, cell, position, x, y, scale);
-                }
+                Point rel = entry.Relative;
+                if (rel.X < minX || rel.X >= maxX || rel.Y < minY || rel.Y >= maxY)
+                    continue;
+                if (includeCell is not null && !includeCell(rel))
+                    continue;
+
+                PayloadCell cell = entry.Cell;
+                if (cell.IsEmpty)
+                    continue;
+
+                DrawWall(sb, cell, position, rel.X, rel.Y, scale);
+                DrawLiquid(sb, cell, position, rel.X, rel.Y, scale);
+                DrawTile(sb, cell, position, rel.X, rel.Y, scale);
             }
 
-            for (int y = minY; y < maxY; y++)
+            /*foreach (Payload.Entry entry in entries)
             {
-                for (int x = minX; x < maxX; x++)
-                {
-                    var point = new Point(x, y);
-                    if (includeCell is not null && !includeCell(point))
-                        continue;
-                    if (!payload.TryGetCell(point, out PayloadCell cell) || cell.IsEmpty)
-                        continue;
-                    DrawLiquid(sb, cell, position, x, y, scale);
-                }
+                Point rel = entry.Relative;
+                if (rel.X < minX || rel.X >= maxX || rel.Y < minY || rel.Y >= maxY)
+                    continue;
+                if (includeCell is not null && !includeCell(rel))
+                    continue;
+
+                PayloadCell cell = entry.Cell;
+                if (cell.IsEmpty)
+                    continue;
+
+                DrawLiquid(sb, cell, position, rel.X, rel.Y, scale);
             }
 
-            for (int y = minY; y < maxY; y++)
+            foreach (Payload.Entry entry in entries)
             {
-                for (int x = minX; x < maxX; x++)
-                {
-                    var point = new Point(x, y);
-                    if (includeCell is not null && !includeCell(point))
-                        continue;
-                    if (!payload.TryGetCell(point, out PayloadCell cell) || cell.IsEmpty)
-                        continue;
-                    DrawTile(sb, cell, position, x, y, scale);
-                }
-            }
+                Point rel = entry.Relative;
+                if (rel.X < minX || rel.X >= maxX || rel.Y < minY || rel.Y >= maxY)
+                    continue;
+                if (includeCell is not null && !includeCell(rel))
+                    continue;
+
+                PayloadCell cell = entry.Cell;
+                if (cell.IsEmpty)
+                    continue;
+
+                DrawTile(sb, cell, position, rel.X, rel.Y, scale);
+            }*/
         }
 
         private static bool TryGetIncludedCell(Projection proj, Payload payload, Point relative, out PayloadCell cell)

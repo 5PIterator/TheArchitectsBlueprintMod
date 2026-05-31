@@ -9,7 +9,7 @@ using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.Utils;
 #if DEBUG
-using TheArchitectsBlueprintMod.Tests;
+using TheArchitectsBlueprintMod.Core.ScenarioTests;
 #endif
 
 namespace TheArchitectsBlueprintMod.Content.Items
@@ -126,7 +126,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 					return;
 #if DEBUG
 				case DebugStickAction.RunBlueprintTests:
-					BlueprintTestRunner.RunAll(player, (msg, color) => Main.NewText(msg, color));
+					ScenarioTestRunner.RunAll(new DelegateScenarioTestReporter((msg, color) => Main.NewText(msg, color)), player);
 					return;
 #endif
 				default:

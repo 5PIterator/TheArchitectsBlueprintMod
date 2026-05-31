@@ -1,4 +1,6 @@
 using System;
+using Terraria.GameContent.Bestiary;
+using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets

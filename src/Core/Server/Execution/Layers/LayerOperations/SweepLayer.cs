@@ -23,7 +23,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             {
                 for (int x = 0; x < lookup.PasteTiles.GetLength(0); x++)
                 {
-                    var pt = lookup.PasteTiles[x, y];
+                    PasteTile pt = lookup.PasteTiles[x, y];
+                    if (pt.Relative.X != x || pt.Relative.Y != y)
+                        continue;
+
                     bounded.Add(new Blueprint.BlueprintCell(pt.Relative, pt.World, true));
                 }
             }

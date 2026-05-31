@@ -1,4 +1,3 @@
-using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.UI.TmodGUI;
@@ -7,8 +6,7 @@ using TheArchitectsBlueprintMod.UI.TmodGUI.Widgets;
 namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Opens the payload browser for the topmost projection under cursor.
-    /// If the topmost blueprint is a selection, a projection is created first.
+    /// Opens the payload browser. Import/export use the current topmost projection.
     /// Usage: /tab.openBrowser
     /// </summary>
     public sealed class PayloadOpenBrowserCommand : ModCommand
@@ -32,24 +30,16 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            if (caller.Player is not Player player || player.whoAmI != Main.myPlayer)
+            if (caller.Player is not { } player || player.whoAmI != Main.myPlayer)
                 return;
 
-            if (!PayloadSerialization.TryResolveProjectionFromCursor(player, out Projection? projection) || projection == null)
+            if (PayloadBrowser.HasActive && TmodGUI.GetActiveWidget() is TmodPayloadBrowserWidget)
             {
-                caller.Reply("Payload Browser: No projection or selection under the cursor.", Color.Orange);
+                caller.Reply("Payload Browser is already open.");
                 return;
             }
 
-            if (PayloadSerialization.HasBrowserSession &&
-                TmodGUI.GetActiveWidget() is TmodPayloadBrowserWidget &&
-                PayloadSerialization.SetActiveBrowserProjection(projection))
-            {
-                caller.Reply("Payload Browser target updated.", Color.LightGreen);
-                return;
-            }
-
-            TmodPayloadBrowserWidget.Open(projection);
+            TmodPayloadBrowserWidget.Open();
         }
     }
 }

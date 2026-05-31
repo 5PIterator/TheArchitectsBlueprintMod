@@ -1,7 +1,7 @@
 #if DEBUG
 #nullable enable
 
-using TheArchitectsBlueprintMod.Tests;
+using TheArchitectsBlueprintMod.Core.ScenarioTests;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -15,7 +15,7 @@ namespace TheArchitectsBlueprintMod.Core
         public override CommandType Type => CommandType.Chat;
 
         public override string Usage =>
-            "/tab.test list | /tab.test all | /tab.test run <scenarioId> | legacy: selection|projection|import|exec|cut|cut_on|cut_off|cut_toggle";
+            "/tab.test list | /tab.test all | /tab.test run <scenarioId> | /tab.test scenarios list|all|run <scenarioId>";
 
         public override string Description =>
             "[Debug] Runs blueprint test scenarios (fixture chain setup + scenario-specific checks).";
@@ -47,23 +47,23 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            var reporter = new CommandTestReporter(caller);
+            var reporter = new CommandScenarioTestReporter(caller);
             switch (args[0])
             {
+                case "scenarios":
+                    ScenarioTestRunner.HandleCommand(caller, pl, args);
+                    break;
                 case "list":
-                    BlueprintTestRunner.ListScenarios(reporter);
+                    ScenarioTestRunner.ListScenarios(reporter);
                     break;
                 case "all":
-                    BlueprintTestRunner.RunAll(reporter, pl);
+                    ScenarioTestRunner.RunAll(reporter, pl);
                     break;
                 case "run" when args.Length >= 2:
-                    BlueprintTestRunner.RunScenario(reporter, pl, args[1]);
+                    ScenarioTestRunner.RunScenario(reporter, pl, args[1]);
                     break;
                 default:
-                    if (TestScenarioRegistry.TryResolveLegacyAlias(args[0], out string? legacyId))
-                        BlueprintTestRunner.RunScenario(reporter, pl, legacyId!);
-                    else
-                        caller.Reply(Usage, Color.Orange);
+                    caller.Reply(Usage, Color.Orange);
                     break;
             }
         }

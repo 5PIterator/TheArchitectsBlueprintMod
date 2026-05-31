@@ -82,25 +82,26 @@ namespace TheArchitectsBlueprintMod.Core
             var entries = new List<Payload.Entry>();
             int totalCells = 0;
             int incompatibleCells = 0;
+            IReadOnlyList<Payload.Entry> sourceEntries = source.Entries;
 
-            for (int y = 0; y < source.Height; y++)
+            for (int i = 0; i < sourceEntries.Count; i++)
             {
-                for (int x = 0; x < source.Width; x++)
+                Payload.Entry sourceEntry = sourceEntries[i];
+                PayloadCell cell = sourceEntry.Cell;
+                if (cell.IsEmpty)
+                    continue;
+
+                totalCells++;
+                Point rel = sourceEntry.Relative;
+                if (IsCellCompatible(cell))
                 {
-                    if (!source.TryGetCell(new Point(x, y), out PayloadCell cell) || cell.IsEmpty)
-                        continue;
-
-                    totalCells++;
-                    if (IsCellCompatible(cell))
-                    {
-                        entries.Add(new Payload.Entry(new Point(x, y), cell));
-                        continue;
-                    }
-
-                    incompatibleCells++;
-                    if (TrySanitizeCell(cell, out PayloadCell sanitized) && !sanitized.IsEmpty)
-                        entries.Add(new Payload.Entry(new Point(x, y), sanitized));
+                    entries.Add(new Payload.Entry(rel, cell));
+                    continue;
                 }
+
+                incompatibleCells++;
+                if (TrySanitizeCell(cell, out PayloadCell sanitized) && !sanitized.IsEmpty)
+                    entries.Add(new Payload.Entry(rel, sanitized));
             }
 
             report = new PayloadCompatibilityReport(totalCells, incompatibleCells, missingMods);
@@ -130,23 +131,15 @@ namespace TheArchitectsBlueprintMod.Core
             return metadataModsLoaded.Where(m => !current.Contains(m)).ToList();
         }
 
-        private static int CountNonEmpty(Payload payload)
-        {
-            int count = 0;
-            foreach (PayloadCell cell in payload.Cells)
-            {
-                if (!cell.IsEmpty)
-                    count++;
-            }
-
-            return count;
-        }
+        private static int CountNonEmpty(Payload payload) => payload.Entries.Count;
 
         private static int CountIncompatible(Payload payload)
         {
             int count = 0;
-            foreach (PayloadCell cell in payload.Cells)
+            IReadOnlyList<Payload.Entry> entries = payload.Entries;
+            for (int i = 0; i < entries.Count; i++)
             {
+                PayloadCell cell = entries[i].Cell;
                 if (!cell.IsEmpty && !IsCellCompatible(cell))
                     count++;
             }

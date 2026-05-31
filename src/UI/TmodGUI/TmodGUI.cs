@@ -1,3 +1,4 @@
+using TheArchitectsBlueprintMod.UI.TmodGUI.Elements;
 using TheArchitectsBlueprintMod.UI.TmodGUI.Widgets;
 using Terraria;
 using Terraria.ModLoader;
@@ -9,7 +10,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI
     {
         private static TmodWidgetBase? _activeWidget;
         public static bool IsOpen => _activeWidget is not null;
-        public static bool IsBlockingInput => false;
+        public static bool IsBlockingInput => IsOpen && TmodWindowPanel.IsCapturingTextInput;
 
         public static void Show(TmodWidgetBase widget)
         {
@@ -40,12 +41,14 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI
                 return;
 
             system.SetActiveWidget(null);
+            TmodWindowPanel.ResetInputState();
             Main.blockInput = false;
         }
 
         public static void CloseAll()
         {
             Close();
+            TmodWindowPanel.ResetInputState();
             Main.blockInput = false;
         }
 

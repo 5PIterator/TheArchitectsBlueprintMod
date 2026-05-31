@@ -719,29 +719,37 @@ namespace TheArchitectsBlueprintMod.Core
         /// </summary>
         private PasteTileLookup BuildLookup()
         {
-            /// Full source payload grid (WxH): opaque clears and layer identify need deselected / empty cells too.
+            /// Full WxH grid: opaque clears walk every relative index. Sparse payload only fills some cells;
+            /// each populated slot must set <see cref="PasteTile.Relative"/> to its grid index (see <see cref="PasteTileLookup"/>).
 
-            // Get the size of the payload.
             Point size = Projection.PayloadSize;
             int w = size.X;
             int h = size.Y;
             var list = new PasteTile[w, h];
-
-            // Payload + target are required; source-area world is optional (imported payloads may not mirror capture).
 
             for (int x = 0; x < w; x++)
             {
                 for (int y = 0; y < h; y++)
                 {
                     Point rel = new(x, y);
-                    if (!Projection.Payload.TryGetCell(rel, out PayloadCell cell) || cell.IsEmpty)
-                        continue;
                     if (!Projection.TryGetTargetTile(rel, out Tile targetTile))
                         continue;
 
                     Projection.TryGetSourceTile(rel, out Tile sourceTile);
                     Point world = Projection.RelativeToWorld(rel);
-                    InteractionEntry interaction = ResolveInteraction(cell.ToTile());
+
+                    PayloadCell cell = default;
+                    InteractionEntry interaction;
+                    if (Projection.Payload.TryGetCell(rel, out PayloadCell payloadCell) && !payloadCell.IsEmpty)
+                    {
+                        cell = payloadCell;
+                        interaction = ResolveInteraction(cell.ToTile());
+                    }
+                    else
+                    {
+                        interaction = InteractionEntry.Create("Tile", mainId: -1);
+                    }
+
                     list[x, y] = new PasteTile(
                         payloadCell: cell,
                         interaction: interaction,

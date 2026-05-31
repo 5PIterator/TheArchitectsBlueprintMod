@@ -10,8 +10,6 @@ using Terraria.ModLoader.IO;
 using Terraria.ObjectData;
 namespace TheArchitectsBlueprintMod.Core
 {
-
-
     /// <summary>
     /// Detached tile cell for a projection: boxed <see cref="DetachedTileSnapshot"/> (tModLoader ECS tile slices).
     /// Default / <see cref="IsEmpty"/> matches former <c>PayloadFacets?</c> null (air).
@@ -92,6 +90,9 @@ namespace TheArchitectsBlueprintMod.Core
         public DetailData Detail => new(_data);
 
         public bool IsEmpty => _data is null;
+
+        /// <summary>True when sparse <c>payload</c> / network encodings would emit a non-empty <c>c</c> body.</summary>
+        internal bool HasSparseContent => PayloadTagIO.CellHasBodyContent(this);
         internal PayloadCell(TileData data) => _data = data;
 
         /// <summary>Creates a non-empty payload cell from detached tile data.</summary>
@@ -121,7 +122,8 @@ namespace TheArchitectsBlueprintMod.Core
                 TileObjectData.GetTileInfo(tile, ref style, ref alternate);
             data.TileStyle = style;
             data.TileAlternate = alternate;
-            return new PayloadCell(data);
+            PayloadCell cell = new(data);
+            return cell.HasSparseContent ? cell : default;
         }
 
         /// <summary>
@@ -138,7 +140,7 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>
-        /// Creates a Tile data structure from a PayloadCell.
+        /// Creates a Tile data structure from a PayloadCell. Empty cells materialize as <c>default</c> (air).
         /// !Important: The returned Tile is a temporary tile, and will be overridden by the next call to ToTile().
         /// </summary>
         /// <param name="cell"></param>
@@ -146,7 +148,7 @@ namespace TheArchitectsBlueprintMod.Core
         public Tile ToTile()
         {
             if (IsEmpty)
-                throw new InvalidOperationException("PayloadCell is empty");
+                return default;
             Tile t = new();
             t.Get<TileTypeData>() = _data.TileType;
             t.Get<WallTypeData>() = _data.WallType;
@@ -193,8 +195,8 @@ namespace TheArchitectsBlueprintMod.Core
     }
 
     /// <summary>
-    /// Immutable grid of detached tile snapshots (<see cref="PayloadCell"/>), stored as a 2D array <c>[x, y]</c>.
-    /// New state is always produced via <see cref="Empty"/>, <see cref="FromWorld"/>, <see cref="FromSparse"/>, or <see cref="FromDocument"/>.
+    /// Immutable sparse list of detached tile snapshots (<see cref="PayloadCell"/>) with document bounds.
+    /// New state is always produced via <see cref="Empty"/>, <see cref="FromWorld"/>, <see cref="FromSparse"/>, or <see cref="TryFromTagDocument"/>.
     /// </summary>
     public sealed class Payload
     {
@@ -206,37 +208,38 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>Zero-sized payload (no grid).</summary>
-        public static Payload Empty { get; } = new(0, 0, new PayloadCell[0, 0]);
+        public static Payload Empty { get; } = new(0, 0, Array.Empty<Entry>());
 
-        private readonly PayloadCell[,] _cells;
         private readonly int _width;
         private readonly int _height;
+        private readonly Entry[] _entries;
+        private Dictionary<Point, PayloadCell>? _cellIndex;
 
-        private Payload(int width, int height, PayloadCell[,] cells)
+        private Payload(int width, int height, Entry[] entries)
         {
             _width = width;
             _height = height;
-            _cells = cells;
+            _entries = entries;
         }
 
-        /// <summary>
-        /// All cells in C# multidimensional order: first index (width) slowest, second (height) fastest — same as <c>foreach</c> on the backing 2D array.
-        /// </summary>
-        public IEnumerable<PayloadCell> Cells => EnumerateCells();
+        /// <summary>Non-empty cells with relative coordinates.</summary>
+        public IReadOnlyList<Entry> Entries => _entries;
+
+        /// <summary>Non-empty cell bodies only (no coordinates).</summary>
+        public IEnumerable<PayloadCell> Cells
+        {
+            get
+            {
+                for (int i = 0; i < _entries.Length; i++)
+                    yield return _entries[i].Cell;
+            }
+        }
 
         public Point Size => IsDefined ? new Point(_width, _height) : Point.Zero;
         public bool IsDefined => _width > 0 && _height > 0;
 
         public int Width => _width;
         public int Height => _height;
-
-        private IEnumerable<PayloadCell> EnumerateCells()
-        {
-            if (!IsDefined)
-                yield break;
-            foreach (PayloadCell cell in _cells)
-                yield return cell;
-        }
 
         /// <summary>Captures live world tiles under <paramref name="worldBounds"/>.</summary>
         public static Payload FromWorld(Rectangle worldBounds)
@@ -246,7 +249,7 @@ namespace TheArchitectsBlueprintMod.Core
 
             int w = worldBounds.Width;
             int h = worldBounds.Height;
-            var cells = new PayloadCell[w, h];
+            var entries = new List<Entry>();
             for (int x = 0; x < w; x++)
             {
                 for (int y = 0; y < h; y++)
@@ -256,63 +259,37 @@ namespace TheArchitectsBlueprintMod.Core
                     if (!WorldGen.InWorld(wx, wy))
                         continue;
 
-                    cells[x, y] = PayloadCell.FromTile(Framing.GetTileSafely(wx, wy));
+                    PayloadCell cell = PayloadCell.FromTile(Framing.GetTileSafely(wx, wy));
+                    if (cell.HasSparseContent)
+                        entries.Add(new Entry(new Point(x, y), cell));
                 }
             }
 
-            return new Payload(w, h, cells);
+            return new Payload(w, h, entries.ToArray());
         }
 
-        /// <summary>
-        /// Merges sparse entries into a dense <paramref name="width"/>×<paramref name="height"/> grid (unset cells stay air).
-        /// </summary>
+        /// <summary>Builds a sparse payload from relative placements within <paramref name="width"/>×<paramref name="height"/> bounds.</summary>
         public static Payload FromSparse(IReadOnlyList<Entry> entries, int width, int height)
         {
-            if (entries is null || width <= 0 || height <= 0)
+            if (width <= 0 || height <= 0)
                 return Empty;
 
-            var cells = new PayloadCell[width, height];
+            if (entries is null || entries.Count == 0)
+                return new Payload(width, height, Array.Empty<Entry>());
+
+            var filtered = new List<Entry>(entries.Count);
             for (int i = 0; i < entries.Count; i++)
             {
                 Entry e = entries[i];
                 Point rel = e.Relative;
                 if ((uint)rel.X >= (uint)width || (uint)rel.Y >= (uint)height)
                     continue;
-                cells[rel.X, rel.Y] = e.Cell;
+                if (!e.Cell.HasSparseContent)
+                    continue;
+                filtered.Add(e);
             }
 
-            return new Payload(width, height, cells);
-        }
-
-        /// <summary>Loads a payload from a raw JSON 2D tile-data array.</summary>
-        public static Payload FromJson(string json)
-        {
-            // --- Deserialize the raw grid, then convert each non-null tile snapshot into a cell.
-
-            if (string.IsNullOrWhiteSpace(json))
-                return Empty;
-
-            PayloadCell.TileData?[,]? dataGrid = JsonConvert.DeserializeObject<PayloadCell.TileData?[,]>(json);
-            if (dataGrid is null)
-                return Empty;
-
-            int width = dataGrid.GetLength(0);
-            int height = dataGrid.GetLength(1);
-            if (width <= 0 || height <= 0)
-                return Empty;
-
-            var cells = new PayloadCell[width, height];
-            for (int x = 0; x < width; x++)
-            {
-                for (int y = 0; y < height; y++)
-                {
-                    PayloadCell.TileData? data = dataGrid[x, y];
-                    if (data is not null)
-                        cells[x, y] = PayloadCell.FromData(data);
-                }
-            }
-
-            return new Payload(width, height, cells);
+            return new Payload(width, height, filtered.ToArray());
         }
 
         /// <summary>
@@ -337,7 +314,7 @@ namespace TheArchitectsBlueprintMod.Core
                     continue;
 
                 byte[] cellBytes = reader.ReadBytes(byteLen);
-                if (!PayloadTagIO.TryCellFromBytes(cellBytes, out PayloadCell cell) || cell.IsEmpty)
+                if (!PayloadTagIO.TryCellFromBytes(cellBytes, out PayloadCell cell) || !cell.HasSparseContent)
                     continue;
 
                 entries.Add(new Entry(new Point(x, y), cell));
@@ -352,17 +329,16 @@ namespace TheArchitectsBlueprintMod.Core
             return PayloadTagIO.TryReadDocument(root, out payload, out info, out error);
         }
 
-        /// <summary>Independent copy of <paramref name="other"/> (same cells; new 2D array).</summary>
+        /// <summary>Independent copy of <paramref name="other"/>.</summary>
         public static Payload FromClone(Payload other)
         {
             ArgumentNullException.ThrowIfNull(other);
             if (!other.IsDefined)
                 return Empty;
 
-            var cells = new PayloadCell[other._width, other._height];
-            Array.Copy(other._cells, cells, other._cells.Length);
-
-            return new Payload(other._width, other._height, cells);
+            var copy = new Entry[other._entries.Length];
+            Array.Copy(other._entries, copy, other._entries.Length);
+            return new Payload(other._width, other._height, copy);
         }
 
         /// <summary>Snapshot for one world <see cref="Tile"/> (air omitted).</summary>
@@ -382,47 +358,17 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            int nonEmpty = 0;
-            foreach (PayloadCell cell in _cells)
+            writer.Write(_entries.Length);
+            for (int i = 0; i < _entries.Length; i++)
             {
-                if (!cell.IsEmpty)
-                    nonEmpty++;
+                Entry entry = _entries[i];
+                Point rel = entry.Relative;
+                byte[] cellBytes = PayloadTagIO.CellTagToBytes(PayloadTagIO.CellBodyToTag(entry.Cell));
+                writer.Write(rel.X);
+                writer.Write(rel.Y);
+                writer.Write(cellBytes.Length);
+                writer.Write(cellBytes);
             }
-
-            writer.Write(nonEmpty);
-            for (int y = 0; y < _height; y++)
-            {
-                for (int x = 0; x < _width; x++)
-                {
-                    PayloadCell cell = _cells[x, y];
-                    if (cell.IsEmpty)
-                        continue;
-
-                    byte[] cellBytes = PayloadTagIO.CellTagToBytes(PayloadTagIO.CellBodyToTag(cell));
-                    writer.Write(x);
-                    writer.Write(y);
-                    writer.Write(cellBytes.Length);
-                    writer.Write(cellBytes);
-                }
-            }
-        }
-
-        /// <summary>Returns a JSON string of raw 2D tile-data snapshots.</summary>
-        public string ToJson()
-        {
-            // --- Project cells to nullable tile data so empty cells remain explicit JSON nulls.
-
-            if (!IsDefined)
-                return JsonConvert.SerializeObject(new PayloadCell.TileData?[0, 0]);
-
-            var dataGrid = new PayloadCell.TileData?[_width, _height];
-            for (int x = 0; x < _width; x++)
-            {
-                for (int y = 0; y < _height; y++)
-                    dataGrid[x, y] = _cells[x, y].Data;
-            }
-
-            return JsonConvert.SerializeObject(dataGrid);
         }
 
         public bool TryGetCell(Point relative, out PayloadCell cell)
@@ -433,8 +379,25 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
             }
 
-            cell = _cells[relative.X, relative.Y];
-            return true;
+            EnsureCellIndex();
+            if (_cellIndex!.TryGetValue(relative, out cell))
+                return true;
+
+            cell = default;
+            return false;
+        }
+
+        private void EnsureCellIndex()
+        {
+            if (_cellIndex is not null || _entries.Length == 0)
+                return;
+
+            _cellIndex = new Dictionary<Point, PayloadCell>(_entries.Length);
+            for (int i = 0; i < _entries.Length; i++)
+            {
+                Entry entry = _entries[i];
+                _cellIndex[entry.Relative] = entry.Cell;
+            }
         }
     }
 }

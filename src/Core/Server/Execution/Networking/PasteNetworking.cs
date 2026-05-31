@@ -12,7 +12,7 @@ using Terraria.ModLoader;
 
 namespace TheArchitectsBlueprintMod.Core.Server
 {
-    /// <summary>Multipaste control packets; paste payload uses <see cref="PasteRequest"/> (JSON <see cref="TheArchitectsBlueprintMod.Core.Client.PayloadImport.PayloadDocument"/>).</summary>
+    /// <summary>Multipaste control packets; paste payload uses <see cref="PasteRequest"/> (canonical sparse payload JSON via <see cref="PayloadJsonImport"/>).</summary>
     internal static class PasteNetworking
     {
         private static int _nextRequestId = 1;

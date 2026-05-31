@@ -26,6 +26,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public static bool MatchPayloadToTargetTileType(in PasteTile tile)
         {
+            if (tile.PayloadCell.IsEmpty)
+                return !tile.Target.HasTile;
+
             Tile intent = tile.PayloadTile;
             if (intent.HasTile != tile.Target.HasTile) return false;
             if (!intent.HasTile) return !tile.Target.HasTile;
@@ -50,6 +53,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     && tile.Source.TileFrameX == tile.Target.TileFrameX
                     && tile.Source.TileFrameY == tile.Target.TileFrameY;
             }
+
+            if (tile.PayloadCell.IsEmpty)
+                return !tile.Target.HasTile;
 
             Tile intent = tile.PayloadTile;
             if (!intent.HasTile) return true;

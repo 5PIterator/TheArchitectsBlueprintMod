@@ -1,3 +1,39 @@
+UI: {
+	SearchEntries: Search...
+	NoPayloadEntries: No payload entries found.
+	NoProjectionSelected: No projection selected
+	AuthorBy: By {0}
+	RefreshEntries: Refresh entries
+	EditProjectName: Edit project name
+	ExportReadableJsonHoverOff: Export compact .tab
+	ExportReadableJsonHoverOn: Export readable .json
+
+	Metadata: {
+		dimensions: Dimensions
+		createdUtc: Created
+		modified: Modified
+		modVersion: Mod version
+		terrariaVersion: Terraria version
+		modsLoaded: Mods loaded
+	}
+
+	Sort: {
+		ModifiedDesc: Modified ↓
+		ModifiedAsc: Modified ↑
+		NameAsc: Name A–Z
+		NameDesc: Name Z–A
+		SizeDesc: Size ↓
+	}
+
+	Filter: {
+		All: All
+		ValidOnly: Valid
+		InvalidOnly: Invalid
+		MissingMods: Missing mods
+		LegacyOnly: Legacy
+	}
+}
+
 Items: {
 	IncludeStick: {
 		DisplayName: Include Stick
