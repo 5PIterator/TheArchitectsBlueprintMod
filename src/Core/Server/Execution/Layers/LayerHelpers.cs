@@ -408,7 +408,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return LayerResult.Ok(origin.World);
             }
 
-            if (context.NeedsItems && context.Items != null)
+            if (context.UseReplacePlace && dest.HasTile)
+            {
+                SuppressTileDrop.KillTile(x, y);
+                if (Main.tile[x, y].HasTile)
+                    return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
+            }
+
+            if (context.RequireItems && context.Items != null)
             {
                 Item? item = InventoryManager.FindItemByTile(context.Items, tileType, style);
                 if (item is null)
@@ -436,7 +443,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public static bool Consume(in PasteTile tile, in PasteContext context)
         {
-            if (!tile.PayloadCell.HasTile() || !context.NeedsItems || context.Items is null) return true;
+            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
 
             int x = tile.World.X, y = tile.World.Y;
             Tile placed = Main.tile[x, y];
@@ -448,7 +455,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
             Item? item = InventoryManager.FindItemByTile(context.Items, placedType, style);
             if (item is null) return false;
-            InventoryManager.ConsumeItem(item);
+            InventoryManager.ConsumeItem(item, tile.World, context.Inventories, context.Player);
             return true;
         }
     }
@@ -505,7 +512,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 ushort baseType = (ushort)baseTileId.Value;
                 if (!dest.HasTile || dest.TileType != baseType)
                 {
-                    if (context.NeedsItems && context.Items != null)
+                    if (context.RequireItems && context.Items != null)
                     {
                         Item? item = InventoryManager.FindItemByTile(context.Items, baseType);
                         if (item is null)
@@ -513,17 +520,17 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                             PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
                             return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
                         }
-                        WorldGen.PlaceTile(x, y, baseType, mute: false, forced: context.CheatSweep, plr: context.Player.whoAmI, style: 0);
+                        WorldGen.PlaceTile(x, y, baseType, mute: false, forced: context.IsSweepCheat, plr: context.Player.whoAmI, style: 0);
                         if (!Main.tile[x, y].HasTile || Main.tile[x, y].TileType != baseType)
                         {
                             PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
                             return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
                         }
-                        InventoryManager.ConsumeItem(item);
+                        InventoryManager.ConsumeItem(item, origin.World, context.Inventories, context.Player);
                     }
                     else
                     {
-                        WorldGen.PlaceTile(x, y, baseType, mute: false, forced: context.CheatSweep, plr: context.Player.whoAmI, style: 0);
+                        WorldGen.PlaceTile(x, y, baseType, mute: false, forced: context.IsSweepCheat, plr: context.Player.whoAmI, style: 0);
                         if (!Main.tile[x, y].HasTile || Main.tile[x, y].TileType != baseType)
                         {
                             PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
@@ -534,14 +541,24 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
                 }
             }
-            else if (dest.HasTile && !context.CheatSweep && context.NeedsItems)
+            else if (dest.HasTile && !context.IsSweepCheat && context.RequireItems && !context.UseReplacePlace)
             {
                 PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
                 return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
             }
 
+            if (context.UseReplacePlace && dest.HasTile && dest.TileType != tileType)
+            {
+                SuppressTileDrop.KillTile(x, y);
+                if (Main.tile[x, y].HasTile)
+                {
+                    PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                    return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
+                }
+            }
+
             int placeStyle = Math.Max(0, style);
-            if (context.NeedsItems && context.Items != null)
+            if (context.RequireItems && context.Items != null)
             {
                 Item? item = InventoryManager.FindItemByTile(context.Items, tileType, style);
                 if (item is null)
@@ -552,7 +569,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 placeStyle = Math.Max(0, item.placeStyle);
             }
 
-            bool forcePlace = context.CheatSweep || baseTileId.HasValue;
+            bool forcePlace = context.IsSweepCheat || baseTileId.HasValue || context.UseReplacePlace;
             if (!WorldGen.PlaceTile(x, y, tileType, mute: false, forced: forcePlace, plr: context.Player.whoAmI, style: placeStyle))
             {
                 PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
@@ -566,7 +583,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public static bool Consume(in PasteTile tile, in PasteContext context)
         {
-            if (!tile.PayloadCell.HasTile() || !context.NeedsItems || context.Items is null) return true;
+            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
 
             ushort tileType = (ushort)tile.PayloadCell.Block.Type;
             int style = tile.PayloadCell.Detail.Style;
@@ -575,7 +592,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             int lookupStyle = placedType == tileType ? (style >= 0 ? style : 0) : 0;
             Item? item = InventoryManager.FindItemByTile(context.Items, placedType, lookupStyle);
             if (item is null) return false;
-            InventoryManager.ConsumeItem(item);
+            InventoryManager.ConsumeItem(item, tile.World, context.Inventories, context.Player);
             return true;
         }
     }

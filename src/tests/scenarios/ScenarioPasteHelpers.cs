@@ -22,7 +22,7 @@ namespace TheArchitectsBlueprintMod.Core.ScenarioTests
         {
             error = null;
             PastingSystem pastingSystem = ModContent.GetInstance<PastingSystem>();
-            if (!pastingSystem.StartPaste(projection, ClientPreferences.FromLocalConfigs(), out PasteRejectReason rejectReason))
+            if (!pastingSystem.StartPaste(projection, out PasteRejectReason rejectReason))
             {
                 error = $"Paste rejected: {rejectReason}.";
                 return false;

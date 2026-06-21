@@ -3,6 +3,8 @@ Simple Issues:
 -> [#] Export logic should allow selecting a selection the same way Import logic does.
 
 High Priority Issues:
+- [x] New changes have introduced an issue where cheat sweep does not paste the tiles at all. Most likely issue is with the settings configuration.
+- [x] Sweep seems to have some fundamental issue where it incorrectly reads the payload content and places bricks instead of the payload tiles. Remove the Sweep layer, and instead put the CopyFrom functionality into the phase execution system.
 - [#] TAB is not very mod resistant. There is a need for a payload metadata field that tracks what mods the payload has been created with. For now, only mark mods at the time of export. In the future, each tile will be checked for modded content.
     - [ ] Make TAB resistant to missing mods. It should be able to fully process the payload with only skipping the tiles with missing mods. And if forced by cheat sweep, the missing tiles should be handled by UnknownLayer that places tmodloader's missing tiles. Most preferably, the payload should be checked before being assigned to a projection, and checked for incompatibilities and replaced with the tmod's missing tiles that will store the tile's data.
 

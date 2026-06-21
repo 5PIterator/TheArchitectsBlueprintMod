@@ -45,7 +45,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
-            if (!context.NeedsItems || context.Items is null || context.CheatSweep) return true;
+            if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
             if (!IsBlock(tile.PayloadTile)) return true;
             return HasRequiredItemsSingle(in tile, in context);
         }
@@ -53,7 +53,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
             if (!tile.PayloadCell.HasTile()) return true;
-            if (!context.NeedsItems || context.Items is null) return true;
+            if (!context.RequireItems || context.Items is null) return true;
             ushort tileType = tile.PayloadCell.Block.Type;
             int style = tile.PayloadCell.Detail.Style;
             return InventoryManager.FindItemByTile(context.Items, tileType, style) is not null;
@@ -92,7 +92,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return res;
 
             var origin = FrameOperations.GetPlacementOriginTile(tiles);
-            if (!context.CheatSweep && !Consume(in origin, in context))
+            if (!context.IsSweepCheat && !Consume(in origin, in context))
                 return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
 
             return res;
@@ -122,7 +122,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return true;
             }
 
-            if (targetTile.HasTile && !context.CheatSweep)
+            if (targetTile.HasTile && !context.IsSweepCheat)
                 return false;
 
             return true;
@@ -153,7 +153,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     return InventoryManager.FindItemByTile(context.Items!, tileType, style) is not null;
                 }
             }
-            else if (targetTile.HasTile && !context.CheatSweep)
+            else if (targetTile.HasTile && !context.IsSweepCheat)
             {
                 return false;
             }

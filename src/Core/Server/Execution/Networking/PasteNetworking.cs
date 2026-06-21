@@ -137,9 +137,14 @@ namespace TheArchitectsBlueprintMod.Core.Server
             }
 
             var config = ModContent.GetInstance<PastingConfig>();
-            var clientPrefs = ClientPreferences.FromNetwork(request.IgnoreItems, request.IgnoreInvalid, request.TransparentPaste, request.PasteStepSize, config);
+            var hints = new PasteClientHints(
+                request.IgnoreMissingItems,
+                request.IgnoreInvalidPlacement,
+                request.ClearStrategy,
+                request.SweepStrategy);
+            var policy = EffectivePastePolicy.Resolve(config, hints);
             var pastingSystem = ModContent.GetInstance<PastingSystem>();
-            if (!pastingSystem.StartPaste(projection, clientPrefs, out var startReason))
+            if (!pastingSystem.ExecutePaste(projection, policy, out var startReason))
             {
                 SendAck(mod, whoAmI, request.RequestId, accepted: false, startReason);
                 return;

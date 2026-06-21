@@ -43,29 +43,25 @@ namespace TheArchitectsBlueprintMod.Core.Server
     {
         public int RequestId { get; } = requestId;
 
-        public void Write(BinaryWriter writer)
-        {
-            writer.Write(RequestId);
-        }
+        public void Write(BinaryWriter writer) => writer.Write(RequestId);
 
-        public static PasteCancelPacket Read(BinaryReader reader)
-        {
-            return new PasteCancelPacket(reader.ReadInt32());
-        }
+        public static PasteCancelPacket Read(BinaryReader reader) => new(reader.ReadInt32());
     }
 
     internal sealed class PasteRequest
     {
         private const int MaxPasteRequestPayloadBytes = 32 * 1024 * 1024;
+        private const int MaxExcludedRelativeCells = 500_000;
 
         public int RequestId { get; private set; }
         public Rectangle Bounds { get; private set; } = Rectangle.Empty;
         public Rectangle SourceArea { get; private set; } = Rectangle.Empty;
         public bool CutSource { get; private set; }
-        public bool IgnoreItems { get; private set; }
-        public bool IgnoreInvalid { get; private set; }
-        public bool TransparentPaste { get; private set; }
-        public int PasteStepSize { get; private set; }
+        public bool IgnoreMissingItems { get; private set; }
+        public bool IgnoreInvalidPlacement { get; private set; }
+        public ClearPhaseStrategy ClearStrategy { get; private set; }
+        public SweepPhaseStrategy SweepStrategy { get; private set; }
+        public List<Point> ExcludedRelatives { get; private set; } = [];
         public byte[] PayloadBytes { get; private set; } = [];
 
         private PasteRequest() { }
@@ -95,18 +91,17 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 return false;
             }
 
+            var hints = PasteClientHints.FromClientConfig();
             request.RequestId = requestId;
             request.Bounds = projection.Area;
             request.PayloadBytes = payloadBytes;
-            var clientCfg = ModContent.GetInstance<ClientPasteConfig>();
-            var serverCfg = ModContent.GetInstance<PastingConfig>();
-            request.IgnoreItems = clientCfg.IgnoreItems;
-            request.IgnoreInvalid = clientCfg.IgnoreInvalid;
-            request.TransparentPaste = clientCfg.TransparentPaste;
-            request.PasteStepSize = Math.Max(1, Math.Min(clientCfg.PasteStepSize, serverCfg.MaxPasteStepSize));
+            request.IgnoreMissingItems = hints.IgnoreMissingItems;
+            request.IgnoreInvalidPlacement = hints.IgnoreInvalidPlacement;
+            request.ClearStrategy = hints.ClearStrategy;
+            request.SweepStrategy = hints.SweepStrategy;
             request.SourceArea = projection.SourceArea;
             request.CutSource = !projection.SourceArea.IsEmpty && projection.CutSource;
-
+            request.ExcludedRelatives = CollectExcludedRelatives(projection);
             return true;
         }
 
@@ -119,10 +114,17 @@ namespace TheArchitectsBlueprintMod.Core.Server
             WriteRectangle(writer, Bounds);
             WriteRectangle(writer, SourceArea);
             writer.Write(CutSource);
-            writer.Write(IgnoreItems);
-            writer.Write(IgnoreInvalid);
-            writer.Write(TransparentPaste);
-            writer.Write(PasteStepSize);
+            writer.Write(IgnoreMissingItems);
+            writer.Write(IgnoreInvalidPlacement);
+            writer.Write((byte)ClearStrategy);
+            writer.Write((byte)SweepStrategy);
+            writer.Write(ExcludedRelatives.Count);
+            for (int i = 0; i < ExcludedRelatives.Count; i++)
+            {
+                writer.Write(ExcludedRelatives[i].X);
+                writer.Write(ExcludedRelatives[i].Y);
+            }
+
             writer.Write(PayloadBytes.Length);
             writer.Write(PayloadBytes);
         }
@@ -137,10 +139,27 @@ namespace TheArchitectsBlueprintMod.Core.Server
             };
 
             request.CutSource = reader.ReadBoolean();
-            request.IgnoreItems = reader.ReadBoolean();
-            request.IgnoreInvalid = reader.ReadBoolean();
-            request.TransparentPaste = reader.ReadBoolean();
-            request.PasteStepSize = reader.ReadInt32();
+            request.IgnoreMissingItems = reader.ReadBoolean();
+            request.IgnoreInvalidPlacement = reader.ReadBoolean();
+
+            byte clearByte = reader.ReadByte();
+            if (!TryParseClearStrategy(clearByte, out ClearPhaseStrategy clearStrategy))
+                throw new InvalidDataException($"Paste request has invalid clear strategy byte: {clearByte}.");
+            request.ClearStrategy = clearStrategy;
+
+            byte sweepByte = reader.ReadByte();
+            if (!TryParseSweepStrategy(sweepByte, out SweepPhaseStrategy sweepStrategy))
+                throw new InvalidDataException($"Paste request has invalid sweep strategy byte: {sweepByte}.");
+            request.SweepStrategy = sweepStrategy;
+
+            int excludedCount = reader.ReadInt32();
+            if (excludedCount < 0 || excludedCount > MaxExcludedRelativeCells)
+                throw new InvalidDataException("Paste request has invalid excluded-cell count.");
+
+            var excluded = new List<Point>(excludedCount);
+            for (int i = 0; i < excludedCount; i++)
+                excluded.Add(new Point(reader.ReadInt32(), reader.ReadInt32()));
+            request.ExcludedRelatives = excluded;
 
             int payloadLen = reader.ReadInt32();
             if (payloadLen < 0 || payloadLen > MaxPasteRequestPayloadBytes)
@@ -168,17 +187,80 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 return false;
             }
 
-            Player? shellOwner = (uint)ownerPlayerIndex < (uint)Main.maxPlayers ? Main.player[ownerPlayerIndex] : null;
-            var shell = new Selection(shellOwner.whoAmI);
-            shell.Define(Bounds);
+            if ((uint)ownerPlayerIndex >= (uint)Main.maxPlayers)
+            {
+                reason = PasteRejectReason.InvalidPacket;
+                return false;
+            }
 
-            projection = new Projection(ownerPlayerIndex, shell, cutSource: !SourceArea.IsEmpty && CutSource)
+            Player shellOwner = Main.player[ownerPlayerIndex];
+            Rectangle sourceRect = SourceArea.IsEmpty ? Bounds : SourceArea;
+            var sourceSelection = new Selection(shellOwner.whoAmI);
+            sourceSelection.Define(sourceRect);
+
+            bool cutSource = !SourceArea.IsEmpty && CutSource;
+            projection = new Projection(ownerPlayerIndex, sourceSelection, cutSource)
             {
                 Id = RequestId,
             };
 
-            projection.SetPayload(payload, docInfo.ModsLoaded);
+            if (projection.Area.Location != Bounds.Location)
+                projection.MoveTo(Bounds.Location);
+
+            projection.ApplyPayloadForPasteExecution(payload, docInfo.ModsLoaded);
+            ApplyExcludedRelatives(projection, ExcludedRelatives);
             return true;
+        }
+
+        private static List<Point> CollectExcludedRelatives(Projection projection)
+        {
+            var excluded = new List<Point>();
+            if (projection.TargetTiles is null)
+                return excluded;
+
+            foreach (Blueprint.BlueprintCell cell in projection.TargetTiles)
+            {
+                if (!cell.Included)
+                    excluded.Add(cell.Relative);
+            }
+
+            return excluded;
+        }
+
+        private static void ApplyExcludedRelatives(Projection projection, IReadOnlyList<Point> excludedRelatives)
+        {
+            for (int i = 0; i < excludedRelatives.Count; i++)
+            {
+                Point rel = excludedRelatives[i];
+                if (!projection.TryGetTileByRelative(rel, out Blueprint.BlueprintCell? cell) || cell is null)
+                    continue;
+
+                cell.Included = false;
+            }
+        }
+
+        private static bool TryParseClearStrategy(byte value, out ClearPhaseStrategy strategy)
+        {
+            if (value <= (byte)ClearPhaseStrategy.Negative)
+            {
+                strategy = (ClearPhaseStrategy)value;
+                return true;
+            }
+
+            strategy = default;
+            return false;
+        }
+
+        private static bool TryParseSweepStrategy(byte value, out SweepPhaseStrategy strategy)
+        {
+            if (value <= (byte)SweepPhaseStrategy.Cheat)
+            {
+                strategy = (SweepPhaseStrategy)value;
+                return true;
+            }
+
+            strategy = default;
+            return false;
         }
 
         private static void WriteRectangle(BinaryWriter writer, Rectangle rectangle)

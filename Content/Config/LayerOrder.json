@@ -11,8 +11,7 @@
     "Fluid",
     "Paint",
     "Wiring",
-    "Detail",
-    "Sweep"
+    "Detail"
   ],
   "clearOrder": [
     "Fluid",
@@ -40,7 +39,6 @@
     "Fluid",
     "Paint",
     "Wiring",
-    "Detail",
-    "Sweep"
+    "Detail"
   ]
 }

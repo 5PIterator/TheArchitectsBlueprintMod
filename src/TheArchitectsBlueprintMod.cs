@@ -13,16 +13,6 @@ namespace TheArchitectsBlueprintMod
     {
         public const string ModInternalName = "TheArchitectsBlueprintMod";
 
-        public override void Load()
-        {
-            TABLog.Initialize(this);
-        }
-
-        public override void Unload()
-        {
-            TABLog.Unload();
-        }
-
         public override void HandlePacket(BinaryReader reader, int whoAmI)
         {
             PasteNetworking.HandlePacket(this, reader, whoAmI);

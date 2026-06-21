@@ -27,7 +27,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
-            if (!context.NeedsItems || context.Items is null) return true;
+            if (!context.RequireItems || context.Items is null) return true;
             IReadOnlyList<int>? items = GetItem(in tile);
             return items is null || items.Count == 0 || InventoryManager.FindItemById(context.Items, items[0]) is not null;
         }
@@ -36,7 +36,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         {
             if (!tile.PayloadCell.HasTile() || !DetailOperations.IsMechanismTileType((ushort)tile.PayloadCell.Block.Type))
                 return true;
-            if (!context.NeedsItems || context.Items is null)
+            if (!context.RequireItems || context.Items is null)
                 return true;
             int style = tile.PayloadCell.Detail.Style;
             return InventoryManager.FindItemByTile(context.Items, (ushort)tile.PayloadCell.Block.Type, style) is not null;
@@ -96,7 +96,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 var placeResult = TileOperations.Place([tile], in context);
                 if (!placeResult.Success)
                     return placeResult;
-                if (!context.CheatSweep && !Consume(in tile, in context))
+                if (!context.IsSweepCheat && !Consume(in tile, in context))
                     return LayerResult.Fail(tile.World, LayerFailReason.MissingItems);
             }
 

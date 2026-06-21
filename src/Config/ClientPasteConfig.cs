@@ -3,39 +3,38 @@ using Terraria.ModLoader.Config;
 
 namespace TheArchitectsBlueprintMod.Config
 {
-    /// <summary>
-    /// Client-side paste planning preferences. Step size is additionally capped by <see cref="PastingConfig.MaxPasteStepSize"/> on the server.
-    /// </summary>
+    /// <summary>Client clear-phase preference sent with paste requests when the server allows it.</summary>
+    public sealed class ClearPastePreference
+    {
+        [DefaultValue(ClearPhaseStrategy.Transparent)]
+        public ClearPhaseStrategy Strategy = ClearPhaseStrategy.Transparent;
+    }
+
+    /// <summary>Client place-phase tolerance preferences sent with paste requests when the server allows them.</summary>
+    public sealed class PlacePastePreference
+    {
+        [DefaultValue(true)]
+        public bool IgnoreMissingItems = true;
+
+        [DefaultValue(true)]
+        public bool IgnoreInvalidPlacement = true;
+    }
+
+    /// <summary>Client sweep-phase preference sent with paste requests when the server allows it.</summary>
+    public sealed class SweepPastePreference
+    {
+        [DefaultValue(SweepPhaseStrategy.Detail)]
+        public SweepPhaseStrategy Strategy = SweepPhaseStrategy.Detail;
+    }
+
+    /// <summary>Client-side paste preferences carried with each paste request. Server policy decides which are honored.</summary>
     public sealed class ClientPasteConfig : ModConfig
     {
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
-        [Header("PastePlanning")]
-
-        /// <summary>
-        /// When enabled (default), do not queue placement where required items are missing, and treat item failures during placement as task-complete.
-        /// </summary>
-        [DefaultValue(true)]
-        public bool IgnoreItems = true;
-
-        /// <summary>
-        /// When enabled (default), do not queue placement where the tile cannot be placed by world/rules, and treat invalid-placement failures as task-complete.
-        /// </summary>
-        [DefaultValue(true)]
-        public bool IgnoreInvalid = true;
-
-        /// <summary>
-        /// When enabled (default), clears align with planned placement (selected source cells); deselected source cells do not clear the target.
-        /// When disabled, clears are planned for the full projection footprint (opaque paste).
-        /// </summary>
-        [DefaultValue(true)]
-        public bool TransparentPaste = true;
-
-        /// <summary>
-        /// Target tiles processed per paste step. The effective value is at most the server's maximum.
-        /// </summary>
-        [DefaultValue(1)]
-        [Range(1, 15)]
-        public int PasteStepSize = 1;
+        [Header("Preferences")]
+        public ClearPastePreference Clear = new();
+        public PlacePastePreference Place = new();
+        public SweepPastePreference Sweep = new();
     }
 }

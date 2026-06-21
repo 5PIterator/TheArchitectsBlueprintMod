@@ -204,6 +204,43 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>
+        /// Applies a prepared payload for paste execution without redefining the frozen source selection footprint.
+        /// </summary>
+        internal void ApplyPayloadForPasteExecution(Payload source, IReadOnlyList<string>? metadataModsLoaded = null)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+
+            if (!source.IsDefined)
+            {
+                _payload = Payload.Empty;
+                CutSource = false;
+                RefreshTargetTiles();
+                return;
+            }
+
+            Payload prepared = PayloadCompatibility.Prepare(
+                source,
+                PayloadPrepareMode.SkipIncompatible,
+                metadataModsLoaded,
+                out PayloadCompatibilityReport report);
+
+            if (report.IncompatibleCells > 0 && Main.netMode != NetmodeID.Server)
+            {
+                string msg = $"Payload: {report.IncompatibleCells} of {report.TotalNonEmptyCells} cells skipped (unresolvable tile/wall).";
+                if (report.MissingModsFromMetadata.Count > 0)
+                    msg += $" Missing mods: {string.Join(", ", report.MissingModsFromMetadata)}.";
+                Main.NewText(msg, Microsoft.Xna.Framework.Color.Orange);
+            }
+
+            _payload = Payload.FromClone(prepared);
+            CutSource = CutSource && HasPayload;
+
+            var newBounds = new Rectangle(Area.X, Area.Y, _payload.Width, _payload.Height);
+            Define(newBounds);
+            RefreshTargetTiles();
+        }
+
+        /// <summary>
         /// Replaces the payload grid from a prepared <see cref="Core.Payload"/> (stores an independent copy).
         /// When <paramref name="source"/> is defined, resizes the projection target and the selection snapshot to the payload
         /// size at the current top-left anchor so source and target footprints stay aligned.

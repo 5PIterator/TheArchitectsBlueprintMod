@@ -16,14 +16,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         Paint,
         Wiring,
         Detail,
-        Sweep,
     }
 
     /// <summary>
     /// Paste-order layer. Each concrete layer owns match, identify, clear, and place.
     /// After a successful place, <see cref="Place"/> calls <see cref="Consume"/> (and planning uses <see cref="CanConsume"/>).
     /// Identify returns which relatives (<see cref="Blueprint.BlueprintCell"/>) this layer claims for the current source tile (empty = no match).
-    /// <see cref="PlacementValid"/> and <see cref="HasRequiredItems"/> split planning: world/rules vs inventory when <see cref="PasteContext.NeedsItems"/> applies.
+    /// <see cref="PlacementValid"/> and <see cref="HasRequiredItems"/> split planning: world/rules vs inventory when <see cref="PasteContext.RequireItems"/> applies.
     /// </summary>
     internal abstract class Layer(string id, LayerType layerType)
     {
@@ -57,7 +56,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public abstract bool Consume(in PasteTile tile, in PasteContext context);
 
         /// <summary>
-        /// Whether the items required for the given tile are available when <see cref="PasteContext.NeedsItems"/> is set.
+        /// Whether the items required for the given tile are available when <see cref="PasteContext.RequireItems"/> is set.
         /// </summary>
         public abstract bool CanConsume(in PasteTile tile, in PasteContext context);
 
@@ -72,7 +71,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public abstract bool PlacementValid(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context);
 
         /// <summary>
-        /// Whether required items are available when <see cref="PasteContext.NeedsItems"/> and inventory are in use.
+        /// Whether required items are available when <see cref="PasteContext.RequireItems"/> and inventory are in use.
         /// </summary>
         public abstract bool HasRequiredItems(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context);
 

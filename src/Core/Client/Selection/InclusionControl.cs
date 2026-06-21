@@ -176,11 +176,11 @@ namespace TheArchitectsBlueprintMod.Core
         private static void ApplyIncludeWithVolumeLimit(Blueprint target, Rectangle tileRect)
         {
             var config = ModContent.GetInstance<PastingConfig>();
-            int volumeLimit = config.VolumeLimit;
+            int volumeLimit = config.Limits.VolumeLimit;
             if (volumeLimit <= 0 || target.Area.IsEmpty)
                 return;
 
-            int count = CountIncludedTiles(target);
+            int count = PasteLimits.CountIncludedVolume(target);
             if (count >= volumeLimit)
                 return;
 
@@ -203,15 +203,6 @@ namespace TheArchitectsBlueprintMod.Core
             }
         }
 
-        private static int CountIncludedTiles(Blueprint target)
-        {
-            int count = 0;
-            foreach (var t in target.Tiles)
-            {
-                if (t.Included)
-                    count++;
-            }
-            return count;
-        }
+        private static int CountIncludedTiles(Blueprint target) => PasteLimits.CountIncludedVolume(target);
     }
 }

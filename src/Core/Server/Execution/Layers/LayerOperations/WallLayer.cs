@@ -24,24 +24,24 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         {
             ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
             if (wallType == WallID.None) return true;
-            if (!context.NeedsItems || context.Items is null) return true;
+            if (!context.RequireItems || context.Items is null) return true;
             return InventoryManager.FindItemByWall(context.Items, wallType) is not null;
         }
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
             ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
-            if (wallType == WallID.None || !context.NeedsItems || context.Items is null) return true;
+            if (wallType == WallID.None || !context.RequireItems || context.Items is null) return true;
             return InventoryManager.FindItemByWall(context.Items, wallType) is not null;
         }
 
         public override bool Consume(in PasteTile tile, in PasteContext context)
         {
             ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
-            if (wallType == WallID.None || !context.NeedsItems || context.Items is null) return true;
+            if (wallType == WallID.None || !context.RequireItems || context.Items is null) return true;
             Item? item = InventoryManager.FindItemByWall(context.Items, wallType);
             if (item is null) return false;
-            InventoryManager.ConsumeItem(item);
+            InventoryManager.ConsumeItem(item, tile.World, context.Inventories, context.Player);
             return true;
         }
 
@@ -78,14 +78,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
             if (Main.tile[x, y].WallType == wallType) return LayerResult.Ok(tile.World);
 
-            if (context.NeedsItems && context.Items != null && InventoryManager.FindItemByWall(context.Items, wallType) is null)
+            if (context.RequireItems && context.Items != null && InventoryManager.FindItemByWall(context.Items, wallType) is null)
                 return LayerResult.Fail(tile.World, LayerFailReason.MissingItems);
 
             WorldGen.PlaceWall(x, y, wallType, mute: true);
             if (Main.tile[x, y].WallType != wallType) return LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
             LayerSync.SyncTileSquare(x, y);
 
-            if (!context.CheatSweep && !Consume(in tile, in context))
+            if (!context.IsSweepCheat && !Consume(in tile, in context))
                 return LayerResult.Fail(tile.World, LayerFailReason.MissingItems);
 
             return LayerResult.Ok(tile.World);

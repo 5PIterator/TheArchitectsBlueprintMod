@@ -275,23 +275,21 @@ namespace TheArchitectsBlueprintMod.Core
                     // Validate the paste.
                     var config = ModContent.GetInstance<PastingConfig>();
 
-                    // Enforce configured maximum paste dimensions.
-                    if (projection.Area.Width > config.MaxPasteWidth || projection.Area.Height > config.MaxPasteHeight)
+                    if (PasteLimits.ExceedsArea(projection, config))
                     {
                         if (Main.netMode != NetmodeID.Server)
                             Main.NewText("Paste blocked: projection exceeds area limits.", Color.OrangeRed);
                         return;
                     }
 
-                    // Enforce configured tile volume cap.
-                    if (projection.SourceTiles.Length > config.VolumeLimit)
+                    if (PasteLimits.ExceedsVolume(projection, config))
                     {
                         if (Main.netMode != NetmodeID.Server)
                             Main.NewText("Paste blocked: projection exceeds tile volume limit.", Color.OrangeRed);
                         return;
                     }
 
-                    if (!PastingSystem.StartPaste(projection, ClientPreferences.FromLocalConfigs(), out var startReject))
+                    if (!PastingSystem.StartPaste(projection, out var startReject))
                     {
                         Main.NewText($"Paste rejected: {startReject}", Color.OrangeRed);
                     }

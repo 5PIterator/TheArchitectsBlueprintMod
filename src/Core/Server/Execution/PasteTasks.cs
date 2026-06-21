@@ -57,7 +57,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public bool Execute(in PasteContext context)
+        public bool Execute(in PasteContext context, in PasteProgress progress)
         {
             /// If there are no tiles, consider this task complete. This can happen if the task was created with no tiles, or if all tiles were consumed in a previous attempt.
 
@@ -69,8 +69,14 @@ namespace TheArchitectsBlueprintMod.Core
                 return true;
 
             // Execute the clearing operation. If it fails, return false and requeue the task.
-            var res = _layer.Clear(_tiles, in context);
+            PasteTile head = _tiles[0];
+            LayerResult res = _layer.Clear(_tiles, in context);
             TABLog.Debug($"Clear execute layer={_layer.Id} world=({_tiles[0].World.X},{_tiles[0].World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
+
+            bool taskCompletes = ResolveClearTaskCompletes(in res);
+            PasteProgressOutcome outcome = PasteProgress.ClassifyClearAttempt(in res, taskCompletes);
+            PastingInfoLog.Write(progress.WithTaskResult(in head, outcome, res.FailReason));
+
             if (!res.Success)
             {
                 if (res.FailReason == LayerFailReason.InsufficientPickaxePower)
@@ -87,6 +93,14 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             return true;
+        }
+
+        private static bool ResolveClearTaskCompletes(in LayerResult res)
+        {
+            if (res.Success)
+                return res.RemainingTiles.Count == 0;
+
+            return res.FailReason == LayerFailReason.InsufficientPickaxePower;
         }
     }
 
@@ -126,7 +140,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        internal bool Execute(in PasteContext context)
+        internal bool Execute(in PasteContext context, in PasteProgress progress)
         {
             /// If there are no tiles, consider this task complete. This can happen if the task was created with no tiles, or if all tiles were consumed in a previous attempt.
 
@@ -143,13 +157,19 @@ namespace TheArchitectsBlueprintMod.Core
                 "Paste");
 
             // Execute the placing operation. If it fails, return false and requeue the task.
-            var res = _layer.Place(_tiles, in context);
+            LayerResult res = _layer.Place(_tiles, in context);
             TABLog.Debug($"Place execute layer={_layer.Id} world=({_tiles[0].World.X},{_tiles[0].World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
+            PasteTile logHead = _tiles[0];
+
+            bool taskCompletes = ResolvePlaceTaskCompletes(in res, in context);
+            PasteProgressOutcome outcome = PasteProgress.ClassifyPlaceAttempt(in res, in context, taskCompletes);
+            PastingInfoLog.Write(progress.WithTaskResult(in logHead, outcome, res.FailReason));
+
             if (!res.Success)
             {
-                if (context.IgnoreItems && res.FailReason == LayerFailReason.MissingItems)
+                if (context.IgnoreMissingItems && res.FailReason == LayerFailReason.MissingItems)
                     return true;
-                if (context.IgnoreInvalid && res.FailReason == LayerFailReason.InvalidPlacement)
+                if (context.IgnoreInvalidPlacement && res.FailReason == LayerFailReason.InvalidPlacement)
                     return true;
                 return false;
             }
@@ -163,6 +183,20 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             return true;
+        }
+
+        private static bool ResolvePlaceTaskCompletes(in LayerResult res, in PasteContext context)
+        {
+            if (res.Success)
+                return res.RemainingTiles.Count == 0;
+
+            if (context.IgnoreMissingItems && res.FailReason == LayerFailReason.MissingItems)
+                return true;
+
+            if (context.IgnoreInvalidPlacement && res.FailReason == LayerFailReason.InvalidPlacement)
+                return true;
+
+            return false;
         }
     }
 }

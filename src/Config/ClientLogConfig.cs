@@ -15,7 +15,10 @@ namespace TheArchitectsBlueprintMod.Config
         [Header("Logging")]
 
         [DefaultValue(false)]
-        public bool ShowDebugLogs;
+        public bool PrintDebugLogsToChat;
+
+        [DefaultValue(false)]
+        public bool PrintInfoLogsToChat;
 
         public override void OnLoaded()
         {

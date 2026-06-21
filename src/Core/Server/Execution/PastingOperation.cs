@@ -17,9 +17,9 @@ namespace TheArchitectsBlueprintMod.Core
     /// </summary>
     internal sealed class PastingOperation
     {
-        private enum Phase { Prepare, Clear, Cut, Place }
+        private enum Phase { Plan, Clear, Cut, Place, Sweep, Done }
 
-        /// <summary>Sub-stages while <see cref="Phase.Prepare"/> builds task queues incrementally.</summary>
+        /// <summary>Sub-stages while <see cref="Phase.Plan"/> builds task queues incrementally.</summary>
         private enum PrepWorkStage
         {
             PlanPlace = 0,
@@ -29,11 +29,19 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         private Phase _phase;
+        private readonly PlanPhaseRunner _planPhase;
+        private readonly ClearPhaseRunner _clearPhase;
+        private readonly CutPhaseRunner _cutPhase;
+        private readonly PlacePhaseRunner _placePhase;
+        private readonly SweepPhaseRunner _sweepPhase;
         private PrepWorkStage _prepWork;
         private Point _prepIndex;
         private HashSet<Point>[]? _queuedClearByLayer;
+        private HashSet<Point>[]? _queuedCutByLayer;
         private HashSet<Point>[]? _queuedPlaceByLayer;
         private HashSet<Point>? _allowedPlaceRelatives;
+        private readonly HashSet<Point> _sweepQueuedWorldTiles = [];
+        private readonly Queue<PasteTile> _sweepTasks = [];
         private bool _preparationComplete;
 
         public Projection Projection { get; }
@@ -45,14 +53,13 @@ namespace TheArchitectsBlueprintMod.Core
         private int _currentLayerIndex;
         private readonly PasteTileLookup Lookup;
         private const int MaxCurrentStepTiles = 128;
-        /// <summary>Tiles of queue-building work per <see cref="Step"/> while in <see cref="Phase.Prepare"/>.</summary>
-        private const int PreparePhaseTileBudget = 50;
-
         private readonly List<Inventory> _inventories = [];
 
         private readonly List<Queue<ClearingTask>> clearTasks = [];
+        private readonly List<Queue<ClearingTask>> cutTasks = [];
         private readonly List<Queue<PlacingTask>> placeTasks = [];
         internal IReadOnlyList<Queue<ClearingTask>> ClearTasks => clearTasks;
+        internal IReadOnlyList<Queue<ClearingTask>> CutTasks => cutTasks;
         internal IReadOnlyList<Queue<PlacingTask>> PlaceTasks => placeTasks;
 
         private readonly List<Point> _currentStepClearTiles = [];
@@ -61,8 +68,10 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>World tiles finished earlier on the current clear/place layer (overlay alpha 0.9).</summary>
         private readonly HashSet<Point> _overlayDoneThisLayer = new HashSet<Point>();
 
-        private Phase _overlayDoneTrackedPhase = Phase.Prepare;
+        private Phase _overlayDoneTrackedPhase = Phase.Plan;
         private int _overlayDoneTrackedLayer = -1;
+
+        private readonly PasteProgressTracker _progress;
 
         public bool ApplySourceClear { get; }
         public PasteContext Context { get; private set; } = default!;
@@ -70,23 +79,25 @@ namespace TheArchitectsBlueprintMod.Core
         public long NextStepTime { get; private set; }
 
         /// <summary>
-        /// Cheat-sweep runs without queued tasks until <see cref="Sweep"/> applies; do not treat empty queues as done while cheat is enabled.
+        /// Sweep queues on <see cref="SweepPhaseRunner.OnEnter"/>; completion waits until the sweep queue is drained.
         /// </summary>
         public bool IsCompleted =>
-            !PasteConfig.CheatSweep
+            _phase == Phase.Done
             && _preparationComplete
-            && !HasAnyTask(clearTasks)
-            && !HasAnyTask(placeTasks);
+            && (!_clearPhase.Active || !HasAnyTask(clearTasks))
+            && (!_cutPhase.Active || !HasAnyTask(cutTasks))
+            && (!_placePhase.Active || !HasAnyTask(placeTasks))
+            && (!_sweepPhase.Active || _sweepTasks.Count == 0);
 
-        private readonly ClientPreferences _clientPaste;
+        private readonly EffectivePastePolicy _policy;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PastingOperation"/> class.
         /// </summary>
         /// <param name="projection"></param>
         /// <param name="config"></param>
-        /// <param name="clientPaste"></param>
-        public PastingOperation(Projection projection, PastingConfig config, ClientPreferences clientPaste)
+        /// <param name="policy"></param>
+        public PastingOperation(Projection projection, PastingConfig config, EffectivePastePolicy policy)
         {
             /// Validate projection ownership/payload, then initialize layer pipeline and tile lookup.
 
@@ -99,28 +110,46 @@ namespace TheArchitectsBlueprintMod.Core
 
             // Initialize the paste configuration and client preferences.
             PasteConfig = config;
-            _clientPaste = clientPaste;
+            _policy = policy;
             ApplySourceClear = (Projection.CutSource && !Projection.SourceArea.IsEmpty) || config.EnableCutPasteProcess;
             // Compose the layer pipeline.
             Pipeline = LayerSystem.ComposePipeline();
             // Build the tile lookup.
             Lookup = BuildLookup();
+            _planPhase = new PlanPhaseRunner(this, config.Plan);
+            _clearPhase = new ClearPhaseRunner(this, config.Clear.ToPhaseSettings());
+            _cutPhase = new CutPhaseRunner(this, config.Cut);
+            _placePhase = new PlacePhaseRunner(this, config.Place.ToPhaseSettings());
+            _sweepPhase = new SweepPhaseRunner(this, config.Sweep.ToPhaseSettings());
+            _progress = new PasteProgressTracker(Projection.Owner)
+            {
+                CorrelationId = Projection.Id,
+                OverlayId = OverlayId,
+            };
             UpdateContext();
             TABLog.Debug(
                 $"Paste started: sourceClear={ApplySourceClear} (projection={Projection.CutSource}, debug={config.EnableCutPasteProcess}), targetArea=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height}",
                 "Paste");
-            TABLog.Info(
-                $"START | area=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height} | sourceClear={ApplySourceClear} | srcTiles={Projection.SourceTiles.Length} tgtTiles={Projection.TargetTiles.Length}",
+            TABLog.Debug(
+                $"START | area=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height} | sourceClear={ApplySourceClear} | srcTiles={Projection.SourceTiles.Length} tgtTiles={Projection.TargetTiles.Length} | sweep={_policy.SweepStrategy} clear={_policy.ClearStrategy} ignoreItems={_policy.IgnoreMissingItems} ignoreInvalid={_policy.IgnoreInvalidPlacement} requireItems={_policy.RequireItems}",
                 "Paste");
 
-            _phase = config.CheatSweep ? Phase.Clear : Phase.Prepare;
+            _phase = config.Plan.Active ? Phase.Plan : Phase.Clear;
             _prepWork = PrepWorkStage.PlanPlace;
             _prepIndex = new Point(0, 0);
-            _preparationComplete = config.CheatSweep;
-            if (_phase == Phase.Prepare)
-                TABLog.Info("Stage: PREP (building queues: PlaceSource, then ClearTarget, then optional SourceAreaClear)", "Paste");
+            _preparationComplete = !config.Plan.Active;
+            if (_phase == Phase.Plan)
+            {
+                TABLog.Debug("Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)", "Paste");
+            }
             else
-                TABLog.Info("Stage: CLEAR (cheat sweep — preparation skipped)", "Paste");
+            {
+                InitializePlanningState();
+                BuildBlindExecutionQueues();
+                _phase = ResolveFirstEnabledExecutionPhase();
+                GetRunner(_phase).OnEnter();
+                TABLog.Debug($"Stage: {_phase.ToString().ToUpperInvariant()} (plan disabled — blind queue build complete)", "Paste");
+            }
         }
 
         /// <summary>
@@ -135,118 +164,37 @@ namespace TheArchitectsBlueprintMod.Core
             if (player is null || !player.active || player.dead)
                 return false;
 
-            // Process the current phase.
-            switch (_phase)
-            {
-                // Prepare phase: build task queues.
-                case Phase.Prepare:
-                    bool morePrep = Init();
-                    if (!morePrep)
-                    {
-                        _phase = Phase.Clear;
-                        _currentLayerIndex = 0;
-                        TABLog.Info("Stage: EXEC CLEAR — running queued clear tasks", "Paste");
-                    }
+            if (_phase == Phase.Done)
+                return false;
 
-                    // --- Throttling (PasteDelayMs) applies only to clear/place execution, not task preparation.
-                    NextStepTime = 0;
-                    return !IsCompleted;
-                // Clear phase: execute queued clear tasks.
-                case Phase.Clear:
-                    AdvanceToNextNonEmptyLayer(clearTasks);
-                    if (_currentLayerIndex >= clearTasks.Count)
-                    {
-                        bool keep = AdvancePhase();
-                        return keep;
-                    }
+            SyncProgressIdentity();
+            PhaseRunner runner = GetRunner(_phase);
+            runner.ExecuteTick();
 
-                    SyncOverlayDoneTrackingIfNeeded();
-                    var qClear = clearTasks[_currentLayerIndex];
-                    var layerClear = Pipeline.ClearOrder[_currentLayerIndex];
-                    TABLog.Debug($"Clear layer {layerClear.Id} (idx={_currentLayerIndex}) tasks={qClear.Count}", "Paste");
-                    _currentStepClearTiles.Clear();
-                    _currentStepPlaceTiles.Clear();
-                    ProcessClearQueue(qClear, Context, _currentStepClearTiles, _overlayDoneThisLayer);
-                    break;
-                // Cut phase: execute queued cut tasks.
-                case Phase.Cut:
-                    break;
-                // Place phase: execute queued place tasks.
-                case Phase.Place:
-                    AdvanceToNextNonEmptyLayer(placeTasks);
-                    if (_currentLayerIndex >= placeTasks.Count)
-                    {
-                        bool keep = AdvancePhase();
-                        return keep;
-                    }
+            if (_phase == Phase.Plan || _phase == Phase.Done || (_phase == Phase.Sweep && runner.TickDelayMs == 0))
+                NextStepTime = 0;
+            else
+                NextStepTime = Environment.TickCount64 + GetRunner(_phase).TickDelayMs;
 
-                    SyncOverlayDoneTrackingIfNeeded();
-                    var qPlace = placeTasks[_currentLayerIndex];
-                    var layerPlace = Pipeline.PlaceOrder[_currentLayerIndex];
-                    TABLog.Debug($"Place layer {layerPlace.Id} (idx={_currentLayerIndex}) tasks={qPlace.Count}", "Paste");
-                    _currentStepPlaceTiles.Clear();
-                    _currentStepClearTiles.Clear();
-                    ProcessPlaceQueue(qPlace, Context, _currentStepPlaceTiles, _overlayDoneThisLayer);
-                    break;
-                default:
-                    break;
-            }
-
-            NextStepTime = Environment.TickCount64 + Context.PasteDelayMs;
             return !IsCompleted;
         }
 
-        /// <summary>
-        /// Executes cheat-sweep placement in one pass and always completes the operation.
-        /// </summary>
-        public bool Sweep()
+        private void SyncProgressIdentity()
         {
-            // --- Identify the full sweep footprint, place once, and then clear queue state for operation teardown.
-
-            Player player = Context.Player;
-            if (player is null || !player.active || player.dead)
-                return false;
-
-            Layer sweep = LayerSystem.Sweep;
-            if (Lookup.PasteTiles.Length == 0)
-            {
-                ClearAllTaskQueues();
-                NextStepTime = 0;
-                return false;
-            }
-
-            PasteTile anchorPasteTile = Lookup.PasteTiles[0, 0];
-            IReadOnlyList<Blueprint.BlueprintCell> identified = sweep.Identify(in anchorPasteTile, in Lookup, PasteSubject.Payload);
-            if (identified.Count == 0)
-            {
-                ClearAllTaskQueues();
-                NextStepTime = 0;
-                return false;
-            }
-
-            List<PasteTile> pasteTiles = CreateSweepCheatPasteTiles(identified, in Lookup);
-            if (pasteTiles.Count == 0)
-            {
-                ClearAllTaskQueues();
-                NextStepTime = 0;
-                return false;
-            }
-
-            _currentStepPlaceTiles.Clear();
-            _currentStepClearTiles.Clear();
-            int overlayCap = Math.Min(MaxCurrentStepTiles, pasteTiles.Count);
-            for (int i = 0; i < overlayCap; i++)
-                _currentStepPlaceTiles.Add(pasteTiles[i].World);
-
-            PasteContext placeContext = Context;
-            LayerResult placeResult = sweep.Place(pasteTiles, in placeContext);
-            if (!placeResult.Success)
-                TABLog.Debug($"CheatSweep place incomplete: layer={sweep.Id} remaining={placeResult.RemainingTiles.Count}", "Paste");
-
-            ClearAllTaskQueues();
-            NextStepTime = 0;
-            return false;
+            _progress.CorrelationId = Projection.Id;
+            _progress.OverlayId = OverlayId;
         }
+
+        private PhaseRunner GetRunner(Phase phase) =>
+            phase switch
+            {
+                Phase.Plan => _planPhase,
+                Phase.Clear => _clearPhase,
+                Phase.Cut => _cutPhase,
+                Phase.Place => _placePhase,
+                Phase.Sweep => _sweepPhase,
+                _ => _planPhase,
+            };
 
         /// <summary>
         /// Called when this operation leaves <see cref="PastingSystem"/> (completion, cancel, or invalid projection).
@@ -269,8 +217,8 @@ namespace TheArchitectsBlueprintMod.Core
             Context = new PasteContext(
                 playerIndex: Projection.Owner,
                 items: Projection.Inventories.Count > 0 ? InventoryManager.GetContentsFromInventories(_inventories) : null,
-                serverConfig: PasteConfig,
-                clientPrefs: _clientPaste);
+                inventories: Projection.Inventories.Count > 0 ? _inventories : null,
+                policy: _policy);
         }
 
         /// <summary>
@@ -284,7 +232,7 @@ namespace TheArchitectsBlueprintMod.Core
             // Refresh paste context so inventory and player references match current world state.
             UpdateContext();
 
-            int budget = PreparePhaseTileBudget;
+            int budget = _planPhase.TickSize;
             int prepUnitsThisCall = 0;
 
             // Load the inventories.
@@ -299,12 +247,12 @@ namespace TheArchitectsBlueprintMod.Core
                 InitializePlanningState();
 
             // Build the contexts used by identify/planning for this batch.
-            var identifyContext = new PasteContext(Projection.Owner, null, PasteConfig, _clientPaste);
+            var identifyContext = new PasteContext(Projection.Owner, null, null, _policy);
             var planningContext = new PasteContext(
                 Projection.Owner,
                 InventoryManager.GetContentsFromInventories(_inventories),
-                PasteConfig,
-                _clientPaste);
+                _inventories,
+                _policy);
 
             // Consume the prep budget by advancing the active plan stage one tile at a time.
             while (budget > 0 && _prepWork < PrepWorkStage.Done)
@@ -355,17 +303,25 @@ namespace TheArchitectsBlueprintMod.Core
 
             // Reset the clear/place queues and rebuild one queue per layer.
             clearTasks.Clear();
+            cutTasks.Clear();
             placeTasks.Clear();
             for (int i = 0; i < Pipeline.ClearOrder.Count; i++)
+            {
                 clearTasks.Add(new Queue<ClearingTask>());
+                cutTasks.Add(new Queue<ClearingTask>());
+            }
             for (int i = 0; i < Pipeline.PlaceOrder.Count; i++)
                 placeTasks.Add(new Queue<PlacingTask>());
 
             // Allocate per-layer dedup sets matching the layer counts.
             _queuedClearByLayer = new HashSet<Point>[Pipeline.ClearOrder.Count];
+            _queuedCutByLayer = new HashSet<Point>[Pipeline.ClearOrder.Count];
             _queuedPlaceByLayer = new HashSet<Point>[Pipeline.PlaceOrder.Count];
             for (int i = 0; i < _queuedClearByLayer.Length; i++)
+            {
                 _queuedClearByLayer[i] = [];
+                _queuedCutByLayer[i] = [];
+            }
             for (int i = 0; i < _queuedPlaceByLayer.Length; i++)
                 _queuedPlaceByLayer[i] = [];
 
@@ -374,9 +330,9 @@ namespace TheArchitectsBlueprintMod.Core
             _prepWork = PrepWorkStage.PlanPlace;
             _prepIndex = new Point(0, 0);
 
-            TABLog.Info("Prep: PlaceSource — queuing place tasks from source tiles", "Paste");
+            TABLog.Debug("Prep: PlaceSource — queuing place tasks from source tiles", "Paste");
             TABLog.Debug(
-                $"Prep: begin prepTileBudget={PreparePhaseTileBudget} sourceTiles={Projection.SourceTiles.Length} lookupTiles={Lookup.Count} targetTiles={Projection.TargetTiles.Length} transparent={_clientPaste.TransparentPaste} sourceAreaClear={ApplySourceClear}",
+                $"Prep: begin prepTileBudget={_planPhase.TickSize} sourceTiles={Projection.SourceTiles.Length} lookupTiles={Lookup.Count} targetTiles={Projection.TargetTiles.Length} clearStrategy={_policy.ClearStrategy} sourceAreaClear={ApplySourceClear}",
                 "Paste");
         }
 
@@ -409,6 +365,10 @@ namespace TheArchitectsBlueprintMod.Core
             if (!Lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
                 return true;
 
+            // Vacant payload cells are cleared at destination, not placed.
+            if (pasteTile.PayloadCell.IsEmpty)
+                return true;
+
             // Fan the tile out across every applicable place layer, recording allowed relatives for later stages.
             QueuePlaceLayersForTile(
                 rel,
@@ -428,14 +388,13 @@ namespace TheArchitectsBlueprintMod.Core
         /// <returns><c>true</c> while destination tiles remain to process; <c>false</c> once the ClearTarget stage is exhausted.</returns>
         private bool PlanClearTarget(ref int budget, ref int prepUnits, in PasteContext identifyContext)
         {
-            // --- Transparent paste only clears tiles intersecting the place footprint; opaque paste clears the full lookup.
+            // --- Strategy routing for planned clears.
+            bool isTransparent = _policy.ClearStrategy == ClearPhaseStrategy.Transparent;
+            bool isNegative = _policy.ClearStrategy == ClearPhaseStrategy.Negative;
+            bool useTargetCursor = isTransparent || isNegative;
 
-            bool transparent = _clientPaste.TransparentPaste;
-
-            // Transparent paste restricts clears to target tiles that the place planner has already approved.
-            if (transparent)
+            if (useTargetCursor)
             {
-                // Signal stage completion when the target-tile cursor is exhausted.
                 if (_prepIndex.X >= Projection.TargetTiles.GetLength(0) || _prepIndex.Y >= Projection.TargetTiles.GetLength(1))
                     return false;
 
@@ -451,19 +410,21 @@ namespace TheArchitectsBlueprintMod.Core
                 if (!clearCell.Included)
                     return true;
 
-                // Skip target tiles outside the allowed place footprint or missing from the lookup.
-                if (!_allowedPlaceRelatives!.Contains(rel))
+                bool inAllowed = _allowedPlaceRelatives!.Contains(rel);
+                if (isTransparent && !inAllowed)
+                    return true;
+                if (isNegative && inAllowed)
                     return true;
                 if (!Lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
                     return true;
 
-                // Identify every clear layer that applies to the destination tile and restrict to the allowed footprint.
                 QueueClearLayersForTile(
                     rel,
                     in pasteTile,
                     in Lookup,
                     in identifyContext,
                     _queuedClearByLayer!,
+                    clearTasks,
                     _allowedPlaceRelatives!,
                     useSourceAreaWorld: false);
                 budget--;
@@ -471,7 +432,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return true;
             }
 
-            // Opaque paste clears every lookup tile; still skip cells the projection has excluded.
+            // Clear-all clears every lookup tile; still skip cells the projection has excluded.
             if (_prepIndex.X >= Lookup.PasteTiles.GetLength(0) || _prepIndex.Y >= Lookup.PasteTiles.GetLength(1))
                 return false;
 
@@ -493,6 +454,7 @@ namespace TheArchitectsBlueprintMod.Core
                 in Lookup,
                 in identifyContext,
                 _queuedClearByLayer!,
+                clearTasks,
                 restrictClearRelatives: null,
                 useSourceAreaWorld: false);
             budget--;
@@ -542,7 +504,8 @@ namespace TheArchitectsBlueprintMod.Core
                 in pasteTile,
                 in Lookup,
                 in identifyContext,
-                _queuedClearByLayer!,
+                _queuedCutByLayer!,
+                cutTasks,
                 _allowedPlaceRelatives!,
                 useSourceAreaWorld: true);
             budget--;
@@ -565,18 +528,18 @@ namespace TheArchitectsBlueprintMod.Core
             {
                 // Entering ClearTarget: announce the new stage.
                 case PrepWorkStage.PlanClear:
-                    TABLog.Info("Prep: ClearTarget — queuing clears at destination", "Paste");
+                    TABLog.Debug("Prep: ClearTarget — queuing clears at destination", "Paste");
                     TABLog.Debug("Prep: stage PlaceSource -> ClearTarget", "Paste");
                     break;
 
                 // Entering SourceAreaClear: log transparency mode and whether a cut pass will run.
                 case PrepWorkStage.PlanCut:
                 {
-                    string mode = _clientPaste.TransparentPaste ? "transparent" : "opaque";
+                    string mode = _policy.ClearStrategy.ToString();
                     if (ApplySourceClear)
-                        TABLog.Info($"Prep: SourceAreaClear — queuing cuts at source ({mode})", "Paste");
+                        TABLog.Debug($"Prep: SourceAreaClear — queuing cuts at source ({mode})", "Paste");
                     else
-                        TABLog.Info("Prep: no source cut — finalizing queues", "Paste");
+                        TABLog.Debug("Prep: no source cut — finalizing queues", "Paste");
                     TABLog.Debug($"Prep: stage ClearTarget -> SourceAreaClear ({mode})", "Paste");
                     break;
                 }
@@ -585,7 +548,7 @@ namespace TheArchitectsBlueprintMod.Core
                 case PrepWorkStage.Done:
                     if (ApplySourceClear)
                     {
-                        TABLog.Info("Prep: done — source-area clear pass finished", "Paste");
+                        TABLog.Debug("Prep: done — source-area clear pass finished", "Paste");
                         TABLog.Debug("Prep: stage SourceAreaClear -> Done", "Paste");
                     }
                     else
@@ -610,12 +573,19 @@ namespace TheArchitectsBlueprintMod.Core
             int clearBatches = 0;
             for (int i = 0; i < clearTasks.Count; i++)
                 clearBatches += clearTasks[i].Count;
-            TABLog.Info($"Prep: queues ready | placeBatches={placeBatches} clearBatches={clearBatches}", "Paste");
+            TABLog.Debug($"Prep: queues ready | placeBatches={placeBatches} clearBatches={clearBatches}", "Paste");
             TABLog.Debug($"Prep: complete placeBatches={placeBatches} clearBatches={clearBatches}", "Paste");
+            if (placeBatches == 0)
+            {
+                TABLog.Warn(
+                    $"Prep: no place tasks queued (ignoreItems={Context.IgnoreMissingItems} ignoreInvalid={Context.IgnoreInvalidPlacement} requireItems={PasteConfig.Place.RequireItems}); layer place phases will be no-ops",
+                    "Paste");
+            }
 
             // Release planning scratch state — execution phases no longer need dedup sets.
             _preparationComplete = true;
             _queuedClearByLayer = null;
+            _queuedCutByLayer = null;
             _queuedPlaceByLayer = null;
             _allowedPlaceRelatives = null;
             PasteTaskMapDebug.WriteTaskMap(Projection, ApplySourceClear, Pipeline, clearTasks, placeTasks);
@@ -627,7 +597,7 @@ namespace TheArchitectsBlueprintMod.Core
             {
                 PrepWorkStage.PlanPlace =>
                     $"{Math.Min(_prepIndex.X, Projection.TargetTiles.GetLength(0))}x{Math.Min(_prepIndex.Y, Projection.TargetTiles.GetLength(1))}",
-                PrepWorkStage.PlanClear => _clientPaste.TransparentPaste
+                PrepWorkStage.PlanClear => (_policy.ClearStrategy == ClearPhaseStrategy.Transparent || _policy.ClearStrategy == ClearPhaseStrategy.Negative)
                     ? $"{Math.Min(_prepIndex.X, Projection.TargetTiles.GetLength(0))}x{Math.Min(_prepIndex.Y, Projection.TargetTiles.GetLength(1))}"
                     : $"{Math.Min(_prepIndex.X, Lookup.PasteTiles.GetLength(0))}x{Math.Min(_prepIndex.Y, Lookup.PasteTiles.GetLength(1))}",
                 PrepWorkStage.PlanCut =>
@@ -643,13 +613,13 @@ namespace TheArchitectsBlueprintMod.Core
         internal bool TryBuildOverlaySnapshot(out PasteOverlaySnapshot snapshot)
         {
             snapshot = default;
-            if (_phase == Phase.Prepare)
+            if (_phase == Phase.Plan || _phase == Phase.Done)
                 return false;
 
             SyncOverlayDoneTrackingIfNeeded();
 
             const int MaxOverlayTiles = 128;
-            bool isPlacePhase = _phase == Phase.Place;
+            bool isPlacePhase = _phase == Phase.Place || _phase == Phase.Sweep;
             int remaining = MaxOverlayTiles;
             var pendingList = new List<Point>();
 
@@ -666,13 +636,26 @@ namespace TheArchitectsBlueprintMod.Core
                     }
                 }
             }
+            else if (_phase == Phase.Sweep)
+            {
+                int added = 0;
+                foreach (PasteTile tile in _sweepTasks)
+                {
+                    if (remaining <= 0 || added >= MaxOverlayTiles)
+                        break;
+                    pendingList.Add(tile.World);
+                    remaining--;
+                    added++;
+                }
+            }
             else
             {
+                var layerQueues = _phase == Phase.Cut ? cutTasks : clearTasks;
                 int idx = _currentLayerIndex;
-                while (idx < clearTasks.Count && clearTasks[idx].Count == 0) idx++;
-                if (idx < clearTasks.Count)
+                while (idx < layerQueues.Count && layerQueues[idx].Count == 0) idx++;
+                if (idx < layerQueues.Count)
                 {
-                    foreach (var task in clearTasks[idx])
+                    foreach (var task in layerQueues[idx])
                     {
                         if (remaining <= 0) break;
                         remaining -= task.CollectOverlayPoints(pendingList, remaining);
@@ -703,7 +686,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Clears per-layer “done” overlay tiles when the active clear/place layer or phase changes.</summary>
         private void SyncOverlayDoneTrackingIfNeeded()
         {
-            if (_phase != Phase.Clear && _phase != Phase.Place)
+            if (_phase != Phase.Clear && _phase != Phase.Cut && _phase != Phase.Place)
                 return;
 
             if (_phase != _overlayDoneTrackedPhase || _currentLayerIndex != _overlayDoneTrackedLayer)
@@ -822,6 +805,7 @@ namespace TheArchitectsBlueprintMod.Core
             in PasteTileLookup lookup,
             in PasteContext identifyContext,
             HashSet<Point>[] queuedClearByLayer,
+            List<Queue<ClearingTask>> taskTargets,
             HashSet<Point> restrictClearRelatives,
             bool useSourceAreaWorld)
         {
@@ -839,7 +823,7 @@ namespace TheArchitectsBlueprintMod.Core
             for (int i = 0; i < identifiedLayers.Count; i++)
             {
                 var identified = identifiedLayers[i];
-                QueueClearLayer(identified.Layer, identified.Tiles, lookup, queuedClearByLayer, restrictClearRelatives, useSourceAreaWorld, in identifyContext);
+                QueueClearLayer(identified.Layer, identified.Tiles, lookup, queuedClearByLayer, taskTargets, restrictClearRelatives, useSourceAreaWorld, in identifyContext);
             }
         }
 
@@ -854,6 +838,14 @@ namespace TheArchitectsBlueprintMod.Core
             HashSet<Point>[] queuedPlaceByLayer,
             HashSet<Point> allowedPlaceRelatives)
         {
+            // --- Vacant payload intent is handled by clear (and sweep when enabled), not place layers.
+            if (tile.PayloadCell.IsEmpty)
+                return;
+
+            // --- Sweep phase applies payload directly; layer place identification is unnecessary when sweep runs.
+            if (_sweepPhase.Active)
+                return;
+
             // --- Identify place candidates from the payload intent.
 
             var identifiedLayers = LayerSystem.Identify(in tile, in lookup, Pipeline, planningContext, PasteConfig, PasteSubject.Payload);
@@ -870,7 +862,9 @@ namespace TheArchitectsBlueprintMod.Core
                 if (clamped.Count == 0)
                     continue;
 
-                if ((Context.IgnoreItems && !identified.HasRequiredItems) || (Context.IgnoreInvalid && !identified.PlacementValid))
+                if (!Context.IsSweepCheat
+                    && ((Context.IgnoreMissingItems && !identified.HasRequiredItems)
+                        || (Context.IgnoreInvalidPlacement && !identified.PlacementValid)))
                     continue;
 
                 for (int j = 0; j < clamped.Count; j++)
@@ -888,6 +882,7 @@ namespace TheArchitectsBlueprintMod.Core
             IReadOnlyList<Blueprint.BlueprintCell> identified,
             in PasteTileLookup lookup,
             HashSet<Point>[] queuedClearByLayer,
+            List<Queue<ClearingTask>> taskTargets,
             HashSet<Point> restrictClearRelatives,
             bool useSourceAreaWorld,
             in PasteContext identifyContext)
@@ -914,8 +909,8 @@ namespace TheArchitectsBlueprintMod.Core
                 in identifyContext);
             if (tiles.Count > 0)
             {
-                clearTasks[layerIndex].Enqueue(new ClearingTask(layer, tiles));
-                TABLog.Debug($"Queued clear task layer={layer.Id} tiles={tiles.Count} queue={clearTasks[layerIndex].Count}", "Paste");
+                taskTargets[layerIndex].Enqueue(new ClearingTask(layer, tiles));
+                TABLog.Debug($"Queued clear task layer={layer.Id} tiles={tiles.Count} queue={taskTargets[layerIndex].Count}", "Paste");
             }
         }
 
@@ -1015,19 +1010,21 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>
         /// Executes up to one step-sized batch of clear tasks.
         /// </summary>
-        private static int ProcessClearQueue(Queue<ClearingTask> q, in PasteContext context, List<Point> currentStepTiles, HashSet<Point>? overlayDoneThisLayer)
+        private int ProcessClearQueue(Queue<ClearingTask> q, in PasteContext context, int tickSize, List<Point> currentStepTiles, HashSet<Point>? overlayDoneThisLayer)
         {
             // --- Dequeue a bounded batch, execute each task, and requeue incomplete work for future ticks.
 
             int success = 0;
-            int n = Math.Min(context.PasteStepSize, q.Count);
-            for (int i = 0; i < n; i++)
+            int batchTotal = Math.Min(tickSize, q.Count);
+            for (int i = 0; i < batchTotal; i++)
             {
                 if (q.Count == 0) break;
                 var task = q.Dequeue();
+                PasteProgress progress = _progress.ForBatch(i + 1, batchTotal);
                 task.AddTilesTo(currentStepTiles, MaxCurrentStepTiles);
-                if (task.Execute(in context))
+                if (task.Execute(in context, in progress))
                 {
+                    _progress.RecordCompletion();
                     success++;
                     if (overlayDoneThisLayer is not null)
                     {
@@ -1049,24 +1046,37 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>
         /// Executes up to one step-sized batch of place tasks.
         /// </summary>
-        private static int ProcessPlaceQueue(Queue<PlacingTask> q, in PasteContext context, List<Point> currentStepTiles, HashSet<Point>? overlayDoneThisLayer)
+        private int ProcessPlaceQueue(
+            Queue<PlacingTask> q,
+            in PasteContext context,
+            int tickSize,
+            List<Point> currentStepTiles,
+            HashSet<Point>? overlayDoneThisLayer,
+            HashSet<Point>? successfulPlacedWorldTiles)
         {
             // --- Dequeue a bounded batch, execute each task, and requeue incomplete work for future ticks.
 
             int success = 0;
-            int n = Math.Min(context.PasteStepSize, q.Count);
-            for (int i = 0; i < n; i++)
+            int batchTotal = Math.Min(tickSize, q.Count);
+            for (int i = 0; i < batchTotal; i++)
             {
                 if (q.Count == 0) break;
                 var task = q.Dequeue();
+                PasteProgress progress = _progress.ForBatch(i + 1, batchTotal);
                 task.AddTilesTo(currentStepTiles, MaxCurrentStepTiles);
-                if (task.Execute(in context))
+                if (task.Execute(in context, in progress))
                 {
+                    _progress.RecordCompletion();
                     success++;
                     if (overlayDoneThisLayer is not null)
                     {
                         for (int ti = 0; ti < task.Tiles.Count; ti++)
                             overlayDoneThisLayer.Add(task.Tiles[ti].World);
+                    }
+                    if (successfulPlacedWorldTiles is not null)
+                    {
+                        for (int ti = 0; ti < task.Tiles.Count; ti++)
+                            successfulPlacedWorldTiles.Add(task.Tiles[ti].World);
                     }
                 }
                 else
@@ -1081,22 +1091,130 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>
-        /// Advances from clear to place phase and returns whether further queue work exists.
+        /// Advances to the next enabled phase and prepares phase-local queue state.
         /// </summary>
-        private bool AdvancePhase()
+        private void AdvancePhase()
         {
-            // --- Reset layer index at phase boundaries and report whether the next phase has pending tasks.
+            EndInfoPhaseFor(_phase);
 
             _currentLayerIndex = 0;
-            if (_phase == Phase.Clear)
+            _overlayDoneThisLayer.Clear();
+            _overlayDoneTrackedLayer = -1;
+            _overlayDoneTrackedPhase = _phase;
+
+            _phase = _phase switch
             {
-                _phase = Phase.Place;
-                TABLog.Info("Stage: EXEC PLACE — running queued place tasks", "Paste");
-                return HasAnyTask(placeTasks);
+                Phase.Plan => NextEnabledPhaseAfter(Phase.Plan),
+                Phase.Clear => NextEnabledPhaseAfter(Phase.Clear),
+                Phase.Cut => NextEnabledPhaseAfter(Phase.Cut),
+                Phase.Place => NextEnabledPhaseAfter(Phase.Place),
+                Phase.Sweep => Phase.Done,
+                _ => Phase.Done,
+            };
+
+            GetRunner(_phase).OnEnter();
+
+            TABLog.Debug($"Stage: EXEC {_phase.ToString().ToUpperInvariant()}", "Paste");
+        }
+
+        /// <summary>
+        /// Opens info logging for an execution phase and records its total task count.
+        /// </summary>
+        private void BeginInfoPhase(PasteInfoPhase infoPhase)
+        {
+            SyncProgressIdentity();
+            int phaseTotal = CountRemainingInPhase(_phase);
+            PasteProgress progress = _progress.BeginPhase(infoPhase, phaseTotal);
+            PastingInfoLog.Write(in progress);
+        }
+
+        /// <summary>
+        /// Closes info logging for the phase being left.
+        /// </summary>
+        private void EndInfoPhaseFor(Phase phase)
+        {
+            PasteInfoPhase? infoPhase = ToInfoPhase(phase);
+            if (infoPhase is null)
+                return;
+
+            int remaining = CountRemainingInPhase(phase);
+            PasteProgress progress = _progress.EndPhase(remaining);
+            PastingInfoLog.Write(in progress);
+        }
+
+        private static PasteInfoPhase? ToInfoPhase(Phase phase) =>
+            phase switch
+            {
+                Phase.Clear => PasteInfoPhase.Clear,
+                Phase.Cut => PasteInfoPhase.Cut,
+                Phase.Place => PasteInfoPhase.Place,
+                Phase.Sweep => PasteInfoPhase.Sweep,
+                _ => null,
+            };
+
+        private static int CountQueueTasks<T>(List<Queue<T>> queues)
+        {
+            int total = 0;
+            for (int i = 0; i < queues.Count; i++)
+                total += queues[i].Count;
+            return total;
+        }
+
+        private int CountRemainingInPhase(Phase phase) =>
+            phase switch
+            {
+                Phase.Clear => CountQueueTasks(clearTasks),
+                Phase.Cut => CountQueueTasks(cutTasks),
+                Phase.Place => CountQueueTasks(placeTasks),
+                Phase.Sweep => _sweepTasks.Count,
+                _ => 0,
+            };
+
+        private Phase ResolveFirstEnabledExecutionPhase()
+        {
+            if (IsPhaseEnabled(Phase.Clear))
+                return Phase.Clear;
+            if (IsPhaseEnabled(Phase.Cut))
+                return Phase.Cut;
+            if (IsPhaseEnabled(Phase.Place))
+                return Phase.Place;
+            if (IsPhaseEnabled(Phase.Sweep))
+                return Phase.Sweep;
+            return Phase.Done;
+        }
+
+        private Phase NextEnabledPhaseAfter(Phase phase)
+        {
+            if (phase == Phase.Plan)
+                return ResolveFirstEnabledExecutionPhase();
+
+            if (phase == Phase.Clear)
+            {
+                if (IsPhaseEnabled(Phase.Cut))
+                    return Phase.Cut;
+                if (IsPhaseEnabled(Phase.Place))
+                    return Phase.Place;
+                if (IsPhaseEnabled(Phase.Sweep))
+                    return Phase.Sweep;
+                return Phase.Done;
             }
 
-            return false;
+            if (phase == Phase.Cut)
+            {
+                if (IsPhaseEnabled(Phase.Place))
+                    return Phase.Place;
+                if (IsPhaseEnabled(Phase.Sweep))
+                    return Phase.Sweep;
+                return Phase.Done;
+            }
+
+            if (phase == Phase.Place)
+                return IsPhaseEnabled(Phase.Sweep) ? Phase.Sweep : Phase.Done;
+
+            return Phase.Done;
         }
+
+        private bool IsPhaseEnabled(Phase phase) => GetRunner(phase).Active;
 
         /// <summary>
         /// Moves the current layer pointer forward until it reaches a non-empty queue.
@@ -1109,37 +1227,159 @@ namespace TheArchitectsBlueprintMod.Core
                 _currentLayerIndex++;
         }
 
+        private void BuildBlindExecutionQueues()
+        {
+            // --- Build clear/cut/place queues without plan-derived filtering.
+            PasteContext identifyContext = Context;
+            for (int y = 0; y < Projection.TargetTiles.GetLength(1); y++)
+            {
+                for (int x = 0; x < Projection.TargetTiles.GetLength(0); x++)
+                {
+                    Blueprint.BlueprintCell targetCell = Projection.TargetTiles[x, y];
+                    if (!targetCell.Included)
+                        continue;
+
+                    Point rel = targetCell.Relative;
+                    if (!Lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
+                        continue;
+
+                    bool overlap = !pasteTile.PayloadCell.IsEmpty;
+                    bool queueClear = _policy.ClearStrategy switch
+                    {
+                        ClearPhaseStrategy.All => true,
+                        ClearPhaseStrategy.Transparent => overlap,
+                        ClearPhaseStrategy.Negative => !overlap,
+                        _ => true,
+                    };
+                    if (queueClear)
+                    {
+                        QueueClearLayersForTile(
+                            rel,
+                            in pasteTile,
+                            in Lookup,
+                            in identifyContext,
+                            _queuedClearByLayer!,
+                            clearTasks,
+                            restrictClearRelatives: null,
+                            useSourceAreaWorld: false);
+                    }
+
+                    if (!pasteTile.PayloadCell.IsEmpty)
+                    {
+                        QueuePlaceLayersForTile(
+                            rel,
+                            in pasteTile,
+                            in Lookup,
+                            in identifyContext,
+                            _queuedPlaceByLayer!,
+                            _allowedPlaceRelatives!);
+                    }
+
+                    if (ApplySourceClear && TryGetSourceAreaPasteTile(rel, out PasteTile sourceAreaPaste))
+                    {
+                        QueueClearLayersForTile(
+                            rel,
+                            in sourceAreaPaste,
+                            in Lookup,
+                            in identifyContext,
+                            _queuedCutByLayer!,
+                            cutTasks,
+                            restrictClearRelatives: null,
+                            useSourceAreaWorld: true);
+                    }
+                }
+            }
+        }
+
+        private void BuildSweepQueue()
+        {
+            _sweepTasks.Clear();
+            _sweepQueuedWorldTiles.Clear();
+
+            if (!_sweepPhase.Active)
+                return;
+
+            // --- Queue every included footprint tile; sweep applies payload intent directly (no layer identification).
+            for (int y = 0; y < Projection.TargetTiles.GetLength(1); y++)
+            {
+                for (int x = 0; x < Projection.TargetTiles.GetLength(0); x++)
+                {
+                    Blueprint.BlueprintCell targetCell = Projection.TargetTiles[x, y];
+                    if (!targetCell.Included)
+                        continue;
+                    if (!Lookup.TryGetPasteTile(targetCell.Relative, out PasteTile pasteTile))
+                        continue;
+                    if (_sweepQueuedWorldTiles.Add(pasteTile.World))
+                        _sweepTasks.Enqueue(pasteTile);
+                }
+            }
+
+            TABLog.Debug($"Sweep: queued {_sweepTasks.Count} tiles (full footprint)", "Paste");
+        }
+
+        private void ProcessSweepQueue()
+        {
+            _currentStepPlaceTiles.Clear();
+            _currentStepClearTiles.Clear();
+            if (_sweepTasks.Count == 0)
+            {
+                TABLog.Warn("Sweep: queue empty — no tiles to apply", "Paste");
+                return;
+            }
+
+            int tickSize = _sweepPhase.TickSize;
+            int batchTotal = Math.Min(tickSize, _sweepTasks.Count);
+
+            int applied = 0;
+            while (_sweepTasks.Count > 0 && applied < tickSize)
+            {
+                PasteTile pt = _sweepTasks.Dequeue();
+                int wx = pt.World.X, wy = pt.World.Y;
+                PasteProgress progress = _progress.ForBatch(applied + 1, batchTotal);
+                if (!WorldGen.InWorld(wx, wy))
+                {
+                    PasteProgress progressEvent = progress.WithTaskResult(
+                        in pt,
+                        PasteProgressOutcome.Failed,
+                        LayerFailReason.None,
+                        "target tile outside world");
+                    PastingInfoLog.Write(in progressEvent);
+                    _progress.RecordCompletion();
+                    applied++;
+                    continue;
+                }
+
+                pt.PayloadCell.CopyToWorldTile(wx, wy);
+                LayerSync.SyncTileSquare(wx, wy);
+                bool sweepOk = PastingInfoLog.IsSweepSatisfied(in pt);
+                PasteProgressOutcome outcome = sweepOk ? PasteProgressOutcome.Ok : PasteProgressOutcome.Failed;
+                string? detail = sweepOk ? null : PastingInfoLog.ExplainSweepFailure(in pt);
+                PasteProgress progressEvent2 = progress.WithTaskResult(in pt, outcome, LayerFailReason.None, detail);
+                PastingInfoLog.Write(in progressEvent2);
+                _progress.RecordCompletion();
+
+                if (_currentStepPlaceTiles.Count < MaxCurrentStepTiles)
+                    _currentStepPlaceTiles.Add(pt.World);
+                applied++;
+            }
+
+            TABLog.Debug($"Sweep: applied {applied} tiles, remaining={_sweepTasks.Count}", "Paste");
+        }
+
         /// <summary>
         /// Clears all queued clear/place work for this operation.
         /// </summary>
         private void ClearAllTaskQueues()
         {
-            // --- Reset both queue sets when operation exits via cheat sweep or invalid operation state.
+            // --- Reset all queues when operation exits or becomes invalid.
 
             for (int i = 0; i < clearTasks.Count; i++)
                 clearTasks[i].Clear();
+            for (int i = 0; i < cutTasks.Count; i++)
+                cutTasks[i].Clear();
             for (int i = 0; i < placeTasks.Count; i++)
                 placeTasks[i].Clear();
-        }
-
-        /// <summary>
-        /// Converts sweep-identified relatives into paste tiles that can be applied in one cheat pass.
-        /// </summary>
-        private static List<PasteTile> CreateSweepCheatPasteTiles(
-            IReadOnlyList<Blueprint.BlueprintCell> identified,
-            in PasteTileLookup lookup)
-        {
-            // --- Resolve each identified relative through lookup and keep only resolvable paste tiles.
-
-            var list = new List<PasteTile>(identified.Count);
-            for (int i = 0; i < identified.Count; i++)
-            {
-                if (!lookup.TryGetPasteTile(identified[i].Relative, out PasteTile pasteTile))
-                    continue;
-                list.Add(pasteTile);
-            }
-
-            return list;
+            _sweepTasks.Clear();
         }
 
         /// <summary>
@@ -1156,6 +1396,162 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             return false;
+        }
+
+        /// <summary>Shared per-phase settings and tick pacing for a paste operation stage.</summary>
+        private abstract class PhaseRunner
+        {
+            protected readonly PastingOperation Operation;
+            protected readonly PastePhaseSettings Settings;
+
+            protected PhaseRunner(PastingOperation operation, PastePhaseSettings settings)
+            {
+                Operation = operation;
+                Settings = settings;
+            }
+
+            public bool Active => Settings.Active;
+
+            public int TickSize => Math.Max(1, Math.Min(Settings.TickSize, Operation.PasteConfig.Limits.MaxPhaseTickSize));
+
+            public int TickDelayMs => Math.Max(0, Settings.TickDelayMs);
+
+            public abstract Phase Kind { get; }
+
+            public virtual void OnEnter() { }
+
+            public abstract void ExecuteTick();
+        }
+
+        /// <summary>Incrementally builds clear/cut/place task queues.</summary>
+        private sealed class PlanPhaseRunner : PhaseRunner
+        {
+            public PlanPhaseRunner(PastingOperation operation, PastePhaseSettings settings) : base(operation, settings) { }
+
+            public override Phase Kind => Phase.Plan;
+
+            public override void ExecuteTick()
+            {
+                bool morePrep = Operation.Init();
+                if (!morePrep)
+                {
+                    Operation._phase = Operation.ResolveFirstEnabledExecutionPhase();
+                    Operation._currentLayerIndex = 0;
+                    Operation.GetRunner(Operation._phase).OnEnter();
+                    TABLog.Debug($"Stage: EXEC {Operation._phase.ToString().ToUpperInvariant()}", "Paste");
+                }
+            }
+        }
+
+        /// <summary>Executes destination clear tasks layer-by-layer.</summary>
+        private sealed class ClearPhaseRunner : PhaseRunner
+        {
+            public ClearPhaseRunner(PastingOperation operation, PastePhaseSettings settings) : base(operation, settings) { }
+
+            public override Phase Kind => Phase.Clear;
+
+            public override void OnEnter() => Operation.BeginInfoPhase(PasteInfoPhase.Clear);
+
+            public override void ExecuteTick()
+            {
+                Operation.AdvanceToNextNonEmptyLayer(Operation.clearTasks);
+                if (Operation._currentLayerIndex >= Operation.clearTasks.Count)
+                {
+                    Operation.AdvancePhase();
+                    return;
+                }
+
+                Operation.SyncOverlayDoneTrackingIfNeeded();
+                var qClear = Operation.clearTasks[Operation._currentLayerIndex];
+                var layerClear = Operation.Pipeline.ClearOrder[Operation._currentLayerIndex];
+                TABLog.Debug($"Clear layer {layerClear.Id} (idx={Operation._currentLayerIndex}) tasks={qClear.Count}", "Paste");
+                Operation._currentStepClearTiles.Clear();
+                Operation._currentStepPlaceTiles.Clear();
+                Operation.ProcessClearQueue(qClear, Operation.Context, TickSize, Operation._currentStepClearTiles, Operation._overlayDoneThisLayer);
+            }
+        }
+
+        /// <summary>Executes source-area cut clears layer-by-layer.</summary>
+        private sealed class CutPhaseRunner : PhaseRunner
+        {
+            public CutPhaseRunner(PastingOperation operation, PastePhaseSettings settings) : base(operation, settings) { }
+
+            public override Phase Kind => Phase.Cut;
+
+            public override void OnEnter() => Operation.BeginInfoPhase(PasteInfoPhase.Cut);
+
+            public override void ExecuteTick()
+            {
+                Operation.AdvanceToNextNonEmptyLayer(Operation.cutTasks);
+                if (Operation._currentLayerIndex >= Operation.cutTasks.Count)
+                {
+                    Operation.AdvancePhase();
+                    return;
+                }
+
+                Operation.SyncOverlayDoneTrackingIfNeeded();
+                var qCut = Operation.cutTasks[Operation._currentLayerIndex];
+                var layerCut = Operation.Pipeline.ClearOrder[Operation._currentLayerIndex];
+                TABLog.Debug($"Cut layer {layerCut.Id} (idx={Operation._currentLayerIndex}) tasks={qCut.Count}", "Paste");
+                Operation._currentStepClearTiles.Clear();
+                Operation._currentStepPlaceTiles.Clear();
+                Operation.ProcessClearQueue(qCut, Operation.Context, TickSize, Operation._currentStepClearTiles, Operation._overlayDoneThisLayer);
+            }
+        }
+
+        /// <summary>Executes place tasks layer-by-layer.</summary>
+        private sealed class PlacePhaseRunner : PhaseRunner
+        {
+            public PlacePhaseRunner(PastingOperation operation, PastePhaseSettings settings) : base(operation, settings) { }
+
+            public override Phase Kind => Phase.Place;
+
+            public override void OnEnter() => Operation.BeginInfoPhase(PasteInfoPhase.Place);
+
+            public override void ExecuteTick()
+            {
+                Operation.AdvanceToNextNonEmptyLayer(Operation.placeTasks);
+                if (Operation._currentLayerIndex >= Operation.placeTasks.Count)
+                {
+                    Operation.AdvancePhase();
+                    return;
+                }
+
+                Operation.SyncOverlayDoneTrackingIfNeeded();
+                var qPlace = Operation.placeTasks[Operation._currentLayerIndex];
+                var layerPlace = Operation.Pipeline.PlaceOrder[Operation._currentLayerIndex];
+                TABLog.Debug($"Place layer {layerPlace.Id} (idx={Operation._currentLayerIndex}) tasks={qPlace.Count}", "Paste");
+                Operation._currentStepPlaceTiles.Clear();
+                Operation._currentStepClearTiles.Clear();
+                Operation.ProcessPlaceQueue(
+                    qPlace,
+                    Operation.Context,
+                    TickSize,
+                    Operation._currentStepPlaceTiles,
+                    Operation._overlayDoneThisLayer,
+                    successfulPlacedWorldTiles: null);
+            }
+        }
+
+        /// <summary>Applies sweep for the full queue; delay 0 completes the phase in one tick.</summary>
+        private sealed class SweepPhaseRunner : PhaseRunner
+        {
+            public SweepPhaseRunner(PastingOperation operation, PastePhaseSettings settings) : base(operation, settings) { }
+
+            public override Phase Kind => Phase.Sweep;
+
+            public override void OnEnter()
+            {
+                Operation.BuildSweepQueue();
+                Operation.BeginInfoPhase(PasteInfoPhase.Sweep);
+            }
+
+            public override void ExecuteTick()
+            {
+                Operation.ProcessSweepQueue();
+                if (Operation._sweepTasks.Count == 0)
+                    Operation.AdvancePhase();
+            }
         }
     }
 }

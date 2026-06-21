@@ -105,7 +105,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public static Layer Detail => DetailLayer.Definition;
         public static Layer Fluid => FluidLayer.Definition;
         public static Layer Unknown => UnknownLayer.Definition;
-        public static Layer Sweep => SweepLayer.Definition;
 
         public static IReadOnlyList<Layer> BuiltInLayers { get; } =
         [
@@ -118,7 +117,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             Paint,
             Wiring,
             Detail,
-            Sweep,
             Fluid,
             Unknown,
         ];
@@ -186,10 +184,12 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 if (tiles.Count == 0)
                     continue;
 
-                bool placementValid = pasteTile.PayloadCell.IsEmpty
-                    ? identifySubject != PasteSubject.Payload
-                    : layer.PlacementValid(in pasteTile, in identifyLookup, in context);
-                bool hasRequiredItems = pasteTile.PayloadCell.IsEmpty || layer.HasRequiredItems(in pasteTile, in identifyLookup, in context);
+                // Vacant payload: clear/sweep apply air intent; place layers must not queue.
+                if (pasteTile.PayloadCell.IsEmpty && identifySubject == PasteSubject.Payload)
+                    continue;
+
+                bool placementValid = layer.PlacementValid(in pasteTile, in identifyLookup, in context);
+                bool hasRequiredItems = layer.HasRequiredItems(in pasteTile, in identifyLookup, in context);
                 identifiedLayers.Add(new LayerIdentifyResult(layer, tiles, placementValid, hasRequiredItems));
                 claimedTypes.Add(layer.LayerType);
             }
@@ -305,12 +305,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "OtherAnchored",
                     "Tree",
                     "Unknown",
-                    "Deco",
                     "Fluid",
                     "Paint",
                     "Wiring",
                     "Detail",
-                    "Sweep",
                 ],
                 ClearOrder =
                 [
@@ -318,7 +316,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Detail",
                     "Wiring",
                     "Paint",
-                    "Deco",
                     "Unknown",
                     "Tree",
                     "OtherAnchored",
@@ -333,7 +330,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Wall",
                     "Unknown",
                     "Tree",
-                    "Deco",
                     "OtherAnchored",
                     "WallAnchored",
                     "TileAnchored",
@@ -343,7 +339,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Paint",
                     "Wiring",
                     "Detail",
-                    "Sweep",
                 ],
             };
         }

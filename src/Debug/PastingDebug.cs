@@ -1,11 +1,10 @@
-using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 
 namespace TheArchitectsBlueprintMod.Debug;
 
 /// <summary>
-/// Pasting debug helpers. All output goes through <see cref="TABLog"/> when <see cref="ClientLogConfig.ShowDebugLogs"/> is enabled.
+/// Pasting debug helpers. All output goes through <see cref="TABLog"/> and is always written to the mod log.
 /// </summary>
 internal static class PastingDebug
 {

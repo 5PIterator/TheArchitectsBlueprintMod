@@ -8,6 +8,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using Terraria.ObjectData;
+using Terraria.DataStructures;
 namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
@@ -140,22 +141,47 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>
-        /// Creates a Tile data structure from a PayloadCell. Empty cells materialize as <c>default</c> (air).
+        /// Creates a Tile data structure from a PayloadCell. Empty cells materialize as a fresh air tile (<see cref="Tile()"/>).
         /// !Important: The returned Tile is a temporary tile, and will be overridden by the next call to ToTile().
+        /// For world placement, prefer <see cref="CopyToWorldTile"/> instead of <see cref="Tile.CopyFrom"/>.
         /// </summary>
         /// <param name="cell"></param>
         /// <returns>A Tile data structure from a PayloadCell.</returns>
         public Tile ToTile()
         {
             if (IsEmpty)
-                return default;
+                return new Tile();
             Tile t = new();
-            t.Get<TileTypeData>() = _data.TileType;
-            t.Get<WallTypeData>() = _data.WallType;
-            t.Get<Terraria.LiquidData>() = _data.LiquidData;
-            t.Get<TileWallBrightnessInvisibilityData>() = _data.TWBIData;
-            t.Get<TileWallWireStateData>() = _data.TWWStateData;
+            CopyTileDataOnto(t);
             return t;
+        }
+
+        /// <summary>
+        /// Writes this cell's detached snapshot onto a live world tile at <paramref name="x"/>, <paramref name="y"/>.
+        /// Empty cells clear the destination to vacant (block and wall). Avoids the shared <see cref="ToTile"/> scratch buffer.
+        /// </summary>
+        public void CopyToWorldTile(int x, int y)
+        {
+            if (!WorldGen.InWorld(x, y))
+                return;
+
+            Tile dest = Main.tile[x, y];
+            CopyTileDataOnto(dest);
+        }
+
+        private void CopyTileDataOnto(Tile dest)
+        {
+            if (IsEmpty)
+            {
+                dest.Clear(TileDataType.All);
+                return;
+            }
+
+            dest.Get<TileTypeData>() = _data.TileType;
+            dest.Get<WallTypeData>() = _data.WallType;
+            dest.Get<Terraria.LiquidData>() = _data.LiquidData;
+            dest.Get<TileWallBrightnessInvisibilityData>() = _data.TWBIData;
+            dest.Get<TileWallWireStateData>() = _data.TWWStateData;
         }
 
         /// <summary>
@@ -371,6 +397,10 @@ namespace TheArchitectsBlueprintMod.Core
             }
         }
 
+        /// <summary>
+        /// Returns a cell at <paramref name="relative"/> when inside payload bounds.
+        /// Sparse omissions materialize as <see cref="PayloadCell.IsEmpty"/> (air).
+        /// </summary>
         public bool TryGetCell(Point relative, out PayloadCell cell)
         {
             if (!IsDefined || (uint)relative.X >= (uint)_width || (uint)relative.Y >= (uint)_height)
@@ -383,13 +413,15 @@ namespace TheArchitectsBlueprintMod.Core
             if (_cellIndex!.TryGetValue(relative, out cell))
                 return true;
 
+            // --- In-bounds sparse miss: implicit air (default PayloadCell).
+
             cell = default;
-            return false;
+            return true;
         }
 
         private void EnsureCellIndex()
         {
-            if (_cellIndex is not null || _entries.Length == 0)
+            if (_cellIndex is not null)
                 return;
 
             _cellIndex = new Dictionary<Point, PayloadCell>(_entries.Length);

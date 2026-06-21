@@ -64,7 +64,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context)
         {
-            if (!context.NeedsItems || context.Items is null || context.CheatSweep) return true;
+            if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
             if (!tile.PayloadCell.HasTile()) return true;
             int style = tile.PayloadCell.Detail.Style;
             return InventoryManager.FindItemByTile(context.Items, (ushort)tile.PayloadCell.Block.Type, style) is not null;
@@ -72,7 +72,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
-            if (!tile.PayloadCell.HasTile() || !context.NeedsItems || context.Items is null) return true;
+            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
             int style = tile.PayloadCell.Detail.Style;
             return InventoryManager.FindItemByTile(context.Items, (ushort)tile.PayloadCell.Block.Type, style) is not null;
         }
@@ -194,7 +194,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 LayerSync.SyncTileSquare(x, y);
             }
 
-            if (!context.CheatSweep)
+            if (!context.IsSweepCheat)
             {
                 for (int i = 0; i < tiles.Count; i++)
                 {
