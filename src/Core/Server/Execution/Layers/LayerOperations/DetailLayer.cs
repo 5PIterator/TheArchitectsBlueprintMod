@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TheArchitectsBlueprintMod.Core;
 using Terraria;
+using Terraria.Enums;
 using Terraria.ID;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
@@ -21,7 +22,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
             Tile t = tile.Target;
-            return t.IsActuated || t.BlockType != Terraria.ID.BlockType.Solid;
+            return t.IsActuated || t.BlockType != BlockType.Solid;
         }
 
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
@@ -46,22 +47,36 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         {
             if (tiles.Count == 0) return LayerResult.Ok();
             var tile = tiles[0];
-            ref var dest = ref DetailOperations.GetState(tile.World.X, tile.World.Y);
+            int wx = tile.World.X, wy = tile.World.Y;
+            Tile live = Main.tile[wx, wy];
 
             bool changed = false;
-            if (dest.IsActuated)
+            if (live.IsActuated)
             {
-                dest.IsActuated = false;
-                changed = true;
-            }
-            if (dest.BlockType != Terraria.ID.BlockType.Solid)
-            {
-                dest.BlockType = Terraria.ID.BlockType.Solid;
+                TileWallWireStateData state = DetailOperations.ReadState(wx, wy);
+                state.IsActuated = false;
+                DetailOperations.WriteState(wx, wy, in state);
                 changed = true;
             }
 
-            if (changed)
-                LayerSync.SyncTileSquare(tile.World.X, tile.World.Y);
+            if (live.IsHalfBlock)
+            {
+                WorldGen.PoundTile(wx, wy);
+                changed = true;
+            }
+
+            if (live.Slope != SlopeType.Solid)
+            {
+                WorldGen.SlopeTile(wx, wy, 0);
+                changed = true;
+            }
+            else if (live.BlockType != BlockType.Solid)
+            {
+                TileWallWireStateData state = DetailOperations.ReadState(wx, wy);
+                state.BlockType = BlockType.Solid;
+                DetailOperations.WriteState(wx, wy, in state);
+                changed = true;
+            }
 
             return changed ? LayerResult.Ok(tile.World) : LayerResult.Ok();
         }
@@ -72,22 +87,48 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             var tile = tiles[0];
             var src = tile.PayloadCell.Detail;
             int wx = tile.World.X, wy = tile.World.Y;
-            ref var dest = ref DetailOperations.GetState(wx, wy);
+            if (!Main.tile[wx, wy].HasTile)
+                return LayerResult.Ok();
 
+            Tile live = Main.tile[wx, wy];
             bool changed = false;
-            if (dest.IsActuated != src.IsActuated)
+
+            if (src.IsHalfBlock != live.IsHalfBlock)
             {
-                dest.IsActuated = src.IsActuated;
+                WorldGen.PoundTile(wx, wy);
                 changed = true;
-            }
-            if (Main.tile[wx, wy].HasTile && dest.BlockType != src.BlockType)
-            {
-                dest.BlockType = src.BlockType;
-                changed = true;
+                live = Main.tile[wx, wy];
             }
 
-            if (changed)
-                LayerSync.SyncTileSquare(wx, wy);
+            if (src.Slope != live.Slope)
+            {
+                if (src.Slope == SlopeType.Solid)
+                    WorldGen.SlopeTile(wx, wy, 0);
+                else
+                    WorldGen.SlopeTile(wx, wy, (int)src.Slope, noEffects: false);
+                changed = true;
+                live = Main.tile[wx, wy];
+            }
+
+            TileWallWireStateData state = DetailOperations.ReadState(wx, wy);
+            bool stateChanged = false;
+            if (state.IsActuated != src.IsActuated)
+            {
+                state.IsActuated = src.IsActuated;
+                stateChanged = true;
+            }
+
+            if (state.BlockType != src.BlockType)
+            {
+                state.BlockType = src.BlockType;
+                stateChanged = true;
+            }
+
+            if (stateChanged)
+            {
+                DetailOperations.WriteState(wx, wy, in state);
+                changed = true;
+            }
 
             return changed ? LayerResult.Ok(tile.World) : LayerResult.Ok();
         }

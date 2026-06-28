@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Utils;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
@@ -60,14 +62,26 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context)
         {
             if (tiles.Count == 0) return LayerResult.Ok();
-            var tile = tiles[0];
-            int x = tile.World.X, y = tile.World.Y;
-            if (Main.tile[x, y].WallType == WallID.None)
-                return LayerResult.Ok(tile.World);
 
-            Main.tile[x, y].WallType = WallID.None;
-            LayerSync.SyncTileSquare(x, y);
-            return Main.tile[x, y].WallType == WallID.None ? LayerResult.Ok(tile.World) : LayerResult.Fail(tile.World, LayerFailReason.ClearBlocked);
+            bool changed = false;
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                int x = tiles[i].World.X, y = tiles[i].World.Y;
+                if (Main.tile[x, y].WallType == WallID.None)
+                    continue;
+
+                SuppressTileDrop.KillWall(x, y);
+                changed = true;
+            }
+
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                int x = tiles[i].World.X, y = tiles[i].World.Y;
+                if (Main.tile[x, y].WallType != WallID.None)
+                    return LayerResult.Fail(tiles[i].World, LayerFailReason.ClearBlocked);
+            }
+
+            return changed ? LayerResult.Ok(tiles[0].World) : LayerResult.Ok();
         }
 
         public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
@@ -81,8 +95,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (context.RequireItems && context.Items != null && InventoryManager.FindItemByWall(context.Items, wallType) is null)
                 return LayerResult.Fail(tile.World, LayerFailReason.MissingItems);
 
-            WorldGen.PlaceWall(x, y, wallType, mute: true);
-            if (Main.tile[x, y].WallType != wallType) return LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
+            if (!WallLoader.CanPlace(x, y, wallType))
+                return LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
+
+            WorldGen.PlaceWall(x, y, wallType, mute: false);
             LayerSync.SyncTileSquare(x, y);
 
             if (!context.IsSweepCheat && !Consume(in tile, in context))

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.Client;
 using Microsoft.Xna.Framework;
@@ -126,7 +127,8 @@ namespace TheArchitectsBlueprintMod.Core.Server
         private static Point[] ReadPointArray(BinaryReader reader)
         {
             int len = reader.ReadInt32();
-            if (len < 0 || len > 4096)
+            int maxTiles = ModContent.GetInstance<PastingConfig>().Limits.Server.MaxTilesPerCategory;
+            if (len < 0 || len > maxTiles)
                 throw new InvalidDataException("Invalid paste overlay point array length.");
 
             var pts = new Point[len];

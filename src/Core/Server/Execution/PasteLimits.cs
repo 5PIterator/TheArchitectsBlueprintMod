@@ -29,7 +29,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return true;
 
             Rectangle area = projection.Area;
-            return area.Width > config.Limits.MaxPasteWidth || area.Height > config.Limits.MaxPasteHeight;
+            return area.Width > config.Limits.Client.MaxPasteWidth || area.Height > config.Limits.Client.MaxPasteHeight;
         }
 
         /// <summary>Returns true when included cell count exceeds the configured volume limit.</summary>
@@ -38,7 +38,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (projection is null || !projection.IsDefined)
                 return true;
 
-            return CountIncludedVolume(projection) > config.Limits.VolumeLimit;
+            return CountIncludedVolume(projection) > config.Limits.Client.VolumeLimit;
         }
     }
 }

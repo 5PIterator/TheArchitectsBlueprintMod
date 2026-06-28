@@ -21,7 +21,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         private const float RowInset = 5f;
         private const float PanelPadding = 8f;
 
-        private readonly List<GroupOptionButton<int>> _buttons = new();
+        private readonly List<GroupOptionButton<int>> _buttons = [];
         private readonly Action<int> _onSelected;
         private int _currentIndex;
 

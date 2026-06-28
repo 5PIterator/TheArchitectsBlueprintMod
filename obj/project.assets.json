@@ -60,11 +60,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "r:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\TheArchitectsBlueprintMod.csproj",
+      "projectUniqueName": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\TheArchitectsBlueprintMod.csproj",
       "projectName": "TheArchitectsBlueprintMod",
-      "projectPath": "r:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\TheArchitectsBlueprintMod.csproj",
+      "projectPath": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\TheArchitectsBlueprintMod.csproj",
       "packagesPath": "C:\\Users\\theiterator\\.nuget\\packages\\",
-      "outputPath": "r:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\obj\\",
+      "outputPath": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\theiterator\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -116,15 +116,15 @@
         "downloadDependencies": [
           {
             "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[8.0.25, 8.0.25]"
+            "version": "[8.0.27, 8.0.27]"
           },
           {
             "name": "Microsoft.NETCore.App.Ref",
-            "version": "[8.0.25, 8.0.25]"
+            "version": "[8.0.27, 8.0.27]"
           },
           {
             "name": "Microsoft.WindowsDesktop.App.Ref",
-            "version": "[8.0.25, 8.0.25]"
+            "version": "[8.0.27, 8.0.27]"
           }
         ],
         "frameworkReferences": {
@@ -132,7 +132,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.204/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

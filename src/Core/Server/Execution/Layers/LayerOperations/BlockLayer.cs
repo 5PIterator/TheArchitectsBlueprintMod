@@ -28,11 +28,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!subjectTile.HasTile) return false;
             if (subjectTile.TileType >= TileLoader.TileCount) return false;
             if (TileID.Sets.Falling[subjectTile.TileType]) return false;
-            if (FrameOperations.HasTileAnchor(subjectTile)) return false;
-            if (FrameOperations.HasWallAnchor(subjectTile)) return false;
-            if (FrameOperations.HasOtherAnchor(subjectTile)) return false;
+            if (IsLeafBlock(subjectTile.TileType)) return true;
+            if (ObjectLayer.IsObjectTile(subjectTile) || VegetationLayer.IsVegetationTile(subjectTile)) return false;
             return !CustomLayer.TileTypeIsClaimedByAttributedLayer(subjectTile.TileType);
         }
+
+        internal static bool IsLeafBlock(ushort tileType) =>
+            tileType < TileLoader.TileCount && TileID.Sets.Leaves[tileType];
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].HasTile;

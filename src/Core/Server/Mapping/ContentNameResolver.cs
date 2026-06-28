@@ -12,6 +12,18 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
     /// </summary>
     internal static class ContentNameResolver
     {
+        /// <summary>Display namespace for vanilla (Terraria) content in logs and UI.</summary>
+        public const string TerrariaContentPrefix = "Terraria";
+
+        /// <summary>Formats vanilla internal names as <c>terraria:Name</c>; passes mod <c>Mod:Name</c> through unchanged.</summary>
+        public static string FormatContentDisplayName(string rawName)
+        {
+            if (string.IsNullOrWhiteSpace(rawName))
+                return $"{TerrariaContentPrefix}:Unknown";
+
+            return rawName.Contains(':') ? rawName : $"{TerrariaContentPrefix}:{rawName}";
+        }
+
         public static int? ResolveItem(string name)
         {
             if (string.IsNullOrEmpty(name)) return null;

@@ -19,7 +19,7 @@ namespace TheArchitectsBlueprintMod.Debug
     {
         private static Mod? _mod;
         private static uint _batchFrame = uint.MaxValue;
-        private static readonly List<PendingEntry> _pending = new();
+        private static readonly List<PendingEntry> _pending = [];
 
         private sealed class PendingEntry
         {

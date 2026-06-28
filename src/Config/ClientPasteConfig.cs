@@ -13,11 +13,11 @@ namespace TheArchitectsBlueprintMod.Config
     /// <summary>Client place-phase tolerance preferences sent with paste requests when the server allows them.</summary>
     public sealed class PlacePastePreference
     {
-        [DefaultValue(true)]
-        public bool IgnoreMissingItems = true;
+        [DefaultValue(false)]
+        public bool RetryOnMissingItems;
 
-        [DefaultValue(true)]
-        public bool IgnoreInvalidPlacement = true;
+        [DefaultValue(false)]
+        public bool RetryOnInvalidPlacement;
     }
 
     /// <summary>Client sweep-phase preference sent with paste requests when the server allows it.</summary>
@@ -25,6 +25,13 @@ namespace TheArchitectsBlueprintMod.Config
     {
         [DefaultValue(SweepPhaseStrategy.Detail)]
         public SweepPhaseStrategy Strategy = SweepPhaseStrategy.Detail;
+    }
+
+    /// <summary>Client-only paste overlay debug visuals.</summary>
+    public sealed class PasteOverlayDebugConfig
+    {
+        [DefaultValue(false)]
+        public bool RectBorders;
     }
 
     /// <summary>Client-side paste preferences carried with each paste request. Server policy decides which are honored.</summary>
@@ -36,5 +43,8 @@ namespace TheArchitectsBlueprintMod.Config
         public ClearPastePreference Clear = new();
         public PlacePastePreference Place = new();
         public SweepPastePreference Sweep = new();
+
+        [Header("Debug")]
+        public PasteOverlayDebugConfig Overlay = new();
     }
 }

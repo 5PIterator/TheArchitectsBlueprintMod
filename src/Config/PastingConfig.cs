@@ -3,8 +3,8 @@ using Terraria.ModLoader.Config;
 
 namespace TheArchitectsBlueprintMod.Config
 {
-    /// <summary>Global paste limits enforced for every phase and operation.</summary>
-    public sealed class PasteLimitsConfig
+    /// <summary>Per-client paste caps enforced on requests and during server validation.</summary>
+    public sealed class ClientPasteLimitsConfig
     {
         [DefaultValue(200)]
         [Range(1, 2000)]
@@ -21,7 +21,11 @@ namespace TheArchitectsBlueprintMod.Config
         [DefaultValue(1)]
         [Range(1, 128)]
         public int PlayerOperationLimit = 1;
+    }
 
+    /// <summary>Server-wide paste execution caps.</summary>
+    public sealed class ServerPasteLimitsConfig
+    {
         [DefaultValue(8)]
         [Range(1, 512)]
         public int ServerOperationLimit = 8;
@@ -29,6 +33,20 @@ namespace TheArchitectsBlueprintMod.Config
         [DefaultValue(512)]
         [Range(1, 512)]
         public int MaxPhaseTickSize = 512;
+
+        [DefaultValue(4096)]
+        [Range(1, 16384)]
+        public int MaxTilesPerCategory = 4096;
+    }
+
+    /// <summary>Global paste limits grouped by enforcement scope.</summary>
+    public sealed class GlobalLimitsConfig
+    {
+        [Expand(false)]
+        public ClientPasteLimitsConfig Client = new();
+
+        [Expand(false)]
+        public ServerPasteLimitsConfig Server = new();
     }
 
     /// <summary>Clear-phase execution, strategy defaults, and client preference policy.</summary>
@@ -79,14 +97,17 @@ namespace TheArchitectsBlueprintMod.Config
         [DefaultValue(true)]
         public bool RequireItems = true;
 
-        [DefaultValue(true)]
-        public bool IgnoreMissingItems = true;
+        [DefaultValue(false)]
+        public bool RetryOnMissingItems;
 
-        [DefaultValue(true)]
-        public bool IgnoreInvalidPlacement = true;
+        [DefaultValue(false)]
+        public bool RetryOnInvalidPlacement;
 
         [DefaultValue(true)]
         public bool AllowClientPreferences = true;
+
+        [DefaultValue(false)]
+        public bool EnableCutPasteProcess;
 
         public PastePhaseSettings ToPhaseSettings() => new()
         {
@@ -124,15 +145,33 @@ namespace TheArchitectsBlueprintMod.Config
         };
     }
 
+    /// <summary>Per-phase paste policy: plan, clear, cut, place, and sweep.</summary>
+    public sealed class PhasePolicyConfig
+    {
+        [Expand(false)]
+        public PastePhaseSettings Plan = new() { Active = true, TickSize = 50, TickDelayMs = 0 };
+
+        [Expand(false)]
+        public ClearPhaseConfig Clear = new();
+
+        [Expand(false)]
+        public PastePhaseSettings Cut = new() { Active = true, TickSize = 100, TickDelayMs = 100 };
+
+        [Expand(false)]
+        public PlacePhaseConfig Place = new();
+
+        [Expand(false)]
+        public SweepPhaseConfig Sweep = new();
+    }
+
     /// <summary>Per-layer toggles for paste task building. When false, that layer is not identified and generates no clear/place tasks.</summary>
     public sealed class LayerPolicySettings
     {
         [DefaultValue(true)] public bool Wall = true;
         [DefaultValue(true)] public bool Block = true;
         [DefaultValue(true)] public bool FallBlock = true;
-        [DefaultValue(true)] public bool TileAnchored = true;
-        [DefaultValue(true)] public bool WallAnchored = true;
-        [DefaultValue(true)] public bool OtherAnchored = true;
+        [DefaultValue(true)] public bool Object = true;
+        [DefaultValue(true)] public bool Vegetation = true;
         [DefaultValue(true)] public bool Tree = true;
         [DefaultValue(true)] public bool Paint = true;
         [DefaultValue(true)] public bool Wiring = true;
@@ -146,25 +185,11 @@ namespace TheArchitectsBlueprintMod.Config
     {
         public override ConfigScope Mode => ConfigScope.ServerSide;
 
-        [Header("Limits")]
-        public PasteLimitsConfig Limits = new();
+        [Header("GlobalLimits")]
+        public GlobalLimitsConfig Limits = new();
 
-        [Header("PhaseExecution")]
-        public PastePhaseSettings Plan = new() { Active = true, TickSize = 50, TickDelayMs = 0 };
-        public PastePhaseSettings Cut = new() { Active = true, TickSize = 100, TickDelayMs = 100 };
-
-        [Header("ClearPolicy")]
-        public ClearPhaseConfig Clear = new();
-
-        [Header("PlacePolicy")]
-        public PlacePhaseConfig Place = new();
-
-        [Header("SweepPolicy")]
-        public SweepPhaseConfig Sweep = new();
-
-        [Header("Advanced")]
-        [DefaultValue(false)]
-        public bool EnableCutPasteProcess;
+        [Header("PhasePolicy")]
+        public PhasePolicyConfig Phases = new();
 
         [Header("LayerPolicy")]
         public LayerPolicySettings LayerPolicy = new();
@@ -178,9 +203,8 @@ namespace TheArchitectsBlueprintMod.Config
                 "Wall" => s.Wall,
                 "Block" => s.Block,
                 "FallBlock" => s.FallBlock,
-                "TileAnchored" => s.TileAnchored,
-                "WallAnchored" => s.WallAnchored,
-                "OtherAnchored" => s.OtherAnchored,
+                "Object" => s.Object,
+                "Vegetation" => s.Vegetation,
                 "Tree" => s.Tree,
                 "Paint" => s.Paint,
                 "Wiring" => s.Wiring,

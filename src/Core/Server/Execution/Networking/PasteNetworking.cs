@@ -138,8 +138,8 @@ namespace TheArchitectsBlueprintMod.Core.Server
 
             var config = ModContent.GetInstance<PastingConfig>();
             var hints = new PasteClientHints(
-                request.IgnoreMissingItems,
-                request.IgnoreInvalidPlacement,
+                request.RetryOnMissingItems,
+                request.RetryOnInvalidPlacement,
                 request.ClearStrategy,
                 request.SweepStrategy);
             var policy = EffectivePastePolicy.Resolve(config, hints);

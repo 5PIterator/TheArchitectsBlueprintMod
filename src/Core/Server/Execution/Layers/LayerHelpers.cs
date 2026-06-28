@@ -411,8 +411,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (context.UseReplacePlace && dest.HasTile)
             {
                 SuppressTileDrop.KillTile(x, y);
-                if (Main.tile[x, y].HasTile)
-                    return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
             }
 
             if (context.RequireItems && context.Items != null)
@@ -520,25 +518,24 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                             PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
                             return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
                         }
-                        WorldGen.PlaceTile(x, y, baseType, mute: false, forced: context.IsSweepCheat, plr: context.Player.whoAmI, style: 0);
-                        if (!Main.tile[x, y].HasTile || Main.tile[x, y].TileType != baseType)
+                        if (!WorldGen.PlaceTile(x, y, baseType, mute: false, forced: context.IsSweepCheat, plr: context.Player.whoAmI, style: 0))
                         {
                             PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
                             return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
                         }
                         InventoryManager.ConsumeItem(item, origin.World, context.Inventories, context.Player);
                     }
-                    else
+                    else if (!WorldGen.PlaceTile(x, y, baseType, mute: false, forced: context.IsSweepCheat, plr: context.Player.whoAmI, style: 0))
                     {
-                        WorldGen.PlaceTile(x, y, baseType, mute: false, forced: context.IsSweepCheat, plr: context.Player.whoAmI, style: 0);
-                        if (!Main.tile[x, y].HasTile || Main.tile[x, y].TileType != baseType)
-                        {
-                            PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                            return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
-                        }
+                        PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                        return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
                     }
+
                     LayerSync.SyncTileSquare(x, y);
-                    return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
+                    PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, true, "PlaceBaseTile");
+                    // Base-first conversion tiles (e.g., dirt -> grass) require a second pass:
+                    // this pass lays support, next pass applies the conversion tile itself.
+                    return LayerResult.Ok(origin.World, tiles);
                 }
             }
             else if (dest.HasTile && !context.IsSweepCheat && context.RequireItems && !context.UseReplacePlace)
@@ -548,14 +545,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             }
 
             if (context.UseReplacePlace && dest.HasTile && dest.TileType != tileType)
-            {
                 SuppressTileDrop.KillTile(x, y);
-                if (Main.tile[x, y].HasTile)
-                {
-                    PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                    return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
-                }
-            }
 
             int placeStyle = Math.Max(0, style);
             if (context.RequireItems && context.Items != null)
@@ -627,11 +617,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return InteractionMapProvider.GetTileItemIds((ushort)payloadCell.Block.Type, style);
         }
 
-        public static ref TileWallWireStateData GetState(int x, int y)
+        public static void WriteState(int x, int y, in TileWallWireStateData state)
         {
-            int idx = x + y * (int)Main.tile.Width;
-            return ref Main.tile.GetData<TileWallWireStateData>()[idx];
+            Main.tile[x, y].Get<TileWallWireStateData>() = state;
         }
+
+        /// <summary>Reads live <see cref="TileWallWireStateData"/>; commit mutations with <see cref="WriteState"/>.</summary>
+        public static TileWallWireStateData ReadState(int x, int y) =>
+            Main.tile[x, y].Get<TileWallWireStateData>();
     }
 
     internal static class LayerSync

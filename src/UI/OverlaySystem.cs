@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
+using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Utils;
 
 namespace TheArchitectsBlueprintMod.UI
@@ -41,6 +42,9 @@ namespace TheArchitectsBlueprintMod.UI
                 case OverlayDrawableKind.TileFill:
                     OverlaySystem.DrawTileFill((Point[])_data, _color);
                     break;
+                case OverlayDrawableKind.TileRectFill:
+                    OverlaySystem.DrawTileRectFill((Rectangle[])_data, _color);
+                    break;
                 case OverlayDrawableKind.TileBounds:
                     OverlaySystem.DrawTileBounds((Rectangle)_data, _color, _borderWidth);
                     break;
@@ -58,6 +62,7 @@ namespace TheArchitectsBlueprintMod.UI
     {
         Point,
         TileFill,
+        TileRectFill,
         TileBounds,
         TileBorder,
         Screen,
@@ -135,7 +140,7 @@ namespace TheArchitectsBlueprintMod.UI
             _drawOrder.Clear();
         }
 
-        public void Draw(OverlayDrawableKind? onlyKind = null, OverlayDrawableKind? skipKind = null)
+        public void Draw(OverlayDrawableKind? onlyKind = null, OverlayDrawableKind? skipKind = null, bool lateFillsOnly = false, bool excludeLateFills = false)
         {
             List<string>? expired = null;
             for (int i = 0; i < _drawOrder.Count; i++)
@@ -152,6 +157,10 @@ namespace TheArchitectsBlueprintMod.UI
                 if (onlyKind.HasValue && kind != onlyKind.Value)
                     continue;
                 if (skipKind.HasValue && kind == skipKind.Value)
+                    continue;
+                if (lateFillsOnly && !OverlaySystem.IsLateFillKind(kind))
+                    continue;
+                if (excludeLateFills && OverlaySystem.IsLateFillKind(kind))
                     continue;
 
                 item.Drawable.Draw();
@@ -245,6 +254,19 @@ namespace TheArchitectsBlueprintMod.UI
             Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileFill, copy, fill, 0), ttlMs);
         }
 
+        /// <summary>
+        /// Registers paste overlay tiles as batched rectangle fills with exact tile coverage.
+        /// </summary>
+        /// <inheritdoc cref="RegPoints"/>
+        public static void RegPasteTileFill(string id, Point[] tiles, Color fill, string? family = null, int? ttlMs = null)
+        {
+            ValidateRegistration(id, tiles);
+            Rectangle[] rects = TileOverlayRects.Decompose(tiles);
+            var copy = new Rectangle[rects.Length];
+            Array.Copy(rects, copy, rects.Length);
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileRectFill, copy, fill, 0), ttlMs);
+        }
+
         /// <inheritdoc cref="RegPoints"/>
         public static void RegTileBounds(string id, Rectangle tileBounds, Color color, int borderWidth, string? family = null, int? ttlMs = null)
         {
@@ -316,7 +338,7 @@ namespace TheArchitectsBlueprintMod.UI
             if (!ShouldDrawWorldOverlay())
                 return;
 
-            Instance._catalog.Draw(skipKind: OverlayDrawableKind.TileFill);
+            Instance._catalog.Draw(excludeLateFills: true);
         }
 
         private static void DrawOverlayLate()
@@ -324,8 +346,11 @@ namespace TheArchitectsBlueprintMod.UI
             if (!ShouldDrawWorldOverlay())
                 return;
 
-            Instance._catalog.Draw(onlyKind: OverlayDrawableKind.TileFill);
+            Instance._catalog.Draw(lateFillsOnly: true);
         }
+
+        internal static bool IsLateFillKind(OverlayDrawableKind kind) =>
+            kind is OverlayDrawableKind.TileFill or OverlayDrawableKind.TileRectFill;
 
         private static bool ShouldDrawWorldOverlay()
         {
@@ -362,6 +387,31 @@ namespace TheArchitectsBlueprintMod.UI
                 var t = tiles[i];
                 var pos = new Vector2(t.X * TilePixelSize, t.Y * TilePixelSize) - Main.screenPosition;
                 Main.spriteBatch.Draw(pixel, pos, PixelSource, fill, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            }
+        }
+
+        /// <summary>
+        /// Draws each tile-space rectangle as one scaled pixel quad.
+        /// </summary>
+        public static void DrawTileRectFill(Rectangle[] rects, Color fill)
+        {
+            // --- Render every rectangle with width/height scaled to tile pixels.
+
+            var pixel = ModUtils.DummyTexture;
+            for (int i = 0; i < rects.Length; i++)
+            {
+                Rectangle r = rects[i];
+                var pos = new Vector2(r.X * TilePixelSize, r.Y * TilePixelSize) - Main.screenPosition;
+                var scale = new Vector2(r.Width * TilePixelSize, r.Height * TilePixelSize);
+                Main.spriteBatch.Draw(pixel, pos, PixelSource, fill, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            }
+
+            if (ModContent.GetInstance<ClientPasteConfig>().Overlay.RectBorders)
+            {
+                // Draw each batch rectangle outline on top of the fill pass.
+                Color borderColor = new(fill.R, fill.G, fill.B, (byte)255);
+                for (int i = 0; i < rects.Length; i++)
+                    DrawTileBorder(rects[i], borderColor, 2);
             }
         }
 

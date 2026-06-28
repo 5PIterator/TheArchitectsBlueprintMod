@@ -118,6 +118,8 @@ namespace TheArchitectsBlueprintMod.Core
                 TWBIData = tile.Get<TileWallBrightnessInvisibilityData>(),
                 TWWStateData = tile.Get<TileWallWireStateData>(),
             };
+            data.TWWStateData.TileFrameNumber = 0;
+            data.TWWStateData.WallFrameNumber = 0;
             int style = 0, alternate = 0;
             if (tile.HasTile && data.TileType.Type > 0 && data.TileType.Type < TileLoader.TileCount)
                 TileObjectData.GetTileInfo(tile, ref style, ref alternate);
@@ -181,7 +183,10 @@ namespace TheArchitectsBlueprintMod.Core
             dest.Get<WallTypeData>() = _data.WallType;
             dest.Get<Terraria.LiquidData>() = _data.LiquidData;
             dest.Get<TileWallBrightnessInvisibilityData>() = _data.TWBIData;
-            dest.Get<TileWallWireStateData>() = _data.TWWStateData;
+            TileWallWireStateData state = _data.TWWStateData;
+            state.TileFrameNumber = 0;
+            state.WallFrameNumber = 0;
+            dest.Get<TileWallWireStateData>() = state;
         }
 
         /// <summary>

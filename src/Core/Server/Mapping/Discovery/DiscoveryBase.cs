@@ -6,7 +6,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Base for discovery processes. Provides shared path resolution, JSON options, and save helpers.
-    /// World-tile sandboxing lives in <see cref="TestChamberSystem"/>.
+    /// World-tile sandboxing lives in <see cref="TestChamberSystem"/>; destructive edits use <see cref="SuppressTileDrop"/>.
     /// </summary>
     internal abstract class DiscoveryBase
     {

@@ -1,18 +1,14 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 using Terraria.ModLoader;
 
 namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
-    /// Compiles source .itr into layer .itr files. Loads SourceMaps into InteractionMap, then exports by layer.
+    /// Compiles source .itr maps into a single compiled InteractionMap document.
     /// </summary>
     internal static class ItrCompiler
     {
-        private static readonly string[] Layers = ["Wall", "Tile", "Liquid", "Wire", "Paint"];
-
         public static void Compile(Mod mod, Action<string> msg)
         {
             var map = new InteractionMap();
@@ -21,35 +17,30 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             msg("Loading SourceMaps into InteractionMap...");
             ItrLoader.LoadAllInto(directory, map, msg);
 
-            msg("Exporting to CompiledMaps by layer...");
-            var byLayer = map.ExportByLayer();
-
-            foreach (var layerName in Layers)
-            {
-                if (!byLayer.TryGetValue(layerName, out var data))
-                    data = new Dictionary<string, TileFirstExportGroup>(StringComparer.OrdinalIgnoreCase);
-
-                var path = ItrStorage.GetCompiledMapPath($"{layerName}.itr");
-                SaveLayer(mod, path, data, layerName, msg);
-                msg($"{layerName} layer: wrote {data.Count} entries to {path}");
-            }
+            msg("Writing unified interaction maps...");
+            SaveUnifiedMaps(mod, map, msg);
         }
 
-        private static void SaveLayer(Mod mod, string path, Dictionary<string, TileFirstExportGroup> data, string errorContext, Action<string> msg)
+        private static void SaveUnifiedMaps(Mod mod, InteractionMap map, Action<string> msg)
         {
             try
             {
-                var doc = new InteractionMapDocument<Dictionary<string, TileFirstExportGroup>>
-                {
-                    Metadata = InteractionMapMetadata.Create(mod, "tile-first", "compiled"),
-                    Data = data,
-                };
-                var json = JsonSerializer.Serialize(doc, InteractionMapJsonOptions.TileFirst);
-                File.WriteAllText(path, json);
+                InteractionMapMetadata metadata = InteractionMapMetadata.Create(mod, format: "tile-first", mapType: "compiled");
+                string binaryPath = ItrStorage.GetCompiledInteractionMapPath();
+                string jsonPath = ItrStorage.GetCompiledInteractionMapJsonPath();
+
+                using (var binary = File.Create(binaryPath))
+                    InteractionMapTagIO.WriteBinaryDocument(binary, map, metadata);
+
+                using (var json = File.Create(jsonPath))
+                    InteractionMapTagIO.WriteJsonDocument(json, map, metadata);
+
+                msg($"Compiled interaction map written: {binaryPath}");
+                msg($"Readable interaction map written: {jsonPath}");
             }
             catch (Exception ex)
             {
-                msg($"Failed to save {errorContext}: {ex.Message}");
+                msg($"Failed to save unified interaction maps: {ex.Message}");
             }
         }
     }

@@ -93,13 +93,13 @@ namespace TheArchitectsBlueprintMod.Core.Client
                 Color baseHue = s.IsPlacePhase ? placeHue : clearHue;
 
                 if (s.Pending.Length > 0)
-                    OverlaySystem.RegTileFill("pending", s.Pending, baseHue * 0.35f, family);
+                    OverlaySystem.RegPasteTileFill("pending", s.Pending, baseHue * 0.35f, family);
                 if (s.Clear.Length > 0)
-                    OverlaySystem.RegTileFill("clear", s.Clear, clearHue * 0.6f, family);
+                    OverlaySystem.RegPasteTileFill("clear", s.Clear, clearHue * 0.6f, family);
                 if (s.Place.Length > 0)
-                    OverlaySystem.RegTileFill("place", s.Place, placeHue * 0.6f, family);
+                    OverlaySystem.RegPasteTileFill("place", s.Place, placeHue * 0.6f, family);
                 if (s.Done.Length > 0)
-                    OverlaySystem.RegTileFill("done", s.Done, baseHue * 0.1f, family);
+                    OverlaySystem.RegPasteTileFill("done", s.Done, baseHue * 0.1f, family);
             }
         }
 

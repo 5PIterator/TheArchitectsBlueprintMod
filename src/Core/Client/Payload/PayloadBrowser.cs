@@ -48,9 +48,9 @@ namespace TheArchitectsBlueprintMod.Core
         private static PayloadBrowser? _active;
         private static readonly Projection?[] _payloadIoHighlight = new Projection[Main.maxPlayers];
 
-        private readonly List<PayloadImportListEntry> _allEntries = new();
-        private readonly List<PayloadImportListEntry> _filteredEntries = new();
-        private readonly Dictionary<int, ProjectionSnapshot> _snapshots = new();
+        private readonly List<PayloadImportListEntry> _allEntries = [];
+        private readonly List<PayloadImportListEntry> _filteredEntries = [];
+        private readonly Dictionary<int, ProjectionSnapshot> _snapshots = [];
 
         private Projection? _activeProjection;
         private string _searchText = string.Empty;

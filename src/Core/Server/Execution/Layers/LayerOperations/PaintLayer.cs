@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Utils;
 using Terraria;
 using Terraria.ID;
 
@@ -48,22 +49,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         {
             if (tiles.Count == 0) return LayerResult.Ok();
             var tile = tiles[0];
-            ref var dest = ref DetailOperations.GetState(tile.World.X, tile.World.Y);
+            int x = tile.World.X, y = tile.World.Y;
+            Tile live = Main.tile[x, y];
 
             bool changed = false;
-            if (dest.TileColor != PaintID.None)
-            {
-                dest.TileColor = PaintID.None;
+            if (live.HasTile && live.TileColor != PaintID.None && WorldGen.paintTile(x, y, PaintID.None))
                 changed = true;
-            }
-            if (dest.WallColor != PaintID.None)
-            {
-                dest.WallColor = PaintID.None;
+            if (live.WallType != WallID.None && live.WallColor != PaintID.None && WorldGen.paintWall(x, y, PaintID.None))
                 changed = true;
-            }
-
-            if (changed)
-                LayerSync.SyncTileSquare(tile.World.X, tile.World.Y);
 
             return changed ? LayerResult.Ok(tile.World) : LayerResult.Ok();
         }
@@ -74,22 +67,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             var tile = tiles[0];
             var src = tile.PayloadCell.Paint;
             int wx = tile.World.X, wy = tile.World.Y;
-            ref var dest = ref DetailOperations.GetState(wx, wy);
+            Tile live = Main.tile[wx, wy];
 
             bool changed = false;
-            if (Main.tile[wx, wy].HasTile && dest.TileColor != src.TileColor)
-            {
-                dest.TileColor = src.TileColor;
+            if (live.HasTile && live.TileColor != src.TileColor && WorldGen.paintTile(wx, wy, src.TileColor))
                 changed = true;
-            }
-            if (Main.tile[wx, wy].WallType != WallID.None && dest.WallColor != src.WallColor)
-            {
-                dest.WallColor = src.WallColor;
+            if (live.WallType != WallID.None && live.WallColor != src.WallColor && WorldGen.paintWall(wx, wy, src.WallColor))
                 changed = true;
-            }
-
-            if (changed)
-                LayerSync.SyncTileSquare(wx, wy);
 
             return changed ? LayerResult.Ok(tile.World) : LayerResult.Ok();
         }

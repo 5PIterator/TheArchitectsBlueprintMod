@@ -57,8 +57,8 @@ namespace TheArchitectsBlueprintMod.Core.Server
         public Rectangle Bounds { get; private set; } = Rectangle.Empty;
         public Rectangle SourceArea { get; private set; } = Rectangle.Empty;
         public bool CutSource { get; private set; }
-        public bool IgnoreMissingItems { get; private set; }
-        public bool IgnoreInvalidPlacement { get; private set; }
+        public bool RetryOnMissingItems { get; private set; }
+        public bool RetryOnInvalidPlacement { get; private set; }
         public ClearPhaseStrategy ClearStrategy { get; private set; }
         public SweepPhaseStrategy SweepStrategy { get; private set; }
         public List<Point> ExcludedRelatives { get; private set; } = [];
@@ -95,8 +95,8 @@ namespace TheArchitectsBlueprintMod.Core.Server
             request.RequestId = requestId;
             request.Bounds = projection.Area;
             request.PayloadBytes = payloadBytes;
-            request.IgnoreMissingItems = hints.IgnoreMissingItems;
-            request.IgnoreInvalidPlacement = hints.IgnoreInvalidPlacement;
+            request.RetryOnMissingItems = hints.RetryOnMissingItems;
+            request.RetryOnInvalidPlacement = hints.RetryOnInvalidPlacement;
             request.ClearStrategy = hints.ClearStrategy;
             request.SweepStrategy = hints.SweepStrategy;
             request.SourceArea = projection.SourceArea;
@@ -114,8 +114,8 @@ namespace TheArchitectsBlueprintMod.Core.Server
             WriteRectangle(writer, Bounds);
             WriteRectangle(writer, SourceArea);
             writer.Write(CutSource);
-            writer.Write(IgnoreMissingItems);
-            writer.Write(IgnoreInvalidPlacement);
+            writer.Write(RetryOnMissingItems);
+            writer.Write(RetryOnInvalidPlacement);
             writer.Write((byte)ClearStrategy);
             writer.Write((byte)SweepStrategy);
             writer.Write(ExcludedRelatives.Count);
@@ -139,8 +139,8 @@ namespace TheArchitectsBlueprintMod.Core.Server
             };
 
             request.CutSource = reader.ReadBoolean();
-            request.IgnoreMissingItems = reader.ReadBoolean();
-            request.IgnoreInvalidPlacement = reader.ReadBoolean();
+            request.RetryOnMissingItems = reader.ReadBoolean();
+            request.RetryOnInvalidPlacement = reader.ReadBoolean();
 
             byte clearByte = reader.ReadByte();
             if (!TryParseClearStrategy(clearByte, out ClearPhaseStrategy clearStrategy))

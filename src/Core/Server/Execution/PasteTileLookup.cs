@@ -72,8 +72,8 @@ namespace TheArchitectsBlueprintMod.Core
             _pasteTiles = pasteTiles ?? throw new ArgumentNullException(nameof(pasteTiles));
             int width = pasteTiles.GetLength(0);
             int height = pasteTiles.GetLength(1);
-            _byRelative = new Dictionary<Point, PasteTile>();
-            _byWorld = new Dictionary<Point, PasteTile>();
+            _byRelative = [];
+            _byWorld = [];
 
             for (int x = 0; x < width; x++)
             {
@@ -81,9 +81,6 @@ namespace TheArchitectsBlueprintMod.Core
                 {
                     PasteTile pasteTile = pasteTiles[x, y];
                     if (pasteTile.Relative.X != x || pasteTile.Relative.Y != y)
-                        continue;
-
-                    if (pasteTile.PayloadCell.IsEmpty)
                         continue;
 
                     if (!_byRelative.TryAdd(pasteTile.Relative, pasteTile))
@@ -98,8 +95,8 @@ namespace TheArchitectsBlueprintMod.Core
 
         public int Count => _pasteTiles.Length;
 
-        /// <summary>True if <paramref name="relative"/> is part of this paste.</summary>
-        public bool IsInPasteScope(Point relative) => _byRelative.ContainsKey(relative);
+        /// <summary>True if <paramref name="relative"/> resolves to a paste grid cell (including vacant payload intent).</summary>
+        public bool IsInPasteScope(Point relative) => TryGetPasteTile(relative, out _);
 
         public bool TryGetPasteTile(Point relative, out PasteTile pasteTile)
         {
@@ -144,7 +141,7 @@ namespace TheArchitectsBlueprintMod.Core
             for (int i = 0; i < relatives.Count; i++)
             {
                 Point rel = relatives[i];
-                if (!_byRelative.TryGetValue(rel, out result[i]))
+                if (!TryGetPasteTile(rel, out result[i]))
                     throw new KeyNotFoundException($"Paste tile not found for relative coordinate: ({rel.X},{rel.Y}) (index {i}).");
             }
 
@@ -183,7 +180,7 @@ namespace TheArchitectsBlueprintMod.Core
             {
                 Point offsetDelta = offsetMap[i];
                 Point neighborRelative = new(anchorRelative.X + offsetDelta.X, anchorRelative.Y + offsetDelta.Y);
-                if (!_byRelative.TryGetValue(neighborRelative, out result[i]))
+                if (!TryGetPasteTile(neighborRelative, out result[i]))
                     throw new KeyNotFoundException(
                         $"Paste tile not found for relative ({neighborRelative.X},{neighborRelative.Y}) = anchor ({anchorRelative.X},{anchorRelative.Y}) + offset ({offsetDelta.X},{offsetDelta.Y}) (index {i}).");
             }

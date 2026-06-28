@@ -334,7 +334,7 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         private static TagCompound GetMetadataTag(TagCompound root) =>
-            root.ContainsKey(KeyMetadata) && root[KeyMetadata] is TagCompound meta ? meta : new TagCompound();
+            root.ContainsKey(KeyMetadata) && root[KeyMetadata] is TagCompound meta ? meta : [];
 
         private static bool TryResolveDocumentInfo(TagCompound root, TagCompound metaTag, out PayloadDocumentInfo info, out string? error)
         {
@@ -424,9 +424,9 @@ namespace TheArchitectsBlueprintMod.Core
                 return true;
             if (cell.Liquid.Amount > 0)
                 return true;
-            if (cell.Block.FrameX != 0 || cell.Block.FrameY != 0 || cell.Block.FrameNumber != 0)
+            if (cell.Block.FrameX != 0 || cell.Block.FrameY != 0)
                 return true;
-            if (cell.Wall.FrameX != 0 || cell.Wall.FrameY != 0 || cell.Wall.FrameNumber != 0)
+            if (cell.Wall.FrameX != 0 || cell.Wall.FrameY != 0)
                 return true;
 
             PayloadCell.TileData data = cell.Data!;
@@ -469,15 +469,11 @@ namespace TheArchitectsBlueprintMod.Core
                 tag["tFX"] = cell.Block.FrameX;
             if (cell.Block.FrameY != 0)
                 tag["tFY"] = cell.Block.FrameY;
-            if (cell.Block.FrameNumber != 0)
-                tag["tFN"] = cell.Block.FrameNumber;
 
             if (cell.Wall.FrameX != 0)
                 tag["wFX"] = cell.Wall.FrameX;
             if (cell.Wall.FrameY != 0)
                 tag["wFY"] = cell.Wall.FrameY;
-            if (cell.Wall.FrameNumber != 0)
-                tag["wFN"] = cell.Wall.FrameNumber;
 
             if (data.TileStyle != 0)
                 tag["style"] = data.TileStyle;
@@ -574,6 +570,9 @@ namespace TheArchitectsBlueprintMod.Core
                     data.TWWStateData.WallFrameY = wFy;
                 if (tag.ContainsKey("wFN") && TryGetInt32(tag, "wFN", out int wFn))
                     data.TWWStateData.WallFrameNumber = wFn;
+
+                data.TWWStateData.TileFrameNumber = 0;
+                data.TWWStateData.WallFrameNumber = 0;
 
                 if (tag.ContainsKey("style") && TryGetInt32(tag, "style", out int style))
                     data.TileStyle = style;

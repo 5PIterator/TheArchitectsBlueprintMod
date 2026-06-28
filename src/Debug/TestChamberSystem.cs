@@ -44,7 +44,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         public void ClearAndSetTile(int x, int y, int tileType, int style = 0)
         {
             SuppressTileDrop.KillTile(x, y);
-            WorldGen.KillWall(x, y, fail: false);
+            SuppressTileDrop.KillWall(x, y);
             WorldGen.PlaceTile(x, y, tileType, mute: true, forced: true, plr: -1, style: style);
         }
 
@@ -54,7 +54,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             if (!WorldGen.InWorld(x, y))
                 return;
             SuppressTileDrop.KillTile(x, y);
-            WorldGen.KillWall(x, y, fail: false);
+            SuppressTileDrop.KillWall(x, y);
             if (saved.WallType != WallID.None)
                 WorldGen.PlaceWall(x, y, (ushort)saved.WallType, mute: true);
             if (saved.HasTile)
@@ -75,7 +75,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 var t = Main.tile[x, y];
                 saved.Add((x, y, t.HasTile, t.TileType, t.WallType));
                 SuppressTileDrop.KillTile(x, y);
-                WorldGen.KillWall(x, y, fail: false);
+                SuppressTileDrop.KillWall(x, y);
                 WorldGen.PlaceTile(x, y, TileID.DemoniteBrick, mute: true, forced: true, plr: -1, style: 0);
             }
 
@@ -94,7 +94,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     continue;
 
                 SuppressTileDrop.KillTile(x, y);
-                WorldGen.KillWall(x, y, fail: false);
+                SuppressTileDrop.KillWall(x, y);
                 if (wallType != WallID.None)
                     WorldGen.PlaceWall(x, y, (ushort)wallType, mute: true);
                 if (hasTile)

@@ -12,6 +12,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         Wall,
         Block,
         Frame,
+        Vegetation,
         Liquid,
         Paint,
         Wiring,

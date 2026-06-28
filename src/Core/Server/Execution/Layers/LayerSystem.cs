@@ -25,20 +25,21 @@ namespace TheArchitectsBlueprintMod.Core.Layers
     /// <summary>
     /// Result of a layer's Clear or Place action. Success indicates the operation completed;
     /// AffectedTiles lists world positions that were modified (for deduplicating frame tasks).
-    /// RemainingTiles: tiles that still need to be placed/cleared; non-empty means the task should run again.
+    /// RemainingBatch: batch subset that still needs to be placed/cleared; non-empty means the task should run again.
     /// </summary>
-    internal readonly struct LayerResult(bool success, IReadOnlyList<Point> affectedTiles, IReadOnlyList<PasteTile>? remainingTiles, LayerFailReason failReason)
+    internal readonly struct LayerResult(bool success, IReadOnlyList<Point> affectedTiles, TileBatch? remainingBatch, LayerFailReason failReason)
     {
         public readonly bool Success = success;
         public readonly IReadOnlyList<Point> AffectedTiles = affectedTiles ?? Array.Empty<Point>();
-        public readonly IReadOnlyList<PasteTile> RemainingTiles = remainingTiles ?? Array.Empty<PasteTile>();
+        public readonly TileBatch? RemainingBatch = remainingBatch;
+        public readonly IReadOnlyList<PasteTile> RemainingTiles = remainingBatch?.Tiles ?? Array.Empty<PasteTile>();
         public readonly LayerFailReason FailReason = failReason;
 
         public static LayerResult Ok(Point affected) => new(true, [affected], null, LayerFailReason.None);
         public static LayerResult Ok(IReadOnlyList<Point> affected) => new(true, affected ?? [], null, LayerFailReason.None);
         public static LayerResult Ok() => new(true, [], null, LayerFailReason.None);
-        public static LayerResult OkWithRemaining(IReadOnlyList<PasteTile> remaining) => new(true, [], remaining, LayerFailReason.None);
-        public static LayerResult Ok(Point affected, IReadOnlyList<PasteTile> remaining) => new(true, [affected], remaining, LayerFailReason.None);
+        public static LayerResult OkWithRemaining(IReadOnlyList<PasteTile> remaining) => new(true, [], new TileBatch([.. remaining]), LayerFailReason.None);
+        public static LayerResult Ok(Point affected, IReadOnlyList<PasteTile> remaining) => new(true, [affected], new TileBatch([.. remaining]), LayerFailReason.None);
         public static LayerResult Fail(Point attempted) => new(false, [attempted], null, LayerFailReason.Unknown);
         public static LayerResult Fail(Point attempted, LayerFailReason reason) => new(false, [attempted], null, reason);
         public static LayerResult Fail() => new(false, [], null, LayerFailReason.Unknown);
@@ -97,9 +98,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public static Layer Wall => WallLayer.Definition;
         public static Layer Block => BlockLayer.Definition;
         public static Layer FallBlock => FallBlockLayer.Definition;
-        public static Layer TileAnchored => TileAnchoredLayer.Definition;
-        public static Layer WallAnchored => WallAnchoredLayer.Definition;
-        public static Layer OtherAnchored => OtherAnchoredLayer.Definition;
+        public static Layer Object => ObjectLayer.Definition;
+        public static Layer Vegetation => VegetationLayer.Definition;
         public static Layer Paint => PaintLayer.Definition;
         public static Layer Wiring => WiringLayer.Definition;
         public static Layer Detail => DetailLayer.Definition;
@@ -111,9 +111,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             Wall,
             Block,
             FallBlock,
-            TileAnchored,
-            WallAnchored,
-            OtherAnchored,
+            Vegetation,
+            Object,
             Paint,
             Wiring,
             Detail,
@@ -300,12 +299,11 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Wall",
                     "Block",
                     "FallBlock",
-                    "TileAnchored",
-                    "WallAnchored",
-                    "OtherAnchored",
+                    "Fluid",
+                    "Vegetation",
+                    "Object",
                     "Tree",
                     "Unknown",
-                    "Fluid",
                     "Paint",
                     "Wiring",
                     "Detail",
@@ -318,9 +316,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Paint",
                     "Unknown",
                     "Tree",
-                    "OtherAnchored",
-                    "WallAnchored",
-                    "TileAnchored",
+                    "Object",
+                    "Vegetation",
                     "FallBlock",
                     "Block",
                     "Wall",
@@ -330,9 +327,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Wall",
                     "Unknown",
                     "Tree",
-                    "OtherAnchored",
-                    "WallAnchored",
-                    "TileAnchored",
+                    "Vegetation",
+                    "Object",
                     "FallBlock",
                     "Block",
                     "Fluid",

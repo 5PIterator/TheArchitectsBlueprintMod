@@ -48,12 +48,12 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
     /// <summary>
     /// Ultimate authority for the CompiledMaps directory. Owns path resolution, loading at paste time,
-    /// and the cached InteractionMap. Compile layers write via GetCompiledMapPath.
+    /// and the cached InteractionMap loaded from a unified InteractionMap document.
     /// </summary>
     /// <remarks>
     /// <para><b>Pipeline overview</b></para>
     /// <list type="number">
-    ///   <item><b>Compile-time</b>: TileMappingSystem.Compile writes Tile.itr, Wall.itr, etc. via GetCompiledMapPath.</item>
+    ///   <item><b>Compile-time</b>: TileMappingSystem.Compile writes InteractionMap.itr and InteractionMap.itr.json.</item>
     ///   <item><b>Paste start</b>: PastingSystem calls PrepareForPaste with tile/wall IDs from the projection.</item>
     ///   <item><b>Lookup</b>: Layers and PastingInventory use InteractionMapProvider.</item>
     ///   <item><b>Paste end</b>: When no operations remain, Release() clears the cache.</item>
@@ -62,6 +62,8 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
     internal static class ItrStorage
     {
         private const string CompiledMapsDir = "CompiledMaps";
+        private const string CompiledInteractionMapFileName = "InteractionMap.itr";
+        private const string CompiledInteractionMapJsonFileName = "InteractionMap.itr.json";
 
         private static InteractionMap? _map;
 
@@ -82,65 +84,72 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             Path.Combine(GetCompiledMapsDirectory(), fileName);
 
         /// <summary>
+        /// Gets full path for the compact compiled interaction map.
+        /// </summary>
+        public static string GetCompiledInteractionMapPath() =>
+            GetCompiledMapPath(CompiledInteractionMapFileName);
+
+        /// <summary>
+        /// Gets full path for the readable compiled interaction map.
+        /// </summary>
+        public static string GetCompiledInteractionMapJsonPath() =>
+            GetCompiledMapPath(CompiledInteractionMapJsonFileName);
+
+        /// <summary>
         /// True when this game instance may load CompiledMaps from disk for paste
         /// (single-player, dedicated server, or listen-server host).
         /// </summary>
         internal static bool CanLoadPasteInteractionMaps() => TileMappingAuthority.UsesLocalMappingFilesystem();
 
         /// <summary>
-        /// Prepares the interaction map for paste by loading only the given tile and wall IDs from JSON.
+        /// Prepares the interaction map for paste by loading only the given tile and wall IDs.
         /// Call at paste start before any lookups. Replaces any existing cached map.
         /// </summary>
-        /// <param name="tileIds">Tile IDs to load from Tile.itr. Null = load all.</param>
-        /// <param name="wallIds">Wall IDs to load from Wall.itr. Null = load all.</param>
+        /// <param name="tileIds">Tile IDs to load from InteractionMap.itr. Null = load all.</param>
+        /// <param name="wallIds">Wall IDs to load from InteractionMap.itr. Null = load all.</param>
         /// <remarks>Remote multiplayer clients do not load from disk; only single-player, dedicated server, or listen-server host.</remarks>
         public static void PrepareForPaste(IReadOnlySet<int>? tileIds, IReadOnlySet<int>? wallIds)
         {
             if (!CanLoadPasteInteractionMaps())
                 return;
 
-            _map = new InteractionMap();
-            InteractionMapProvider.Current = _map;
-            var dir = GetCompiledMapsDirectory();
+            _map = null;
+            InteractionMapProvider.Current = null;
 
-            if (!Directory.Exists(dir))
-                return;
-
-            foreach (var path in Directory.EnumerateFiles(dir, "*.itr"))
+            string binaryPath = GetCompiledInteractionMapPath();
+            if (File.Exists(binaryPath))
             {
-                if (_map is null) break;
-
-                var layer = GetLayerFromFileName(path);
-                if (layer is null) continue;
-
-                IReadOnlySet<int>? filter = layer switch
+                using var stream = File.OpenRead(binaryPath);
+                if (InteractionMapTagIO.TryReadBinaryDocument(stream, out InteractionMap map, tileIds, wallIds, out string? error))
                 {
-                    "Tile" => tileIds,
-                    "Wall" => wallIds,
-                    _ => null,
-                };
-
-                try
-                {
-                    LoadFileInto(path, _map, layer, filter);
+                    _map = map;
+                    InteractionMapProvider.Current = _map;
+                    return;
                 }
-                catch
-                {
-                    _map = null;
-                    InteractionMapProvider.Current = null;
-                    break;
-                }
+
+                TABLog.Warn($"Failed to load compiled interaction map '{binaryPath}': {error}", "InteractionMap");
             }
 
-            _map?.SortAllByPriority();
-        }
+            string jsonPath = GetCompiledInteractionMapJsonPath();
+            if (!File.Exists(jsonPath))
+                return;
 
-        private static string? GetLayerFromFileName(string path)
-        {
-            if (!path.EndsWith(".itr", StringComparison.OrdinalIgnoreCase))
-                return null;
-            var fileName = Path.GetFileNameWithoutExtension(path);
-            return string.IsNullOrEmpty(fileName) ? null : ContentNameResolver.NormalizeLayer(fileName);
+            try
+            {
+                string json = File.ReadAllText(jsonPath);
+                if (InteractionMapTagIO.TryReadJsonDocument(json, out InteractionMap map, tileIds, wallIds, out string? error))
+                {
+                    _map = map;
+                    InteractionMapProvider.Current = _map;
+                    return;
+                }
+
+                TABLog.Warn($"Failed to load readable interaction map '{jsonPath}': {error}", "InteractionMap");
+            }
+            catch (Exception ex)
+            {
+                TABLog.Warn($"Failed to read readable interaction map '{jsonPath}': {ex.Message}", "InteractionMap");
+            }
         }
 
         /// <summary>
@@ -150,231 +159,6 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         {
             _map = null;
             InteractionMapProvider.Current = null;
-        }
-
-        private static void LoadFileInto(string path, InteractionMap map, string layer, IReadOnlySet<int>? mainIdsToLoad)
-        {
-            var bytes = File.ReadAllBytes(path);
-            var reader = new Utf8JsonReader(bytes, new JsonReaderOptions { CommentHandling = JsonCommentHandling.Skip });
-
-            if (!reader.Read() || reader.TokenType != JsonTokenType.StartObject)
-                return;
-
-            string? format = null;
-            string? mapType = null;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject) break;
-                if (reader.TokenType != JsonTokenType.PropertyName) continue;
-
-                var propName = reader.GetString();
-                reader.Read();
-
-                if (string.Equals(propName, "metadata", StringComparison.Ordinal))
-                {
-                    ReadMetadata(ref reader, out format, out mapType);
-                    continue;
-                }
-
-                if (string.Equals(propName, "data", StringComparison.Ordinal))
-                {
-                    if (!string.Equals(format, "tile-first", StringComparison.OrdinalIgnoreCase) ||
-                        !string.Equals(mapType, "compiled", StringComparison.OrdinalIgnoreCase))
-                        return;
-
-                    ReadData(ref reader, map, layer, mainIdsToLoad);
-                    return;
-                }
-
-                reader.Skip();
-            }
-        }
-
-        private static void ReadMetadata(ref Utf8JsonReader reader, out string? format, out string? mapType)
-        {
-            format = null;
-            mapType = null;
-            if (reader.TokenType != JsonTokenType.StartObject) return;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject) return;
-                if (reader.TokenType != JsonTokenType.PropertyName) continue;
-
-                var name = reader.GetString();
-                reader.Read();
-
-                if (string.Equals(name, "format", StringComparison.Ordinal))
-                    format = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                else if (string.Equals(name, "mapType", StringComparison.Ordinal))
-                    mapType = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                else
-                    reader.Skip();
-            }
-        }
-
-        private static void ReadData(ref Utf8JsonReader reader, InteractionMap map, string layer, IReadOnlySet<int>? mainIdsToLoad)
-        {
-            if (reader.TokenType != JsonTokenType.StartObject) return;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject) return;
-                if (reader.TokenType != JsonTokenType.PropertyName) continue;
-
-                string main = reader.GetString() ?? "";
-                reader.Read();
-
-                var mainId = ContentNameResolver.ResolveMain(layer, main);
-                if (!mainId.HasValue)
-                {
-                    reader.Skip();
-                    continue;
-                }
-
-                bool shouldLoad = mainIdsToLoad is null || mainIdsToLoad.Contains(mainId.Value);
-                if (!shouldLoad)
-                {
-                    reader.Skip();
-                    continue;
-                }
-
-                ReadMainValue(ref reader, map, layer, main, mainId.Value);
-            }
-        }
-
-        private static void ReadMainValue(ref Utf8JsonReader reader, InteractionMap map, string layer, string main, int mainId)
-        {
-            if (reader.TokenType != JsonTokenType.StartObject)
-                return;
-
-            string? itemNamesLayer = null;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject) return;
-                if (reader.TokenType != JsonTokenType.PropertyName) continue;
-
-                var propName = reader.GetString();
-                reader.Read();
-
-                if (string.Equals(propName, "interactions", StringComparison.Ordinal) && reader.TokenType == JsonTokenType.StartArray)
-                {
-                    ReadInteractionsArray(ref reader, map, layer, main, mainId);
-                    continue;
-                }
-
-                if (string.Equals(propName, "itemNames", StringComparison.Ordinal) && reader.TokenType == JsonTokenType.StartArray)
-                {
-                    var useLayer = ContentNameResolver.NormalizeLayer(itemNamesLayer ?? layer);
-                    if (useLayer is not null)
-                        ReadItemNamesArray(ref reader, map, useLayer, main, mainId);
-                    else
-                        reader.Skip();
-                    continue;
-                }
-
-                if ((string.Equals(propName, "layer", StringComparison.Ordinal) || string.Equals(propName, "Layer", StringComparison.Ordinal)) && reader.TokenType == JsonTokenType.String)
-                    itemNamesLayer = reader.GetString();
-                else
-                    reader.Skip();
-            }
-        }
-
-        private static void ReadInteractionsArray(ref Utf8JsonReader reader, InteractionMap map, string layer, string main, int mainId)
-        {
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndArray) return;
-                if (reader.TokenType != JsonTokenType.StartObject) continue;
-
-                var (interactionLayer, item, @base, style) = ReadInteractionObject(ref reader);
-                if (string.IsNullOrEmpty(item))
-                    continue;
-
-                var normLayer = ContentNameResolver.NormalizeLayer(interactionLayer ?? layer);
-                if (normLayer is null)
-                {
-                    TABLog.Warn($"Interaction skipped: layer missing (main={main}, item={item})", "InteractionMap");
-                    continue;
-                }
-
-                var itemId = ContentNameResolver.ResolveItem(item);
-                if (!itemId.HasValue || itemId.Value <= 0)
-                {
-                    TABLog.Warn($"Interaction skipped: item unresolved (layer={normLayer}, main={main}, item={item})", "InteractionMap");
-                    continue;
-                }
-
-                var entry = InteractionEntry.Create(normLayer,
-                    main: main,
-                    mainId: mainId,
-                    item: item,
-                    itemId: itemId.Value,
-                    @base: @base,
-                    style: style);
-                map.Add(entry);
-            }
-        }
-
-        private static (string? Layer, string? Item, string? Base, int? Style) ReadInteractionObject(ref Utf8JsonReader reader)
-        {
-            string? layer = null;
-            string? item = null;
-            string? @base = null;
-            int? style = null;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject) break;
-                if (reader.TokenType != JsonTokenType.PropertyName) continue;
-
-                var name = reader.GetString();
-                reader.Read();
-
-                if (string.Equals(name, "Layer", StringComparison.Ordinal) || string.Equals(name, "layer", StringComparison.Ordinal))
-                    layer = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                else if (string.Equals(name, "Item", StringComparison.Ordinal))
-                    item = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                else if (string.Equals(name, "Base", StringComparison.Ordinal))
-                    @base = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                else if (string.Equals(name, "Style", StringComparison.Ordinal) && reader.TokenType == JsonTokenType.Number)
-                    style = reader.TryGetInt32(out int s) ? s : null;
-                else
-                    reader.Skip();
-            }
-
-            return (layer, item, @base, style);
-        }
-
-        private static void ReadItemNamesArray(ref Utf8JsonReader reader, InteractionMap map, string layer, string main, int mainId)
-        {
-            var normLayer = ContentNameResolver.NormalizeLayer(layer);
-            if (normLayer is null) return;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndArray) return;
-                var name = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                if (string.IsNullOrEmpty(name)) continue;
-
-                var itemId = ContentNameResolver.ResolveItem(name);
-                if (!itemId.HasValue || itemId.Value <= 0)
-                {
-                    TABLog.Warn($"Interaction skipped: item unresolved (layer={normLayer}, main={main}, item={name})", "InteractionMap");
-                    continue;
-                }
-
-                var entry = InteractionEntry.Create(normLayer,
-                    main: main,
-                    mainId: mainId,
-                    item: name,
-                    itemId: itemId.Value,
-                    @base: null,
-                    style: null);
-                map.Add(entry);
-            }
         }
     }
 

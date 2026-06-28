@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Debug;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -17,8 +18,40 @@ namespace TheArchitectsBlueprintMod.Core
     /// </summary>
     public sealed class TileMappingSystem : ModSystem
     {
+        private enum QueuedMappingAction
+        {
+            DiscoverPlacement,
+            DiscoverBiome,
+            DiscoverShimmer,
+            CompileOnly,
+            FullDiscoveryAndCompile,
+        }
+
         private const string ModDirName = "TheArchitectsBlueprintMod";
         private const string SourceMapsDir = "SourceMaps";
+        private static readonly Queue<QueuedMappingAction> PendingActions = new();
+
+        public override void Unload()
+        {
+            PendingActions.Clear();
+        }
+
+        /// <summary>
+        /// Queues one-shot mapping actions requested from <see cref="TileMappingConfig"/>.
+        /// </summary>
+        internal static void QueueConfiguredActions(TileMappingConfig cfg)
+        {
+            if (cfg.RunPlacementDiscovery)
+                PendingActions.Enqueue(QueuedMappingAction.DiscoverPlacement);
+            if (cfg.RunBiomeDiscovery)
+                PendingActions.Enqueue(QueuedMappingAction.DiscoverBiome);
+            if (cfg.RunShimmerDiscovery)
+                PendingActions.Enqueue(QueuedMappingAction.DiscoverShimmer);
+            if (cfg.RunCompileNow)
+                PendingActions.Enqueue(QueuedMappingAction.CompileOnly);
+            if (cfg.RunFullDiscoveryAndCompile)
+                PendingActions.Enqueue(QueuedMappingAction.FullDiscoveryAndCompile);
+        }
 
         /// <summary>
         /// Gets the mod's output directory. Creates it if missing.
@@ -131,6 +164,137 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
             if (mapType != null && (fileMapType == null || !string.Equals(fileMapType, mapType, StringComparison.OrdinalIgnoreCase)))
                 return false;
+            return true;
+        }
+
+        public override void PostUpdateEverything()
+        {
+            ProcessQueuedActions();
+        }
+
+        private static void ProcessQueuedActions()
+        {
+            if (PendingActions.Count == 0)
+                return;
+
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+            {
+                PendingActions.Clear();
+                TABLog.Warn("Tile mapping config actions are server/host only in multiplayer.", "TileMapping");
+                return;
+            }
+
+            if (Main.gameMenu)
+                return;
+
+            var mod = ModContent.GetInstance<global::TheArchitectsBlueprintMod.TheArchitectsBlueprintMod>();
+
+            while (PendingActions.Count > 0)
+            {
+                QueuedMappingAction action = PendingActions.Dequeue();
+                ExecuteQueuedAction(mod, action);
+            }
+        }
+
+        private static void ExecuteQueuedAction(Mod mod, QueuedMappingAction action)
+        {
+            void Log(string s) => TABLog.Info(s, "TileMapping");
+
+            switch (action)
+            {
+                case QueuedMappingAction.DiscoverPlacement:
+                {
+                    if (!TryGetDiscoveryPlayer(out Player? player))
+                    {
+                        TABLog.Warn("Skipped placement discovery from config: no active player available.", "TileMapping");
+                        return;
+                    }
+
+                    Log("Config action: placement discovery.");
+                    PlacementDiscovery.Run(mod, player, Log, allowStepping: false);
+                    return;
+                }
+
+                case QueuedMappingAction.DiscoverBiome:
+                {
+                    if (!TryGetDiscoveryPlayer(out Player? player))
+                    {
+                        TABLog.Warn("Skipped biome discovery from config: no active player available.", "TileMapping");
+                        return;
+                    }
+
+                    Log("Config action: biome discovery.");
+                    BiomeDiscovery.Run(mod, player, Log, allowStepping: false);
+                    return;
+                }
+
+                case QueuedMappingAction.DiscoverShimmer:
+                {
+                    if (!TryGetDiscoveryPlayer(out Player? player))
+                    {
+                        TABLog.Warn("Skipped shimmer discovery from config: no active player available.", "TileMapping");
+                        return;
+                    }
+
+                    Log("Config action: shimmer discovery.");
+                    ShimmerDiscovery.Run(mod, Log, player, allowStepping: false);
+                    return;
+                }
+
+                case QueuedMappingAction.CompileOnly:
+                    Log("Config action: compile interaction map.");
+                    Compile(mod, Log);
+                    return;
+
+                case QueuedMappingAction.FullDiscoveryAndCompile:
+                {
+                    if (!TryGetDiscoveryPlayer(out Player? player))
+                    {
+                        TABLog.Warn("Skipped full discovery from config: no active player available.", "TileMapping");
+                        return;
+                    }
+
+                    Log("Config action: full discovery + compile.");
+                    PlacementDiscovery.Run(mod, player, Log, allowStepping: false);
+                    BiomeDiscovery.Run(mod, player, Log, allowStepping: false);
+                    ShimmerDiscovery.Run(mod, Log, player, allowStepping: false);
+                    Compile(mod, Log);
+                    return;
+                }
+
+                default:
+                    return;
+            }
+        }
+
+        private static bool TryGetDiscoveryPlayer(out Player? player)
+        {
+            player = null;
+
+            if (Main.netMode == NetmodeID.Server)
+            {
+                for (int i = 0; i < Main.maxPlayers; i++)
+                {
+                    Player p = Main.player[i];
+                    if (p is not null && p.active)
+                    {
+                        player = p;
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            int my = Main.myPlayer;
+            if (my < 0 || my >= Main.maxPlayers)
+                return false;
+
+            Player local = Main.player[my];
+            if (local is null || !local.active)
+                return false;
+
+            player = local;
             return true;
         }
 

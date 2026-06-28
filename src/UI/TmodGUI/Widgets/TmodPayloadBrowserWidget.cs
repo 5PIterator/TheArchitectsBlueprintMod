@@ -12,7 +12,7 @@ using Terraria.ModLoader.UI;
 using Terraria.ModLoader.UI.Elements;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Core;
-using TheArchitectsBlueprintMod.UI;
+using TheArchitectsBlueprintMod.UI.Preview;
 using TheArchitectsBlueprintMod.UI.TmodGUI.Elements;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
@@ -21,7 +21,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
     public sealed class TmodPayloadBrowserWidget : TmodWidgetBase
     {
         private readonly PayloadBrowser _browser;
-        private readonly List<Texture2D> _decodedThumbnails = new();
+        private readonly List<Texture2D> _decodedThumbnails = [];
 
         private TmodWindowPanel _window = null!;
         private UIElement _entryScrollHost = null!;

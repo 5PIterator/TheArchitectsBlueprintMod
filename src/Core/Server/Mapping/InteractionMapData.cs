@@ -265,25 +265,45 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     byMain[mainName] = group;
                 }
 
-                bool IsDuplicate(InteractionEntry a, InteractionEntry b)
-                {
-                    if (string.Equals(layer, "Tile", StringComparison.OrdinalIgnoreCase))
-                        return a.Item == b.Item && (a.Style ?? 0) == (b.Style ?? 0) && a.Base == b.Base;
-                    if (string.Equals(layer, "Wall", StringComparison.OrdinalIgnoreCase))
-                        return a.Item == b.Item;
-                    return false;
-                }
-
                 foreach (var entry in kvp.Value)
                 {
                     entry.Main = mainName;
-                    if (!group.Interactions.Exists(x => IsDuplicate(x, entry)))
+                    if (!group.Interactions.Exists(x => IsExportDuplicate(layer, x, entry)))
                         group.Interactions.Add(entry);
                 }
                 group.Interactions.Sort(InteractionPriorityComparer.Instance);
             }
 
             return byLayer;
+        }
+
+        /// <summary>
+        /// Enumerates export-canonical interaction entries (same dedupe rules as <see cref="ExportByLayer"/>).
+        /// </summary>
+        public IEnumerable<InteractionEntry> EnumerateDedupedEntries()
+        {
+            foreach (var layerKvp in ExportByLayer())
+            {
+                foreach (var mainKvp in layerKvp.Value)
+                {
+                    List<InteractionEntry> interactions = mainKvp.Value.Interactions;
+                    for (int i = 0; i < interactions.Count; i++)
+                        yield return interactions[i];
+                }
+            }
+        }
+
+        /// <summary>
+        /// Whether two entries represent the same export interaction for the given layer.
+        /// Tile: Item + Style + Base. Wall: Item. Other layers: never duplicate.
+        /// </summary>
+        private static bool IsExportDuplicate(string layer, InteractionEntry a, InteractionEntry b)
+        {
+            if (string.Equals(layer, "Tile", StringComparison.OrdinalIgnoreCase))
+                return a.Item == b.Item && (a.Style ?? 0) == (b.Style ?? 0) && a.Base == b.Base;
+            if (string.Equals(layer, "Wall", StringComparison.OrdinalIgnoreCase))
+                return a.Item == b.Item;
+            return false;
         }
     }
 

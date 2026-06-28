@@ -218,7 +218,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     }
                     yield return null;
                 }
-                WorldGen.KillWall(testX, testY, fail: false);
+                SuppressTileDrop.KillWall(testX, testY);
 
                 var interactions = tileResults.Concat(wallResults).ToList();
                 resultsByConversionType[conversionType] = interactions;

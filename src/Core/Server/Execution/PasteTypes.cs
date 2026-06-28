@@ -7,13 +7,13 @@ namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>Optional client preference hints attached to a paste request.</summary>
     internal readonly struct PasteClientHints(
-        bool ignoreMissingItems,
-        bool ignoreInvalidPlacement,
+        bool retryOnMissingItems,
+        bool retryOnInvalidPlacement,
         ClearPhaseStrategy clearStrategy,
         SweepPhaseStrategy sweepStrategy)
     {
-        public bool IgnoreMissingItems { get; } = ignoreMissingItems;
-        public bool IgnoreInvalidPlacement { get; } = ignoreInvalidPlacement;
+        public bool RetryOnMissingItems { get; } = retryOnMissingItems;
+        public bool RetryOnInvalidPlacement { get; } = retryOnInvalidPlacement;
         public ClearPhaseStrategy ClearStrategy { get; } = clearStrategy;
         public SweepPhaseStrategy SweepStrategy { get; } = sweepStrategy;
 
@@ -22,8 +22,8 @@ namespace TheArchitectsBlueprintMod.Core
         {
             var client = ModContent.GetInstance<ClientPasteConfig>();
             return new PasteClientHints(
-                client.Place.IgnoreMissingItems,
-                client.Place.IgnoreInvalidPlacement,
+                client.Place.RetryOnMissingItems,
+                client.Place.RetryOnInvalidPlacement,
                 client.Clear.Strategy,
                 client.Sweep.Strategy);
         }
@@ -33,8 +33,8 @@ namespace TheArchitectsBlueprintMod.Core
     internal readonly struct EffectivePastePolicy
     {
         public ClearPhaseStrategy ClearStrategy { get; init; }
-        public bool IgnoreMissingItems { get; init; }
-        public bool IgnoreInvalidPlacement { get; init; }
+        public bool RetryOnMissingItems { get; init; }
+        public bool RetryOnInvalidPlacement { get; init; }
         public SweepPhaseStrategy SweepStrategy { get; init; }
         public PlacePhaseStrategy PlaceStrategy { get; init; }
         public bool RequireItems { get; init; }
@@ -47,22 +47,29 @@ namespace TheArchitectsBlueprintMod.Core
         public bool IsSweepCheat => SweepStrategy == SweepPhaseStrategy.Cheat;
         public bool UseReplacePlace => PlaceStrategy == PlacePhaseStrategy.Replace;
 
-        /// <summary>Merges server policy with optional client hints; only honored fields allowed by server policy are applied.</summary>
+        /// <summary>
+        /// Merges server policy with optional client hints.
+        /// Retry flags are permissive: server may force them on, or clients may opt in when allowed.
+        /// Strategy enums use client choice only when <see cref="PlacePhaseConfig.AllowClientPreferences"/> applies.
+        /// </summary>
         public static EffectivePastePolicy Resolve(PastingConfig server, in PasteClientHints hints)
         {
+            bool allowPlacePrefs = server.Phases.Place.AllowClientPreferences;
             return new EffectivePastePolicy
             {
-                ClearStrategy = server.Clear.AllowClientPreferences ? hints.ClearStrategy : server.Clear.Strategy,
-                IgnoreMissingItems = server.Place.AllowClientPreferences ? hints.IgnoreMissingItems : server.Place.IgnoreMissingItems,
-                IgnoreInvalidPlacement = server.Place.AllowClientPreferences ? hints.IgnoreInvalidPlacement : server.Place.IgnoreInvalidPlacement,
-                SweepStrategy = server.Sweep.AllowClientPreferences ? hints.SweepStrategy : server.Sweep.Strategy,
-                PlaceStrategy = server.Place.Strategy,
-                RequireItems = server.Place.RequireItems,
-                PlanPhase = server.Plan,
-                ClearPhase = server.Clear.ToPhaseSettings(),
-                CutPhase = server.Cut,
-                PlacePhase = server.Place.ToPhaseSettings(),
-                SweepPhase = server.Sweep.ToPhaseSettings(),
+                ClearStrategy = server.Phases.Clear.AllowClientPreferences ? hints.ClearStrategy : server.Phases.Clear.Strategy,
+                RetryOnMissingItems = server.Phases.Place.RetryOnMissingItems
+                    || (allowPlacePrefs && hints.RetryOnMissingItems),
+                RetryOnInvalidPlacement = server.Phases.Place.RetryOnInvalidPlacement
+                    || (allowPlacePrefs && hints.RetryOnInvalidPlacement),
+                SweepStrategy = server.Phases.Sweep.AllowClientPreferences ? hints.SweepStrategy : server.Phases.Sweep.Strategy,
+                PlaceStrategy = server.Phases.Place.Strategy,
+                RequireItems = server.Phases.Place.RequireItems,
+                PlanPhase = server.Phases.Plan,
+                ClearPhase = server.Phases.Clear.ToPhaseSettings(),
+                CutPhase = server.Phases.Cut,
+                PlacePhase = server.Phases.Place.ToPhaseSettings(),
+                SweepPhase = server.Phases.Sweep.ToPhaseSettings(),
             };
         }
     }
@@ -75,8 +82,8 @@ namespace TheArchitectsBlueprintMod.Core
         public readonly Player Player = Main.player[playerIndex];
         public readonly SweepPhaseStrategy SweepStrategy = policy.SweepStrategy;
         public readonly bool IsSweepCheat = policy.IsSweepCheat;
-        public readonly bool IgnoreMissingItems = policy.IgnoreMissingItems;
-        public readonly bool IgnoreInvalidPlacement = policy.IgnoreInvalidPlacement;
+        public readonly bool RetryOnMissingItems = policy.RetryOnMissingItems;
+        public readonly bool RetryOnInvalidPlacement = policy.RetryOnInvalidPlacement;
         public readonly bool RequireItems = policy.RequireItems;
         public readonly Item[]? Items = items;
         public readonly IReadOnlyList<Inventory>? Inventories = inventories;

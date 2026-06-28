@@ -180,7 +180,7 @@ Items: {
 
 Configs: {
 	ClientLogConfig: {
-		DisplayName: Client diagnostics
+		DisplayName: Client Diagnostics
 		Tooltip: These options apply only on your machine. They are not sent to the server and do not change host paste rules or map compilation.
 		Headers.Logging: Logging
 
@@ -206,13 +206,17 @@ Configs: {
 	}
 
 	ClientPasteConfig: {
-		DisplayName: Client paste preferences
+		DisplayName: Client Paste Preferences
 		Tooltip:
 			'''
 			Local paste preferences sent with your paste request.
 			The server decides which preferences are honored via Allow client preferences in Paste policy (server / host).
 			'''
-		Headers.Preferences: Preferences
+
+		Headers: {
+			Preferences: Preferences
+			Debug: Debug Header
+		}
 
 		Clear: {
 			Label: Clear
@@ -233,14 +237,19 @@ Configs: {
 			Label: Place
 			Tooltip: Place-phase tolerance preferences.
 
-			IgnoreMissingItems: {
-				Label: Ignore missing items
-				Tooltip: When enabled (default), placement is not queued where required items are missing, and place steps that fail for lack of items are treated as complete.
+			RetryOnMissingItems: {
+				Label: Retry on missing items
+				Tooltip: When enabled, place tasks that fail for lack of items are requeued. When disabled (default), those tiles are skipped during planning and at execution.
 			}
 
-			IgnoreInvalidPlacement: {
-				Label: Ignore invalid placement
-				Tooltip: When enabled (default), placement is not queued where the tile cannot be placed by world/rules, and place steps that fail for invalid placement are treated as complete.
+			RetryOnInvalidPlacement: {
+				Label: Retry on invalid placement
+				Tooltip:
+					'''
+					When enabled, object-layer tiles retry until their support exists; other layers requeue failed placements.
+					When disabled (default), tiles that cannot be placed are skipped so the paste can finish.
+					Single-player and listen-host pastes use this client preference when the server allows client preferences.
+					'''
 			}
 		}
 
@@ -257,10 +266,15 @@ Configs: {
 					'''
 			}
 		}
+
+		Overlay: {
+			Label: Overlay
+			Tooltip: ""
+		}
 	}
 
 	PastingConfig: {
-		DisplayName: Paste policy (server / host)
+		DisplayName: Paste Policy
 		Tooltip:
 			'''
 			In multiplayer, the host or dedicated server owns these values; joining clients see them but usually cannot change them.
@@ -268,47 +282,221 @@ Configs: {
 			'''
 
 		Headers: {
-			Limits: Limits
-			PhaseExecution: Phase execution
-			ClearPolicy: Clear policy
-			PlacePolicy: Place policy
-			SweepPolicy: Sweep policy
-			Advanced: Advanced
+			GlobalLimits: Global limits
+			PhasePolicy: Phase policy
 			LayerPolicy: Layer policy
 		}
 
 		Limits: {
-			Label: Limits
+			Label: Global limits
 			Tooltip: Global caps enforced for all paste phases and operations.
 
-			MaxPasteWidth: {
-				Label: Max paste width
-				Tooltip: Maximum projection width in tiles.
+			Client: {
+				Label: Client limits
+				Tooltip: Per-client caps enforced on paste requests and during server validation.
+
+				MaxPasteWidth: {
+					Label: Max paste width
+					Tooltip: Maximum projection width in tiles.
+				}
+
+				MaxPasteHeight: {
+					Label: Max paste height
+					Tooltip: Maximum projection height in tiles.
+				}
+
+				VolumeLimit: {
+					Label: Volume limit
+					Tooltip: Maximum number of cells in a single paste.
+				}
+
+				PlayerOperationLimit: {
+					Label: Player operation limit
+					Tooltip: Maximum concurrent paste operations per player.
+				}
 			}
 
-			MaxPasteHeight: {
-				Label: Max paste height
-				Tooltip: Maximum projection height in tiles.
+			Server: {
+				Label: Server limits
+				Tooltip: Server-wide execution caps.
+
+				ServerOperationLimit: {
+					Label: Server operation limit
+					Tooltip: Maximum concurrent paste operations on the server.
+				}
+
+				MaxPhaseTickSize: {
+					Label: Max phase tick size
+					Tooltip: Upper bound for tasks or planning units processed per tick in any phase.
+				}
+
+				MaxTilesPerCategory: {
+					Label: Max tiles per category
+					Tooltip: Maximum tiles processed per layer category in a single step.
+				}
+			}
+		}
+
+		Phases: {
+			Label: Phase policy
+			Tooltip: Per-phase execution, strategy defaults, and client preference policy.
+
+			Plan: {
+				Label: Plan
+				Tooltip: Builds clear, cut, and place task queues before execution.
+
+				Active: {
+					Label: Active
+					Tooltip: When off, queues are built without planning optimizations.
+				}
+
+				TickSize: {
+					Label: Planning units per tick
+					Tooltip: How many planning units to process per tick while building queues.
+				}
+
+				TickDelayMs: {
+					Label: Tick delay (ms)
+					Tooltip: Delay between planning ticks. Use 0 for no wait.
+				}
 			}
 
-			VolumeLimit: {
-				Label: Volume limit
-				Tooltip: Maximum number of cells in a single paste.
+			Clear: {
+				Label: Clear
+				Tooltip: Clears destination tiles before placement.
+
+				Strategy: {
+					Label: Clear strategy default
+					Tooltip: Server default used when client preferences are disabled.
+				}
+
+				AllowClientPreferences: {
+					Label: Allow client preferences
+					Tooltip: Allow clients to override clear strategy. When disabled, server default is used.
+				}
+
+				Active: {
+					Label: Active
+					Tooltip: ""
+				}
+
+				TickSize: {
+					Label: Tasks per tick
+					Tooltip: Maximum clear tasks executed per tick.
+				}
+
+				TickDelayMs: {
+					Label: Tick delay (ms)
+					Tooltip: Delay after each clear tick.
+				}
 			}
 
-			PlayerOperationLimit: {
-				Label: Player operation limit
-				Tooltip: Maximum concurrent paste operations per player.
+			Cut: {
+				Label: Cut
+				Tooltip: Clears tiles at the source area for cut-paste.
+
+				Active: {
+					Label: Active
+					Tooltip: ""
+				}
+
+				TickSize: {
+					Label: Tasks per tick
+					Tooltip: Maximum cut tasks executed per tick.
+				}
+
+				TickDelayMs: {
+					Label: Tick delay (ms)
+					Tooltip: Delay after each cut tick.
+				}
 			}
 
-			ServerOperationLimit: {
-				Label: Server operation limit
-				Tooltip: Maximum concurrent paste operations on the server.
+			Place: {
+				Label: Place
+				Tooltip: Places payload tiles at the destination.
+
+				Strategy: {
+					Label: Place strategy
+					Tooltip: Place uses normal placement; Replace clears conflicting tiles before placing.
+				}
+
+				RequireItems: {
+					Label: Require items
+					Tooltip: Consume required items from inventory while placing.
+				}
+
+				RetryOnMissingItems: {
+					Label: Retry on missing items default
+					Tooltip: Server default used when client preferences are disabled.
+				}
+
+				RetryOnInvalidPlacement: {
+					Label: Retry on invalid placement default
+					Tooltip:
+						'''
+						Server default when client preferences are disabled.
+						When enabled, invalid placements are retried; when disabled, they are skipped.
+						'''
+				}
+
+				AllowClientPreferences: {
+					Label: Allow client preferences
+					Tooltip: Allow clients to override place-phase preferences. When disabled, server defaults are used.
+				}
+
+				Active: {
+					Label: Active
+					Tooltip: ""
+				}
+
+				TickSize: {
+					Label: Tasks per tick
+					Tooltip: Maximum place tasks executed per tick.
+				}
+
+				TickDelayMs: {
+					Label: Tick delay (ms)
+					Tooltip: Delay after each place tick.
+				}
+
+				EnableCutPasteProcess: {
+					Label: Force source clear during paste
+					Tooltip:
+						'''
+						When enabled, paste always plans source-area clear tasks even if the projection source-clear flag is off.
+						Server / host only in multiplayer — clients cannot force this from their own config.
+						'''
+				}
 			}
 
-			MaxPhaseTickSize: {
-				Label: Max phase tick size
-				Tooltip: Upper bound for tasks or planning units processed per tick in any phase.
+			Sweep: {
+				Label: Sweep
+				Tooltip: Final footprint sweep. Tick delay 0 runs the full queue in one tick.
+
+				Strategy: {
+					Label: Sweep strategy default
+					Tooltip: Server default used when client preferences are disabled.
+				}
+
+				AllowClientPreferences: {
+					Label: Allow client preferences
+					Tooltip: Allow clients to override sweep strategy. When disabled, server default is used.
+				}
+
+				Active: {
+					Label: Active
+					Tooltip: ""
+				}
+
+				TickSize: {
+					Label: Batch size
+					Tooltip: Reserved for future batching; full queue runs in one tick when delay is 0.
+				}
+
+				TickDelayMs: {
+					Label: Tick delay (ms)
+					Tooltip: Use 0 to apply the entire sweep queue in a single tick.
+				}
 			}
 		}
 
@@ -331,19 +519,9 @@ Configs: {
 				Tooltip: Falling tiles such as sand, silt, slush, and similar blocks.
 			}
 
-			TileAnchored: {
-				Label: Tile Anchored
-				Tooltip: Multi-tiles anchored to solid tiles.
-			}
-
-			WallAnchored: {
-				Label: Wall Anchored
-				Tooltip: Multi-tiles anchored to walls.
-			}
-
-			OtherAnchored: {
-				Label: Other Anchored
-				Tooltip: Multi-tiles that use other anchor rules such as plants or alternate supports.
+			Object: {
+				Label: Object
+				Tooltip: Tiles that require nearby support such as anchors, walls, or mapped base tiles.
 			}
 
 			Tree: {
@@ -378,170 +556,21 @@ Configs: {
 
 			Label: Layer policy
 		}
-
-		Plan: {
-			Label: Plan
-			Tooltip: Builds clear, cut, and place task queues before execution.
-
-			Active: {
-				Label: Active
-				Tooltip: When off, queues are built without planning optimizations.
-			}
-
-			TickSize: {
-				Label: Planning units per tick
-				Tooltip: How many planning units to process per tick while building queues.
-			}
-
-			TickDelayMs: {
-				Label: Tick delay (ms)
-				Tooltip: Delay between planning ticks. Use 0 for no wait.
-			}
-		}
-
-		Clear: {
-			Label: Clear
-			Tooltip: Clears destination tiles before placement.
-
-			Strategy: {
-				Label: Clear strategy default
-				Tooltip: Server default used when client preferences are disabled.
-			}
-
-			AllowClientPreferences: {
-				Label: Allow client preferences
-				Tooltip: Allow clients to override clear strategy. When disabled, server default is used.
-			}
-
-			Active: {
-				Label: Active
-				Tooltip: ""
-			}
-
-			TickSize: {
-				Label: Tasks per tick
-				Tooltip: Maximum clear tasks executed per tick.
-			}
-
-			TickDelayMs: {
-				Label: Tick delay (ms)
-				Tooltip: Delay after each clear tick.
-			}
-		}
-
-		Cut: {
-			Label: Cut
-			Tooltip: Clears tiles at the source area for cut-paste.
-
-			Active: {
-				Label: Active
-				Tooltip: ""
-			}
-
-			TickSize: {
-				Label: Tasks per tick
-				Tooltip: Maximum cut tasks executed per tick.
-			}
-
-			TickDelayMs: {
-				Label: Tick delay (ms)
-				Tooltip: Delay after each cut tick.
-			}
-		}
-
-		Place: {
-			Label: Place
-			Tooltip: Places payload tiles at the destination.
-
-			Strategy: {
-				Label: Place strategy
-				Tooltip: Place uses normal placement; Replace clears conflicting tiles before placing.
-			}
-
-			RequireItems: {
-				Label: Require items
-				Tooltip: Consume required items from inventory while placing.
-			}
-
-			IgnoreMissingItems: {
-				Label: Ignore missing items default
-				Tooltip: Server default used when client preferences are disabled.
-			}
-
-			IgnoreInvalidPlacement: {
-				Label: Ignore invalid placement default
-				Tooltip: Server default used when client preferences are disabled.
-			}
-
-			AllowClientPreferences: {
-				Label: Allow client preferences
-				Tooltip: Allow clients to override place-phase preferences. When disabled, server defaults are used.
-			}
-
-			Active: {
-				Label: Active
-				Tooltip: ""
-			}
-
-			TickSize: {
-				Label: Tasks per tick
-				Tooltip: Maximum place tasks executed per tick.
-			}
-
-			TickDelayMs: {
-				Label: Tick delay (ms)
-				Tooltip: Delay after each place tick.
-			}
-		}
-
-		Sweep: {
-			Label: Sweep
-			Tooltip: Final footprint sweep. Tick delay 0 runs the full queue in one tick.
-
-			Strategy: {
-				Label: Sweep strategy default
-				Tooltip: Server default used when client preferences are disabled.
-			}
-
-			AllowClientPreferences: {
-				Label: Allow client preferences
-				Tooltip: Allow clients to override sweep strategy. When disabled, server default is used.
-			}
-
-			Active: {
-				Label: Active
-				Tooltip: ""
-			}
-
-			TickSize: {
-				Label: Batch size
-				Tooltip: Reserved for future batching; full queue runs in one tick when delay is 0.
-			}
-
-			TickDelayMs: {
-				Label: Tick delay (ms)
-				Tooltip: Use 0 to apply the entire sweep queue in a single tick.
-			}
-		}
-
-		EnableCutPasteProcess: {
-			Label: Force source clear during paste
-			Tooltip:
-				'''
-				When enabled, paste always plans source-area clear tasks even if the projection source-clear flag is off.
-				Server / host only in multiplayer — clients cannot force this from their own config.
-				'''
-		}
 	}
 
 	TileMappingConfig: {
-		DisplayName: Tile mapping compile (server / host)
+		DisplayName: Tile Mapping
 		Tooltip:
 			'''
-			Controls which SourceMaps layers are merged when compiling interaction maps. In multiplayer, the host or dedicated server owns these toggles.
-			Use Client diagnostics and Client paste for per-machine log and planning preferences.
+			Server/host control panel for mapping discovery and compile.
+			Layer toggles control which SourceMaps are included during compile.
+			Action toggles are one-shot: set to true and save config to enqueue that action.
 			'''
-		Headers.TileMapping: Compile layers
+
+		Headers: {
+			TileMapping: Source map layers
+			Actions: Actions
+		}
 
 		EnablePlacementDiscovery: {
 			Label: Placement
@@ -561,6 +590,31 @@ Configs: {
 		EnableShimmerTransforms: {
 			Label: Shimmer
 			Tooltip: When enabled, Shimmer.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		RunPlacementDiscovery: {
+			Label: Run placement discovery
+			Tooltip: One-shot action. Save config with this enabled to run placement discovery.
+		}
+
+		RunBiomeDiscovery: {
+			Label: Run biome discovery
+			Tooltip: One-shot action. Save config with this enabled to run biome discovery.
+		}
+
+		RunShimmerDiscovery: {
+			Label: Run shimmer discovery
+			Tooltip: One-shot action. Save config with this enabled to run shimmer discovery.
+		}
+
+		RunCompileNow: {
+			Label: Compile mapping now
+			Tooltip: One-shot action. Save config with this enabled to compile interaction maps now.
+		}
+
+		RunFullDiscoveryAndCompile: {
+			Label: Run full discovery + compile
+			Tooltip: One-shot action. Save config with this enabled to run placement, biome, shimmer discovery, then compile.
 		}
 	}
 
@@ -582,18 +636,8 @@ Configs: {
 			Tooltip: ""
 		}
 
-		TileAnchored: {
-			Label: Tile Anchored
-			Tooltip: ""
-		}
-
-		WallAnchored: {
-			Label: Wall Anchored
-			Tooltip: ""
-		}
-
-		OtherAnchored: {
-			Label: Other Anchored
+		Object: {
+			Label: Object
 			Tooltip: ""
 		}
 
@@ -629,6 +673,11 @@ Configs: {
 
 		Unknown: {
 			Label: Unknown
+			Tooltip: ""
+		}
+
+		Vegetation: {
+			Label: Vegetation
 			Tooltip: ""
 		}
 	}
@@ -709,36 +758,88 @@ Configs: {
 		}
 	}
 
-	PasteLimitsConfig: {
+	GlobalLimitsConfig: {
+		Tooltip: ""
+
+		Client: {
+			Label: Client
+			Tooltip: ""
+		}
+
+		Server: {
+			Label: Server
+			Tooltip: ""
+		}
+	}
+
+	ClientPasteLimitsConfig: {
 		Tooltip: ""
 
 		MaxPasteWidth: {
-			Label: Max Paste Width
+			Label: Max paste width
 			Tooltip: ""
 		}
 
 		MaxPasteHeight: {
-			Label: Max Paste Height
+			Label: Max paste height
 			Tooltip: ""
 		}
 
 		VolumeLimit: {
-			Label: Volume Limit
+			Label: Volume limit
 			Tooltip: ""
 		}
 
 		PlayerOperationLimit: {
-			Label: Player Operation Limit
+			Label: Player operation limit
 			Tooltip: ""
 		}
+	}
+
+	ServerPasteLimitsConfig: {
+		Tooltip: ""
 
 		ServerOperationLimit: {
-			Label: Server Operation Limit
+			Label: Server operation limit
 			Tooltip: ""
 		}
 
 		MaxPhaseTickSize: {
-			Label: Max Phase Tick Size
+			Label: Max phase tick size
+			Tooltip: ""
+		}
+
+		MaxTilesPerCategory: {
+			Label: Max tiles per category
+			Tooltip: ""
+		}
+	}
+
+	PhasePolicyConfig: {
+		Tooltip: ""
+
+		Plan: {
+			Label: Plan
+			Tooltip: ""
+		}
+
+		Clear: {
+			Label: Clear
+			Tooltip: ""
+		}
+
+		Cut: {
+			Label: Cut
+			Tooltip: ""
+		}
+
+		Place: {
+			Label: Place
+			Tooltip: ""
+		}
+
+		Sweep: {
+			Label: Sweep
 			Tooltip: ""
 		}
 	}
@@ -756,13 +857,13 @@ Configs: {
 			Tooltip: ""
 		}
 
-		IgnoreMissingItems: {
-			Label: Ignore Missing Items
+		RetryOnMissingItems: {
+			Label: Retry On Missing Items
 			Tooltip: ""
 		}
 
-		IgnoreInvalidPlacement: {
-			Label: Ignore Invalid Placement
+		RetryOnInvalidPlacement: {
+			Label: Retry On Invalid Placement
 			Tooltip: ""
 		}
 
@@ -783,6 +884,11 @@ Configs: {
 
 		TickDelayMs: {
 			Label: Tick Delay Ms
+			Tooltip: ""
+		}
+
+		EnableCutPasteProcess: {
+			Label: Force source clear during paste
 			Tooltip: ""
 		}
 	}
@@ -871,13 +977,13 @@ Configs: {
 	PlacePastePreference: {
 		Tooltip: ""
 
-		IgnoreMissingItems: {
-			Label: Ignore Missing Items
+		RetryOnMissingItems: {
+			Label: Retry On Missing Items
 			Tooltip: ""
 		}
 
-		IgnoreInvalidPlacement: {
-			Label: Ignore Invalid Placement
+		RetryOnInvalidPlacement: {
+			Label: Retry On Invalid Placement
 			Tooltip: ""
 		}
 	}
@@ -887,6 +993,15 @@ Configs: {
 
 		Strategy: {
 			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	PasteOverlayDebugConfig: {
+		Tooltip: ""
+
+		RectBorders: {
+			Label: Rect Borders
 			Tooltip: ""
 		}
 	}

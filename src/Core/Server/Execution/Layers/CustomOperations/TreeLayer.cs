@@ -25,11 +25,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>True when this tile type is handled by the tree layer (block exclusion / identification).</summary>
         public static bool IsTreeType(ushort tileType)
         {
+            if (VegetationLayer.ExcludesTreeLayer(tileType))
+                return false;
+
             return TileID.Sets.IsATreeTrunk[tileType]
                 || TileID.Sets.IsShakeable[tileType]
                 || TileID.Sets.CountsAsGemTree[tileType]
-                || TileID.Sets.GetsCheckedForLeaves[tileType]
-                || TileID.Sets.Leaves[tileType];
+                || TileID.Sets.GetsCheckedForLeaves[tileType];
         }
 
         public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
@@ -176,9 +178,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!WorldGen.PlaceTile(x, y, TileID.LivingWood, mute: true, forced: true, plr: context.Player.whoAmI, style: 0))
                 return LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
 
-            if (!Main.tile[x, y].HasTile || Main.tile[x, y].TileType != TileID.LivingWood)
-                return LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
-
             LayerSync.SyncTileSquare(x, y);
             return LayerResult.Ok(tile.World);
         }
@@ -220,11 +219,12 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             dest.HasTile = true;
             dest.TileType = (ushort)payload.Block.Type;
 
-            ref TileWallWireStateData state = ref DetailOperations.GetState(x, y);
+            TileWallWireStateData state = DetailOperations.ReadState(x, y);
             var b = payload.Block;
             state.TileFrameX = (short)b.FrameX;
             state.TileFrameY = (short)b.FrameY;
             state.BlockType = payload.Detail.BlockType;
+            DetailOperations.WriteState(x, y, in state);
         }
 
         private static void PlayTreePasteFx(IReadOnlyList<PasteTile> tiles, Point trunkWorld)

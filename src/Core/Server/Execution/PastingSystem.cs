@@ -100,11 +100,11 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
 
             var disabledPhases = new List<string>(3);
-            if (!config.Clear.AllowClientPreferences)
+            if (!config.Phases.Clear.AllowClientPreferences)
                 disabledPhases.Add("Clear");
-            if (!config.Place.AllowClientPreferences)
+            if (!config.Phases.Place.AllowClientPreferences)
                 disabledPhases.Add("Place");
-            if (!config.Sweep.AllowClientPreferences)
+            if (!config.Phases.Sweep.AllowClientPreferences)
                 disabledPhases.Add("Sweep");
 
             if (disabledPhases.Count == 0)
@@ -313,13 +313,13 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
             }
 
-            if (GetActiveOperationCountForPlayer(projection.Owner) >= config.Limits.PlayerOperationLimit)
+            if (GetActiveOperationCountForPlayer(projection.Owner) >= config.Limits.Client.PlayerOperationLimit)
             {
                 rejectReason = PasteRejectReason.PlayerOperationLimit;
                 return false;
             }
 
-            if (GetActiveOperationCount() >= config.Limits.ServerOperationLimit)
+            if (GetActiveOperationCount() >= config.Limits.Server.ServerOperationLimit)
             {
                 rejectReason = PasteRejectReason.ServerOperationLimit;
                 return false;

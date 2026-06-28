@@ -37,9 +37,10 @@ internal static class PastingInfoLog
             {
                 string contentName = ResolveContentName(in progress);
                 string result = ResolveResult(in progress);
-                Color color = ResolveResultColor(progress.Outcome);
+                Color color = ResolveResultColor(in progress);
+                string layer = string.IsNullOrEmpty(progress.LayerId) ? "-" : progress.LayerId;
                 string message =
-                    $"[{progress.Phase}] [{progress.BatchIndex}/{progress.BatchTotal}] [{progress.PhaseIndex}/{progress.PhaseTotal}] [{progress.WorldX}, {progress.WorldY}] {contentName} - {result}";
+                    $"[{progress.Phase}] [{layer}] [{progress.BatchIndex}/{progress.BatchTotal}] [{progress.PhaseIndex}/{progress.PhaseTotal}] [{progress.WorldX}, {progress.WorldY}] {contentName} - {result}";
                 TABLog.Info(message, chatColor: color);
                 return;
             }
@@ -66,6 +67,9 @@ internal static class PastingInfoLog
 
         if (tile.PayloadCell.Wall.Type != WallID.None)
             return world.WallType == tile.PayloadCell.Wall.Type;
+
+        if (tile.PayloadCell.Liquid.Amount > 0)
+            return world.LiquidAmount == tile.PayloadCell.Liquid.Amount && world.LiquidType == tile.PayloadCell.Liquid.Type;
 
         return true;
     }
@@ -95,6 +99,14 @@ internal static class PastingInfoLog
         if (tile.PayloadCell.Wall.Type != WallID.None && world.WallType != tile.PayloadCell.Wall.Type)
             return "wall not placed";
 
+        if (tile.PayloadCell.Liquid.Amount > 0)
+        {
+            if (world.LiquidAmount != tile.PayloadCell.Liquid.Amount)
+                return "liquid amount mismatch";
+            if (world.LiquidType != tile.PayloadCell.Liquid.Type)
+                return "liquid type mismatch";
+        }
+
         return "intent not applied";
     }
 
@@ -103,29 +115,32 @@ internal static class PastingInfoLog
         switch (progress.ContentKind)
         {
             case PasteProgressContentKind.Air:
-                return "Vanilla:Air";
+                return ContentNameResolver.FormatContentDisplayName("Air");
             case PasteProgressContentKind.Tile:
                 return NormalizeContentName(ContentNameResolver.GetTileName(progress.ContentType));
             case PasteProgressContentKind.Wall:
                 return NormalizeContentName(ContentNameResolver.GetWallName(progress.ContentType));
+            case PasteProgressContentKind.Liquid:
+                return NormalizeContentName(ContentNameResolver.GetLiquidTypeName(progress.ContentType));
+            case PasteProgressContentKind.Wiring:
+                return progress.ContentDetail ?? "Wire:unknown";
+            case PasteProgressContentKind.Detail:
+                return progress.ContentDetail ?? "Detail:unknown";
+            case PasteProgressContentKind.Paint:
+                return progress.ContentDetail ?? "Paint:unknown";
             default:
-                return "Vanilla:Unknown";
+                return ContentNameResolver.FormatContentDisplayName(null);
         }
     }
 
-    private static string NormalizeContentName(string rawName)
-    {
-        if (string.IsNullOrWhiteSpace(rawName))
-            return "Vanilla:Unknown";
-
-        return rawName.Contains(':') ? rawName : $"Vanilla:{rawName}";
-    }
+    private static string NormalizeContentName(string rawName) =>
+        ContentNameResolver.FormatContentDisplayName(rawName);
 
     private static string ResolveResult(in PasteProgress progress)
     {
         return progress.Outcome switch
         {
-            PasteProgressOutcome.Ok => "OK",
+            PasteProgressOutcome.Ok => progress.ResolveOkLabel(),
             PasteProgressOutcome.Retry =>
                 $"Retry: {ExplainFailReason(progress.FailReason, progress.ResultDetail)}",
             PasteProgressOutcome.Skipped =>
@@ -136,15 +151,23 @@ internal static class PastingInfoLog
         };
     }
 
-    private static Color ResolveResultColor(PasteProgressOutcome outcome) =>
-        outcome switch
+    private static Color ResolveResultColor(in PasteProgress progress)
+    {
+        if (progress.Outcome == PasteProgressOutcome.Retry && PasteProgress.IsBatchRetryDetail(progress.ResultDetail))
+            return Color.MediumPurple;
+
+        if (progress.IsTerminalOutcome())
+            return Color.Red;
+
+        return progress.Outcome switch
         {
             PasteProgressOutcome.Ok => Color.LightGreen,
             PasteProgressOutcome.Retry => Color.Khaki,
             PasteProgressOutcome.Skipped => Color.LightYellow,
-            PasteProgressOutcome.Failed => Color.OrangeRed,
-            _ => Color.OrangeRed,
+            PasteProgressOutcome.Failed => Color.Red,
+            _ => Color.Red,
         };
+    }
 
     private static string ExplainFailReason(LayerFailReason reason, string? detail)
     {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.UI;
+using TheArchitectsBlueprintMod.UI.Preview;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;

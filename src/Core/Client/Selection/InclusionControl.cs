@@ -176,7 +176,7 @@ namespace TheArchitectsBlueprintMod.Core
         private static void ApplyIncludeWithVolumeLimit(Blueprint target, Rectangle tileRect)
         {
             var config = ModContent.GetInstance<PastingConfig>();
-            int volumeLimit = config.Limits.VolumeLimit;
+            int volumeLimit = config.Limits.Client.VolumeLimit;
             if (volumeLimit <= 0 || target.Area.IsEmpty)
                 return;
 

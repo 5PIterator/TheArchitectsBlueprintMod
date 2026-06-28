@@ -1,0 +1,136 @@
+[15:42:03.703] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3191,318) 1x2
+[Paste] START | area=(3191,318) 1x2 | sourceClear=False | srcTiles=2 tgtTiles=2 | sweep=Cheat clear=All retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
+[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
+[Projection] Projection.Lock: id=0 owner=0
+[Paste] Prep: PlaceSource — queuing place tasks from source tiles
+[Paste] Prep: begin prepTileBudget=50 sourceTiles=2 lookupTiles=2 targetTiles=2 clearStrategy=All sourceAreaClear=False
+[Paste] Identify place layer=Wall rel=(0,0) tiles=1 placementValid=True hasItems=False
+[Paste] Identify place layer=Vegetation rel=(0,0) tiles=1 placementValid=True hasItems=True
+[Paste] Queued place task layer=Wall tiles=1 queue=1
+[Paste] Queued place task layer=Vegetation tiles=1 queue=1
+[Paste] Identify place layer=Wall rel=(0,1) tiles=1 placementValid=True hasItems=False
+[Paste] Identify place layer=Block rel=(0,1) tiles=1 placementValid=True hasItems=True
+[Paste] Queued place task layer=Wall tiles=1 queue=2
+[Paste] Queued place task layer=Block tiles=1 queue=1
+[Paste] Prep: ClearTarget — queuing clears at destination
+[Paste] Prep: stage PlaceSource -> ClearTarget
+[Paste] Prep: no source cut — finalizing queues
+[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
+[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+[Paste] Prep: queues ready | placeBatches=4 clearBatches=0
+[Paste] Prep: complete placeBatches=4 clearBatches=0
+[Paste] Stage: EXEC CLEAR
+TheArchitectsBlueprintMod: [15:42:03.703] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3191,318) 1x2
+[Paste] START | area=(3191,318) 1x2 | sourceClear=False | srcTiles=2 tgtTiles=2 | sweep=Cheat clear=All retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
+[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
+[Projection] Projection.Lock: id=0 owner=0
+[Paste] Prep: PlaceSource — queuing place tasks from source tiles
+[Paste] Prep: begin prepTileBudget=50 sourceTiles=2 lookupTiles=2 targetTiles=2 clearStrategy=All sourceAreaClear=False
+[Paste] Identify place layer=Wall rel=(0,0) tiles=1 placementValid=True hasItems=False
+[Paste] Identify place layer=Vegetation rel=(0,0) tiles=1 placementValid=True hasItems=True
+[Paste] Queued place task layer=Wall tiles=1 queue=1
+[Paste] Queued place task layer=Vegetation tiles=1 queue=1
+[Paste] Identify place layer=Wall rel=(0,1) tiles=1 placementValid=True hasItems=False
+[Paste] Identify place layer=Block rel=(0,1) tiles=1 placementValid=True hasItems=True
+[Paste] Queued place task layer=Wall tiles=1 queue=2
+[Paste] Queued place task layer=Block tiles=1 queue=1
+[Paste] Prep: ClearTarget — queuing clears at destination
+[Paste] Prep: stage PlaceSource -> ClearTarget
+[Paste] Prep: no source cut — finalizing queues
+[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
+[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+[Paste] Prep: queues ready | placeBatches=4 clearBatches=0
+[Paste] Prep: complete placeBatches=4 clearBatches=0
+[Paste] Stage: EXEC CLEAR
+[15:42:03.704] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Plan] START ---
+[Plan] [Place] [Wall] [3191, 318] Queued batch (1 tiles)
+[Plan] [Place] [Vegetation] [3191, 318] Queued batch (1 tiles)
+[Plan] [Place] [Wall] [3191, 319] Queued batch (1 tiles)
+[Plan] [Place] [Block] [3191, 319] Queued batch (1 tiles)
+--- [Plan] END (placeBatches=4, clearBatches=0) ---
+--- [Clear] START ---
+TheArchitectsBlueprintMod: [15:42:03.704] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Plan] START ---
+[Plan] [Place] [Wall] [3191, 318] Queued batch (1 tiles)
+[Plan] [Place] [Vegetation] [3191, 318] Queued batch (1 tiles)
+[Plan] [Place] [Wall] [3191, 319] Queued batch (1 tiles)
+[Plan] [Place] [Block] [3191, 319] Queued batch (1 tiles)
+--- [Plan] END (placeBatches=4, clearBatches=0) ---
+--- [Clear] START ---
+[15:42:03.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC CUT
+TheArchitectsBlueprintMod: [15:42:03.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC CUT
+[15:42:03.801] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=0, remaining=0) ---
+--- [Cut] START ---
+TheArchitectsBlueprintMod: [15:42:03.801] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=0, remaining=0) ---
+--- [Cut] START ---
+[15:42:03.916] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC PLACE
+TheArchitectsBlueprintMod: [15:42:03.916] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC PLACE
+[15:42:03.917] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Cut] END (processed=0, remaining=0) ---
+--- [Place] START (tasks=4) ---
+TheArchitectsBlueprintMod: [15:42:03.917] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Cut] END (processed=0, remaining=0) ---
+--- [Place] START (tasks=4) ---
+[15:42:04.033] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Wall (idx=0) tasks=2
+[Paste] Place begin layer=Wall batch=1 rel=(0,0) world=(3191,318) payload[hasTile=True type=61 frame=(144,0)] source[hasTile=True type=61] target[hasTile=False type=0]
+[Paste] Place execute layer=Wall world=(3191,318) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:42:04.033] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Wall (idx=0) tasks=2
+[Paste] Place begin layer=Wall batch=1 rel=(0,0) world=(3191,318) payload[hasTile=True type=61 frame=(144,0)] source[hasTile=True type=61] target[hasTile=False type=0]
+[Paste] Place execute layer=Wall world=(3191,318) success=True failReason=None remaining=0
+[15:42:04.034] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Wall] [1/1] [1/4] [3191, 318] Terraria:MudUnsafe - Placed
+TheArchitectsBlueprintMod: [15:42:04.034] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Wall] [1/1] [1/4] [3191, 318] Terraria:MudUnsafe - Placed
+[15:42:04.134] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Wall (idx=0) tasks=1
+[Paste] Place begin layer=Wall batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=False type=0]
+[Paste] Place execute layer=Wall world=(3191,319) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:42:04.134] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Wall (idx=0) tasks=1
+[Paste] Place begin layer=Wall batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=False type=0]
+[Paste] Place execute layer=Wall world=(3191,319) success=True failReason=None remaining=0
+[15:42:04.134] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Wall] [1/1] [2/4] [3191, 319] Terraria:MudUnsafe - Placed
+TheArchitectsBlueprintMod: [15:42:04.134] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Wall] [1/1] [2/4] [3191, 319] Terraria:MudUnsafe - Placed
+[15:42:04.250] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
+[Paste] Place begin layer=Block batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)]
+[Paste] Interaction lookup: JungleGrass style=0 => first=? mode=conversion
+[Paste] Place [PlaceBaseTile] (3191,319) JungleGrass style=0 mode=conversion base=Mud => OK
+[Paste] Place execute layer=Block world=(3191,319) success=True failReason=None remaining=1
+[Paste] Requeue place task world=(3191,319) remainingTiles=1
+TheArchitectsBlueprintMod: [15:42:04.250] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
+[Paste] Place begin layer=Block batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)]
+[Paste] Interaction lookup: JungleGrass style=0 => first=? mode=conversion
+[Paste] Place [PlaceBaseTile] (3191,319) JungleGrass style=0 mode=conversion base=Mud => OK
+[Paste] Place execute layer=Block world=(3191,319) success=True failReason=None remaining=1
+[Paste] Requeue place task world=(3191,319) remainingTiles=1
+[15:42:04.251] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Block] [1/1] [3/4] [3191, 319] Terraria:JungleGrass - Retry: Batch (1/2)
+TheArchitectsBlueprintMod: [15:42:04.251] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Block] [1/1] [3/4] [3191, 319] Terraria:JungleGrass - Retry: Batch (1/2)
+[15:42:04.350] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
+[Paste] Place begin layer=Block batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=True type=59]
+[Paste] BlockLayer.Place batch=1rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)]
+[Paste] Interaction lookup: JungleGrass style=0 => first=? mode=conversion
+[Paste] Place [PlaceTile] (3191,319) JungleGrass style=0 mode=conversion base=Mud => OK
+[Paste] Place execute layer=Block world=(3191,319) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:42:04.350] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
+[Paste] Place begin layer=Block batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=True type=59]
+[Paste] BlockLayer.Place batch=1rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)]
+[Paste] Interaction lookup: JungleGrass style=0 => first=? mode=conversion
+[Paste] Place [PlaceTile] (3191,319) JungleGrass style=0 mode=conversion base=Mud => OK
+[Paste] Place execute layer=Block world=(3191,319) success=True failReason=None remaining=0
+[15:42:04.351] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Block] [1/1] [3/4] [3191, 319] Terraria:JungleGrass - Placed
+TheArchitectsBlueprintMod: [15:42:04.351] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Block] [1/1] [3/4] [3191, 319] Terraria:JungleGrass - Placed
+[15:42:04.467] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Vegetation (idx=4) tasks=1
+[Paste] Place begin layer=Vegetation batch=1 rel=(0,0) world=(3191,318) payload[hasTile=True type=61 frame=(144,0)] source[hasTile=True type=61] target[hasTile=False type=0]
+[Paste] Interaction lookup: JunglePlants style=0 => first=? mode=direct
+[Paste] Place [PlaceTile] (3191,318) JunglePlants style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Vegetation world=(3191,318) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:42:04.467] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Vegetation (idx=4) tasks=1
+[Paste] Place begin layer=Vegetation batch=1 rel=(0,0) world=(3191,318) payload[hasTile=True type=61 frame=(144,0)] source[hasTile=True type=61] target[hasTile=False type=0]
+[Paste] Interaction lookup: JunglePlants style=0 => first=? mode=direct
+[Paste] Place [PlaceTile] (3191,318) JunglePlants style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Vegetation world=(3191,318) success=True failReason=None remaining=0
+[15:42:04.467] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Vegetation] [1/1] [4/4] [3191, 318] Terraria:JunglePlants - Placed
+TheArchitectsBlueprintMod: [15:42:04.467] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Vegetation] [1/1] [4/4] [3191, 318] Terraria:JunglePlants - Placed
+[15:42:04.567] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC DONE
+[Paste] Paste ended: step returned no more work
+[Projection] Projection.Unlock: id=0 owner=0
+TheArchitectsBlueprintMod: [15:42:04.567] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC DONE
+[Paste] Paste ended: step returned no more work
+[Projection] Projection.Unlock: id=0 owner=0
+[15:42:04.568] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=4, remaining=0) ---
+TheArchitectsBlueprintMod: [15:42:04.568] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=4, remaining=0) ---
