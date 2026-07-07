@@ -26,12 +26,23 @@ namespace TheArchitectsBlueprintMod.Core
             Sessions.Remove(operationId);
         }
 
-        internal static bool TryCompleteProjectileImpact(int operationId, int mutationId)
+        internal static bool TryCompleteProjectileImpact(
+            int operationId,
+            int mutationId,
+            bool arrivedAtDestination,
+            Point dropTile,
+            out bool actionSucceeded)
         {
+            actionSucceeded = false;
             if (!Sessions.TryGetValue(operationId, out TileEffectSession? session))
                 return false;
 
-            return TileExecutor.CompleteProjectileImpact(session, mutationId);
+            return TileExecutor.CompleteProjectileImpact(
+                session,
+                mutationId,
+                arrivedAtDestination,
+                dropTile,
+                out actionSucceeded);
         }
 
         internal static bool TryGetProjectileDestination(int operationId, int mutationId, out Vector2 destination)
@@ -50,17 +61,18 @@ namespace TheArchitectsBlueprintMod.Core
                 return true;
             }
 
-            if (mutation.TargetInventoryIndex >= 0
-                && ctx.Inventories is not null
-                && mutation.TargetInventoryIndex < ctx.Inventories.Count)
+            if (ctx.InventoryLookup is not null
+                && mutation.TargetInventoryIndex >= 0
+                && ctx.InventoryLookup.TryGetInventory(mutation.TargetInventoryIndex, out Inventory inventory))
             {
                 destination = InventoryManager.GetInventoryWorldCenter(
-                    ctx.Inventories[mutation.TargetInventoryIndex],
+                    inventory,
                     ctx.Player);
                 return true;
             }
 
-            return InventoryManager.TryResolveStoreDestination(ctx.Inventories, ctx.Player, out destination);
+            return ctx.InventoryLookup is not null
+                && ctx.InventoryLookup.TryResolveStoreDestination(ctx.Player, out destination);
         }
 
         internal static void ProcessSessions()

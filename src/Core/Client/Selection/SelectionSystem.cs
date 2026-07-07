@@ -180,6 +180,9 @@ namespace TheArchitectsBlueprintMod.Core
         public void SetPointA(Player player, Point tilePosition)
         {
             var state = GetState(player);
+            if (state.HasPointA && state.PointA == tilePosition)
+                return;
+
             state.PointA = tilePosition;
             state.HasPointA = true;
             UpdateSelection(state);
@@ -200,6 +203,9 @@ namespace TheArchitectsBlueprintMod.Core
         public void SetPointB(Player player, Point tilePosition)
         {
             var state = GetState(player);
+            if (state.HasPointB && state.PointB == tilePosition)
+                return;
+
             state.PointB = tilePosition;
             state.HasPointB = true;
             UpdateSelection(state);
@@ -220,6 +226,9 @@ namespace TheArchitectsBlueprintMod.Core
         public void SetPoints(Player player, Point pointA, Point pointB)
         {
             var state = GetState(player);
+            if (state.HasPointA && state.HasPointB && state.PointA == pointA && state.PointB == pointB)
+                return;
+
             state.PointA = pointA;
             state.PointB = pointB;
             state.HasPointA = true;

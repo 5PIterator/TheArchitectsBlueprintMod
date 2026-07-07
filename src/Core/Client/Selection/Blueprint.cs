@@ -53,20 +53,29 @@ namespace TheArchitectsBlueprintMod.Core
 
         public virtual void Define(Rectangle bounds)
         {
+            if (bounds.IsEmpty)
+            {
+                if (!IsDefined)
+                    return;
+
+                bool hadGrid = Tiles is not null;
+                Area = bounds;
+                Tiles = null;
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug(
+                        $"{GetType().Name}.Define: cleared bounds (empty rect) owner={Owner} hadGrid={hadGrid}",
+                        "Blueprint");
+                return;
+            }
+
+            if (bounds == Area && Tiles is not null)
+                return;
+
             int oldWidth = Area.Width;
             int oldHeight = Area.Height;
             BlueprintCell[,] previous = Tiles;
 
             Area = bounds;
-
-            if (Area.IsEmpty)
-            {
-                if (TABLog.IsDebugEnabled)
-                    TABLog.Debug(
-                        $"{GetType().Name}.Define: cleared bounds (empty rect) owner={Owner} hadGrid={previous is not null}",
-                        "Blueprint");
-                return;
-            }
 
             Tiles = new BlueprintCell[Area.Width, Area.Height];
             for (int y = 0; y < Area.Height; y++)

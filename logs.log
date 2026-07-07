@@ -1,174 +1,304 @@
-[16:32:42.622] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3186,336) 7x7
-[Paste] START | area=(3186,336) 7x7 | sourceClear=False | srcTiles=49 tgtTiles=49 | sweep=Cheat planClear=All clearItemDrop=Store retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
-[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
-TheArchitectsBlueprintMod: [16:32:42.622] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3186,336) 7x7
-[Paste] START | area=(3186,336) 7x7 | sourceClear=False | srcTiles=49 tgtTiles=49 | sweep=Cheat planClear=All clearItemDrop=Store retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
-[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
-[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
-[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
-[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
-[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
-[16:32:42.635] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Plan] END (placeBatches=0, clearBatches=0) ---
-TheArchitectsBlueprintMod: [16:32:42.635] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Plan] END (placeBatches=0, clearBatches=0) ---
-[16:32:42.636] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] Prep: no place tasks queued (retryOnMissingItems=True requireItems=True); layer place phases will be no-ops
-TheArchitectsBlueprintMod: [16:32:42.636] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] Prep: no place tasks queued (retryOnMissingItems=True requireItems=True); layer place phases will be no-ops
-[16:32:42.752] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=0, remaining=0) ---
-TheArchitectsBlueprintMod: [16:32:42.752] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=0, remaining=0) ---
-[16:32:42.852] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Sweep: queued 49 tiles (full footprint)
-TheArchitectsBlueprintMod: [16:32:42.852] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Sweep: queued 49 tiles (full footprint)
-[16:32:42.852] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=0, remaining=0) ---
---- [Sweep] START (tasks=49) ---
-TheArchitectsBlueprintMod: [16:32:42.852] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=0, remaining=0) ---
---- [Sweep] START (tasks=49) ---
-[16:32:42.869] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [TileExecutor] Register id=1 Sweep (3186,336) projectile=none
-[TileExecutor] Register id=2 Sweep (3187,336) projectile=none
-[TileExecutor] Register id=3 Sweep (3188,336) projectile=none
-[TileExecutor] Register id=4 Sweep (3189,336) projectile=none
-[TileExecutor] Register id=5 Sweep (3190,336) projectile=none
-[TileExecutor] Register id=6 Sweep (3191,336) projectile=none
-[TileExecutor] Register id=7 Sweep (3192,336) projectile=none
-[TileExecutor] Register id=8 Sweep (3186,337) projectile=none
-[TileExecutor] Register id=9 Sweep (3188,337) projectile=none
-[TileExecutor] Register id=10 Sweep (3190,337) projectile=none
-[TileExecutor] Register id=11 Sweep (3192,337) projectile=none
-[TileExecutor] Register id=12 Sweep (3186,338) projectile=none
-[TileExecutor] Register id=13 Sweep (3187,338) projectile=none
-[TileExecutor] Register id=14 Sweep (3189,338) projectile=none
-[TileExecutor] Register id=15 Sweep (3191,338) projectile=none
-[TileExecutor] Register id=16 Sweep (3192,338) projectile=none
-[TileExecutor] Register id=17 Sweep (3186,339) projectile=none
-[TileExecutor] Register id=18 Sweep (3188,339) projectile=none
-[TileExecutor] Register id=19 Sweep (3189,339) projectile=none
-[TileExecutor] Register id=20 Sweep (3190,339) projectile=none
-[TileExecutor] Register id=21 Sweep (3192,339) projectile=none
-[TileExecutor] Register id=22 Sweep (3186,340) projectile=none
-[TileExecutor] Register id=23 Sweep (3187,340) projectile=none
-[TileExecutor] Register id=24 Sweep (3189,340) projectile=none
-[TileExecutor] Register id=25 Sweep (3191,340) projectile=none
-[TileExecutor] Register id=26 Sweep (3192,340) projectile=none
-[TileExecutor] Register id=27 Sweep (3186,341) projectile=none
-[TileExecutor] Register id=28 Sweep (3188,341) projectile=none
-[TileExecutor] Register id=29 Sweep (3190,341) projectile=none
-[TileExecutor] Register id=30 Sweep (3192,341) projectile=none
-[TileExecutor] Register id=31 Sweep (3186,342) projectile=none
-[TileExecutor] Register id=32 Sweep (3187,342) projectile=none
-[TileExecutor] Register id=33 Sweep (3188,342) projectile=none
-[TileExecutor] Register id=34 Sweep (3189,342) projectile=none
-[TileExecutor] Register id=35 Sweep (3190,342) projectile=none
-[TileExecutor] Register id=36 Sweep (3191,342) projectile=none
-[TileExecutor] Register id=37 Sweep (3192,342) projectile=none
-[TileExecutor] Sweep id=1 (3186,336) ok
-[TileExecutor] Sweep id=2 (3187,336) ok
-[TileExecutor] Sweep id=3 (3188,336) ok
-[TileExecutor] Sweep id=4 (3189,336) ok
-[TileExecutor] Sweep id=5 (3190,336) ok
-[TileExecutor] Sweep id=6 (3191,336) ok
-[TileExecutor] Sweep id=7 (3192,336) ok
-[TileExecutor] Sweep id=8 (3186,337) ok
-[TileExecutor] Sweep id=9 (3188,337) ok
-[TileExecutor] Sweep id=10 (3190,337) ok
-[TileExecutor] Sweep id=11 (3192,337) ok
-[TileExecutor] Sweep id=12 (3186,338) ok
-[TileExecutor] Sweep id=13 (3187,338) ok
-[TileExecutor] Sweep id=14 (3189,338) ok
-[TileExecutor] Sweep id=15 (3191,338) ok
-[TileExecutor] Sweep id=16 (3192,338) ok
-[TileExecutor] Sweep id=17 (3186,339) ok
-[TileExecutor] Sweep id=18 (3188,339) ok
-[TileExecutor] Sweep id=19 (3189,339) ok
-[TileExecutor] Sweep id=20 (3190,339) ok
-[TileExecutor] Sweep id=21 (3192,339) ok
-[TileExecutor] Sweep id=22 (3186,340) ok
-[TileExecutor] Sweep id=23 (3187,340) ok
-[TileExecutor] Sweep id=24 (3189,340) ok
-[TileExecutor] Sweep id=25 (3191,340) ok
-[TileExecutor] Sweep id=26 (3192,340) ok
-[TileExecutor] Sweep id=27 (3186,341) ok
-[TileExecutor] Sweep id=28 (3188,341) ok
-[TileExecutor] Sweep id=29 (3190,341) ok
-[TileExecutor] Sweep id=30 (3192,341) ok
-[TileExecutor] Sweep id=31 (3186,342) ok
-[TileExecutor] Sweep id=32 (3187,342) ok
-[TileExecutor] Sweep id=33 (3188,342) ok
-[TileExecutor] Sweep id=34 (3189,342) ok
-[TileExecutor] Sweep id=35 (3190,342) ok
-[TileExecutor] Sweep id=36 (3191,342) ok
-[TileExecutor] Sweep id=37 (3192,342) ok
-TheArchitectsBlueprintMod: [16:32:42.869] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [TileExecutor] Register id=1 Sweep (3186,336) projectile=none
-[TileExecutor] Register id=2 Sweep (3187,336) projectile=none
-[TileExecutor] Register id=3 Sweep (3188,336) projectile=none
-[TileExecutor] Register id=4 Sweep (3189,336) projectile=none
-[TileExecutor] Register id=5 Sweep (3190,336) projectile=none
-[TileExecutor] Register id=6 Sweep (3191,336) projectile=none
-[TileExecutor] Register id=7 Sweep (3192,336) projectile=none
-[TileExecutor] Register id=8 Sweep (3186,337) projectile=none
-[TileExecutor] Register id=9 Sweep (3188,337) projectile=none
-[TileExecutor] Register id=10 Sweep (3190,337) projectile=none
-[TileExecutor] Register id=11 Sweep (3192,337) projectile=none
-[TileExecutor] Register id=12 Sweep (3186,338) projectile=none
-[TileExecutor] Register id=13 Sweep (3187,338) projectile=none
-[TileExecutor] Register id=14 Sweep (3189,338) projectile=none
-[TileExecutor] Register id=15 Sweep (3191,338) projectile=none
-[TileExecutor] Register id=16 Sweep (3192,338) projectile=none
-[TileExecutor] Register id=17 Sweep (3186,339) projectile=none
-[TileExecutor] Register id=18 Sweep (3188,339) projectile=none
-[TileExecutor] Register id=19 Sweep (3189,339) projectile=none
-[TileExecutor] Register id=20 Sweep (3190,339) projectile=none
-[TileExecutor] Register id=21 Sweep (3192,339) projectile=none
-[TileExecutor] Register id=22 Sweep (3186,340) projectile=none
-[TileExecutor] Register id=23 Sweep (3187,340) projectile=none
-[TileExecutor] Register id=24 Sweep (3189,340) projectile=none
-[TileExecutor] Register id=25 Sweep (3191,340) projectile=none
-[TileExecutor] Register id=26 Sweep (3192,340) projectile=none
-[TileExecutor] Register id=27 Sweep (3186,341) projectile=none
-[TileExecutor] Register id=28 Sweep (3188,341) projectile=none
-[TileExecutor] Register id=29 Sweep (3190,341) projectile=none
-[TileExecutor] Register id=30 Sweep (3192,341) projectile=none
-[TileExecutor] Register id=31 Sweep (3186,342) projectile=none
-[TileExecutor] Register id=32 Sweep (3187,342) projectile=none
-[TileExecutor] Register id=33 Sweep (3188,342) projectile=none
-[TileExecutor] Register id=34 Sweep (3189,342) projectile=none
-[TileExecutor] Register id=35 Sweep (3190,342) projectile=none
-[TileExecutor] Register id=36 Sweep (3191,342) projectile=none
-[TileExecutor] Register id=37 Sweep (3192,342) projectile=none
-[TileExecutor] Sweep id=1 (3186,336) ok
-[TileExecutor] Sweep id=2 (3187,336) ok
-[TileExecutor] Sweep id=3 (3188,336) ok
-[TileExecutor] Sweep id=4 (3189,336) ok
-[TileExecutor] Sweep id=5 (3190,336) ok
-[TileExecutor] Sweep id=6 (3191,336) ok
-[TileExecutor] Sweep id=7 (3192,336) ok
-[TileExecutor] Sweep id=8 (3186,337) ok
-[TileExecutor] Sweep id=9 (3188,337) ok
-[TileExecutor] Sweep id=10 (3190,337) ok
-[TileExecutor] Sweep id=11 (3192,337) ok
-[TileExecutor] Sweep id=12 (3186,338) ok
-[TileExecutor] Sweep id=13 (3187,338) ok
-[TileExecutor] Sweep id=14 (3189,338) ok
-[TileExecutor] Sweep id=15 (3191,338) ok
-[TileExecutor] Sweep id=16 (3192,338) ok
-[TileExecutor] Sweep id=17 (3186,339) ok
-[TileExecutor] Sweep id=18 (3188,339) ok
-[TileExecutor] Sweep id=19 (3189,339) ok
-[TileExecutor] Sweep id=20 (3190,339) ok
-[TileExecutor] Sweep id=21 (3192,339) ok
-[TileExecutor] Sweep id=22 (3186,340) ok
-[TileExecutor] Sweep id=23 (3187,340) ok
-[TileExecutor] Sweep id=24 (3189,340) ok
-[TileExecutor] Sweep id=25 (3191,340) ok
-[TileExecutor] Sweep id=26 (3192,340) ok
-[TileExecutor] Sweep id=27 (3186,341) ok
-[TileExecutor] Sweep id=28 (3188,341) ok
-[TileExecutor] Sweep id=29 (3190,341) ok
-[TileExecutor] Sweep id=30 (3192,341) ok
-[TileExecutor] Sweep id=31 (3186,342) ok
-[TileExecutor] Sweep id=32 (3187,342) ok
-[TileExecutor] Sweep id=33 (3188,342) ok
-[TileExecutor] Sweep id=34 (3189,342) ok
-[TileExecutor] Sweep id=35 (3190,342) ok
-[TileExecutor] Sweep id=36 (3191,342) ok
-[TileExecutor] Sweep id=37 (3192,342) ok
---- [Sweep] END (processed=49, remaining=0) ---
---- [Sweep] END (processed=49, remaining=0) ---
-[16:32:42.885] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Complete (sweepStrategy=Cheat)
-TheArchitectsBlueprintMod: [16:32:42.885] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Complete (sweepStrategy=Cheat)
+[Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=0x0 carriedInclusion=False
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=0x0 carriedInclusion=False
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.749] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.749] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.766] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.766] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.783] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.783] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.816] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.816] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.833] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.833] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.850] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.850] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.866] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.866] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.883] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.883] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.900] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.900] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.916] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.916] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.933] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.933] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.950] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.950] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.966] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.966] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:28.983] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:28.983] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.000] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.000] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.017] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.017] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.033] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.033] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.049] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.049] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.067] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.067] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.100] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.100] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.117] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.117] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.134] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.134] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.150] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.150] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.167] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.167] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.183] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.183] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.200] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.200] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.217] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.217] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.234] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.234] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.250] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.250] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.267] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.267] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.284] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.284] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.300] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.300] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.317] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.317] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.333] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.333] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.350] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.350] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.367] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.367] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.384] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.384] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.417] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.417] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.433] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.433] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.450] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.450] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.467] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.467] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.484] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.484] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.500] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.500] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.517] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.517] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.533] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.533] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.550] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.550] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.567] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.567] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.584] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.584] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.600] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.600] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.617] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.617] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.634] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.634] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.650] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.650] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.667] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.667] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.684] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.684] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.700] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.700] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.717] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.717] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.734] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.734] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.750] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.750] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.767] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.767] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.784] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.784] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.817] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.817] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.834] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.834] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.850] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.850] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.867] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.867] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.884] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.884] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.901] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.901] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.917] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.917] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.934] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.934] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.951] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.951] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.967] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.967] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[14:30:29.984] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+TheArchitectsBlueprintMod: [14:30:29.984] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
+[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1

@@ -104,8 +104,7 @@ namespace TheArchitectsBlueprintMod.Core
     /// </summary>
     internal readonly struct PasteContext(
         int playerIndex,
-        Item[]? items,
-        IReadOnlyList<Inventory>? inventories,
+        InventoryLookup? inventoryLookup,
         in EffectivePastePolicy policy,
         PasteTileLookup? lookup = null,
         TileEffectSession? effectSession = null)
@@ -116,8 +115,9 @@ namespace TheArchitectsBlueprintMod.Core
         public readonly bool RetryOnMissingItems = policy.PlacePhase.Strategy.RetryOnMissingItems;
         public readonly bool RetryOnInvalidPlacement = policy.PlacePhase.Strategy.RetryOnInvalidPlacement;
         public readonly bool RequireItems = policy.PlacePhase.Strategy.RequireItems;
-        public readonly Item[]? Items = items;
-        public readonly IReadOnlyList<Inventory>? Inventories = inventories;
+        public readonly InventoryLookup? InventoryLookup = inventoryLookup;
+        public readonly Item[]? Items = inventoryLookup?.GetContents();
+        public readonly IReadOnlyList<Inventory>? Inventories = inventoryLookup?.Inventories;
         public readonly ClearStyle ClearStrategy = policy.PlanPhase.Strategy.Style;
         public readonly ClearItemDropStyle ItemDropStyle = policy.ClearPhase.Strategy.ItemDrop;
         public readonly PlaceStyle PlacementStyle = policy.PlacePhase.Strategy.Style;

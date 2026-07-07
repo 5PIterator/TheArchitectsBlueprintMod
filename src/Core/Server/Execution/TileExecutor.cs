@@ -130,17 +130,17 @@ namespace TheArchitectsBlueprintMod.Core
 
         public static bool HasItemForTile(ushort tileType, int style, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.Items is null || ctx.IsSweepCheat)
+            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweepCheat)
                 return true;
-            return InventoryManager.FindItemByTile(ctx.Items, tileType, style) is not null;
+            return ctx.InventoryLookup.HasItemForTile(tileType, style);
         }
 
         /// <summary>Whether required inventory contains an item for the given wall type.</summary>
         public static bool HasItemForWall(ushort wallType, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.Items is null || ctx.IsSweepCheat)
+            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweepCheat)
                 return true;
-            return InventoryManager.FindItemByWall(ctx.Items, wallType) is not null;
+            return ctx.InventoryLookup.HasItemForWall(wallType);
         }
 
         internal static bool ProcessQueuedMutation(TileEffectSession session, TileMutation mutation)
@@ -163,29 +163,49 @@ namespace TheArchitectsBlueprintMod.Core
             return result;
         }
 
-        internal static bool CompleteProjectileImpact(TileEffectSession session, int mutationId)
+        internal static bool CompleteProjectileImpact(
+            TileEffectSession session,
+            int mutationId,
+            bool arrivedAtDestination,
+            Point dropTile,
+            out bool actionSucceeded)
         {
+            actionSucceeded = false;
             PasteContext ctx = session.ContextFactory();
             if (!session.TryTakeImpact(mutationId, out TileMutation mutation))
                 return false;
+            if (dropTile == default)
+                dropTile = mutation.World;
 
             if (mutation.ProjectileMode == PasteProjectileMode.Place)
-                return ApplyMutation(mutation, in ctx);
+            {
+                actionSucceeded = arrivedAtDestination && ApplyMutation(mutation, in ctx);
+                if (!actionSucceeded)
+                    InventoryManager.DropItemAtTile(mutation.ItemType, mutation.ItemStack, dropTile);
+                return true;
+            }
 
-            InventoryManager.ApplyStoreOnArrival(
+            if (!arrivedAtDestination || ctx.InventoryLookup is null)
+            {
+                InventoryManager.DropItemAtTile(mutation.ItemType, mutation.ItemStack, dropTile);
+                return true;
+            }
+
+            int remaining = ctx.InventoryLookup.TryStoreAtDestination(
                 mutation.ItemType,
                 mutation.ItemStack,
-                mutation.World,
-                ctx.Inventories,
                 mutation.TargetInventoryIndex);
+            actionSucceeded = remaining <= 0;
 
             if (mutation.TargetInventoryIndex >= 0
-                && ctx.Inventories is not null
-                && mutation.TargetInventoryIndex < ctx.Inventories.Count
-                && ctx.Inventories[mutation.TargetInventoryIndex].Chest is Chest destinationChest)
+                && mutation.TargetInventoryIndex < ctx.InventoryLookup.Inventories.Count
+                && ctx.InventoryLookup.Inventories[mutation.TargetInventoryIndex].Chest is Chest destinationChest)
             {
                 InventoryManager.PlayChestEatAnimation(destinationChest);
             }
+
+            if (remaining > 0)
+                InventoryManager.DropItemAtTile(mutation.ItemType, remaining, ResolveDestinationDropTile(in ctx, mutation, dropTile));
 
             return true;
         }
@@ -290,21 +310,20 @@ namespace TheArchitectsBlueprintMod.Core
             Vector2 origin;
             bool fromChest;
             Chest? sourceChest;
+            if (ctx.InventoryLookup is null)
+                return false;
+
             bool reserved = mutation.Kind == TileMutationKind.PlaceWall
-                ? InventoryManager.TryReserveItemForWallMutation(
-                    ctx.Items,
+                ? ctx.InventoryLookup.TryReserveForWallMutation(
                     mutation.Type,
-                    ctx.Inventories,
                     ctx.Player,
                     out itemType,
                     out origin,
                     out fromChest,
                     out sourceChest)
-                : InventoryManager.TryReserveItemForTileMutation(
-                    ctx.Items,
+                : ctx.InventoryLookup.TryReserveForTileMutation(
                     mutation.Type,
                     mutation.Style,
-                    ctx.Inventories,
                     ctx.Player,
                     out placeStyle,
                     out itemType,
@@ -321,7 +340,13 @@ namespace TheArchitectsBlueprintMod.Core
                 ItemStack = 1
             };
             session.TrackImpact(impactMutation);
-            SpawnProjectile(mutation, origin, InventoryManager.GetTileWorldCenter(mutation.World), itemType);
+            if (!SpawnProjectile(impactMutation, origin, InventoryManager.GetTileWorldCenter(mutation.World)))
+            {
+                if (!session.TryTakeImpact(impactMutation.MutationId, out _))
+                    return false;
+                InventoryManager.DropItemAtTile(itemType, 1, WorldToTile(origin));
+                return false;
+            }
             if (fromChest && sourceChest is not null)
                 InventoryManager.PlayChestEatAnimation(sourceChest);
             return true;
@@ -329,13 +354,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         private static bool SpawnClearProjectile(TileEffectSession session, TileMutation mutation, in PasteContext ctx)
         {
-            if (mutation.ItemType <= 0
-                || !InventoryManager.TryResolveStoreDestinationForItem(
-                    mutation.ItemType,
-                    ctx.Inventories,
-                    ctx.Player,
-                    out Vector2 destination,
-                    out int inventoryIndex))
+            if (mutation.ItemType <= 0 || ctx.InventoryLookup is null)
             {
                 return ApplyMutation(mutation with { ProjectileMode = null }, in ctx);
             }
@@ -343,13 +362,33 @@ namespace TheArchitectsBlueprintMod.Core
             if (!ApplyMutation(mutation with { ItemDropStyle = ClearItemDropStyle.Void, ProjectileMode = null }, in ctx))
                 return false;
 
-            var trackedMutation = mutation with { TargetInventoryIndex = inventoryIndex };
+            int inventoryIndex = -1;
+            if (!ctx.InventoryLookup.TryResolveStoreDestinationForItem(
+                    mutation.ItemType,
+                    ctx.Player,
+                    out Vector2 destination,
+                    out inventoryIndex))
+            {
+                destination = ctx.Player.Center;
+            }
+
+            var trackedMutation = mutation with
+            {
+                ItemStack = Math.Max(1, mutation.ItemStack),
+                TargetInventoryIndex = inventoryIndex
+            };
             session.TrackImpact(trackedMutation);
-            SpawnProjectile(trackedMutation, InventoryManager.GetTileWorldCenter(mutation.World), destination, mutation.ItemType);
+            if (!SpawnProjectile(trackedMutation, InventoryManager.GetTileWorldCenter(mutation.World), destination))
+            {
+                if (!session.TryTakeImpact(trackedMutation.MutationId, out _))
+                    return false;
+                InventoryManager.DropItemAtTile(trackedMutation.ItemType, trackedMutation.ItemStack, trackedMutation.World);
+                return false;
+            }
             return true;
         }
 
-        private static void SpawnProjectile(TileMutation mutation, Vector2 origin, Vector2 destination, int itemType)
+        private static bool SpawnProjectile(TileMutation mutation, Vector2 origin, Vector2 destination)
         {
             int projType = ModContent.ProjectileType<PasteTileProjectile>();
             int projIndex = Projectile.NewProjectile(
@@ -370,7 +409,7 @@ namespace TheArchitectsBlueprintMod.Core
                 TABLog.Warn(
                     $"Projectile spawn failed id={mutation.MutationId} {mutation.ProjectileMode}",
                     TABLog.TileExecutorCategory);
-                return;
+                return false;
             }
 
             Projectile p = Main.projectile[projIndex];
@@ -378,9 +417,10 @@ namespace TheArchitectsBlueprintMod.Core
             p.localAI[1] = destination.Y;
             p.netUpdate = true;
             if (p.ModProjectile is PasteTileProjectile tabProj)
-                tabProj.SetVisualItem(itemType);
+                tabProj.AttachHeldItem(mutation.ItemType, mutation.ItemStack);
 
             TileExecutorLog.Projectile(in mutation, fired: true);
+            return true;
         }
 
         private static bool ApplyClearTile(int x, int y, TileMutation mutation, in PasteContext ctx)
@@ -396,7 +436,7 @@ namespace TheArchitectsBlueprintMod.Core
                 case ClearItemDropStyle.Store:
                     SuppressTileDrop.KillTile(x, y);
                     if (mutation.ItemType > 0)
-                        InventoryManager.ApplyStoreOnArrival(mutation.ItemType, mutation.ItemStack, mutation.World, ctx.Inventories);
+                        ctx.InventoryLookup?.ApplyStoreOnArrival(mutation.ItemType, mutation.ItemStack, mutation.World);
                     return true;
                 default:
                     return false;
@@ -416,7 +456,7 @@ namespace TheArchitectsBlueprintMod.Core
                 case ClearItemDropStyle.Store:
                     SuppressTileDrop.KillWall(x, y);
                     if (mutation.ItemType > 0)
-                        InventoryManager.ApplyStoreOnArrival(mutation.ItemType, mutation.ItemStack, mutation.World, ctx.Inventories);
+                        ctx.InventoryLookup?.ApplyStoreOnArrival(mutation.ItemType, mutation.ItemStack, mutation.World);
                     return true;
                 default:
                     return false;
@@ -442,7 +482,7 @@ namespace TheArchitectsBlueprintMod.Core
                     return true;
                 case ClearItemDropStyle.Store:
                     voidKill();
-                    InventoryManager.ApplyStoreOnArrival(itemId, 1, mutation.World, ctx.Inventories);
+                    ctx.InventoryLookup?.ApplyStoreOnArrival(itemId, 1, mutation.World);
                     return true;
                 default:
                     return false;
@@ -459,16 +499,14 @@ namespace TheArchitectsBlueprintMod.Core
             ShouldConsumeOnPlace(in ctx, consumeItem);
 
         private static bool ShouldConsumeOnPlace(in PasteContext ctx, bool consumeItem) =>
-            consumeItem && ctx.RequireItems && ctx.Items is not null && !ctx.IsSweepCheat;
+            consumeItem && ctx.RequireItems && ctx.InventoryLookup is not null && !ctx.IsSweepCheat;
 
         private static PasteProjectileMode? ResolveClearProjectileMode(int itemType, ClearItemDropStyle style, in PasteContext ctx)
         {
             if (style != ClearItemDropStyle.Store || itemType <= 0)
                 return null;
 
-            return InventoryManager.TryResolveStoreDestinationForItem(itemType, ctx.Inventories, ctx.Player, out _, out _)
-                ? PasteProjectileMode.Clear
-                : null;
+            return ctx.InventoryLookup is not null ? PasteProjectileMode.Clear : null;
         }
 
         private static int ResolveStoreItemForClearTile(int x, int y, ClearItemDropStyle style)
@@ -508,6 +546,32 @@ namespace TheArchitectsBlueprintMod.Core
         {
             if (Main.netMode == NetmodeID.Server)
                 NetMessage.SendTileSquare(-1, x, y, 1, 1);
+        }
+
+        private static Point WorldToTile(Vector2 worldPosition) =>
+            new((int)(worldPosition.X / 16f), (int)(worldPosition.Y / 16f));
+
+        private static Point ResolveDestinationDropTile(in PasteContext ctx, TileMutation mutation, Point fallbackTile)
+        {
+            if (ctx.InventoryLookup is null)
+                return fallbackTile;
+
+            if (mutation.TargetInventoryIndex >= 0
+                && mutation.TargetInventoryIndex < ctx.InventoryLookup.Inventories.Count)
+            {
+                Vector2 target = InventoryManager.GetInventoryWorldCenter(
+                    ctx.InventoryLookup.Inventories[mutation.TargetInventoryIndex],
+                    ctx.Player);
+                return WorldToTile(target);
+            }
+
+            return ctx.InventoryLookup.TryResolveStoreDestinationForItem(
+                mutation.ItemType,
+                ctx.Player,
+                out Vector2 destination,
+                out _)
+                ? WorldToTile(destination)
+                : fallbackTile;
         }
     }
 }

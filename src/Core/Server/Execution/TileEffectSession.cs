@@ -88,7 +88,12 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             for (int i = 0; i < orphaned.Count; i++)
-                TileExecutor.CompleteProjectileImpact(this, orphaned[i]);
+                TileExecutor.CompleteProjectileImpact(
+                    this,
+                    orphaned[i],
+                    arrivedAtDestination: false,
+                    dropTile: default,
+                    out _);
         }
 
         private static bool HasActiveProjectile(int projType, int operationId, int mutationId)

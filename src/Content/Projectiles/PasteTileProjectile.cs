@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -11,13 +12,18 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
 {
     internal sealed class PasteTileProjectile : ModProjectile
     {
-        private bool _impactCompleted;
+        private bool _impactHandled;
+        private bool _arrivedAtDestination;
+        private int _heldItemType;
+        private int _heldItemStack;
 
         public override string Texture => "Terraria/Images/Projectile_1";
 
-        public void SetVisualItem(int itemType)
+        public void AttachHeldItem(int itemType, int stack)
         {
             Projectile.damage = itemType;
+            _heldItemType = itemType;
+            _heldItemStack = Math.Max(1, stack);
             Projectile.netUpdate = true;
         }
 
@@ -36,7 +42,10 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
 
         public override void OnSpawn(IEntitySource source)
         {
-            _impactCompleted = false;
+            _impactHandled = false;
+            _arrivedAtDestination = false;
+            _heldItemType = 0;
+            _heldItemStack = 0;
         }
 
         public override void AI()
@@ -59,6 +68,7 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
 
             if (distance <= 6f)
             {
+                _arrivedAtDestination = true;
                 TryCompleteImpact();
                 Projectile.Kill();
             }
@@ -83,18 +93,26 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
 
         private void TryCompleteImpact()
         {
-            if (Main.netMode == NetmodeID.MultiplayerClient || _impactCompleted)
+            if (Main.netMode == NetmodeID.MultiplayerClient || _impactHandled)
                 return;
 
             int operationId = (int)Projectile.ai[1];
             int mutationId = (int)Projectile.ai[2];
-            if (TileExecutorSystem.TryCompleteProjectileImpact(operationId, mutationId))
-                _impactCompleted = true;
+            Point dropTile = new((int)(Projectile.Center.X / 16f), (int)(Projectile.Center.Y / 16f));
+            if (TileExecutorSystem.TryCompleteProjectileImpact(
+                    operationId,
+                    mutationId,
+                    _arrivedAtDestination,
+                    dropTile,
+                    out _))
+            {
+                _impactHandled = true;
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
         {
-            int itemType = Projectile.damage;
+            int itemType = _heldItemType > 0 ? _heldItemType : Projectile.damage;
             if (itemType <= 0 || itemType >= ItemLoader.ItemCount)
                 return true;
 

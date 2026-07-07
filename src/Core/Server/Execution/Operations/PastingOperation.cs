@@ -51,6 +51,7 @@ namespace TheArchitectsBlueprintMod.Core
         internal int _currentLayerIndex;
         private readonly PasteTileLookup Lookup;
         private readonly List<Inventory> _inventories = [];
+        private readonly InventoryLookup _inventoryLookup = new();
 
         internal readonly List<Queue<ClearingTask>> clearTasks = [];
         internal readonly List<Queue<ClearingTask>> cutTasks = [];
@@ -218,12 +219,11 @@ namespace TheArchitectsBlueprintMod.Core
             // --- Rebuild context right before a step/sweep so slots and player reference match current world state.
 
             RefreshInventories();
+            _inventoryLookup.Refresh(_inventories);
 
-            bool useInventory = _policy.PlacePhase.Strategy.RequireItems || Projection.Inventories.Count > 0;
             Context = new PasteContext(
                 playerIndex: Projection.Owner,
-                items: useInventory ? InventoryManager.GetContentsFromInventories(_inventories) : null,
-                inventories: useInventory ? _inventories : null,
+                inventoryLookup: _inventoryLookup,
                 policy: _policy,
                 lookup: Lookup,
                 effectSession: EffectSession);
@@ -257,7 +257,7 @@ namespace TheArchitectsBlueprintMod.Core
                 InitializePlanningState();
 
             // Clear identification ignores inventory; place planning uses <see cref="Context"/>.
-            var identifyContext = new PasteContext(Projection.Owner, null, null, _policy, Lookup, null);
+            var identifyContext = new PasteContext(Projection.Owner, null, _policy, Lookup, null);
             PasteContext planningContext = Context;
 
             // Consume the prep budget by advancing the active plan stage one tile at a time.
