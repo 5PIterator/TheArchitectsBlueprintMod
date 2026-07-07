@@ -12,7 +12,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         Wall,
         Block,
         Frame,
-        Vegetation,
+        Custom,
         Liquid,
         Paint,
         Wiring,
@@ -39,17 +39,17 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>
         /// Classifies tiles for this layer. Use <see cref="PasteTile.GetTileForIdentify"/> with <paramref name="identifySubject"/> (<see cref="PasteSubject.Payload"/> when placing, <see cref="PasteSubject.Target"/> when clearing at destination).
         /// </summary>
-        public abstract IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject);
+        public abstract LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject);
 
         /// <summary>
-        /// Clears the given tiles. Returns the remaining tiles that were not cleared.
+        /// Clears the given batch. Returns the remaining tiles that were not cleared.
         /// </summary>
-        public abstract LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context);
+        public abstract LayerResult Clear(TileBatch batch, in PasteContext context);
 
         /// <summary>
-        /// Places the given tiles. Returns the remaining tiles that were not placed.
+        /// Places the given batch. Returns the remaining tiles that were not placed.
         /// </summary>
-        public abstract LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context);
+        public abstract LayerResult Place(TileBatch batch, in PasteContext context);
 
         /// <summary>
         /// Consumes inventory for the given tile after a successful <see cref="Place"/> step. No-op layers return true.
@@ -89,7 +89,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public virtual bool IsCustom(ushort tileType) => false;
     }
 
-    /// <summary>Marks a <see cref="Layer"/> subclass discovered by <see cref="CustomLayer.DiscoverAttributedLayers"/>.</summary>
+    /// <summary>Marks a custom sub-layer discovered and composed by <see cref="CustomLayer"/>.</summary>
     [AttributeUsage(AttributeTargets.Class, Inherited = false)]
     internal sealed class CustomPasteLayerAttribute : Attribute { }
 }

@@ -3,7 +3,6 @@ using Terraria;
 using Terraria.ID;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.Layers;
-using TheArchitectsBlueprintMod.Core.TileMapping;
 
 namespace TheArchitectsBlueprintMod.Debug;
 
@@ -35,7 +34,7 @@ internal static class PastingInfoLog
             }
             case PasteProgressKind.TaskResult:
             {
-                string contentName = ResolveContentName(in progress);
+                string contentName = progress.ContentMessage ?? LayerLogFormat.FormatContentDisplayName(null);
                 string result = ResolveResult(in progress);
                 Color color = ResolveResultColor(in progress);
                 string layer = string.IsNullOrEmpty(progress.LayerId) ? "-" : progress.LayerId;
@@ -110,39 +109,12 @@ internal static class PastingInfoLog
         return "intent not applied";
     }
 
-    private static string ResolveContentName(in PasteProgress progress)
-    {
-        switch (progress.ContentKind)
-        {
-            case PasteProgressContentKind.Air:
-                return ContentNameResolver.FormatContentDisplayName("Air");
-            case PasteProgressContentKind.Tile:
-                return NormalizeContentName(ContentNameResolver.GetTileName(progress.ContentType));
-            case PasteProgressContentKind.Wall:
-                return NormalizeContentName(ContentNameResolver.GetWallName(progress.ContentType));
-            case PasteProgressContentKind.Liquid:
-                return NormalizeContentName(ContentNameResolver.GetLiquidTypeName(progress.ContentType));
-            case PasteProgressContentKind.Wiring:
-                return progress.ContentDetail ?? "Wire:unknown";
-            case PasteProgressContentKind.Detail:
-                return progress.ContentDetail ?? "Detail:unknown";
-            case PasteProgressContentKind.Paint:
-                return progress.ContentDetail ?? "Paint:unknown";
-            default:
-                return ContentNameResolver.FormatContentDisplayName(null);
-        }
-    }
-
-    private static string NormalizeContentName(string rawName) =>
-        ContentNameResolver.FormatContentDisplayName(rawName);
-
     private static string ResolveResult(in PasteProgress progress)
     {
         return progress.Outcome switch
         {
-            PasteProgressOutcome.Ok => progress.ResolveOkLabel(),
-            PasteProgressOutcome.Retry =>
-                $"Retry: {ExplainFailReason(progress.FailReason, progress.ResultDetail)}",
+            PasteProgressOutcome.Ok => progress.OkLabel ?? progress.ResolveGenericOkLabel(),
+            PasteProgressOutcome.Retry => FormatRetryResult(in progress),
             PasteProgressOutcome.Skipped =>
                 $"Skipped: {ExplainFailReason(progress.FailReason, progress.ResultDetail)}",
             PasteProgressOutcome.Failed =>
@@ -151,9 +123,17 @@ internal static class PastingInfoLog
         };
     }
 
+    private static string FormatRetryResult(in PasteProgress progress)
+    {
+        if (progress.FailReason == LayerFailReason.None && string.IsNullOrWhiteSpace(progress.ResultDetail))
+            return "Retry";
+
+        return $"Retry: {ExplainFailReason(progress.FailReason, progress.ResultDetail)}";
+    }
+
     private static Color ResolveResultColor(in PasteProgress progress)
     {
-        if (progress.Outcome == PasteProgressOutcome.Retry && PasteProgress.IsBatchRetryDetail(progress.ResultDetail))
+        if (progress.Outcome == PasteProgressOutcome.Retry && PasteProgress.HasBatchProgressSuffix(progress.ContentMessage))
             return Color.MediumPurple;
 
         if (progress.IsTerminalOutcome())

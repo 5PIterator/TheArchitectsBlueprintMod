@@ -43,8 +43,7 @@ namespace TheArchitectsBlueprintMod.UI.Preview
                 origin,
                 1f,
                 PreviewTint,
-                IncludeCell,
-                proj.Area.Location);
+                IncludeCell);
         }
 
         /// <summary>Bakes a square preview texture for UI thumbnails. Caller must Dispose the result.</summary>

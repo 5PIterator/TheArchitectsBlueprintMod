@@ -12,11 +12,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private DetailLayer() : base("Detail", LayerType.Detail) { }
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
         {
             Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             bool hasDetail = subjectTile.IsActuated || subjectTile.BlockType != BlockType.Solid;
-            return hasDetail ? [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)] : [];
+            if (!hasDetail)
+                return LayerResult.IdentifyNone();
+
+            return LayerResult.Identified(
+                TileBatch.FromCells([new Blueprint.BlueprintCell(tile.Relative, tile.World, true)]),
+                LayerLogFormat.FormatDetailState(subjectTile));
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
@@ -43,12 +48,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
 
-        public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Clear(TileBatch batch, in PasteContext context)
         {
-            if (tiles.Count == 0) return LayerResult.Ok();
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
+            if (tiles.Count == 0)
+                return LayerResult.Ok();
+
             var tile = tiles[0];
             int wx = tile.World.X, wy = tile.World.Y;
             Tile live = Main.tile[wx, wy];
+            string message = LayerLogFormat.FormatDetailState(live);
 
             bool changed = false;
             if (live.IsActuated)
@@ -78,17 +87,22 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 changed = true;
             }
 
-            return changed ? LayerResult.Ok(tile.World) : LayerResult.Ok();
+            return changed ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel) : LayerResult.Ok();
         }
 
-        public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Place(TileBatch batch, in PasteContext context)
         {
-            if (tiles.Count == 0) return LayerResult.Ok();
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
+            if (tiles.Count == 0)
+                return LayerResult.Ok();
+
             var tile = tiles[0];
             var src = tile.PayloadCell.Detail;
             int wx = tile.World.X, wy = tile.World.Y;
             if (!Main.tile[wx, wy].HasTile)
                 return LayerResult.Ok();
+
+            string message = LayerLogFormat.FormatDetailState(in src);
 
             Tile live = Main.tile[wx, wy];
             bool changed = false;
@@ -130,7 +144,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 changed = true;
             }
 
-            return changed ? LayerResult.Ok(tile.World) : LayerResult.Ok();
+            return changed ? LayerResult.Ok(message, LayerLogFormat.DetailedLabel) : LayerResult.Ok();
         }
     }
 }

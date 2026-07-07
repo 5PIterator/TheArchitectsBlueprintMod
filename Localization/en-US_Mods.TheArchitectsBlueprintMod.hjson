@@ -184,6 +184,17 @@ Configs: {
 		Tooltip: These options apply only on your machine. They are not sent to the server and do not change host paste rules or map compilation.
 		Headers.Logging: Logging
 
+		CategoryFilter: {
+			Label: Log category filter
+			Tooltip:
+				'''
+				Limit which log categories are written to the mod log and chat.
+				Use TileExecutor only to hide Paste and other categories while debugging tile mutations.
+				'''
+			All.Label: All categories
+			TileExecutorOnly.Label: TileExecutor only
+		}
+
 		PrintDebugLogsToChat: {
 			Label: Print debug logs to chat
 			Tooltip:
@@ -218,9 +229,9 @@ Configs: {
 			Debug: Debug Header
 		}
 
-		Clear: {
-			Label: Clear
-			Tooltip: Clear-phase strategy preference.
+		Plan: {
+			Label: Plan
+			Tooltip: Plan-phase strategy preference.
 
 			Strategy: {
 				Label: Strategy
@@ -230,6 +241,26 @@ Configs: {
 					Transparent — clear only where payload overlaps the destination.
 					Negative — clear only where payload does not overlap.
 					'''
+			}
+		}
+
+		Clear: {
+			Label: Clear
+			Tooltip: Clear-phase item handling while destroying tiles.
+
+			Strategy: {
+				Label: Strategy
+				Tooltip: ""
+
+				ItemDrop: {
+					Label: Item drop
+					Tooltip:
+						'''
+						Void — destroy tiles without dropping items.
+						Drop — spawn normal tile drops in the world.
+						Store — route drops into adjacent inventories, dropping overflow when full or when no inventory is linked.
+						'''
+				}
 			}
 		}
 
@@ -504,54 +535,83 @@ Configs: {
 			DisplayName: Layer policy
 			Tooltip: Enable or disable task identification per layer. Disabled layers queue no clear or place tasks.
 
-			Wall: {
-				Label: Wall
-				Tooltip: Wall placement and removal.
+			MainLayers: {
+				DisplayName: Main Layers
+				Tooltip: Pipeline layers that run directly in the paste queue.
+
+				Wall: {
+					Label: Wall
+					Tooltip: Wall placement and removal.
+				}
+
+				Block: {
+					Label: Block
+					Tooltip: Standard placed tiles that are not falling, anchored, tree, or unknown tiles.
+				}
+
+				Falling: {
+					Label: Falling Block
+					Tooltip: Falling tiles such as sand, silt, slush, and similar blocks.
+				}
+
+				Frame: {
+					Label: Frame
+					Tooltip: Tiles that require nearby support such as anchors, walls, or mapped base tiles.
+				}
+
+				Custom: {
+					Label: Custom
+					Tooltip: Master switch for attributed custom handlers. Individual handler toggles are in Custom Layers.
+				}
+
+				Paint: {
+					Label: Paint
+					Tooltip: Tile and wall paint state.
+				}
+
+				Wiring: {
+					Label: Wiring
+					Tooltip: Wires and actuators.
+				}
+
+				Detail: {
+					Label: Detail
+					Tooltip: Slopes, half-blocks, and actuation state.
+				}
+
+				Fluid: {
+					Label: Fluid
+					Tooltip: Water, lava, honey, and shimmer.
+				}
+
+				Unknown: {
+					Label: Unknown
+					Tooltip: Unknown tile ids, usually from missing or unloaded content.
+				}
+
+				Label: Main Layers
 			}
 
-			Block: {
-				Label: Block
-				Tooltip: Standard placed tiles that are not falling, anchored, tree, or unknown tiles.
-			}
+			CustomLayers: {
+				DisplayName: Custom Layers
+				Tooltip: Enable or disable identification for individual attributed custom handlers.
 
-			FallBlock: {
-				Label: Falling Block
-				Tooltip: Falling tiles such as sand, silt, slush, and similar blocks.
-			}
+				Plant: {
+					Label: Plant
+					Tooltip: Surface plants and regrowth tiles (non-grass).
+				}
 
-			Object: {
-				Label: Object
-				Tooltip: Tiles that require nearby support such as anchors, walls, or mapped base tiles.
-			}
+				Vine: {
+					Label: Vine
+					Tooltip: Hanging and reverse vine columns.
+				}
 
-			Tree: {
-				Label: Tree
-				Tooltip: Trees and similar custom tile families handled by the tree layer.
-			}
+				Tree: {
+					Label: Tree
+					Tooltip: Trees, gem trees, and cactus.
+				}
 
-			Paint: {
-				Label: Paint
-				Tooltip: Tile and wall paint state.
-			}
-
-			Wiring: {
-				Label: Wiring
-				Tooltip: Wires and actuators.
-			}
-
-			Detail: {
-				Label: Detail
-				Tooltip: Slopes, half-blocks, and actuation state.
-			}
-
-			Fluid: {
-				Label: Fluid
-				Tooltip: Water, lava, honey, and shimmer.
-			}
-
-			Unknown: {
-				Label: Unknown
-				Tooltip: Unknown tile ids, usually from missing or unloaded content.
+				Label: Custom Layers
 			}
 
 			Label: Layer policy
@@ -631,19 +691,19 @@ Configs: {
 			Tooltip: ""
 		}
 
-		FallBlock: {
-			Label: Fall Block
+		Falling: {
+			Label: Falling
 			Tooltip: ""
 		}
 
-		Object: {
-			Label: Object
+		Frame: {
+			Label: Frame
 			Tooltip: ""
 		}
 
-		Tree: {
-			Label: Tree
-			Tooltip: ""
+		Custom: {
+			Label: Custom
+			Tooltip: Master switch for attributed custom handlers. Individual handler toggles are in Custom Layers.
 		}
 
 		Paint: {
@@ -675,9 +735,37 @@ Configs: {
 			Label: Unknown
 			Tooltip: ""
 		}
+	}
 
-		Vegetation: {
-			Label: Vegetation
+	LayerPolicyConfig: {
+		Tooltip: ""
+
+		MainLayers: {
+			Label: Main Layers
+			Tooltip: ""
+		}
+
+		CustomLayers: {
+			Label: Custom Layers
+			Tooltip: ""
+		}
+	}
+
+	CustomLayerPolicySettings: {
+		Tooltip: ""
+
+		Plant: {
+			Label: Plant
+			Tooltip: ""
+		}
+
+		Vine: {
+			Label: Vine
+			Tooltip: ""
+		}
+
+		Tree: {
+			Label: Tree
 			Tooltip: ""
 		}
 	}
@@ -701,7 +789,7 @@ Configs: {
 		}
 	}
 
-	PlacePhaseStrategy: {
+	PlacementStyle: {
 		Tooltip: ""
 
 		Place: {
@@ -711,6 +799,62 @@ Configs: {
 
 		Replace: {
 			Label: Replace
+			Tooltip: ""
+		}
+	}
+
+	PlanPhaseStrategies: {
+		Style: {
+			Label: Style
+			Tooltip: ""
+		}
+
+		Tooltip: ""
+	}
+
+	ClearPhaseStrategies: {
+		ItemDrop: {
+			Label: Item drop
+			Tooltip: ""
+		}
+
+		Tooltip: ""
+	}
+
+	PlacePhaseStrategies: {
+		Tooltip: ""
+
+		RequireItems: {
+			Label: Require Items
+			Tooltip: ""
+		}
+
+		RetryOnMissingItems: {
+			Label: Retry On Missing Items
+			Tooltip: ""
+		}
+
+		RetryOnInvalidPlacement: {
+			Label: Retry On Invalid Placement
+			Tooltip: ""
+		}
+
+		PlacementStyle: {
+			Label: Placement Style
+			Tooltip: ""
+		}
+
+		Style: {
+			Label: Style
+			Tooltip: ""
+		}
+	}
+
+	SweepPhaseStrategies: {
+		Tooltip: ""
+
+		Style: {
+			Label: Style
 			Tooltip: ""
 		}
 	}
@@ -847,23 +991,8 @@ Configs: {
 	PlacePhaseConfig: {
 		Tooltip: ""
 
-		Strategy: {
-			Label: Strategy
-			Tooltip: ""
-		}
-
-		RequireItems: {
-			Label: Require Items
-			Tooltip: ""
-		}
-
-		RetryOnMissingItems: {
-			Label: Retry On Missing Items
-			Tooltip: ""
-		}
-
-		RetryOnInvalidPlacement: {
-			Label: Retry On Invalid Placement
+		Strategies: {
+			Label: Strategies
 			Tooltip: ""
 		}
 
@@ -891,15 +1020,20 @@ Configs: {
 			Label: Force source clear during paste
 			Tooltip: ""
 		}
-	}
 
-	ClearPhaseConfig: {
-		Tooltip: ""
+		TickSpeed: {
+			Label: Tick Speed
+			Tooltip: ""
+		}
 
 		Strategy: {
 			Label: Strategy
 			Tooltip: ""
 		}
+	}
+
+	ClearPhaseConfig: {
+		Tooltip: ""
 
 		AllowClientPreferences: {
 			Label: Client Control Enabled
@@ -918,6 +1052,16 @@ Configs: {
 
 		TickDelayMs: {
 			Label: Tick Delay Ms
+			Tooltip: ""
+		}
+
+		TickSpeed: {
+			Label: Tick Speed
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
 			Tooltip: ""
 		}
 	}
@@ -925,8 +1069,8 @@ Configs: {
 	SweepPhaseConfig: {
 		Tooltip: ""
 
-		Strategy: {
-			Label: Strategy
+		Strategies: {
+			Label: Strategies
 			Tooltip: ""
 		}
 
@@ -947,6 +1091,16 @@ Configs: {
 
 		TickDelayMs: {
 			Label: Tick Delay Ms
+			Tooltip: ""
+		}
+
+		TickSpeed: {
+			Label: Tick Speed
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
 			Tooltip: ""
 		}
 	}
@@ -965,16 +1119,25 @@ Configs: {
 		}
 	}
 
-	ClearPastePreference: {
+	PlanPasteStrategies: {
 		Tooltip: ""
 
-		Strategy: {
-			Label: Strategy
+		Style: {
+			Label: Style
 			Tooltip: ""
 		}
 	}
 
-	PlacePastePreference: {
+	ClearPasteStrategies: {
+		Tooltip: ""
+
+		ItemDrop: {
+			Label: Item drop
+			Tooltip: ""
+		}
+	}
+
+	PlacePasteStrategies: {
 		Tooltip: ""
 
 		RetryOnMissingItems: {
@@ -988,8 +1151,64 @@ Configs: {
 		}
 	}
 
+	SweepPasteStrategies: {
+		Tooltip: ""
+
+		Style: {
+			Label: Style
+			Tooltip: ""
+		}
+	}
+
+	PlanPastePreference: {
+		Tooltip: ""
+
+		Strategies: {
+			Label: Strategies
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	ClearPastePreference: {
+		Tooltip: ""
+
+		Strategies: {
+			Label: Strategies
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	PlacePastePreference: {
+		Tooltip: ""
+
+		Strategies: {
+			Label: Strategies
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
 	SweepPastePreference: {
 		Tooltip: ""
+
+		Strategies: {
+			Label: Strategies
+			Tooltip: ""
+		}
 
 		Strategy: {
 			Label: Strategy
@@ -1005,4 +1224,148 @@ Configs: {
 			Tooltip: ""
 		}
 	}
+
+	ClearStyle: {
+		Tooltip: ""
+
+		All: {
+			Label: All
+			Tooltip: ""
+		}
+
+		Transparent: {
+			Label: Transparent
+			Tooltip: ""
+		}
+
+		Negative: {
+			Label: Negative
+			Tooltip: ""
+		}
+	}
+
+	ClearItemDropStyle: {
+		Tooltip: ""
+
+		Void: {
+			Label: Void
+			Tooltip: ""
+		}
+
+		Drop: {
+			Label: Drop
+			Tooltip: ""
+		}
+
+		Store: {
+			Label: Store
+			Tooltip: ""
+		}
+	}
+
+	SweepStyle: {
+		Tooltip: ""
+
+		Detail: {
+			Label: Detail
+			Tooltip: ""
+		}
+
+		Cheat: {
+			Label: Cheat
+			Tooltip: ""
+		}
+	}
+
+	PlanPhaseConfig: {
+		Tooltip: ""
+
+		AllowClientPreferences: {
+			Label: Client Control Enabled
+			Tooltip: ""
+		}
+
+		Active: {
+			Label: Active
+			Tooltip: ""
+		}
+
+		TickSize: {
+			Label: Tick Size
+			Tooltip: ""
+		}
+
+		TickSpeed: {
+			Label: Tick Speed
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	CutPhaseConfig: {
+		Tooltip: ""
+
+		Active: {
+			Label: Active
+			Tooltip: ""
+		}
+
+		TickSize: {
+			Label: Tick Size
+			Tooltip: ""
+		}
+
+		TickSpeed: {
+			Label: Tick Speed
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	CutPhaseStrategies: {
+		Tooltip: ""
+
+		EnableCutPasteProcess: {
+			Label: Enable Cut Paste Process
+			Tooltip: ""
+		}
+	}
+
+	PlaceStyle: {
+		Tooltip: ""
+
+		Place: {
+			Label: Place
+			Tooltip: ""
+		}
+
+		Replace: {
+			Label: Replace
+			Tooltip: ""
+		}
+	}
+
+	LogCategoryFilter: {
+		Tooltip: ""
+
+		All: {
+			Label: All
+			Tooltip: ""
+		}
+
+		TileExecutorOnly: {
+			Label: Tile Executor Only
+			Tooltip: ""
+		}
+	}
 }
+
+Projectiles.PasteTileProjectile.DisplayName: Paste Tile Projectile

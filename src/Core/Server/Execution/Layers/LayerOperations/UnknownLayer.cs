@@ -11,7 +11,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private UnknownLayer() : base("Unknown", LayerType.Block) { }
 
-        public static bool IsUnknownTileType(ushort tileType) => tileType >= TileLoader.TileCount;
+        public static bool IsUnknownTileType(ushort tileType) => !TileLoaderSupport.IsKnownTileType(tileType);
 
         public override bool Match(in PasteTile tile)
         {
@@ -21,10 +21,15 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return intent.HasTile == tile.Target.HasTile && (!intent.HasTile || intent.TileType == tile.Target.TileType);
         }
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
         {
             Tile view = PasteTile.GetTileForIdentify(in tile, identifySubject);
-            return view.HasTile && IsUnknownTileType(view.TileType) ? [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)] : [];
+            if (!view.HasTile || !IsUnknownTileType(view.TileType))
+                return LayerResult.IdentifyNone();
+
+            return LayerResult.Identified(
+                TileBatch.FromCells([new Blueprint.BlueprintCell(tile.Relative, tile.World, true)]),
+                LayerLogFormat.FormatTile(view));
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
@@ -40,10 +45,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
 
-        public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context) =>
+        public override LayerResult Clear(TileBatch batch, in PasteContext context) =>
             LayerResult.Ok();
 
-        public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context) =>
+        public override LayerResult Place(TileBatch batch, in PasteContext context) =>
             LayerResult.Ok();
     }
 }

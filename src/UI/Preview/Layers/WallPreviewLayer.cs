@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.Drawing;
+using Terraria.ID;
 using TheArchitectsBlueprintMod.Core;
 
 namespace TheArchitectsBlueprintMod.UI.Preview.Layers
@@ -18,34 +19,36 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
 
         public override void Draw(in PreviewDrawContext ctx, PayloadCell cell, int relX, int relY)
         {
-            if (cell.Wall.Type == 0 || cell.Paint.WallInvisible)
+            Tile tile = cell.ToTile();
+            if (tile.WallType == WallID.None)
                 return;
 
-            ushort wallType = cell.Wall.Type;
-            Main.instance.LoadWall(wallType);
-            Texture2D textureWall = GetWallDrawTexture(wallType, cell.Paint.WallColor);
-            int wallFrame = Main.wallFrame[wallType] * 180;
-            var source = new Rectangle(cell.Wall.FrameX, cell.Wall.FrameY + wallFrame, 32, 32);
-            Vector2 pos = ctx.Position + new Vector2(
-                relX * PreviewDrawContext.TilePixelSize - 8,
-                relY * PreviewDrawContext.TilePixelSize - 8);
-            ctx.SpriteBatch.Draw(textureWall, pos * ctx.Scale, source, ctx.Tint, 0f, Vector2.Zero, ctx.Scale, SpriteEffects.None, 0f);
-        }
+            if ((cell.Paint.WallInvisible || tile.WallType == WallID.EchoWall) && !Main.ShouldShowInvisibleWalls())
+                return;
 
-        private static Texture2D GetWallDrawTexture(ushort wallType, byte wallColor)
-        {
+            ushort wallType = tile.WallType;
+            Main.instance.LoadWall(wallType);
+
+            // get the wall draw texture
+
+            Texture2D textureWall;
             if (_paintSystemFieldInfo is null)
             {
                 _paintSystemFieldInfo = typeof(WallDrawing).GetField("_paintSystem", BindingFlags.Instance | BindingFlags.NonPublic);
                 _paintSystem = (TilePaintSystemV2)_paintSystemFieldInfo.GetValue(Main.instance.WallsRenderer)!;
             }
 
-            Texture2D result = TextureAssets.Wall[wallType].Value;
-            Texture2D? painted = _paintSystem!.TryGetWallAndRequestIfNotReady(wallType, wallColor);
+            textureWall = TextureAssets.Wall[wallType].Value;
+            Texture2D? painted = _paintSystem!.TryGetWallAndRequestIfNotReady(wallType, tile.WallColor);
             if (painted is not null)
-                result = painted;
+                textureWall = painted;
 
-            return result;
+            int wallFrame = Main.wallFrame[wallType] * 180;
+            var source = new Rectangle(tile.WallFrameX, tile.WallFrameY + wallFrame, 32, 32);
+            Vector2 pos = ctx.Position + new Vector2(
+                relX * PreviewDrawContext.TilePixelSize - 8,
+                relY * PreviewDrawContext.TilePixelSize - 8);
+            ctx.SpriteBatch.Draw(textureWall, pos * ctx.Scale, source, ctx.Tint, 0f, Vector2.Zero, ctx.Scale, SpriteEffects.None, 0f);
         }
     }
 }

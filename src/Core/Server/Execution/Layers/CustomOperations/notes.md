@@ -1,0 +1,4 @@
+- Investigate WorldGen functions to place vegetation.
+- Implement plant layer:
+- Implement vine layer:
+- Implement tree layer:

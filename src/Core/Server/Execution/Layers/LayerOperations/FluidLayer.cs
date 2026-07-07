@@ -15,12 +15,12 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private FluidLayer() : base("Fluid", LayerType.Liquid) { }
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
         {
             var relatives = new List<Point>();
             CollectFluidPool(tile.Relative, identifySubject, in lookup, relatives);
             if (relatives.Count == 0)
-                return [];
+                return LayerResult.IdentifyNone();
 
             var cells = new List<Blueprint.BlueprintCell>(relatives.Count);
             for (int i = 0; i < relatives.Count; i++)
@@ -30,7 +30,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 cells.Add(new Blueprint.BlueprintCell(rel, member.World, true));
             }
 
-            return cells;
+            Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
+            return LayerResult.Identified(TileBatch.FromCells(cells), LayerLogFormat.FormatLiquid(subjectTile));
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
@@ -54,10 +55,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
 
-        public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Clear(TileBatch batch, in PasteContext context)
         {
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
             if (tiles.Count == 0)
                 return LayerResult.Ok();
+
+            string message = LayerLogFormat.FormatLiquid(tiles[0].Target);
+            bool changed = false;
 
             for (int i = 0; i < tiles.Count; i++)
             {
@@ -66,6 +71,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     continue;
 
                 SuppressTileDrop.EmptyLiquid(x, y);
+                changed = true;
 
                 if (Main.netMode == NetmodeID.Server)
                     NetMessage.SendData(MessageID.LiquidUpdate, -1, -1, null, x, y);
@@ -75,24 +81,28 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             {
                 int x = tiles[i].World.X, y = tiles[i].World.Y;
                 if (Main.tile[x, y].LiquidAmount != 0)
-                    return LayerResult.Fail(tiles[i].World, LayerFailReason.InvalidPlacement);
+                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            return LayerResult.Ok(tiles[0].World);
+            return changed ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel) : LayerResult.Ok();
         }
 
-        public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Place(TileBatch batch, in PasteContext context)
         {
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
             if (tiles.Count == 0)
                 return LayerResult.Ok();
 
+            string okLabel = LayerLogFormat.PlacedLabel(in context);
+
             for (int i = 0; i < tiles.Count; i++)
             {
                 PasteTile tile = tiles[i];
                 int x = tile.World.X, y = tile.World.Y;
                 var src = tile.PayloadCell.Liquid;
+                string message = LayerLogFormat.FormatLiquid(tile.PayloadTile);
                 if (!TryWriteLiquid(x, y, src.Type, src.Amount))
-                    return LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
+                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
             for (int i = 0; i < tiles.Count; i++)
@@ -100,15 +110,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 PasteTile tile = tiles[i];
                 int x = tile.World.X, y = tile.World.Y;
                 var src = tile.PayloadCell.Liquid;
+                string message = LayerLogFormat.FormatLiquid(tile.PayloadTile);
                 Tile worldTile = Main.tile[x, y];
                 if (worldTile.LiquidAmount != src.Amount || worldTile.LiquidType != src.Type)
-                    return LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
+                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
 
                 if (Main.netMode == NetmodeID.Server)
                     NetMessage.SendData(MessageID.LiquidUpdate, -1, -1, null, x, y);
             }
 
-            return LayerResult.Ok(tiles[0].World);
+            return LayerResult.Ok(LayerLogFormat.FormatLiquid(tiles[0].PayloadTile), okLabel);
         }
 
         /// <summary>

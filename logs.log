@@ -1,136 +1,174 @@
-[15:42:03.703] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3191,318) 1x2
-[Paste] START | area=(3191,318) 1x2 | sourceClear=False | srcTiles=2 tgtTiles=2 | sweep=Cheat clear=All retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
+[16:32:42.622] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3186,336) 7x7
+[Paste] START | area=(3186,336) 7x7 | sourceClear=False | srcTiles=49 tgtTiles=49 | sweep=Cheat planClear=All clearItemDrop=Store retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
 [Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
-[Projection] Projection.Lock: id=0 owner=0
-[Paste] Prep: PlaceSource — queuing place tasks from source tiles
-[Paste] Prep: begin prepTileBudget=50 sourceTiles=2 lookupTiles=2 targetTiles=2 clearStrategy=All sourceAreaClear=False
-[Paste] Identify place layer=Wall rel=(0,0) tiles=1 placementValid=True hasItems=False
-[Paste] Identify place layer=Vegetation rel=(0,0) tiles=1 placementValid=True hasItems=True
-[Paste] Queued place task layer=Wall tiles=1 queue=1
-[Paste] Queued place task layer=Vegetation tiles=1 queue=1
-[Paste] Identify place layer=Wall rel=(0,1) tiles=1 placementValid=True hasItems=False
-[Paste] Identify place layer=Block rel=(0,1) tiles=1 placementValid=True hasItems=True
-[Paste] Queued place task layer=Wall tiles=1 queue=2
-[Paste] Queued place task layer=Block tiles=1 queue=1
-[Paste] Prep: ClearTarget — queuing clears at destination
-[Paste] Prep: stage PlaceSource -> ClearTarget
-[Paste] Prep: no source cut — finalizing queues
+TheArchitectsBlueprintMod: [16:32:42.622] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3186,336) 7x7
+[Paste] START | area=(3186,336) 7x7 | sourceClear=False | srcTiles=49 tgtTiles=49 | sweep=Cheat planClear=All clearItemDrop=Store retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
+[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
 [Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
 [Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
-[Paste] Prep: queues ready | placeBatches=4 clearBatches=0
-[Paste] Prep: complete placeBatches=4 clearBatches=0
-[Paste] Stage: EXEC CLEAR
-TheArchitectsBlueprintMod: [15:42:03.703] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3191,318) 1x2
-[Paste] START | area=(3191,318) 1x2 | sourceClear=False | srcTiles=2 tgtTiles=2 | sweep=Cheat clear=All retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
-[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
-[Projection] Projection.Lock: id=0 owner=0
-[Paste] Prep: PlaceSource — queuing place tasks from source tiles
-[Paste] Prep: begin prepTileBudget=50 sourceTiles=2 lookupTiles=2 targetTiles=2 clearStrategy=All sourceAreaClear=False
-[Paste] Identify place layer=Wall rel=(0,0) tiles=1 placementValid=True hasItems=False
-[Paste] Identify place layer=Vegetation rel=(0,0) tiles=1 placementValid=True hasItems=True
-[Paste] Queued place task layer=Wall tiles=1 queue=1
-[Paste] Queued place task layer=Vegetation tiles=1 queue=1
-[Paste] Identify place layer=Wall rel=(0,1) tiles=1 placementValid=True hasItems=False
-[Paste] Identify place layer=Block rel=(0,1) tiles=1 placementValid=True hasItems=True
-[Paste] Queued place task layer=Wall tiles=1 queue=2
-[Paste] Queued place task layer=Block tiles=1 queue=1
-[Paste] Prep: ClearTarget — queuing clears at destination
-[Paste] Prep: stage PlaceSource -> ClearTarget
-[Paste] Prep: no source cut — finalizing queues
 [Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
 [Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
-[Paste] Prep: queues ready | placeBatches=4 clearBatches=0
-[Paste] Prep: complete placeBatches=4 clearBatches=0
-[Paste] Stage: EXEC CLEAR
-[15:42:03.704] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Plan] START ---
-[Plan] [Place] [Wall] [3191, 318] Queued batch (1 tiles)
-[Plan] [Place] [Vegetation] [3191, 318] Queued batch (1 tiles)
-[Plan] [Place] [Wall] [3191, 319] Queued batch (1 tiles)
-[Plan] [Place] [Block] [3191, 319] Queued batch (1 tiles)
---- [Plan] END (placeBatches=4, clearBatches=0) ---
---- [Clear] START ---
-TheArchitectsBlueprintMod: [15:42:03.704] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Plan] START ---
-[Plan] [Place] [Wall] [3191, 318] Queued batch (1 tiles)
-[Plan] [Place] [Vegetation] [3191, 318] Queued batch (1 tiles)
-[Plan] [Place] [Wall] [3191, 319] Queued batch (1 tiles)
-[Plan] [Place] [Block] [3191, 319] Queued batch (1 tiles)
---- [Plan] END (placeBatches=4, clearBatches=0) ---
---- [Clear] START ---
-[15:42:03.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC CUT
-TheArchitectsBlueprintMod: [15:42:03.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC CUT
-[15:42:03.801] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=0, remaining=0) ---
---- [Cut] START ---
-TheArchitectsBlueprintMod: [15:42:03.801] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=0, remaining=0) ---
---- [Cut] START ---
-[15:42:03.916] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC PLACE
-TheArchitectsBlueprintMod: [15:42:03.916] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC PLACE
-[15:42:03.917] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Cut] END (processed=0, remaining=0) ---
---- [Place] START (tasks=4) ---
-TheArchitectsBlueprintMod: [15:42:03.917] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Cut] END (processed=0, remaining=0) ---
---- [Place] START (tasks=4) ---
-[15:42:04.033] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Wall (idx=0) tasks=2
-[Paste] Place begin layer=Wall batch=1 rel=(0,0) world=(3191,318) payload[hasTile=True type=61 frame=(144,0)] source[hasTile=True type=61] target[hasTile=False type=0]
-[Paste] Place execute layer=Wall world=(3191,318) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:42:04.033] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Wall (idx=0) tasks=2
-[Paste] Place begin layer=Wall batch=1 rel=(0,0) world=(3191,318) payload[hasTile=True type=61 frame=(144,0)] source[hasTile=True type=61] target[hasTile=False type=0]
-[Paste] Place execute layer=Wall world=(3191,318) success=True failReason=None remaining=0
-[15:42:04.034] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Wall] [1/1] [1/4] [3191, 318] Terraria:MudUnsafe - Placed
-TheArchitectsBlueprintMod: [15:42:04.034] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Wall] [1/1] [1/4] [3191, 318] Terraria:MudUnsafe - Placed
-[15:42:04.134] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Wall (idx=0) tasks=1
-[Paste] Place begin layer=Wall batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=False type=0]
-[Paste] Place execute layer=Wall world=(3191,319) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:42:04.134] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Wall (idx=0) tasks=1
-[Paste] Place begin layer=Wall batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=False type=0]
-[Paste] Place execute layer=Wall world=(3191,319) success=True failReason=None remaining=0
-[15:42:04.134] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Wall] [1/1] [2/4] [3191, 319] Terraria:MudUnsafe - Placed
-TheArchitectsBlueprintMod: [15:42:04.134] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Wall] [1/1] [2/4] [3191, 319] Terraria:MudUnsafe - Placed
-[15:42:04.250] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
-[Paste] Place begin layer=Block batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)]
-[Paste] Interaction lookup: JungleGrass style=0 => first=? mode=conversion
-[Paste] Place [PlaceBaseTile] (3191,319) JungleGrass style=0 mode=conversion base=Mud => OK
-[Paste] Place execute layer=Block world=(3191,319) success=True failReason=None remaining=1
-[Paste] Requeue place task world=(3191,319) remainingTiles=1
-TheArchitectsBlueprintMod: [15:42:04.250] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
-[Paste] Place begin layer=Block batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)]
-[Paste] Interaction lookup: JungleGrass style=0 => first=? mode=conversion
-[Paste] Place [PlaceBaseTile] (3191,319) JungleGrass style=0 mode=conversion base=Mud => OK
-[Paste] Place execute layer=Block world=(3191,319) success=True failReason=None remaining=1
-[Paste] Requeue place task world=(3191,319) remainingTiles=1
-[15:42:04.251] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Block] [1/1] [3/4] [3191, 319] Terraria:JungleGrass - Retry: Batch (1/2)
-TheArchitectsBlueprintMod: [15:42:04.251] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Block] [1/1] [3/4] [3191, 319] Terraria:JungleGrass - Retry: Batch (1/2)
-[15:42:04.350] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
-[Paste] Place begin layer=Block batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=True type=59]
-[Paste] BlockLayer.Place batch=1rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)]
-[Paste] Interaction lookup: JungleGrass style=0 => first=? mode=conversion
-[Paste] Place [PlaceTile] (3191,319) JungleGrass style=0 mode=conversion base=Mud => OK
-[Paste] Place execute layer=Block world=(3191,319) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:42:04.350] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
-[Paste] Place begin layer=Block batch=1 rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)] source[hasTile=True type=60] target[hasTile=True type=59]
-[Paste] BlockLayer.Place batch=1rel=(0,1) world=(3191,319) payload[hasTile=True type=60 frame=(180,54)]
-[Paste] Interaction lookup: JungleGrass style=0 => first=? mode=conversion
-[Paste] Place [PlaceTile] (3191,319) JungleGrass style=0 mode=conversion base=Mud => OK
-[Paste] Place execute layer=Block world=(3191,319) success=True failReason=None remaining=0
-[15:42:04.351] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Block] [1/1] [3/4] [3191, 319] Terraria:JungleGrass - Placed
-TheArchitectsBlueprintMod: [15:42:04.351] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Block] [1/1] [3/4] [3191, 319] Terraria:JungleGrass - Placed
-[15:42:04.467] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Vegetation (idx=4) tasks=1
-[Paste] Place begin layer=Vegetation batch=1 rel=(0,0) world=(3191,318) payload[hasTile=True type=61 frame=(144,0)] source[hasTile=True type=61] target[hasTile=False type=0]
-[Paste] Interaction lookup: JunglePlants style=0 => first=? mode=direct
-[Paste] Place [PlaceTile] (3191,318) JunglePlants style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Vegetation world=(3191,318) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:42:04.467] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Vegetation (idx=4) tasks=1
-[Paste] Place begin layer=Vegetation batch=1 rel=(0,0) world=(3191,318) payload[hasTile=True type=61 frame=(144,0)] source[hasTile=True type=61] target[hasTile=False type=0]
-[Paste] Interaction lookup: JunglePlants style=0 => first=? mode=direct
-[Paste] Place [PlaceTile] (3191,318) JunglePlants style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Vegetation world=(3191,318) success=True failReason=None remaining=0
-[15:42:04.467] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Vegetation] [1/1] [4/4] [3191, 318] Terraria:JunglePlants - Placed
-TheArchitectsBlueprintMod: [15:42:04.467] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Place] [Vegetation] [1/1] [4/4] [3191, 318] Terraria:JunglePlants - Placed
-[15:42:04.567] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC DONE
-[Paste] Paste ended: step returned no more work
-[Projection] Projection.Unlock: id=0 owner=0
-TheArchitectsBlueprintMod: [15:42:04.567] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC DONE
-[Paste] Paste ended: step returned no more work
-[Projection] Projection.Unlock: id=0 owner=0
-[15:42:04.568] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=4, remaining=0) ---
-TheArchitectsBlueprintMod: [15:42:04.568] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=4, remaining=0) ---
+[16:32:42.635] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Plan] END (placeBatches=0, clearBatches=0) ---
+TheArchitectsBlueprintMod: [16:32:42.635] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Plan] END (placeBatches=0, clearBatches=0) ---
+[16:32:42.636] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] Prep: no place tasks queued (retryOnMissingItems=True requireItems=True); layer place phases will be no-ops
+TheArchitectsBlueprintMod: [16:32:42.636] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] Prep: no place tasks queued (retryOnMissingItems=True requireItems=True); layer place phases will be no-ops
+[16:32:42.752] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=0, remaining=0) ---
+TheArchitectsBlueprintMod: [16:32:42.752] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=0, remaining=0) ---
+[16:32:42.852] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Sweep: queued 49 tiles (full footprint)
+TheArchitectsBlueprintMod: [16:32:42.852] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Sweep: queued 49 tiles (full footprint)
+[16:32:42.852] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=0, remaining=0) ---
+--- [Sweep] START (tasks=49) ---
+TheArchitectsBlueprintMod: [16:32:42.852] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=0, remaining=0) ---
+--- [Sweep] START (tasks=49) ---
+[16:32:42.869] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [TileExecutor] Register id=1 Sweep (3186,336) projectile=none
+[TileExecutor] Register id=2 Sweep (3187,336) projectile=none
+[TileExecutor] Register id=3 Sweep (3188,336) projectile=none
+[TileExecutor] Register id=4 Sweep (3189,336) projectile=none
+[TileExecutor] Register id=5 Sweep (3190,336) projectile=none
+[TileExecutor] Register id=6 Sweep (3191,336) projectile=none
+[TileExecutor] Register id=7 Sweep (3192,336) projectile=none
+[TileExecutor] Register id=8 Sweep (3186,337) projectile=none
+[TileExecutor] Register id=9 Sweep (3188,337) projectile=none
+[TileExecutor] Register id=10 Sweep (3190,337) projectile=none
+[TileExecutor] Register id=11 Sweep (3192,337) projectile=none
+[TileExecutor] Register id=12 Sweep (3186,338) projectile=none
+[TileExecutor] Register id=13 Sweep (3187,338) projectile=none
+[TileExecutor] Register id=14 Sweep (3189,338) projectile=none
+[TileExecutor] Register id=15 Sweep (3191,338) projectile=none
+[TileExecutor] Register id=16 Sweep (3192,338) projectile=none
+[TileExecutor] Register id=17 Sweep (3186,339) projectile=none
+[TileExecutor] Register id=18 Sweep (3188,339) projectile=none
+[TileExecutor] Register id=19 Sweep (3189,339) projectile=none
+[TileExecutor] Register id=20 Sweep (3190,339) projectile=none
+[TileExecutor] Register id=21 Sweep (3192,339) projectile=none
+[TileExecutor] Register id=22 Sweep (3186,340) projectile=none
+[TileExecutor] Register id=23 Sweep (3187,340) projectile=none
+[TileExecutor] Register id=24 Sweep (3189,340) projectile=none
+[TileExecutor] Register id=25 Sweep (3191,340) projectile=none
+[TileExecutor] Register id=26 Sweep (3192,340) projectile=none
+[TileExecutor] Register id=27 Sweep (3186,341) projectile=none
+[TileExecutor] Register id=28 Sweep (3188,341) projectile=none
+[TileExecutor] Register id=29 Sweep (3190,341) projectile=none
+[TileExecutor] Register id=30 Sweep (3192,341) projectile=none
+[TileExecutor] Register id=31 Sweep (3186,342) projectile=none
+[TileExecutor] Register id=32 Sweep (3187,342) projectile=none
+[TileExecutor] Register id=33 Sweep (3188,342) projectile=none
+[TileExecutor] Register id=34 Sweep (3189,342) projectile=none
+[TileExecutor] Register id=35 Sweep (3190,342) projectile=none
+[TileExecutor] Register id=36 Sweep (3191,342) projectile=none
+[TileExecutor] Register id=37 Sweep (3192,342) projectile=none
+[TileExecutor] Sweep id=1 (3186,336) ok
+[TileExecutor] Sweep id=2 (3187,336) ok
+[TileExecutor] Sweep id=3 (3188,336) ok
+[TileExecutor] Sweep id=4 (3189,336) ok
+[TileExecutor] Sweep id=5 (3190,336) ok
+[TileExecutor] Sweep id=6 (3191,336) ok
+[TileExecutor] Sweep id=7 (3192,336) ok
+[TileExecutor] Sweep id=8 (3186,337) ok
+[TileExecutor] Sweep id=9 (3188,337) ok
+[TileExecutor] Sweep id=10 (3190,337) ok
+[TileExecutor] Sweep id=11 (3192,337) ok
+[TileExecutor] Sweep id=12 (3186,338) ok
+[TileExecutor] Sweep id=13 (3187,338) ok
+[TileExecutor] Sweep id=14 (3189,338) ok
+[TileExecutor] Sweep id=15 (3191,338) ok
+[TileExecutor] Sweep id=16 (3192,338) ok
+[TileExecutor] Sweep id=17 (3186,339) ok
+[TileExecutor] Sweep id=18 (3188,339) ok
+[TileExecutor] Sweep id=19 (3189,339) ok
+[TileExecutor] Sweep id=20 (3190,339) ok
+[TileExecutor] Sweep id=21 (3192,339) ok
+[TileExecutor] Sweep id=22 (3186,340) ok
+[TileExecutor] Sweep id=23 (3187,340) ok
+[TileExecutor] Sweep id=24 (3189,340) ok
+[TileExecutor] Sweep id=25 (3191,340) ok
+[TileExecutor] Sweep id=26 (3192,340) ok
+[TileExecutor] Sweep id=27 (3186,341) ok
+[TileExecutor] Sweep id=28 (3188,341) ok
+[TileExecutor] Sweep id=29 (3190,341) ok
+[TileExecutor] Sweep id=30 (3192,341) ok
+[TileExecutor] Sweep id=31 (3186,342) ok
+[TileExecutor] Sweep id=32 (3187,342) ok
+[TileExecutor] Sweep id=33 (3188,342) ok
+[TileExecutor] Sweep id=34 (3189,342) ok
+[TileExecutor] Sweep id=35 (3190,342) ok
+[TileExecutor] Sweep id=36 (3191,342) ok
+[TileExecutor] Sweep id=37 (3192,342) ok
+TheArchitectsBlueprintMod: [16:32:42.869] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [TileExecutor] Register id=1 Sweep (3186,336) projectile=none
+[TileExecutor] Register id=2 Sweep (3187,336) projectile=none
+[TileExecutor] Register id=3 Sweep (3188,336) projectile=none
+[TileExecutor] Register id=4 Sweep (3189,336) projectile=none
+[TileExecutor] Register id=5 Sweep (3190,336) projectile=none
+[TileExecutor] Register id=6 Sweep (3191,336) projectile=none
+[TileExecutor] Register id=7 Sweep (3192,336) projectile=none
+[TileExecutor] Register id=8 Sweep (3186,337) projectile=none
+[TileExecutor] Register id=9 Sweep (3188,337) projectile=none
+[TileExecutor] Register id=10 Sweep (3190,337) projectile=none
+[TileExecutor] Register id=11 Sweep (3192,337) projectile=none
+[TileExecutor] Register id=12 Sweep (3186,338) projectile=none
+[TileExecutor] Register id=13 Sweep (3187,338) projectile=none
+[TileExecutor] Register id=14 Sweep (3189,338) projectile=none
+[TileExecutor] Register id=15 Sweep (3191,338) projectile=none
+[TileExecutor] Register id=16 Sweep (3192,338) projectile=none
+[TileExecutor] Register id=17 Sweep (3186,339) projectile=none
+[TileExecutor] Register id=18 Sweep (3188,339) projectile=none
+[TileExecutor] Register id=19 Sweep (3189,339) projectile=none
+[TileExecutor] Register id=20 Sweep (3190,339) projectile=none
+[TileExecutor] Register id=21 Sweep (3192,339) projectile=none
+[TileExecutor] Register id=22 Sweep (3186,340) projectile=none
+[TileExecutor] Register id=23 Sweep (3187,340) projectile=none
+[TileExecutor] Register id=24 Sweep (3189,340) projectile=none
+[TileExecutor] Register id=25 Sweep (3191,340) projectile=none
+[TileExecutor] Register id=26 Sweep (3192,340) projectile=none
+[TileExecutor] Register id=27 Sweep (3186,341) projectile=none
+[TileExecutor] Register id=28 Sweep (3188,341) projectile=none
+[TileExecutor] Register id=29 Sweep (3190,341) projectile=none
+[TileExecutor] Register id=30 Sweep (3192,341) projectile=none
+[TileExecutor] Register id=31 Sweep (3186,342) projectile=none
+[TileExecutor] Register id=32 Sweep (3187,342) projectile=none
+[TileExecutor] Register id=33 Sweep (3188,342) projectile=none
+[TileExecutor] Register id=34 Sweep (3189,342) projectile=none
+[TileExecutor] Register id=35 Sweep (3190,342) projectile=none
+[TileExecutor] Register id=36 Sweep (3191,342) projectile=none
+[TileExecutor] Register id=37 Sweep (3192,342) projectile=none
+[TileExecutor] Sweep id=1 (3186,336) ok
+[TileExecutor] Sweep id=2 (3187,336) ok
+[TileExecutor] Sweep id=3 (3188,336) ok
+[TileExecutor] Sweep id=4 (3189,336) ok
+[TileExecutor] Sweep id=5 (3190,336) ok
+[TileExecutor] Sweep id=6 (3191,336) ok
+[TileExecutor] Sweep id=7 (3192,336) ok
+[TileExecutor] Sweep id=8 (3186,337) ok
+[TileExecutor] Sweep id=9 (3188,337) ok
+[TileExecutor] Sweep id=10 (3190,337) ok
+[TileExecutor] Sweep id=11 (3192,337) ok
+[TileExecutor] Sweep id=12 (3186,338) ok
+[TileExecutor] Sweep id=13 (3187,338) ok
+[TileExecutor] Sweep id=14 (3189,338) ok
+[TileExecutor] Sweep id=15 (3191,338) ok
+[TileExecutor] Sweep id=16 (3192,338) ok
+[TileExecutor] Sweep id=17 (3186,339) ok
+[TileExecutor] Sweep id=18 (3188,339) ok
+[TileExecutor] Sweep id=19 (3189,339) ok
+[TileExecutor] Sweep id=20 (3190,339) ok
+[TileExecutor] Sweep id=21 (3192,339) ok
+[TileExecutor] Sweep id=22 (3186,340) ok
+[TileExecutor] Sweep id=23 (3187,340) ok
+[TileExecutor] Sweep id=24 (3189,340) ok
+[TileExecutor] Sweep id=25 (3191,340) ok
+[TileExecutor] Sweep id=26 (3192,340) ok
+[TileExecutor] Sweep id=27 (3186,341) ok
+[TileExecutor] Sweep id=28 (3188,341) ok
+[TileExecutor] Sweep id=29 (3190,341) ok
+[TileExecutor] Sweep id=30 (3192,341) ok
+[TileExecutor] Sweep id=31 (3186,342) ok
+[TileExecutor] Sweep id=32 (3187,342) ok
+[TileExecutor] Sweep id=33 (3188,342) ok
+[TileExecutor] Sweep id=34 (3189,342) ok
+[TileExecutor] Sweep id=35 (3190,342) ok
+[TileExecutor] Sweep id=36 (3191,342) ok
+[TileExecutor] Sweep id=37 (3192,342) ok
+--- [Sweep] END (processed=49, remaining=0) ---
+--- [Sweep] END (processed=49, remaining=0) ---
+[16:32:42.885] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Complete (sweepStrategy=Cheat)
+TheArchitectsBlueprintMod: [16:32:42.885] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Complete (sweepStrategy=Cheat)

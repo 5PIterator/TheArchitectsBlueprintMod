@@ -8,21 +8,21 @@ using Terraria.ModLoader;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
-    internal sealed class FallBlockLayer : Layer
+    internal sealed class FallingLayer : Layer
     {
-        public static readonly FallBlockLayer Definition = new();
+        public static readonly FallingLayer Definition = new();
 
-        private FallBlockLayer() : base("FallBlock", LayerType.Block) { }
+        private FallingLayer() : base("Falling", LayerType.Block) { }
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchForPaste(in tile);
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
         {
             Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             if (!subjectTile.HasTile ||
-                subjectTile.TileType >= TileLoader.TileCount ||
+                !TileLoaderSupport.IsKnownTileType(subjectTile.TileType) ||
                 !TileID.Sets.Falling[subjectTile.TileType])
-                return [];
+                return LayerResult.IdentifyNone();
 
             // Cut-at-source: anchor Target is live capture; lookup.Target is the offset paste destination (often empty).
             // Walk the column using lookup.Source (capture-area snapshot) and source-area world coords.
@@ -37,7 +37,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     break;
                 Tile t = PasteTile.GetTileForIdentify(in lookupTile, columnSubject);
                 if (!t.HasTile ||
-                    t.TileType >= TileLoader.TileCount ||
+                    !TileLoaderSupport.IsKnownTileType(t.TileType) ||
                     !TileID.Sets.Falling[t.TileType])
                     break;
                 list.Insert(0, new Blueprint.BlueprintCell(p, CellWorld(in tile, p, in lookupTile, sourceCut), true));
@@ -49,12 +49,15 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     break;
                 Tile t = PasteTile.GetTileForIdentify(in lookupTile, columnSubject);
                 if (!t.HasTile ||
-                    t.TileType >= TileLoader.TileCount ||
+                    !TileLoaderSupport.IsKnownTileType(t.TileType) ||
                     !TileID.Sets.Falling[t.TileType])
                     break;
                 list.Add(new Blueprint.BlueprintCell(p, CellWorld(in tile, p, in lookupTile, sourceCut), true));
             }
-            return list.Count > 0 ? list : [];
+
+            return list.Count > 0
+                ? LayerResult.Identified(TileBatch.FromCells(list), LayerLogFormat.FormatTile(subjectTile))
+                : LayerResult.IdentifyNone();
         }
 
         private static Point CellWorld(in PasteTile anchor, Point relative, in PasteTile lookupTile, bool sourceCut) =>
@@ -72,14 +75,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
             if (!tile.PayloadCell.HasTile()) return true;
             int style = tile.PayloadCell.Detail.Style;
-            return InventoryManager.FindItemByTile(context.Items, (ushort)tile.PayloadCell.Block.Type, style) is not null;
+            return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
         }
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
             if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
             int style = tile.PayloadCell.Detail.Style;
-            return InventoryManager.FindItemByTile(context.Items, (ushort)tile.PayloadCell.Block.Type, style) is not null;
+            return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
         }
 
         public override bool Consume(in PasteTile tile, in PasteContext context) =>
@@ -92,8 +95,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
         }
 
-        public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Clear(TileBatch batch, in PasteContext context)
         {
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
             if (tiles.Count == 0) return LayerResult.Ok();
             int highestIdx = 0;
             for (int i = 1; i < tiles.Count; i++)
@@ -104,11 +108,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             var remaining = new List<PasteTile>(tiles.Count - 1);
             for (int i = 0; i < tiles.Count; i++)
                 if (i != highestIdx) remaining.Add(tiles[i]);
-            return remaining.Count > 0 ? LayerResult.Ok(tile.World, remaining) : LayerResult.Ok(tile.World);
+            return remaining.Count > 0
+                ? LayerResult.OkWithRemaining(batch.WithRemainingTiles(remaining), res.Message, res.OkLabel)
+                : res;
         }
 
-        public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Place(TileBatch batch, in PasteContext context)
         {
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
             if (tiles.Count == 0) return LayerResult.Ok();
             int lowestIdx = 0;
             for (int i = 1; i < tiles.Count; i++)
@@ -117,11 +124,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             var res = TileOperations.Place([tile], in context);
             if (!res.Success) return res;
             if (!context.IsSweepCheat && !Consume(in tile, in context))
-                return LayerResult.Fail(tile.World, LayerFailReason.MissingItems);
+                return LayerResult.Fail(LayerFailReason.MissingItems, LayerLogFormat.FormatTile(tile.PayloadTile));
             var remaining = new List<PasteTile>(tiles.Count - 1);
             for (int i = 0; i < tiles.Count; i++)
                 if (i != lowestIdx) remaining.Add(tiles[i]);
-            return remaining.Count > 0 ? LayerResult.Ok(tile.World, remaining) : LayerResult.Ok(tile.World);
+            return remaining.Count > 0
+                ? LayerResult.OkWithRemaining(batch.WithRemainingTiles(remaining), res.Message, res.OkLabel)
+                : res;
         }
     }
 }

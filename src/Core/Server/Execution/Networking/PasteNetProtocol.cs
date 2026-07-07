@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.Phases;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -59,8 +60,9 @@ namespace TheArchitectsBlueprintMod.Core.Server
         public bool CutSource { get; private set; }
         public bool RetryOnMissingItems { get; private set; }
         public bool RetryOnInvalidPlacement { get; private set; }
-        public ClearPhaseStrategy ClearStrategy { get; private set; }
-        public SweepPhaseStrategy SweepStrategy { get; private set; }
+        public ClearStyle ClearStrategy { get; private set; }
+        public ClearItemDropStyle ClearItemDropStrategy { get; private set; }
+        public SweepStyle SweepStrategy { get; private set; }
         public List<Point> ExcludedRelatives { get; private set; } = [];
         public byte[] PayloadBytes { get; private set; } = [];
 
@@ -97,8 +99,9 @@ namespace TheArchitectsBlueprintMod.Core.Server
             request.PayloadBytes = payloadBytes;
             request.RetryOnMissingItems = hints.RetryOnMissingItems;
             request.RetryOnInvalidPlacement = hints.RetryOnInvalidPlacement;
-            request.ClearStrategy = hints.ClearStrategy;
-            request.SweepStrategy = hints.SweepStrategy;
+            request.ClearStrategy = hints.ClearStyle;
+            request.ClearItemDropStrategy = hints.ClearItemDropStyle;
+            request.SweepStrategy = hints.SweepStyle;
             request.SourceArea = projection.SourceArea;
             request.CutSource = !projection.SourceArea.IsEmpty && projection.CutSource;
             request.ExcludedRelatives = CollectExcludedRelatives(projection);
@@ -117,6 +120,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
             writer.Write(RetryOnMissingItems);
             writer.Write(RetryOnInvalidPlacement);
             writer.Write((byte)ClearStrategy);
+            writer.Write((byte)ClearItemDropStrategy);
             writer.Write((byte)SweepStrategy);
             writer.Write(ExcludedRelatives.Count);
             for (int i = 0; i < ExcludedRelatives.Count; i++)
@@ -143,12 +147,17 @@ namespace TheArchitectsBlueprintMod.Core.Server
             request.RetryOnInvalidPlacement = reader.ReadBoolean();
 
             byte clearByte = reader.ReadByte();
-            if (!TryParseClearStrategy(clearByte, out ClearPhaseStrategy clearStrategy))
+            if (!TryParseClearStrategy(clearByte, out ClearStyle clearStrategy))
                 throw new InvalidDataException($"Paste request has invalid clear strategy byte: {clearByte}.");
             request.ClearStrategy = clearStrategy;
 
+            byte clearItemDropByte = reader.ReadByte();
+            if (!TryParseClearItemDropStrategy(clearItemDropByte, out ClearItemDropStyle clearItemDropStrategy))
+                throw new InvalidDataException($"Paste request has invalid clear item-drop strategy byte: {clearItemDropByte}.");
+            request.ClearItemDropStrategy = clearItemDropStrategy;
+
             byte sweepByte = reader.ReadByte();
-            if (!TryParseSweepStrategy(sweepByte, out SweepPhaseStrategy sweepStrategy))
+            if (!TryParseSweepStrategy(sweepByte, out SweepStyle sweepStrategy))
                 throw new InvalidDataException($"Paste request has invalid sweep strategy byte: {sweepByte}.");
             request.SweepStrategy = sweepStrategy;
 
@@ -239,11 +248,11 @@ namespace TheArchitectsBlueprintMod.Core.Server
             }
         }
 
-        private static bool TryParseClearStrategy(byte value, out ClearPhaseStrategy strategy)
+        private static bool TryParseClearStrategy(byte value, out ClearStyle strategy)
         {
-            if (value <= (byte)ClearPhaseStrategy.Negative)
+            if (value <= (byte)ClearStyle.Negative)
             {
-                strategy = (ClearPhaseStrategy)value;
+                strategy = (ClearStyle)value;
                 return true;
             }
 
@@ -251,11 +260,23 @@ namespace TheArchitectsBlueprintMod.Core.Server
             return false;
         }
 
-        private static bool TryParseSweepStrategy(byte value, out SweepPhaseStrategy strategy)
+        private static bool TryParseClearItemDropStrategy(byte value, out ClearItemDropStyle strategy)
         {
-            if (value <= (byte)SweepPhaseStrategy.Cheat)
+            if (value <= (byte)ClearItemDropStyle.Store)
             {
-                strategy = (SweepPhaseStrategy)value;
+                strategy = (ClearItemDropStyle)value;
+                return true;
+            }
+
+            strategy = default;
+            return false;
+        }
+
+        private static bool TryParseSweepStrategy(byte value, out SweepStyle strategy)
+        {
+            if (value <= (byte)SweepStyle.Cheat)
+            {
+                strategy = (SweepStyle)value;
                 return true;
             }
 

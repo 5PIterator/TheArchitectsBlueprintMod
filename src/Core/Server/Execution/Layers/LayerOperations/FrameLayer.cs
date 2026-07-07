@@ -11,46 +11,74 @@ namespace TheArchitectsBlueprintMod.Core.Layers
     /// <summary>
     /// Tile-anchored frames and multitiles (doors, furniture, etc.).
     /// </summary>
-    internal sealed class ObjectLayer : Layer
+    internal sealed class FrameLayer : Layer
     {
-        public static readonly ObjectLayer Definition = new();
+        public static readonly FrameLayer Definition = new();
 
-        private ObjectLayer() : base("Object", LayerType.Frame) { }
+        private FrameLayer() : base("Frame", LayerType.Frame) { }
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
         {
             Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
-            if (!IsFrameObjectTile(subjectTile))
-                return [];
+            if (!IsFrameTile(subjectTile))
+                return LayerResult.IdentifyNone();
 
+            string message = LayerLogFormat.FormatTile(subjectTile);
             IReadOnlyList<Blueprint.BlueprintCell>? tiles = FrameOperations.GetFrameTilesAsBounded(tile.Relative, subjectTile, lookup);
             if (tiles is { Count: > 0 })
-                return tiles;
+                return LayerResult.Identified(TileBatch.FromCells(tiles), message);
 
-            return [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)];
+            return LayerResult.Identified(
+                TileBatch.FromCells([new Blueprint.BlueprintCell(tile.Relative, tile.World, true)]),
+                message);
         }
 
-        internal static bool IsFrameObjectTile(Tile tile)
+        /// <summary>Returns true for tile-anchored or multi-cell objects that must use frame placement.</summary>
+        internal static bool IsFrameTile(Tile tile)
         {
-            if (!tile.HasTile || tile.TileType >= TileLoader.TileCount)
+            // --- Reject air, mod tiles, and falling blocks; then classify anchors and multi-cell footprints.
+            if (!tile.HasTile || !TileLoaderSupport.IsKnownTileType(tile.TileType))
                 return false;
 
             if (TileID.Sets.Falling[tile.TileType])
                 return false;
 
-            if (VegetationLayer.IsVegetationTile(tile))
-                return false;
+            if (HasFrameAnchor(tile))
+                return true;
 
-            return FrameOperations.HasTileAnchor(tile)
-                || FrameOperations.HasWallAnchor(tile)
-                || FrameOperations.HasOtherAnchor(tile);
+            int style = 0, alternate = 0;
+            TileObjectData.GetTileInfo(tile, ref style, ref alternate);
+            if (HasFrameAnchor(tile.TileType, style))
+                return true;
+
+            TileObjectData? data = TileObjectData.GetTileData(tile.TileType, style);
+            return data is not null && (data.Width > 1 || data.Height > 1);
         }
 
-        /// <summary>Used by <see cref="BlockLayer"/> to avoid claiming framed objects.</summary>
-        internal static bool IsObjectTile(Tile tile) => IsFrameObjectTile(tile);
+        /// <summary>Type-only frame check for <see cref="CustomLayer"/> tile-type exclusion lists.</summary>
+        internal static bool IsFrameTileType(ushort tileType)
+        {
+            if (!TileLoaderSupport.IsKnownTileType(tileType) || TileID.Sets.Falling[tileType])
+                return false;
 
+            if (HasFrameAnchor(tileType, 0))
+                return true;
+
+            TileObjectData? data = TileObjectData.GetTileData(tileType, 0);
+            return data is not null && (data.Width > 1 || data.Height > 1);
+        }
+
+        private static bool HasFrameAnchor(Tile tile) =>
+            FrameOperations.HasTileAnchor(tile)
+            || FrameOperations.HasWallAnchor(tile)
+            || FrameOperations.HasOtherAnchor(tile);
+
+        private static bool HasFrameAnchor(ushort tileType, int style) =>
+            FrameOperations.HasTileAnchor(tileType, style)
+            || FrameOperations.HasWallAnchor(tileType, style)
+            || FrameOperations.HasOtherAnchor(tileType, style);
         private static bool UsesBaseTilePlacement(ushort tileType, int style) =>
             InteractionMapProvider.GetRequiredBaseTile(tileType, style).HasValue;
 
@@ -60,7 +88,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return false;
 
             ushort tileType = origin.PayloadCell.Block.Type;
-            if (tileType >= TileLoader.TileCount)
+            if (!TileLoaderSupport.IsKnownTileType(tileType))
                 return false;
 
             int style = origin.PayloadCell.Detail.Style;
@@ -84,14 +112,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
             if (!tile.PayloadCell.HasTile()) return true;
             int style = tile.PayloadCell.Detail.Style;
-            return InventoryManager.FindItemByTile(context.Items, (ushort)tile.PayloadCell.Block.Type, style) is not null;
+            return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
         }
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
             if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
             int style = tile.PayloadCell.Detail.Style;
-            return InventoryManager.FindItemByTile(context.Items, (ushort)tile.PayloadCell.Block.Type, style) is not null;
+            return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
         }
 
         public override bool Consume(in PasteTile tile, in PasteContext context)
@@ -113,12 +141,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
         }
 
-        public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context) =>
-            FrameOperations.Clear(tiles, in context);
+        public override LayerResult Clear(TileBatch batch, in PasteContext context) =>
+            FrameOperations.Clear(batch.Tiles, in context);
 
-        public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Place(TileBatch batch, in PasteContext context)
         {
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
             var origin = tiles.Count > 0 ? tiles[0] : default;
+            string message = origin.PayloadCell.HasTile()
+                ? LayerLogFormat.FormatTile(origin.PayloadTile)
+                : LayerLogFormat.FormatFromSubject(in origin, PasteSubject.Payload);
             bool useTilePlace = UsesTilePlacement(tiles, in origin);
             var res = useTilePlace
                 ? TileOperations.Place(tiles, in context)
@@ -130,7 +162,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
                 var placementOrigin = useTilePlace ? origin : FrameOperations.GetPlacementOriginTile(tiles);
                 if (!context.IsSweepCheat && !Consume(in placementOrigin, in context))
-                    return LayerResult.Fail(placementOrigin.World, LayerFailReason.MissingItems);
+                    return LayerResult.Fail(
+                        LayerFailReason.MissingItems,
+                        LayerLogFormat.FormatTile(placementOrigin.PayloadTile));
 
                 return res;
             }
@@ -138,8 +172,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (res.FailReason == LayerFailReason.InvalidPlacement && tiles.Count > 0)
             {
                 if (!context.RetryOnInvalidPlacement)
-                    return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
-                return LayerResult.OkWithRemaining(tiles);
+                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+                return LayerResult.OkWithRemaining(batch, message, LayerLogFormat.PlacedLabel(in context));
             }
 
             return res;

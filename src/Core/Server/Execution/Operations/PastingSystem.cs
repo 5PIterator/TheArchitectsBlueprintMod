@@ -91,6 +91,7 @@ namespace TheArchitectsBlueprintMod.Core
 
             projection.Lock();
             _operations.Add(op);
+            TileExecutorSystem.RegisterSession(op.EffectSession);
             return true;
         }
 
@@ -100,6 +101,8 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
 
             var disabledPhases = new List<string>(3);
+            if (!config.Phases.Plan.AllowClientPreferences)
+                disabledPhases.Add("Plan");
             if (!config.Phases.Clear.AllowClientPreferences)
                 disabledPhases.Add("Clear");
             if (!config.Phases.Place.AllowClientPreferences)
@@ -128,6 +131,7 @@ namespace TheArchitectsBlueprintMod.Core
             {
                 if (ReferenceEquals(operation.Projection, projection))
                 {
+                    TileExecutorSystem.UnregisterSession(operation.EffectSession.OperationId);
                     operation.Teardown();
                     _operations.Remove(operation);
                     break;
@@ -229,6 +233,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         private void RemoveOperationAt(int index)
         {
+            TileExecutorSystem.UnregisterSession(_operations[index].EffectSession.OperationId);
             _operations[index].Teardown();
             _operations.RemoveAt(index);
             if (_operations.Count == 0)
@@ -239,6 +244,7 @@ namespace TheArchitectsBlueprintMod.Core
         public override void PostUpdatePlayers()
         {
             ProcessOperations();
+            TileExecutorSystem.ProcessSessions();
             PasteOverlayNetworking.BroadcastPasteOverlaysToRemoteClients(this);
         }
 
@@ -246,7 +252,10 @@ namespace TheArchitectsBlueprintMod.Core
         public override void OnWorldUnload()
         {
             for (int i = 0; i < _operations.Count; i++)
+            {
+                TileExecutorSystem.UnregisterSession(_operations[i].EffectSession.OperationId);
                 _operations[i].Teardown();
+            }
 
             _operations.Clear();
             ItrStorage.Release();
@@ -447,6 +456,7 @@ namespace TheArchitectsBlueprintMod.Core
 
                 op.UpdateContext();
                 bool keep = op.Step();
+                TileExecutorSystem.ProcessSessions();
                 if (!keep)
                 {
                     TABLog.Debug("Paste ended: manual step returned no more work", "Paste");

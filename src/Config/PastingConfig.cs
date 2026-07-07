@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
+using TheArchitectsBlueprintMod.Core.Phases;
 
 namespace TheArchitectsBlueprintMod.Config
 {
@@ -49,7 +50,106 @@ namespace TheArchitectsBlueprintMod.Config
         public ServerPasteLimitsConfig Server = new();
     }
 
-    /// <summary>Clear-phase execution, strategy defaults, and client preference policy.</summary>
+    /// <summary>Place-phase behavioral strategies that modify how placement runs.</summary>
+    public sealed class PlacePhaseStrategies
+    {
+        [DefaultValue(true)]
+        public bool RequireItems = true;
+
+        [DefaultValue(false)]
+        public bool RetryOnMissingItems;
+
+        [DefaultValue(false)]
+        public bool RetryOnInvalidPlacement;
+
+        [DefaultValue(PlaceStyle.Place)]
+        public PlaceStyle Style = PlaceStyle.Place;
+    }
+
+    /// <summary>Sweep-phase behavioral strategies that modify how sweeping runs.</summary>
+    public sealed class SweepPhaseStrategies
+    {
+        [DefaultValue(SweepStyle.Detail)]
+        public SweepStyle Style = SweepStyle.Detail;
+    }
+
+    /// <summary>Plan-phase strategies that control how clear/place task queues are built.</summary>
+    public sealed class PlanPhaseStrategies
+    {
+        [DefaultValue(ClearStyle.Transparent)]
+        public ClearStyle Style = ClearStyle.Transparent;
+    }
+
+    /// <summary>Clear-phase strategies that control item handling while tiles are destroyed.</summary>
+    public sealed class ClearPhaseStrategies
+    {
+        [DefaultValue(ClearItemDropStyle.Void)]
+        public ClearItemDropStyle ItemDrop = ClearItemDropStyle.Void;
+    }
+
+    /// <summary>Cut-phase execution strategy.</summary>
+    public sealed class CutPhaseStrategies
+    {
+        [DefaultValue(false)]
+        public bool EnableCutPasteProcess;
+    }
+
+    /// <summary>Plan-phase execution policy.</summary>
+    public sealed class PlanPhaseConfig
+    {
+        [DefaultValue(true)]
+        public bool Active = true;
+
+        [DefaultValue(50)]
+        [Range(1, 512)]
+        public int TickSize = 50;
+
+        [DefaultValue(0)]
+        [Range(0, 5000)]
+        public int TickSpeed;
+
+        [Expand(true)]
+        public PlanPhaseStrategies Strategy = new();
+
+        [DefaultValue(true)]
+        public bool AllowClientPreferences = true;
+
+        public PastePhasePolicy<PlanPhaseStrategy> ToPolicy(in PlanPhaseStrategy strategy) => new()
+        {
+            Active = Active,
+            TickSize = TickSize,
+            TickSpeed = TickSpeed,
+            Strategy = strategy,
+        };
+    }
+
+    /// <summary>Cut-phase execution policy.</summary>
+    public sealed class CutPhaseConfig
+    {
+        [DefaultValue(true)]
+        public bool Active = true;
+
+        [DefaultValue(100)]
+        [Range(1, 512)]
+        public int TickSize = 100;
+
+        [DefaultValue(100)]
+        [Range(0, 5000)]
+        public int TickSpeed = 100;
+
+        [Expand(true)]
+        public CutPhaseStrategies Strategy = new();
+
+        public PastePhasePolicy<CutPhaseStrategy> ToPolicy(in CutPhaseStrategy strategy) => new()
+        {
+            Active = Active,
+            TickSize = TickSize,
+            TickSpeed = TickSpeed,
+            Strategy = strategy,
+        };
+    }
+
+    /// <summary>Clear-phase execution policy.</summary>
     public sealed class ClearPhaseConfig
     {
         [DefaultValue(true)]
@@ -61,23 +161,24 @@ namespace TheArchitectsBlueprintMod.Config
 
         [DefaultValue(100)]
         [Range(0, 5000)]
-        public int TickDelayMs = 100;
+        public int TickSpeed = 100;
 
-        [DefaultValue(ClearPhaseStrategy.Transparent)]
-        public ClearPhaseStrategy Strategy = ClearPhaseStrategy.Transparent;
+        [Expand(true)]
+        public ClearPhaseStrategies Strategy = new();
 
         [DefaultValue(true)]
         public bool AllowClientPreferences = true;
 
-        public PastePhaseSettings ToPhaseSettings() => new()
+        public PastePhasePolicy<ClearPhaseStrategy> ToPolicy(in ClearPhaseStrategy strategy) => new()
         {
             Active = Active,
             TickSize = TickSize,
-            TickDelayMs = TickDelayMs,
+            TickSpeed = TickSpeed,
+            Strategy = strategy,
         };
     }
 
-    /// <summary>Place-phase execution, strategy, item rules, defaults, and client preference policy.</summary>
+    /// <summary>Place-phase execution, strategies, and client preference policy.</summary>
     public sealed class PlacePhaseConfig
     {
         [DefaultValue(true)]
@@ -89,35 +190,24 @@ namespace TheArchitectsBlueprintMod.Config
 
         [DefaultValue(100)]
         [Range(0, 5000)]
-        public int TickDelayMs = 100;
+        public int TickSpeed = 100;
 
-        [DefaultValue(PlacePhaseStrategy.Place)]
-        public PlacePhaseStrategy Strategy = PlacePhaseStrategy.Place;
-
-        [DefaultValue(true)]
-        public bool RequireItems = true;
-
-        [DefaultValue(false)]
-        public bool RetryOnMissingItems;
-
-        [DefaultValue(false)]
-        public bool RetryOnInvalidPlacement;
+        [Expand(true)]
+        public PlacePhaseStrategies Strategy = new();
 
         [DefaultValue(true)]
         public bool AllowClientPreferences = true;
 
-        [DefaultValue(false)]
-        public bool EnableCutPasteProcess;
-
-        public PastePhaseSettings ToPhaseSettings() => new()
+        public PastePhasePolicy<PlacePhaseStrategy> ToPolicy(in PlacePhaseStrategy strategy) => new()
         {
             Active = Active,
             TickSize = TickSize,
-            TickDelayMs = TickDelayMs,
+            TickSpeed = TickSpeed,
+            Strategy = strategy,
         };
     }
 
-    /// <summary>Sweep-phase execution, strategy defaults, and client preference policy.</summary>
+    /// <summary>Sweep-phase execution, strategies, and client preference policy.</summary>
     public sealed class SweepPhaseConfig
     {
         [DefaultValue(true)]
@@ -129,19 +219,20 @@ namespace TheArchitectsBlueprintMod.Config
 
         [DefaultValue(0)]
         [Range(0, 5000)]
-        public int TickDelayMs;
+        public int TickSpeed;
 
-        [DefaultValue(SweepPhaseStrategy.Detail)]
-        public SweepPhaseStrategy Strategy = SweepPhaseStrategy.Detail;
+        [Expand(true)]
+        public SweepPhaseStrategies Strategy = new();
 
         [DefaultValue(true)]
         public bool AllowClientPreferences = true;
 
-        public PastePhaseSettings ToPhaseSettings() => new()
+        public PastePhasePolicy<SweepPhaseStrategy> ToPolicy(in SweepPhaseStrategy strategy) => new()
         {
             Active = Active,
             TickSize = TickSize,
-            TickDelayMs = TickDelayMs,
+            TickSpeed = TickSpeed,
+            Strategy = strategy,
         };
     }
 
@@ -149,13 +240,13 @@ namespace TheArchitectsBlueprintMod.Config
     public sealed class PhasePolicyConfig
     {
         [Expand(false)]
-        public PastePhaseSettings Plan = new() { Active = true, TickSize = 50, TickDelayMs = 0 };
+        public PlanPhaseConfig Plan = new();
 
         [Expand(false)]
         public ClearPhaseConfig Clear = new();
 
         [Expand(false)]
-        public PastePhaseSettings Cut = new() { Active = true, TickSize = 100, TickDelayMs = 100 };
+        public CutPhaseConfig Cut = new();
 
         [Expand(false)]
         public PlacePhaseConfig Place = new();
@@ -169,15 +260,32 @@ namespace TheArchitectsBlueprintMod.Config
     {
         [DefaultValue(true)] public bool Wall = true;
         [DefaultValue(true)] public bool Block = true;
-        [DefaultValue(true)] public bool FallBlock = true;
-        [DefaultValue(true)] public bool Object = true;
-        [DefaultValue(true)] public bool Vegetation = true;
-        [DefaultValue(true)] public bool Tree = true;
+        [DefaultValue(true)] public bool Falling = true;
+        [DefaultValue(true)] public bool Frame = true;
+        [DefaultValue(true)] public bool Custom = true;
         [DefaultValue(true)] public bool Paint = true;
         [DefaultValue(true)] public bool Wiring = true;
         [DefaultValue(true)] public bool Detail = true;
         [DefaultValue(true)] public bool Fluid = true;
         [DefaultValue(true)] public bool Unknown = true;
+    }
+
+    /// <summary>Per-handler toggles for attributed custom sub-layers.</summary>
+    public sealed class CustomLayerPolicySettings
+    {
+        [DefaultValue(true)] public bool Plant = true;
+        [DefaultValue(true)] public bool Vine = true;
+        [DefaultValue(true)] public bool Tree = true;
+    }
+
+    /// <summary>Main pipeline layer toggles and attributed custom sub-layer toggles.</summary>
+    public sealed class LayerPolicyConfig
+    {
+        [Expand(false)]
+        public LayerPolicySettings MainLayers = new();
+
+        [Expand(false)]
+        public CustomLayerPolicySettings CustomLayers = new();
     }
 
     /// <summary>Authoritative server paste policy: limits, phase execution, strategy defaults, and layer toggles.</summary>
@@ -192,25 +300,28 @@ namespace TheArchitectsBlueprintMod.Config
         public PhasePolicyConfig Phases = new();
 
         [Header("LayerPolicy")]
-        public LayerPolicySettings LayerPolicy = new();
+        public LayerPolicyConfig LayerPolicy = new();
 
         /// <summary>Whether task building should run identification for the paste layer with the given <c>Layer.Id</c>.</summary>
         public bool IsLayerIdentificationEnabled(string layerId)
         {
-            var s = LayerPolicy;
+            var mainLayers = LayerPolicy.MainLayers;
+            var customLayers = LayerPolicy.CustomLayers;
             return layerId switch
             {
-                "Wall" => s.Wall,
-                "Block" => s.Block,
-                "FallBlock" => s.FallBlock,
-                "Object" => s.Object,
-                "Vegetation" => s.Vegetation,
-                "Tree" => s.Tree,
-                "Paint" => s.Paint,
-                "Wiring" => s.Wiring,
-                "Detail" => s.Detail,
-                "Fluid" => s.Fluid,
-                "Unknown" => s.Unknown,
+                "Wall" => mainLayers.Wall,
+                "Block" => mainLayers.Block,
+                "Falling" => mainLayers.Falling,
+                "Frame" => mainLayers.Frame,
+                "Custom" => mainLayers.Custom,
+                "Plant" => customLayers.Plant,
+                "Vine" => customLayers.Vine,
+                "Tree" => customLayers.Tree,
+                "Paint" => mainLayers.Paint,
+                "Wiring" => mainLayers.Wiring,
+                "Detail" => mainLayers.Detail,
+                "Fluid" => mainLayers.Fluid,
+                "Unknown" => mainLayers.Unknown,
                 _ => true,
             };
         }

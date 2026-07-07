@@ -148,6 +148,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     Log($"    {itemPrefix}{baseName} ({tileId})");
                     yield return null;
                     WorldGen.Convert(testX, testY, conversionType, size: 3, tiles: true, walls: false);
+                    TileLoader.Convert(testX, testY, conversionType);
 
                     var tile = Main.tile[testX, testY];
                     if (!tile.HasTile)

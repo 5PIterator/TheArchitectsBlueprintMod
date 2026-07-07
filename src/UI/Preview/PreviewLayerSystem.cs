@@ -30,16 +30,22 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             Vector2 position,
             float scale,
             Color tint,
-            Func<Point, bool>? includeCell = null,
-            Point worldOrigin = default)
+            Func<Point, bool>? includeCell = null)
         {
+            var cellLookup = new Dictionary<Point, PayloadCell>(entries.Count);
+            foreach (Payload.Entry entry in entries)
+            {
+                if (!entry.Cell.IsEmpty)
+                    cellLookup[entry.Relative] = entry.Cell;
+            }
+
             var ctx = new PreviewDrawContext
             {
                 SpriteBatch = sb,
                 Position = position,
                 Scale = scale,
-                WorldOrigin = worldOrigin,
                 Tint = tint,
+                CellLookup = cellLookup,
             };
 
             for (int i = 0; i < DrawOrder.Length; i++)

@@ -33,7 +33,8 @@ namespace TheArchitectsBlueprintMod.Utils
     /// <summary>
     /// Wraps destructive <see cref="WorldGen"/> calls with drop suppression via <see cref="SuppressTileDropGlobalTile"/>
     /// and <see cref="SuppressTileDropGlobalWall"/>.
-    /// <see cref="KillTile"/> also passes <c>noItem</c>; wire/actuator kills rely on <see cref="GlobalTile.CanDrop"/>.
+    /// <see cref="KillTile"/> also passes <c>noItem</c>. Wire/actuator kills clear tile flags directly because
+    /// <see cref="WorldGen.KillWire"/> and <see cref="WorldGen.KillActuator"/> spawn items via <see cref="Item.NewItem"/>.
     /// </summary>
     public static class SuppressTileDrop
     {
@@ -66,18 +67,31 @@ namespace TheArchitectsBlueprintMod.Utils
             RunSuppressed(() => WorldGen.EmptyLiquid(x, y));
 
         public static void KillWire(int i, int j) =>
-            RunSuppressed(() => WorldGen.KillWire(i, j));
+            RunSuppressed(() => ClearWireFlag(i, j, state => state.RedWire, (state, value) => state with { RedWire = value }));
 
         public static void KillWire2(int i, int j) =>
-            RunSuppressed(() => WorldGen.KillWire2(i, j));
+            RunSuppressed(() => ClearWireFlag(i, j, state => state.BlueWire, (state, value) => state with { BlueWire = value }));
 
         public static void KillWire3(int i, int j) =>
-            RunSuppressed(() => WorldGen.KillWire3(i, j));
+            RunSuppressed(() => ClearWireFlag(i, j, state => state.GreenWire, (state, value) => state with { GreenWire = value }));
 
         public static void KillWire4(int i, int j) =>
-            RunSuppressed(() => WorldGen.KillWire4(i, j));
+            RunSuppressed(() => ClearWireFlag(i, j, state => state.YellowWire, (state, value) => state with { YellowWire = value }));
 
         public static void KillActuator(int i, int j) =>
-            RunSuppressed(() => WorldGen.KillActuator(i, j));
+            RunSuppressed(() => ClearWireFlag(i, j, state => state.HasActuator, (state, value) => state with { HasActuator = value }));
+
+        private static void ClearWireFlag(
+            int i,
+            int j,
+            Func<TileWallWireStateData, bool> isSet,
+            Func<TileWallWireStateData, bool, TileWallWireStateData> withValue)
+        {
+            TileWallWireStateData state = Main.tile[i, j].Get<TileWallWireStateData>();
+            if (!isSet(state))
+                return;
+
+            Main.tile[i, j].Get<TileWallWireStateData>() = withValue(state, false);
+        }
     }
 }

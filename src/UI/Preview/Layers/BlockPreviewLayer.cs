@@ -17,7 +17,11 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
         {
             // --- Draw plain solid tiles; detail-modified tiles are handled by DetailPreviewLayer.
 
-            if (!cell.Detail.HasTile || cell.Paint.TileInvisible)
+            if (!cell.Detail.HasTile)
+                return;
+
+            Tile tile = cell.ToTile();
+            if (!TileDrawing.IsVisible(tile))
                 return;
 
             PayloadCell.DetailData detail = cell.Detail;
@@ -27,7 +31,6 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
             ushort tileType = cell.Block.Type;
             Main.instance.LoadTiles(tileType);
 
-            Tile tile = cell.ToTile();
             // Preview tile draw data should not depend on wall animation/frame state.
             TileWallWireStateData state = tile.Get<TileWallWireStateData>();
             int tileFrameNumber = state.TileFrameNumber;
@@ -39,14 +42,14 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
             tile.Get<WallTypeData>() = default;
 
             TileDrawing renderer = Main.instance.TilesRenderer;
-            int worldX = ctx.WorldX(relX);
-            int worldY = ctx.WorldY(relY);
+            int payloadX = relX;
+            int payloadY = relY;
 
-            short frameX = cell.Block.FrameX;
-            short frameY = cell.Block.FrameY;
+            short frameX = tile.TileFrameX;
+            short frameY = tile.TileFrameY;
             renderer.GetTileDrawData(
-                worldX,
-                worldY,
+                payloadX,
+                payloadY,
                 tile,
                 tileType,
                 ref frameX,
@@ -62,7 +65,7 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
                 out Rectangle glowSourceRect,
                 out Color glowColor);
 
-            Texture2D texture = renderer.GetTileDrawTexture(tile, worldX, worldY);
+            Texture2D texture = renderer.GetTileDrawTexture(tile, payloadX, payloadY);
             var source = new Rectangle(frameX + addFrX, frameY + addFrY, tileWidth, tileHeight - halfBrickHeight);
             Vector2 pos = ctx.Position + new Vector2(
                 relX * PreviewDrawContext.TilePixelSize - (tileWidth - PreviewDrawContext.TilePixelSize) / 2f,

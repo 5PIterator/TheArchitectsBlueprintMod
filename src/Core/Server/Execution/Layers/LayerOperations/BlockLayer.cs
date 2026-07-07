@@ -19,22 +19,30 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public override bool Match(in PasteTile tile) => TileComparison.MatchForPaste(in tile);
 
         /// <summary>At most one <see cref="Blueprint.BlueprintCell"/> (this relative only). No multi-cell frame expansion.</summary>
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject) =>
-            IsBlock(PasteTile.GetTileForIdentify(in tile, identifySubject)) ? [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)] : [];
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
+        {
+            Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
+            if (!IsBlock(subjectTile))
+                return LayerResult.IdentifyNone();
+
+            return LayerResult.Identified(
+                TileBatch.FromCells([new Blueprint.BlueprintCell(tile.Relative, tile.World, true)]),
+                LayerLogFormat.FormatTile(subjectTile));
+        }
 
         /// <summary>Classifies <paramref name="subjectTile"/> (source vs target is chosen by <see cref="PasteSubject"/> in <see cref="Layer.Identify"/>).</summary>
         private static bool IsBlock(Tile subjectTile)
         {
             if (!subjectTile.HasTile) return false;
-            if (subjectTile.TileType >= TileLoader.TileCount) return false;
+            if (!TileLoaderSupport.IsKnownTileType(subjectTile.TileType)) return false;
             if (TileID.Sets.Falling[subjectTile.TileType]) return false;
+            if (FrameLayer.IsFrameTile(subjectTile)) return false;
             if (IsLeafBlock(subjectTile.TileType)) return true;
-            if (ObjectLayer.IsObjectTile(subjectTile) || VegetationLayer.IsVegetationTile(subjectTile)) return false;
             return !CustomLayer.TileTypeIsClaimedByAttributedLayer(subjectTile.TileType);
         }
 
         internal static bool IsLeafBlock(ushort tileType) =>
-            tileType < TileLoader.TileCount && TileID.Sets.Leaves[tileType];
+            TileLoaderSupport.IsKnownTileType(tileType) && TileID.Sets.Leaves[tileType];
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].HasTile;
@@ -58,7 +66,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!context.RequireItems || context.Items is null) return true;
             ushort tileType = tile.PayloadCell.Block.Type;
             int style = tile.PayloadCell.Detail.Style;
-            return InventoryManager.FindItemByTile(context.Items, tileType, style) is not null;
+            return TileExecutor.HasItemForTile(tileType, style, in context);
         }
 
         public override bool Consume(in PasteTile tile, in PasteContext context) =>
@@ -72,11 +80,27 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return InteractionMapProvider.GetTileItemIds(intent.TileType, style);
         }
 
-        public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context) =>
-            FrameOperations.Clear(tiles, in context);
-
-        public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Clear(TileBatch batch, in PasteContext context)
         {
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
+            if (tiles.Count == 0)
+                return LayerResult.Ok();
+
+            var tile = tiles[0];
+            int x = tile.World.X, y = tile.World.Y;
+            bool hadTile = Main.tile[x, y].HasTile;
+            string? message = hadTile ? LayerLogFormat.FormatTile(Main.tile[x, y]) : null;
+
+            LayerResult res = FrameOperations.Clear(tiles, in context);
+            if (!res.Success)
+                return LayerResult.Fail(res.FailReason, message);
+
+            return hadTile ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel) : LayerResult.Ok();
+        }
+
+        public override LayerResult Place(TileBatch batch, in PasteContext context)
+        {
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
             if (TABLog.IsDebugEnabled && tiles.Count > 0)
             {
                 var samplePasteTile = tiles[0];
@@ -89,15 +113,24 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Paste");
             }
 
-            var res = TileOperations.Place(tiles, in context);
-            if (!res.Success || res.RemainingTiles.Count > 0 || tiles.Count == 0)
-                return res;
+            if (tiles.Count == 0)
+                return LayerResult.Ok();
 
             var origin = FrameOperations.GetPlacementOriginTile(tiles);
-            if (!context.IsSweepCheat && !Consume(in origin, in context))
-                return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
+            bool hasPayload = origin.PayloadCell.HasTile();
+            string? message = hasPayload ? LayerLogFormat.FormatTile(origin.PayloadTile) : null;
 
-            return res;
+            var res = TileOperations.Place(tiles, in context);
+            if (!res.Success)
+                return LayerResult.Fail(res.FailReason, message);
+
+            if (res.RemainingTiles.Count > 0)
+                return LayerResult.OkWithRemaining(batch.WithRemainingTiles(res.RemainingTiles), message, LayerLogFormat.PlacedLabel(in context));
+
+            if (!context.IsSweepCheat && !Consume(in origin, in context))
+                return LayerResult.Fail(LayerFailReason.MissingItems, message);
+
+            return hasPayload ? LayerResult.Ok(message, LayerLogFormat.PlacedLabel(in context)) : LayerResult.Ok();
         }
 
         private static bool PlacementValidSingle(in PasteTile tile, in PasteContext context)
@@ -107,15 +140,15 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!intent.HasTile) return true;
 
             ushort tileType = intent.TileType;
-            if (tileType >= TileLoader.TileCount) return false;
+            if (!TileLoaderSupport.IsKnownTileType(tileType)) return false;
 
             int style = tile.PayloadCell.Detail.Style;
             int alternate = tile.PayloadCell.Detail.Alternate;
-            int? baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
             Tile targetTile = Main.tile[x, y];
 
             if (targetTile.HasTile && targetTile.TileType == tileType) return true;
 
+            int? baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
             if (baseTileId.HasValue)
             {
                 ushort baseType = (ushort)baseTileId.Value;
@@ -124,10 +157,12 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return true;
             }
 
+            if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context)) return false;
+
             if (targetTile.HasTile && !context.IsSweepCheat)
                 return false;
 
-            return true;
+            return context.IsSweepCheat || TileLoader.CanPlace(x, y, tileType);
         }
 
         private static bool HasRequiredItemsSingle(in PasteTile tile, in PasteContext context)
@@ -137,7 +172,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!intent.HasTile) return true;
 
             ushort tileType = intent.TileType;
-            if (tileType >= TileLoader.TileCount) return true;
+            if (!TileLoaderSupport.IsKnownTileType(tileType)) return true;
 
             int style = tile.PayloadCell.Detail.Style;
             int alternate = tile.PayloadCell.Detail.Alternate;
@@ -151,8 +186,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 ushort baseType = (ushort)baseTileId.Value;
                 if (!targetTile.HasTile || targetTile.TileType != baseType)
                 {
-                    if (InventoryManager.FindItemByTile(context.Items!, baseType) is null) return false;
-                    return InventoryManager.FindItemByTile(context.Items!, tileType, style) is not null;
+                    if (!TileExecutor.HasItemForTile(baseType, 0, in context)) return false;
+                    return TileExecutor.HasItemForTile(tileType, style, in context);
                 }
             }
             else if (targetTile.HasTile && !context.IsSweepCheat)
@@ -160,7 +195,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return false;
             }
 
-            return InventoryManager.FindItemByTile(context.Items!, tileType, style) is not null;
+            return TileExecutor.HasItemForTile(tileType, style, in context);
         }
     }
 }

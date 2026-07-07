@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
-using TheArchitectsBlueprintMod.Utils;
 using TheArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -65,11 +64,69 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         }
     }
 
+    internal static class TileLoaderSupport
+    {
+        public static bool IsKnownTileType(int tileType) =>
+            tileType >= 0 && tileType < TileLoader.TileCount;
+
+        public static bool IsKnownTileType(ushort tileType) =>
+            tileType < TileLoader.TileCount;
+
+        public static bool IsReplaceAllowedAt(int x, int y, ushort newTileType, in PasteContext context)
+        {
+            Tile target = Main.tile[x, y];
+            if (!target.HasTile || target.TileType == newTileType)
+                return true;
+
+            if (context.IsSweepCheat)
+                return true;
+
+            if (!context.UseReplacePlace)
+                return false;
+
+            if (!IsKnownTileType(target.TileType))
+                return false;
+
+            return TileLoader.CanReplace(x, y, target.TileType, newTileType);
+        }
+
+        public static bool IsCanPlaceAllowedAt(int x, int y, ushort tileType, in PasteContext context)
+        {
+            if (!IsKnownTileType(tileType) || !WorldGen.InWorld(x, y, 1))
+                return false;
+
+            if (!IsReplaceAllowedAt(x, y, tileType, in context))
+                return false;
+
+            if (context.IsSweepCheat)
+                return true;
+
+            return TileLoader.CanPlace(x, y, tileType);
+        }
+
+        public static void RunPostPlacementHooks(int x, int y)
+        {
+            if (!WorldGen.InWorld(x, y, 1))
+                return;
+
+            Tile placed = Main.tile[x, y];
+            if (!placed.HasTile || !IsKnownTileType(placed.TileType))
+                return;
+
+            int tileType = placed.TileType;
+            bool resetFrame = false;
+            bool noBreak = false;
+            TileLoader.TileFrame(x, y, tileType, ref resetFrame, ref noBreak);
+            if (tileType >= TileID.Count)
+                TileLoader.CheckModTile(x, y, tileType);
+        }
+    }
+
     internal static class FrameOperations
     {
         public static IReadOnlyList<Point>? GetFrameTiles(Point originRel, in Tile sourceTile, in PasteTileLookup lookup)
         {
-            if (!sourceTile.HasTile || sourceTile.TileType >= TileLoader.TileCount)
+            if (!sourceTile.HasTile || !TileLoaderSupport.IsKnownTileType(sourceTile.TileType))
                 return null;
 
             int style = 0, alternate = 0;
@@ -122,7 +179,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <param name="anchorWorld">World position of the tile at <paramref name="originRel"/> (target paste coordinates).</param>
         public static IReadOnlyList<Blueprint.BlueprintCell>? GetFrameTilesAsBoundedFromOrigin(Point originRel, Point anchorWorld, in Tile sourceTile)
         {
-            if (!sourceTile.HasTile || sourceTile.TileType >= TileLoader.TileCount)
+            if (!sourceTile.HasTile || !TileLoaderSupport.IsKnownTileType(sourceTile.TileType))
                 return null;
 
             int style = 0, alternate = 0;
@@ -352,13 +409,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             for (int i = 0; i < tiles.Count; i++)
             {
                 var t = tiles[i];
+                TileLoaderSupport.RunPostPlacementHooks(t.World.X, t.World.Y);
                 LayerSync.SyncTileSquare(t.World.X, t.World.Y);
             }
         }
 
-        public static LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public static LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context, string? message = null)
         {
             if (tiles.Count == 0) return LayerResult.Ok();
+
+            message ??= LayerLogFormat.FormatTile(tiles[0].Target);
 
             bool changed = false;
             for (int i = 0; i < tiles.Count; i++)
@@ -368,19 +428,11 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 if (!Main.tile[wx, wy].HasTile)
                     continue;
 
-                SuppressTileDrop.KillTile(wx, wy);
+                TileExecutor.EnqueueClearTile(wx, wy, in context);
                 changed = true;
             }
 
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                var t = tiles[i];
-                int wx = t.World.X, wy = t.World.Y;
-                if (Main.tile[wx, wy].HasTile)
-                    return LayerResult.Fail(t.World, LayerFailReason.ClearBlocked);
-            }
-
-            return changed ? LayerResult.Ok(tiles[0].World) : LayerResult.Ok();
+            return changed ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel) : LayerResult.Ok();
         }
 
         public static LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
@@ -391,11 +443,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             int x = origin.World.X, y = origin.World.Y;
             if (!origin.PayloadCell.HasTile()) return LayerResult.Ok();
 
+            string message = LayerLogFormat.FormatTile(origin.PayloadTile);
+            string okLabel = LayerLogFormat.PlacedLabel(in context);
+
             ushort tileType = (ushort)origin.PayloadCell.Block.Type;
-            if (tileType >= TileLoader.TileCount)
+            if (!TileLoaderSupport.IsKnownTileType(tileType))
             {
                 PastingDebug.LogPlacement(tileType, 0, null, x, y, false, "PlaceObject");
-                return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
             int style = origin.PayloadCell.Detail.Style;
@@ -405,69 +460,56 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (dest.HasTile && dest.TileType == tileType)
             {
                 PasteFrame(tiles);
-                return LayerResult.Ok(origin.World);
+                return LayerResult.Ok(message, okLabel);
+            }
+
+            if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
+            {
+                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
             if (context.UseReplacePlace && dest.HasTile)
-            {
-                SuppressTileDrop.KillTile(x, y);
-            }
+                TileExecutor.EnqueueVoidKillTile(x, y, in context);
 
-            if (context.RequireItems && context.Items != null)
-            {
-                Item? item = InventoryManager.FindItemByTile(context.Items, tileType, style);
-                if (item is null)
-                {
-                    PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
-                    return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
-                }
-                style = Math.Max(0, item.placeStyle);
-            }
-            else
-            {
-                style = Math.Max(0, style);
-            }
-
-            if (!WorldGen.PlaceObject(x, y, tileType, mute: true, style, alternate, random: -1, direction: -1))
+            if (!context.IsSweepCheat && !TileLoader.CanPlace(x, y, tileType))
             {
                 PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
-                return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            LayerSync.SyncTileSquare(x, y);
+            if (!TileExecutor.HasItemForTile(tileType, style, in context))
+            {
+                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
+                return LayerResult.Fail(LayerFailReason.MissingItems, message);
+            }
+
+            if (!TileExecutor.EnqueuePlaceObject(x, y, tileType, style, alternate, in context, consumeItem: true))
+            {
+                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+            }
+
             PastingDebug.LogPlacement(tileType, style, null, x, y, true, "PlaceObject");
-            return LayerResult.Ok(origin.World);
+            return LayerResult.Ok(message, okLabel);
         }
 
-        public static bool Consume(in PasteTile tile, in PasteContext context)
-        {
-            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
-
-            int x = tile.World.X, y = tile.World.Y;
-            Tile placed = Main.tile[x, y];
-            if (!placed.HasTile) return true;
-
-            ushort placedType = placed.TileType;
-            int style = 0, alternate = 0;
-            TileObjectData.GetTileInfo(placed, ref style, ref alternate);
-
-            Item? item = InventoryManager.FindItemByTile(context.Items, placedType, style);
-            if (item is null) return false;
-            InventoryManager.ConsumeItem(item, tile.World, context.Inventories, context.Player);
-            return true;
-        }
+        public static bool Consume(in PasteTile tile, in PasteContext context) => true;
     }
 
     internal static class TileOperations
     {
-        public static LayerResult Clear(in PasteTile originTile, in PasteContext context)
+        public static LayerResult Clear(in PasteTile originTile, in PasteContext context, string? message = null)
         {
+            message ??= LayerLogFormat.FormatTile(originTile.Target);
             int x = originTile.World.X, y = originTile.World.Y;
             if (!Main.tile[x, y].HasTile)
                 return LayerResult.Ok();
 
-            SuppressTileDrop.KillTile(x, y);
-            return Main.tile[x, y].HasTile ? LayerResult.Fail(originTile.World, LayerFailReason.ClearBlocked) : LayerResult.Ok(originTile.World);
+            bool queued = TileExecutor.EnqueueClearTile(x, y, in context);
+            return queued
+                ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel)
+                : LayerResult.Fail(LayerFailReason.ClearBlocked, message);
         }
 
         public static LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
@@ -479,10 +521,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!origin.PayloadCell.HasTile()) return LayerResult.Ok();
 
             ushort tileType = (ushort)origin.PayloadCell.Block.Type;
-            if (tileType >= TileLoader.TileCount)
+            if (!TileLoaderSupport.IsKnownTileType(tileType))
             {
                 PastingDebug.LogPlacement(tileType, 0, null, x, y, false, "PlaceTile");
-                return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, LayerLogFormat.FormatTile(origin.PayloadTile));
             }
 
             int style = origin.PayloadCell.Detail.Style;
@@ -493,7 +535,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (dest.HasTile && dest.TileType == tileType)
             {
                 FrameOperations.PasteFrame(tiles);
-                return LayerResult.Ok(origin.World);
+                return LayerResult.Ok(
+                    LayerLogFormat.FormatTile(origin.PayloadTile),
+                    LayerLogFormat.PlacedLabel(in context));
             }
 
             return PlaceWithTile(origin, tiles, style, baseTileId, in context);
@@ -503,6 +547,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         {
             int x = origin.World.X, y = origin.World.Y;
             ushort tileType = (ushort)origin.PayloadCell.Block.Type;
+            string message = LayerLogFormat.FormatTile(origin.PayloadTile);
+            string okLabel = LayerLogFormat.PlacedLabel(in context);
             Tile dest = Main.tile[x, y];
 
             if (baseTileId.HasValue)
@@ -510,81 +556,76 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 ushort baseType = (ushort)baseTileId.Value;
                 if (!dest.HasTile || dest.TileType != baseType)
                 {
-                    if (context.RequireItems && context.Items != null)
-                    {
-                        Item? item = InventoryManager.FindItemByTile(context.Items, baseType);
-                        if (item is null)
-                        {
-                            PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                            return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
-                        }
-                        if (!WorldGen.PlaceTile(x, y, baseType, mute: false, forced: context.IsSweepCheat, plr: context.Player.whoAmI, style: 0))
-                        {
-                            PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                            return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
-                        }
-                        InventoryManager.ConsumeItem(item, origin.World, context.Inventories, context.Player);
-                    }
-                    else if (!WorldGen.PlaceTile(x, y, baseType, mute: false, forced: context.IsSweepCheat, plr: context.Player.whoAmI, style: 0))
+                    if (!TileLoaderSupport.IsCanPlaceAllowedAt(x, y, baseType, in context))
                     {
                         PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                        return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
+                        return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
                     }
 
-                    LayerSync.SyncTileSquare(x, y);
+                    if (!TileExecutor.HasItemForTile(baseType, 0, in context))
+                    {
+                        PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                        return LayerResult.Fail(LayerFailReason.MissingItems, message);
+                    }
+
+                    if (!TileExecutor.EnqueuePlaceTile(x, y, baseType, 0, in context, forced: context.IsSweepCheat, consumeItem: true))
+                    {
+                        PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                        return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+                    }
+
                     PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, true, "PlaceBaseTile");
                     // Base-first conversion tiles (e.g., dirt -> grass) require a second pass:
                     // this pass lays support, next pass applies the conversion tile itself.
-                    return LayerResult.Ok(origin.World, tiles);
+                    return LayerResult.OkWithRemaining(tiles, message, okLabel);
                 }
             }
             else if (dest.HasTile && !context.IsSweepCheat && context.RequireItems && !context.UseReplacePlace)
             {
                 PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            if (context.UseReplacePlace && dest.HasTile && dest.TileType != tileType)
-                SuppressTileDrop.KillTile(x, y);
+            bool conversionBaseReady = baseTileId.HasValue
+                && dest.HasTile
+                && dest.TileType == (ushort)baseTileId.Value;
 
-            int placeStyle = Math.Max(0, style);
-            if (context.RequireItems && context.Items != null)
+            if (!conversionBaseReady)
             {
-                Item? item = InventoryManager.FindItemByTile(context.Items, tileType, style);
-                if (item is null)
+                if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
                 {
                     PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                    return LayerResult.Fail(origin.World, LayerFailReason.MissingItems);
+                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
                 }
-                placeStyle = Math.Max(0, item.placeStyle);
+
+                if (context.UseReplacePlace && dest.HasTile && dest.TileType != tileType)
+                    TileExecutor.EnqueueVoidKillTile(x, y, in context);
+
+                if (!context.IsSweepCheat && !TileLoader.CanPlace(x, y, tileType))
+                {
+                    PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+                }
+            }
+
+            if (!TileExecutor.HasItemForTile(tileType, style, in context))
+            {
+                PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                return LayerResult.Fail(LayerFailReason.MissingItems, message);
             }
 
             bool forcePlace = context.IsSweepCheat || baseTileId.HasValue || context.UseReplacePlace;
-            if (!WorldGen.PlaceTile(x, y, tileType, mute: false, forced: forcePlace, plr: context.Player.whoAmI, style: placeStyle))
+            if (!TileExecutor.EnqueuePlaceTile(x, y, tileType, style, in context, forcePlace, consumeItem: true))
             {
                 PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                return LayerResult.Fail(origin.World, LayerFailReason.InvalidPlacement);
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            FrameOperations.PasteFrame(tiles);
             PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, true, "PlaceTile");
-            return LayerResult.Ok(origin.World);
+            return LayerResult.Ok(message, okLabel);
         }
 
-        public static bool Consume(in PasteTile tile, in PasteContext context)
-        {
-            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
-
-            ushort tileType = (ushort)tile.PayloadCell.Block.Type;
-            int style = tile.PayloadCell.Detail.Style;
-            ushort placedType = (ushort)Main.tile[tile.World.X, tile.World.Y].TileType;
-
-            int lookupStyle = placedType == tileType ? (style >= 0 ? style : 0) : 0;
-            Item? item = InventoryManager.FindItemByTile(context.Items, placedType, lookupStyle);
-            if (item is null) return false;
-            InventoryManager.ConsumeItem(item, tile.World, context.Inventories, context.Player);
-            return true;
-        }
+        public static bool Consume(in PasteTile tile, in PasteContext context) => true;
     }
 
     internal static class DetailOperations

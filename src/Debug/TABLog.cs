@@ -17,6 +17,8 @@ namespace TheArchitectsBlueprintMod.Debug
     /// </summary>
     internal sealed class TABLog : ModSystem
     {
+        public const string TileExecutorCategory = "TileExecutor";
+
         private static Mod? _mod;
         private static uint _batchFrame = uint.MaxValue;
         private static readonly List<PendingEntry> _pending = [];
@@ -103,10 +105,15 @@ namespace TheArchitectsBlueprintMod.Debug
         public static bool IsInfoChatEnabled => ClientLogConfig.Instance?.PrintInfoLogsToChat ?? false;
 
         /// <summary>
-        /// Always true: debug/info log records are always written to mod logs.
+        /// True when debug/info records for the given category should be emitted.
+        /// </summary>
+        public static bool IsCategoryEnabled(string? category) => ShouldEmitCategory(category);
+
+        /// <summary>
+        /// Always true: debug/info log records are always written to mod logs when their category passes <see cref="CategoryFilter"/>.
         /// Kept for existing call sites that guard expensive message construction.
         /// </summary>
-        public static bool IsDebugEnabled => true;
+        public static bool IsDebugEnabled => ShouldEmitCategory(null) || ShouldEmitCategory(TileExecutorCategory);
 
         /// <summary>
         /// Queues a debug message for the current frame batch.
@@ -150,7 +157,8 @@ namespace TheArchitectsBlueprintMod.Debug
             Flush();
 
             var mod = _mod;
-            if (mod is null) return;
+            if (mod is null || !ShouldEmitCategory(category))
+                return;
 
             var full = FormatLine(message, category);
             mod.Logger.Error(full, ex);
@@ -158,7 +166,8 @@ namespace TheArchitectsBlueprintMod.Debug
 
         public static void Chat(string message, string? category = null, Color? color = null)
         {
-            if (Main.netMode == NetmodeID.Server) return;
+            if (Main.netMode == NetmodeID.Server || !ShouldEmitCategory(category))
+                return;
 
             string full = FormatLine(message, category);
             Main.NewText(full, color ?? Color.LightYellow);
@@ -167,9 +176,20 @@ namespace TheArchitectsBlueprintMod.Debug
         /// <summary>
         /// Appends a debug/info record to the current frame batch, rolling the batch forward when the frame changes.
         /// </summary>
+        private static bool ShouldEmitCategory(string? category)
+        {
+            LogCategoryFilter filter = ClientLogConfig.Instance?.CategoryFilter ?? LogCategoryFilter.All;
+            return filter switch
+            {
+                LogCategoryFilter.TileExecutorOnly => category == TileExecutorCategory,
+                _ => true,
+            };
+        }
+
         private static void Enqueue(string message, string? category, int level, bool echoToChat, Color chatColor)
         {
-            if (_mod is null) return;
+            if (_mod is null || !ShouldEmitCategory(category))
+                return;
 
             // --- A new frame started before the previous batch was flushed; flush the stale batch first.
             uint frame = Main.GameUpdateCount;
@@ -190,7 +210,8 @@ namespace TheArchitectsBlueprintMod.Debug
         private static void Log(string message, string? category, int level)
         {
             var mod = _mod;
-            if (mod is null) return;
+            if (mod is null || !ShouldEmitCategory(category))
+                return;
 
             var full = FormatLine(message, category);
 

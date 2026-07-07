@@ -97,6 +97,10 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 }
             }
 
+            int modDropFallbacksAdded = AddModTileDropFallbackEntries(map);
+            if (modDropFallbacksAdded > 0)
+                Log($"Added {modDropFallbacksAdded} mod tile drop fallback mappings from TileLoader.GetItemDropFromTypeAndStyle.");
+
             chamber.TeardownRing(testX, testY, chamberState);
             yield return null;
 
@@ -161,6 +165,35 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             }
 
             chamber.RestoreCell(testX, testY, saved);
+            return added;
+        }
+
+        /// <summary>
+        /// Adds tile->item mappings for mod tiles that register drop mappings through TileLoader.
+        /// This complements the item-driven probe when tiles are not reliably discoverable via createTile.
+        /// </summary>
+        private static int AddModTileDropFallbackEntries(PlacementInteractionMap map)
+        {
+            int added = 0;
+            for (int tileId = TileID.Count; tileId < TileLoader.TileCount; tileId++)
+            {
+                int itemId = TileLoader.GetItemDropFromTypeAndStyle(tileId, 0);
+                if (itemId <= 0)
+                    continue;
+
+                var item = new Item();
+                item.SetDefaults(itemId);
+                if (item.IsAir || !item.consumable || item.createTile != tileId)
+                    continue;
+
+                map.AddTile(tileId, InteractionEntry.Create(
+                    "Tile",
+                    item: ContentNameResolver.GetItemName(itemId),
+                    itemId: itemId,
+                    style: item.placeStyle >= 0 ? item.placeStyle : null));
+                added++;
+            }
+
             return added;
         }
 

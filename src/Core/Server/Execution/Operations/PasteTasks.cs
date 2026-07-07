@@ -38,13 +38,8 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>
         /// Executes this clearing task. Returns true if the task is complete, false if it needs to be retried with the remaining tiles.
         /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
         public bool Execute(in PasteContext context, in PasteProgress progress)
         {
-            /// If there are no tiles, consider this task complete. This can happen if the task was created with no tiles, or if all tiles were consumed in a previous attempt.
-
-            // Validate Tile positions.
             if (Batch.IsEmpty)
                 return true;
 
@@ -53,17 +48,19 @@ namespace TheArchitectsBlueprintMod.Core
 
             PasteTile head = Batch.Head;
 
-            LayerResult res = _layer.Clear(Batch.Tiles, in context);
+            LayerResult res = _layer.Clear(Batch, in context);
             TABLog.Debug($"Clear execute layer={_layer.Id} world=({Batch.Head.World.X},{Batch.Head.World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
 
             bool taskCompletes = ResolveClearTaskCompletes(in res);
             PasteProgressOutcome outcome = PasteProgress.ClassifyClearAttempt(in res, taskCompletes);
-            string? detail = PasteProgress.ResolveBatchRetryDetail(Batch, in res, outcome);
+            string? contentMessage = PasteProgress.AppendBatchProgressToContent(res.Message, Batch, in res, outcome);
             PastingInfoLog.Write(progress.WithTaskResult(
                 in head,
                 outcome,
-                res.FailReason,
-                detail,
+                contentMessage: contentMessage,
+                okLabel: res.OkLabel,
+                failReason: res.FailReason,
+                detail: res.Detail,
                 layerId: _layer.Id));
 
             if (!res.Success)
@@ -73,10 +70,9 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
             }
 
-            // If there are remaining tiles, requeue the task and return false.
-            if (res.RemainingBatch is not null && res.RemainingBatch.Count > 0)
+            if (res.TileBatch is not null && res.TileBatch.Tiles.Count > 0)
             {
-                Batch.ReplaceWith(res.RemainingBatch.Tiles);
+                Batch.ReplaceWith(res.TileBatch);
                 return false;
             }
 
@@ -86,7 +82,7 @@ namespace TheArchitectsBlueprintMod.Core
         private static bool ResolveClearTaskCompletes(in LayerResult res)
         {
             if (res.Success)
-                return res.RemainingBatch is null || res.RemainingBatch.Count == 0;
+                return res.TileBatch is null || res.TileBatch.Tiles.Count == 0;
 
             return res.FailReason == LayerFailReason.InsufficientPickaxePower;
         }
@@ -108,13 +104,8 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>
         /// Executes this placing task. Returns true if the task is complete, false if it needs to be retried with the remaining tiles.
         /// </summary>
-        /// <param name="context"></param>
-        /// <returns></returns>
         internal bool Execute(in PasteContext context, in PasteProgress progress)
         {
-            /// If there are no tiles, consider this task complete. This can happen if the task was created with no tiles, or if all tiles were consumed in a previous attempt.
-
-            // Validate Tile positions.
             if (Batch.IsEmpty)
                 return true;
 
@@ -125,19 +116,19 @@ namespace TheArchitectsBlueprintMod.Core
             if (_layer.Id == LayerSystem.Wiring.Id)
             {
                 TABLog.Debug(
-                    $"Place begin layer=Wiring batch={Batch.Count} rel=({head.Relative.X},{head.Relative.Y}) world=({head.World.X},{head.World.Y}) intent={PasteProgress.FormatWireState(head.PayloadCell.Wire)} before={PasteProgress.FormatWireStateAt(head.World.X, head.World.Y)}",
+                    $"Place begin layer=Wiring batch={Batch.Count} rel=({head.Relative.X},{head.Relative.Y}) world=({head.World.X},{head.World.Y}) intent={LayerLogFormat.FormatWireState(head.PayloadCell.Wire)} before={LayerLogFormat.FormatWireStateAt(head.World.X, head.World.Y)}",
                     "Paste");
             }
             else if (_layer.Id == LayerSystem.Detail.Id)
             {
                 TABLog.Debug(
-                    $"Place begin layer=Detail batch={Batch.Count} rel=({head.Relative.X},{head.Relative.Y}) world=({head.World.X},{head.World.Y}) intent={PasteProgress.FormatDetailState(head.PayloadCell.Detail)} before={PasteProgress.FormatDetailState(head.Target)}",
+                    $"Place begin layer=Detail batch={Batch.Count} rel=({head.Relative.X},{head.Relative.Y}) world=({head.World.X},{head.World.Y}) intent={LayerLogFormat.FormatDetailState(head.PayloadCell.Detail)} before={LayerLogFormat.FormatDetailState(head.Target)}",
                     "Paste");
             }
             else if (_layer.Id == LayerSystem.Paint.Id)
             {
                 TABLog.Debug(
-                    $"Place begin layer=Paint batch={Batch.Count} rel=({head.Relative.X},{head.Relative.Y}) world=({head.World.X},{head.World.Y}) intent={PasteProgress.FormatPaintState(head.PayloadCell)} before={PasteProgress.FormatPaintState(head.Target)}",
+                    $"Place begin layer=Paint batch={Batch.Count} rel=({head.Relative.X},{head.Relative.Y}) world=({head.World.X},{head.World.Y}) intent={LayerLogFormat.FormatPaintState(head.PayloadCell)} before={LayerLogFormat.FormatPaintState(head.Target)}",
                     "Paste");
             }
             else
@@ -148,35 +139,41 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             // Execute the placing operation. If it fails, return false and requeue the task.
-            LayerResult res = _layer.Place(Batch.Tiles, in context);
+            LayerResult res = _layer.Place(Batch, in context);
             if (_layer.Id == LayerSystem.Wiring.Id)
             {
                 TABLog.Debug(
-                    $"Place execute layer=Wiring world=({head.World.X},{head.World.Y}) after={PasteProgress.FormatWireStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
+                    $"Place execute layer=Wiring world=({head.World.X},{head.World.Y}) after={LayerLogFormat.FormatWireStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
                     "Paste");
             }
             else if (_layer.Id == LayerSystem.Detail.Id)
             {
                 TABLog.Debug(
-                    $"Place execute layer=Detail world=({head.World.X},{head.World.Y}) after={PasteProgress.FormatDetailStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
+                    $"Place execute layer=Detail world=({head.World.X},{head.World.Y}) after={LayerLogFormat.FormatDetailStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
                     "Paste");
             }
             else if (_layer.Id == LayerSystem.Paint.Id)
             {
                 TABLog.Debug(
-                    $"Place execute layer=Paint world=({head.World.X},{head.World.Y}) after={PasteProgress.FormatPaintStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
+                    $"Place execute layer=Paint world=({head.World.X},{head.World.Y}) after={LayerLogFormat.FormatPaintStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
                     "Paste");
             }
             else
             {
                 TABLog.Debug($"Place execute layer={_layer.Id} world=({Batch.Head.World.X},{Batch.Head.World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
             }
-            PasteTile logHead = Batch.Head;
 
             bool taskCompletes = ResolvePlaceTaskCompletes(in res, in context);
             PasteProgressOutcome outcome = PasteProgress.ClassifyPlaceAttempt(in res, in context, taskCompletes);
-            string? detail = PasteProgress.ResolveBatchRetryDetail(Batch, in res, outcome);
-            PastingInfoLog.Write(progress.WithTaskResult(in logHead, outcome, res.FailReason, detail, layerId: _layer.Id));
+            string? contentMessage = PasteProgress.AppendBatchProgressToContent(res.Message, Batch, in res, outcome);
+            PastingInfoLog.Write(progress.WithTaskResult(
+                in head,
+                outcome,
+                contentMessage: contentMessage,
+                okLabel: res.OkLabel,
+                failReason: res.FailReason,
+                detail: res.Detail,
+                layerId: _layer.Id));
 
             if (!res.Success)
             {
@@ -187,10 +184,9 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
             }
 
-            // Success with remaining tiles means the layer placed part of a batch (e.g. FallBlock columns).
-            if (res.RemainingBatch is not null && res.RemainingBatch.Count > 0)
+            if (res.TileBatch is not null && res.TileBatch.Tiles.Count > 0)
             {
-                Batch.ReplaceWith(res.RemainingBatch.Tiles);
+                Batch.ReplaceWith(res.TileBatch);
                 return false;
             }
 
@@ -200,7 +196,7 @@ namespace TheArchitectsBlueprintMod.Core
         private static bool ResolvePlaceTaskCompletes(in LayerResult res, in PasteContext context)
         {
             if (res.Success)
-                return res.RemainingBatch is null || res.RemainingBatch.Count == 0;
+                return res.TileBatch is null || res.TileBatch.Tiles.Count == 0;
 
             if (!context.RetryOnMissingItems && res.FailReason == LayerFailReason.MissingItems)
                 return true;

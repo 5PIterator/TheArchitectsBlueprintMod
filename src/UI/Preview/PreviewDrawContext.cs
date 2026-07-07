@@ -1,5 +1,8 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using TheArchitectsBlueprintMod.Core;
 
 namespace TheArchitectsBlueprintMod.UI.Preview
 {
@@ -11,10 +14,21 @@ namespace TheArchitectsBlueprintMod.UI.Preview
         public required SpriteBatch SpriteBatch { get; init; }
         public required Vector2 Position { get; init; }
         public required float Scale { get; init; }
-        public required Point WorldOrigin { get; init; }
         public required Color Tint { get; init; }
+        public IReadOnlyDictionary<Point, PayloadCell>? CellLookup { get; init; }
 
-        public int WorldX(int relX) => WorldOrigin.X + relX;
-        public int WorldY(int relY) => WorldOrigin.Y + relY;
+        /// <summary>Returns whether a relative neighbor cell carries the same wire color.</summary>
+        public bool NeighborHasWire(int relX, int relY, int offsetX, int offsetY, Func<PayloadCell.WireData, bool> hasWire)
+        {
+            // --- Look up the offset cell in the sparse payload map and test its wire flags.
+
+            if (CellLookup is null)
+                return false;
+
+            if (!CellLookup.TryGetValue(new Point(relX + offsetX, relY + offsetY), out PayloadCell neighbor))
+                return false;
+
+            return hasWire(neighbor.Wire);
+        }
     }
 }

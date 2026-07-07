@@ -141,6 +141,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 request.RetryOnMissingItems,
                 request.RetryOnInvalidPlacement,
                 request.ClearStrategy,
+                request.ClearItemDropStrategy,
                 request.SweepStrategy);
             var policy = EffectivePastePolicy.Resolve(config, hints);
             var pastingSystem = ModContent.GetInstance<PastingSystem>();

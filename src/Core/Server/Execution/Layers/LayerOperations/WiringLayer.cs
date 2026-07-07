@@ -15,11 +15,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private WiringLayer() : base("Wiring", LayerType.Wiring) { }
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
         {
             Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             bool hasWiring = subjectTile.RedWire || subjectTile.BlueWire || subjectTile.GreenWire || subjectTile.YellowWire || subjectTile.HasActuator;
-            return hasWiring ? [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)] : [];
+            if (!hasWiring)
+                return LayerResult.IdentifyNone();
+
+            return LayerResult.Identified(
+                TileBatch.FromCells([new Blueprint.BlueprintCell(tile.Relative, tile.World, true)]),
+                LayerLogFormat.FormatWireState(subjectTile));
         }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
@@ -54,30 +59,38 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
 
-        public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Clear(TileBatch batch, in PasteContext context)
         {
-            if (tiles.Count == 0) return LayerResult.Ok();
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
+            if (tiles.Count == 0)
+                return LayerResult.Ok();
+
             var tile = tiles[0];
             int x = tile.World.X, y = tile.World.Y;
+            string message = LayerLogFormat.FormatWireState(Main.tile[x, y]);
 
             if (IsWireClear(Main.tile[x, y]))
                 return LayerResult.Ok();
 
-            bool changed = ClearWiringAt(x, y);
+            bool changed = ClearWiringAt(x, y, in context);
             if (changed)
                 LayerSync.SyncTileSquare(x, y);
 
             return IsWireClear(Main.tile[x, y])
-                ? LayerResult.Ok(tile.World)
-                : LayerResult.Fail(tile.World, LayerFailReason.ClearBlocked);
+                ? (changed ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel) : LayerResult.Ok())
+                : LayerResult.Fail(LayerFailReason.ClearBlocked, message);
         }
 
-        public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Place(TileBatch batch, in PasteContext context)
         {
-            if (tiles.Count == 0) return LayerResult.Ok();
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
+            if (tiles.Count == 0)
+                return LayerResult.Ok();
+
             var tile = tiles[0];
             int x = tile.World.X, y = tile.World.Y;
             var intent = tile.PayloadCell.Wire;
+            string message = LayerLogFormat.FormatWireState(in intent);
 
             if (WireMatches(in intent, Main.tile[x, y]))
                 return LayerResult.Ok();
@@ -87,20 +100,20 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 LayerSync.SyncTileSquare(x, y);
 
             return WireMatches(in intent, Main.tile[x, y])
-                ? LayerResult.Ok(tile.World)
-                : LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
+                ? LayerResult.Ok(message, LayerLogFormat.WiredLabel)
+                : LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
         }
 
         /// <summary>Removes every wire color and any actuator at the world cell.</summary>
-        private static bool ClearWiringAt(int x, int y)
+        private static bool ClearWiringAt(int x, int y, in PasteContext context)
         {
             bool changed = false;
 
-            if (Main.tile[x, y].RedWire) { SuppressTileDrop.KillWire(x, y); changed = true; }
-            if (Main.tile[x, y].BlueWire) { SuppressTileDrop.KillWire2(x, y); changed = true; }
-            if (Main.tile[x, y].GreenWire) { SuppressTileDrop.KillWire3(x, y); changed = true; }
-            if (Main.tile[x, y].YellowWire) { SuppressTileDrop.KillWire4(x, y); changed = true; }
-            if (Main.tile[x, y].HasActuator) { SuppressTileDrop.KillActuator(x, y); changed = true; }
+            if (Main.tile[x, y].RedWire) { TileExecutor.EnqueueClearWire(x, y, in context); changed = true; }
+            if (Main.tile[x, y].BlueWire) { TileExecutor.EnqueueClearWire2(x, y, in context); changed = true; }
+            if (Main.tile[x, y].GreenWire) { TileExecutor.EnqueueClearWire3(x, y, in context); changed = true; }
+            if (Main.tile[x, y].YellowWire) { TileExecutor.EnqueueClearWire4(x, y, in context); changed = true; }
+            if (Main.tile[x, y].HasActuator) { TileExecutor.EnqueueClearActuator(x, y, in context); changed = true; }
 
             return changed;
         }

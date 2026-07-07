@@ -18,7 +18,11 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
         {
             // --- Draw tiles whose sprite depends on detail state; plain blocks use BlockPreviewLayer.
 
-            if (!cell.Detail.HasTile || cell.Paint.TileInvisible)
+            if (!cell.Detail.HasTile)
+                return;
+
+            Tile tile = cell.ToTile();
+            if (!TileDrawing.IsVisible(tile))
                 return;
 
             PayloadCell.DetailData detail = cell.Detail;
@@ -28,7 +32,6 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
             ushort tileType = cell.Block.Type;
             Main.instance.LoadTiles(tileType);
 
-            Tile tile = cell.ToTile();
             // Preview tile draw data should not depend on wall animation/frame state.
             TileWallWireStateData state = tile.Get<TileWallWireStateData>();
             int tileFrameNumber = state.TileFrameNumber;
@@ -40,14 +43,14 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
             tile.Get<WallTypeData>() = default;
 
             TileDrawing renderer = Main.instance.TilesRenderer;
-            int worldX = ctx.WorldX(relX);
-            int worldY = ctx.WorldY(relY);
+            int payloadX = relX;
+            int payloadY = relY;
 
-            short frameX = cell.Block.FrameX;
-            short frameY = cell.Block.FrameY;
+            short frameX = tile.TileFrameX;
+            short frameY = tile.TileFrameY;
             renderer.GetTileDrawData(
-                worldX,
-                worldY,
+                payloadX,
+                payloadY,
                 tile,
                 tileType,
                 ref frameX,
@@ -63,17 +66,18 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
                 out Rectangle glowSourceRect,
                 out Color glowColor);
 
-            Texture2D texture = renderer.GetTileDrawTexture(tile, worldX, worldY);
+            Texture2D texture = renderer.GetTileDrawTexture(tile, payloadX, payloadY);
             var source = new Rectangle(frameX + addFrX, frameY + addFrY, tileWidth, tileHeight - halfBrickHeight);
             Vector2 pos = ctx.Position + new Vector2(
                 relX * PreviewDrawContext.TilePixelSize - (tileWidth - PreviewDrawContext.TilePixelSize) / 2f,
                 relY * PreviewDrawContext.TilePixelSize + tileTop + halfBrickHeight);
 
+            Color drawTint = detail.IsActuated ? ctx.Tint * 0.4f : ctx.Tint;
             SlopeType slope = detail.Slope;
             if (slope != SlopeType.Solid)
-                DrawSlopeTile(ctx.SpriteBatch, texture, source, pos, ctx.Scale, effects, slope, ctx.Tint);
+                DrawSlopeTile(ctx.SpriteBatch, texture, source, pos, ctx.Scale, effects, slope, drawTint);
             else
-                ctx.SpriteBatch.Draw(texture, pos * ctx.Scale, source, ctx.Tint, 0f, Vector2.Zero, ctx.Scale, effects, 0f);
+                ctx.SpriteBatch.Draw(texture, pos * ctx.Scale, source, drawTint, 0f, Vector2.Zero, ctx.Scale, effects, 0f);
         }
 
         private static void DrawSlopeTile(

@@ -10,7 +10,7 @@ using Terraria;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
-    /// <summary>Why a <see cref="Layer"/> <see cref="Layer.Place"/> or <see cref="Layer.Clear"/> did not succeed; shared by both paths.</summary>
+    /// <summary>Why a <see cref="Layer"/> operation did not succeed.</summary>
     internal enum LayerFailReason
     {
         None,
@@ -23,35 +23,75 @@ namespace TheArchitectsBlueprintMod.Core.Layers
     }
 
     /// <summary>
-    /// Result of a layer's Clear or Place action. Success indicates the operation completed;
-    /// AffectedTiles lists world positions that were modified (for deduplicating frame tasks).
-    /// RemainingBatch: batch subset that still needs to be placed/cleared; non-empty means the task should run again.
+    /// Result of <see cref="Layer.Identify"/>, <see cref="Layer.Clear"/>, or <see cref="Layer.Place"/>.
+    /// <see cref="TileBatch"/> holds identified cells (identify) or remaining paste tiles (clear/place retry).
     /// </summary>
-    internal readonly struct LayerResult(bool success, IReadOnlyList<Point> affectedTiles, TileBatch? remainingBatch, LayerFailReason failReason)
+    internal readonly struct LayerResult
     {
-        public readonly bool Success = success;
-        public readonly IReadOnlyList<Point> AffectedTiles = affectedTiles ?? Array.Empty<Point>();
-        public readonly TileBatch? RemainingBatch = remainingBatch;
-        public readonly IReadOnlyList<PasteTile> RemainingTiles = remainingBatch?.Tiles ?? Array.Empty<PasteTile>();
-        public readonly LayerFailReason FailReason = failReason;
+        public readonly bool Success;
+        public readonly TileBatch? TileBatch;
+        public readonly LayerFailReason FailReason;
+        public readonly string? Message;
+        public readonly string? OkLabel;
+        public readonly string? Detail;
 
-        public static LayerResult Ok(Point affected) => new(true, [affected], null, LayerFailReason.None);
-        public static LayerResult Ok(IReadOnlyList<Point> affected) => new(true, affected ?? [], null, LayerFailReason.None);
-        public static LayerResult Ok() => new(true, [], null, LayerFailReason.None);
-        public static LayerResult OkWithRemaining(IReadOnlyList<PasteTile> remaining) => new(true, [], new TileBatch([.. remaining]), LayerFailReason.None);
-        public static LayerResult Ok(Point affected, IReadOnlyList<PasteTile> remaining) => new(true, [affected], new TileBatch([.. remaining]), LayerFailReason.None);
-        public static LayerResult Fail(Point attempted) => new(false, [attempted], null, LayerFailReason.Unknown);
-        public static LayerResult Fail(Point attempted, LayerFailReason reason) => new(false, [attempted], null, reason);
-        public static LayerResult Fail() => new(false, [], null, LayerFailReason.Unknown);
-        public static LayerResult Fail(LayerFailReason reason) => new(false, [], null, reason);
+        public IReadOnlyList<PasteTile> RemainingTiles => TileBatch?.Tiles ?? Array.Empty<PasteTile>();
+
+        private LayerResult(
+            bool success,
+            TileBatch? tileBatch,
+            LayerFailReason failReason,
+            string? message,
+            string? okLabel,
+            string? detail)
+        {
+            Success = success;
+            TileBatch = tileBatch;
+            FailReason = failReason;
+            Message = message;
+            OkLabel = okLabel;
+            Detail = detail;
+        }
+
+        public static LayerResult IdentifyNone() =>
+            new(true, null, LayerFailReason.None, null, null, null);
+
+        public static LayerResult Identified(TileBatch cells, string? message) =>
+            new(true, cells, LayerFailReason.None, message, null, null);
+
+        public static LayerResult Ok(string? message = null, string? okLabel = null) =>
+            new(true, null, LayerFailReason.None, message, okLabel, null);
+
+        public static LayerResult OkWithRemaining(
+            TileBatch batch,
+            string? message = null,
+            string? okLabel = null) =>
+            new(true, batch, LayerFailReason.None, message, okLabel, null);
+
+        public static LayerResult OkWithRemaining(
+            IReadOnlyList<PasteTile> remaining,
+            string? message = null,
+            string? okLabel = null) =>
+            OkWithRemaining(new TileBatch([.. remaining]), message, okLabel);
+
+        public static LayerResult Fail(LayerFailReason reason, string? message = null, string? detail = null) =>
+            new(false, null, reason, message, null, detail);
+
+        public static LayerResult Fail(Point _, LayerFailReason reason, string? message = null, string? detail = null) =>
+            Fail(reason, message, detail);
+
+        public LayerResult WithLog(string? message = null, string? okLabel = null, string? detail = null) =>
+            new(Success, TileBatch, FailReason, message ?? Message, okLabel ?? OkLabel, detail ?? Detail);
     }
 
     internal readonly record struct LayerIdentifyResult(
         Layer Layer,
-        IReadOnlyList<Blueprint.BlueprintCell> Tiles,
+        LayerResult Result,
         bool PlacementValid,
         bool HasRequiredItems)
     {
+        public IReadOnlyList<Blueprint.BlueprintCell> Tiles => Result.TileBatch?.Cells ?? [];
+        public string? Message => Result.Message;
         public readonly bool CanPlace => PlacementValid && HasRequiredItems;
     }
 
@@ -81,11 +121,27 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             _layerById = layerById;
         }
 
-        public int ToPlaceIndex(Layer layer) =>
-            layer is not null && _placeIndexByLayer.TryGetValue(layer, out int idx) ? idx : -1;
+        public int ToPlaceIndex(Layer layer)
+        {
+            if (layer is null)
+                return -1;
 
-        public int ToClearIndex(Layer layer) =>
-            layer is not null && _clearIndexByLayer.TryGetValue(layer, out int idx) ? idx : -1;
+            if (CustomLayer.IsAttributedSubLayer(layer))
+                layer = CustomLayer.Definition;
+
+            return _placeIndexByLayer.TryGetValue(layer, out int idx) ? idx : -1;
+        }
+
+        public int ToClearIndex(Layer layer)
+        {
+            if (layer is null)
+                return -1;
+
+            if (CustomLayer.IsAttributedSubLayer(layer))
+                layer = CustomLayer.Definition;
+
+            return _clearIndexByLayer.TryGetValue(layer, out int idx) ? idx : -1;
+        }
 
         public Layer? TryGetLayer(string id) =>
             id is not null && _layerById.TryGetValue(id, out Layer? layer) ? layer : null;
@@ -97,22 +153,22 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public static Layer Wall => WallLayer.Definition;
         public static Layer Block => BlockLayer.Definition;
-        public static Layer FallBlock => FallBlockLayer.Definition;
-        public static Layer Object => ObjectLayer.Definition;
-        public static Layer Vegetation => VegetationLayer.Definition;
+        public static Layer Falling => FallingLayer.Definition;
+        public static Layer Frame => FrameLayer.Definition;
         public static Layer Paint => PaintLayer.Definition;
         public static Layer Wiring => WiringLayer.Definition;
         public static Layer Detail => DetailLayer.Definition;
         public static Layer Fluid => FluidLayer.Definition;
+        public static Layer Custom => CustomLayer.Definition;
         public static Layer Unknown => UnknownLayer.Definition;
 
         public static IReadOnlyList<Layer> BuiltInLayers { get; } =
         [
             Wall,
             Block,
-            FallBlock,
-            Vegetation,
-            Object,
+            Falling,
+            Frame,
+            Custom,
             Paint,
             Wiring,
             Detail,
@@ -121,20 +177,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         ];
 
         /// <summary>
-        /// Composes a layer pipeline from the built-in layers and custom layers.
+        /// Composes a layer pipeline from built-in layers. Custom sub-layers are registered for lookup but ordered internally by <see cref="CustomLayer"/>.
         /// </summary>
-        /// <returns></returns>
         public static LayerPipeline ComposePipeline()
         {
-            /// Resolves various layer order and identification configurations.
-            // Discover custom layers.
-            IReadOnlyList<Layer> customLayers = CustomLayer.DiscoverAttributedLayers();
-            // Create a registry of all layers.
-            var registry = new List<Layer>(BuiltInLayers.Count + customLayers.Count);
-            registry.AddRange(BuiltInLayers);
-            registry.AddRange(customLayers);
+            // --- Register built-in pipeline layers and discover custom sub-layers for id lookup only.
+            IReadOnlyList<Layer> customSubLayers = CustomLayer.DiscoverAttributedLayers();
+            var registry = new List<Layer>(BuiltInLayers);
 
-            // Create a dictionary of layers by ID.
             var layerById = new Dictionary<string, Layer>(StringComparer.Ordinal);
             for (int i = 0; i < registry.Count; i++)
             {
@@ -143,14 +193,18 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     TABLog.Warn($"Duplicate layer id '{layer.Id}' was registered. Later registrations are ignored.", "Layers");
             }
 
-            // Load the layer order definition.
+            for (int i = 0; i < customSubLayers.Count; i++)
+            {
+                Layer subLayer = customSubLayers[i];
+                if (!layerById.TryAdd(subLayer.Id, subLayer))
+                    TABLog.Warn($"Duplicate custom sub-layer id '{subLayer.Id}' was registered. Later registrations are ignored.", "Layers");
+            }
+
             LayerOrderDefinition definition = LayerOrderDefinition.Load();
-            // Resolve the layer order for each phase.
             var placeOrder = ResolveOrder(definition.PlaceOrder, layerById, registry);
             var clearOrder = ResolveOrder(definition.ClearOrder, layerById, registry);
             var identifyOrder = ResolveOrder(definition.IdentifyOrder, layerById, registry);
 
-            // Create a new layer pipeline.
             return new LayerPipeline(
                 placeOrder,
                 clearOrder,
@@ -176,11 +230,33 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 Layer layer = pipeline.IdentifyOrder[i];
                 if (!config.IsLayerIdentificationEnabled(layer.Id))
                     continue;
+
+                if (layer == CustomLayer.Definition)
+                {
+                    IReadOnlyList<LayerIdentifyResult> customResults = CustomLayer.IdentifySubLayers(
+                        in pasteTile,
+                        in identifyLookup,
+                        in context,
+                        config,
+                        identifySubject);
+                    for (int j = 0; j < customResults.Count; j++)
+                    {
+                        LayerIdentifyResult custom = customResults[j];
+                        if (claimedTypes.Contains(LayerType.Custom))
+                            continue;
+
+                        identifiedLayers.Add(custom);
+                        claimedTypes.Add(LayerType.Custom);
+                    }
+
+                    continue;
+                }
+
                 if (claimedTypes.Contains(layer.LayerType))
                     continue;
 
-                IReadOnlyList<Blueprint.BlueprintCell> tiles = layer.Identify(in pasteTile, in identifyLookup, identifySubject);
-                if (tiles.Count == 0)
+                LayerResult identifyResult = layer.Identify(in pasteTile, in identifyLookup, identifySubject);
+                if (identifyResult.TileBatch is null || identifyResult.TileBatch.Cells.Count == 0)
                     continue;
 
                 // Vacant payload: clear/sweep apply air intent; place layers must not queue.
@@ -189,7 +265,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
                 bool placementValid = layer.PlacementValid(in pasteTile, in identifyLookup, in context);
                 bool hasRequiredItems = layer.HasRequiredItems(in pasteTile, in identifyLookup, in context);
-                identifiedLayers.Add(new LayerIdentifyResult(layer, tiles, placementValid, hasRequiredItems));
+                identifiedLayers.Add(new LayerIdentifyResult(layer, identifyResult, placementValid, hasRequiredItems));
                 claimedTypes.Add(layer.LayerType);
             }
 
@@ -298,11 +374,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 [
                     "Wall",
                     "Block",
-                    "FallBlock",
+                    "Falling",
+                    "Frame",
+                    "Custom",
                     "Fluid",
-                    "Vegetation",
-                    "Object",
-                    "Tree",
                     "Unknown",
                     "Paint",
                     "Wiring",
@@ -315,10 +390,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Wiring",
                     "Paint",
                     "Unknown",
-                    "Tree",
-                    "Object",
-                    "Vegetation",
-                    "FallBlock",
+                    "Custom",
+                    "Frame",
+                    "Falling",
                     "Block",
                     "Wall",
                 ],
@@ -326,10 +400,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 [
                     "Wall",
                     "Unknown",
-                    "Tree",
-                    "Vegetation",
-                    "Object",
-                    "FallBlock",
+                    "Custom",
+                    "Frame",
+                    "Falling",
                     "Block",
                     "Fluid",
                     "Paint",

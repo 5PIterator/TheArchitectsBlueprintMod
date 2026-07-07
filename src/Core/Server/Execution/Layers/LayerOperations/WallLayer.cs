@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
-using TheArchitectsBlueprintMod.Utils;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -14,8 +13,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private WallLayer() : base("Wall", LayerType.Wall) { }
 
-        public override IReadOnlyList<Blueprint.BlueprintCell> Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject) =>
-            PasteTile.GetTileForIdentify(in tile, identifySubject).WallType == WallID.None ? [] : [new Blueprint.BlueprintCell(tile.Relative, tile.World, true)];
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
+        {
+            Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
+            if (subjectTile.WallType == WallID.None)
+                return LayerResult.IdentifyNone();
+
+            return LayerResult.Identified(
+                TileBatch.FromCells([new Blueprint.BlueprintCell(tile.Relative, tile.World, true)]),
+                LayerLogFormat.FormatWall(subjectTile));
+        }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].WallType != WallID.None;
@@ -26,26 +33,17 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         {
             ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
             if (wallType == WallID.None) return true;
-            if (!context.RequireItems || context.Items is null) return true;
-            return InventoryManager.FindItemByWall(context.Items, wallType) is not null;
+            return TileExecutor.HasItemForWall(wallType, in context);
         }
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
             ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
-            if (wallType == WallID.None || !context.RequireItems || context.Items is null) return true;
-            return InventoryManager.FindItemByWall(context.Items, wallType) is not null;
+            if (wallType == WallID.None) return true;
+            return TileExecutor.HasItemForWall(wallType, in context);
         }
 
-        public override bool Consume(in PasteTile tile, in PasteContext context)
-        {
-            ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
-            if (wallType == WallID.None || !context.RequireItems || context.Items is null) return true;
-            Item? item = InventoryManager.FindItemByWall(context.Items, wallType);
-            if (item is null) return false;
-            InventoryManager.ConsumeItem(item, tile.World, context.Inventories, context.Player);
-            return true;
-        }
+        public override bool Consume(in PasteTile tile, in PasteContext context) => true;
 
         public override bool Match(in PasteTile tile) =>
             TileComparison.IsSourceCutIntent(in tile)
@@ -59,52 +57,50 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return InteractionMapProvider.GetWallItemIds(wallType);
         }
 
-        public override LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Clear(TileBatch batch, in PasteContext context)
         {
-            if (tiles.Count == 0) return LayerResult.Ok();
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
+            if (tiles.Count == 0)
+                return LayerResult.Ok();
 
+            string? message = null;
             bool changed = false;
             for (int i = 0; i < tiles.Count; i++)
             {
                 int x = tiles[i].World.X, y = tiles[i].World.Y;
-                if (Main.tile[x, y].WallType == WallID.None)
+                Tile live = Main.tile[x, y];
+                if (live.WallType == WallID.None)
                     continue;
 
-                SuppressTileDrop.KillWall(x, y);
+                message ??= LayerLogFormat.FormatWall(live);
+                TileExecutor.EnqueueClearWall(x, y, in context);
                 changed = true;
             }
 
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                int x = tiles[i].World.X, y = tiles[i].World.Y;
-                if (Main.tile[x, y].WallType != WallID.None)
-                    return LayerResult.Fail(tiles[i].World, LayerFailReason.ClearBlocked);
-            }
-
-            return changed ? LayerResult.Ok(tiles[0].World) : LayerResult.Ok();
+            return changed ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel) : LayerResult.Ok();
         }
 
-        public override LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public override LayerResult Place(TileBatch batch, in PasteContext context)
         {
-            if (tiles.Count == 0) return LayerResult.Ok();
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
+            if (tiles.Count == 0)
+                return LayerResult.Ok();
+
             var tile = tiles[0];
             int x = tile.World.X, y = tile.World.Y;
             ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
-            if (Main.tile[x, y].WallType == wallType) return LayerResult.Ok(tile.World);
+            if (Main.tile[x, y].WallType == wallType)
+                return LayerResult.Ok();
 
-            if (context.RequireItems && context.Items != null && InventoryManager.FindItemByWall(context.Items, wallType) is null)
-                return LayerResult.Fail(tile.World, LayerFailReason.MissingItems);
+            string message = LayerLogFormat.FormatWall(tile.PayloadTile);
 
-            if (!WallLoader.CanPlace(x, y, wallType))
-                return LayerResult.Fail(tile.World, LayerFailReason.InvalidPlacement);
+            if (!TileExecutor.HasItemForWall(wallType, in context))
+                return LayerResult.Fail(LayerFailReason.MissingItems, message);
 
-            WorldGen.PlaceWall(x, y, wallType, mute: false);
-            LayerSync.SyncTileSquare(x, y);
+            if (!TileExecutor.EnqueuePlaceWall(x, y, wallType, in context, consumeItem: true))
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
 
-            if (!context.IsSweepCheat && !Consume(in tile, in context))
-                return LayerResult.Fail(tile.World, LayerFailReason.MissingItems);
-
-            return LayerResult.Ok(tile.World);
+            return LayerResult.Ok(message, LayerLogFormat.PlacedLabel(in context));
         }
     }
 }
