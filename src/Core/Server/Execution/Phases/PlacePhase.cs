@@ -1,3 +1,4 @@
+using TheArchitectsBlueprintMod.Core.Layers;
 using TheArchitectsBlueprintMod.Debug;
 
 namespace TheArchitectsBlueprintMod.Core.Phases
@@ -49,9 +50,12 @@ namespace TheArchitectsBlueprintMod.Core.Phases
             TABLog.Debug($"Place layer {layerPlace.Id} (idx={Operation._currentLayerIndex}) tasks={qPlace.Count}", "Paste");
             Operation._currentStepPlaceTiles.Clear();
             Operation._currentStepClearTiles.Clear();
+            PasteContext placeContext = layerPlace.Id == LayerSystem.Frame.Id
+                ? Operation.BuildFramePlaceContext(Operation._currentLayerIndex)
+                : Operation.Context;
             ProcessPlaceQueue(
                 qPlace,
-                Operation.Context,
+                placeContext,
                 TickSize,
                 Operation._currentStepPlaceTiles,
                 Operation._overlayDoneThisLayer,

@@ -38,6 +38,10 @@ namespace TheArchitectsBlueprintMod.Config
         [DefaultValue(4096)]
         [Range(1, 16384)]
         public int MaxTilesPerCategory = 4096;
+
+        [DefaultValue(64)]
+        [Range(1, 512)]
+        public int MaxConcurrentArrows = 64;
     }
 
     /// <summary>Global paste limits grouped by enforcement scope.</summary>

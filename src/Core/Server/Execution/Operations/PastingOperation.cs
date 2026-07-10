@@ -78,6 +78,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         /// <summary>
         /// Sweep queues on <see cref="SweepPhase.OnEnter"/>; completion waits until the sweep queue is drained.
+        /// Also waits until <see cref="TileEffectSession"/> has no queued or in-flight tile mutations.
         /// </summary>
         public bool IsCompleted =>
             _currentPhase is null
@@ -87,6 +88,9 @@ namespace TheArchitectsBlueprintMod.Core
             && (!_placePhase.Active || !HasAnyTask(placeTasks))
             && (!_sweepPhase.Active || !_sweepPhase.HasPendingTasks)
             && EffectSession.IsIdle;
+
+        /// <summary>True while tile mutations are still queued or projectiles are in flight for this operation.</summary>
+        internal bool IsWaitingForTileEffects => !EffectSession.IsIdle;
 
         private readonly EffectivePastePolicy _policy;
 
@@ -120,10 +124,7 @@ namespace TheArchitectsBlueprintMod.Core
             _cutPhase = new CutPhase(this, _policy.CutPhase);
             _placePhase = new PlacePhase(this, _policy.PlacePhase);
             _sweepPhase = new SweepPhase(this, _policy.SweepPhase);
-            int operationId = projection.Id > 0
-                ? projection.Id
-                : Environment.TickCount ^ (projection.Owner << 8) ^ projection.Area.GetHashCode();
-            EffectSession = new TileEffectSession(operationId, () => Context);
+            EffectSession = new TileEffectSession(TileEffectSession.AllocateOperationId(), () => Context);
             _progress = new PasteProgressTracker(Projection.Owner)
             {
                 CorrelationId = Projection.Id,
@@ -170,7 +171,10 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
 
             if (_currentPhase is null)
-                return false;
+            {
+                NextStepTime = 0;
+                return !IsCompleted;
+            }
 
             SyncProgressIdentity();
             Phase phase = _currentPhase;
@@ -227,6 +231,39 @@ namespace TheArchitectsBlueprintMod.Core
                 policy: _policy,
                 lookup: Lookup,
                 effectSession: EffectSession);
+        }
+
+        /// <summary>Builds place context with every pending frame candidate from the frame layer queue.</summary>
+        internal PasteContext BuildFramePlaceContext(int frameLayerIndex)
+        {
+            // --- Snapshot queued frame tasks so placement can defer objects waiting on lower support.
+            return new PasteContext(
+                playerIndex: Projection.Owner,
+                inventoryLookup: _inventoryLookup,
+                policy: _policy,
+                lookup: Lookup,
+                effectSession: EffectSession,
+                pendingFramePlaceCandidates: CollectPendingFramePlaceCandidates(frameLayerIndex));
+        }
+
+        /// <summary>Collects logical frame objects still waiting in the frame place queue.</summary>
+        internal List<FrameOperations.FrameCandidate> CollectPendingFramePlaceCandidates(int frameLayerIndex)
+        {
+            // --- Flatten every queued task footprint, then regroup by placement origin.
+            var pendingTiles = new List<PasteTile>();
+            Queue<PlacingTask> queue = placeTasks[frameLayerIndex];
+            if (queue.Count == 0)
+                return [];
+
+            PlacingTask[] snapshot = [.. queue];
+            for (int i = 0; i < snapshot.Length; i++)
+            {
+                IReadOnlyList<PasteTile> tiles = snapshot[i].Tiles;
+                for (int j = 0; j < tiles.Count; j++)
+                    pendingTiles.Add(tiles[j]);
+            }
+
+            return FrameOperations.GroupIntoCandidates(pendingTiles, forClear: false);
         }
 
         /// <summary>
@@ -1063,9 +1100,18 @@ namespace TheArchitectsBlueprintMod.Core
 
         /// <summary>
         /// Advances to the next enabled phase and prepares phase-local queue state.
+        /// Defers while tile-effect mutations from the current phase are still queued or in flight.
         /// </summary>
         internal void AdvancePhase()
         {
+            if (!EffectSession.IsIdle)
+            {
+                TABLog.Debug(
+                    $"Waiting for tile effects before phase advance queued={EffectSession.PendingMutationCount} inFlight={EffectSession.PendingImpactCount}",
+                    "Paste");
+                return;
+            }
+
             EndInfoPhaseFor(_currentPhase);
 
             _currentLayerIndex = 0;

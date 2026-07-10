@@ -63,6 +63,22 @@ namespace TheArchitectsBlueprintMod.Config
         public SweepPasteStrategies Strategy = new();
     }
 
+    /// <summary>Client arrow flight preferences for paste projectiles.</summary>
+    public sealed class ArrowPastePreference
+    {
+        [DefaultValue(48)]
+        [Range(10, 600)]
+        public int Speed = 48;
+
+        [DefaultValue(2.5f)]
+        [Range(0.5f, 48f)]
+        public float MinSpeed = 2.5f;
+
+        [DefaultValue(24f)]
+        [Range(1f, 96f)]
+        public float MaxSpeed = 24f;
+    }
+
     /// <summary>Client-only paste overlay debug visuals.</summary>
     public sealed class PasteOverlayDebugConfig
     {
@@ -80,6 +96,9 @@ namespace TheArchitectsBlueprintMod.Config
         public ClearPastePreference Clear = new();
         public PlacePastePreference Place = new();
         public SweepPastePreference Sweep = new();
+
+        [Header("Arrow")]
+        public ArrowPastePreference Arrow = new();
 
         [Header("Debug")]
         public PasteOverlayDebugConfig Overlay = new();

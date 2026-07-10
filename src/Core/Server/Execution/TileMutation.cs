@@ -23,6 +23,16 @@ namespace TheArchitectsBlueprintMod.Core
         ClearActuator = 9,
         VoidKillTile = 10,
         Sweep = 11,
+        PlaceWireRed = 12,
+        PlaceWireBlue = 13,
+        PlaceWireGreen = 14,
+        PlaceWireYellow = 15,
+        PlaceActuator = 16,
+        ApplyDetailState = 17,
+        ApplyPaintState = 18,
+        SetLiquid = 19,
+        ApplyTileFrame = 20,
+        ApplyPayloadBlock = 21,
     }
 
     /// <summary>Queued world mutation executed by <see cref="TileExecutorSystem"/>.</summary>
@@ -40,7 +50,7 @@ namespace TheArchitectsBlueprintMod.Core
         PasteProjectileMode? ProjectileMode = null,
         int ItemType = 0,
         int ItemStack = 1,
-        PayloadCell SweepPayload = default,
+        PayloadCell Payload = default,
         int TargetInventoryIndex = -1)
     {
         public static TileMutation New(
@@ -57,7 +67,7 @@ namespace TheArchitectsBlueprintMod.Core
             PasteProjectileMode? projectileMode = null,
             int itemType = 0,
             int itemStack = 1,
-            PayloadCell sweepPayload = default,
+            PayloadCell payload = default,
             int targetInventoryIndex = -1) =>
             new(
                 MutationId: mutationId,
@@ -73,7 +83,7 @@ namespace TheArchitectsBlueprintMod.Core
                 ProjectileMode: projectileMode,
                 ItemType: itemType,
                 ItemStack: itemStack,
-                SweepPayload: sweepPayload,
+                Payload: payload,
                 TargetInventoryIndex: targetInventoryIndex);
     }
 }

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using TheArchitectsBlueprintMod.Core;
-using TheArchitectsBlueprintMod.Utils;
 using Terraria;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
@@ -72,13 +71,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (IsWireClear(Main.tile[x, y]))
                 return LayerResult.Ok();
 
-            bool changed = ClearWiringAt(x, y, in context);
-            if (changed)
-                LayerSync.SyncTileSquare(x, y);
+            bool changed = false;
+            if (!ClearWiringAt(x, y, in context, ref changed))
+                return LayerResult.Fail(LayerFailReason.ClearBlocked, message);
 
-            return IsWireClear(Main.tile[x, y])
-                ? (changed ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel) : LayerResult.Ok())
-                : LayerResult.Fail(LayerFailReason.ClearBlocked, message);
+            return changed
+                ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel)
+                : LayerResult.Ok();
         }
 
         public override LayerResult Place(TileBatch batch, in PasteContext context)
@@ -95,70 +94,110 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (WireMatches(in intent, Main.tile[x, y]))
                 return LayerResult.Ok();
 
-            bool changed = ApplyWireIntent(x, y, in intent);
-            if (changed)
-                LayerSync.SyncTileSquare(x, y);
+            bool changed = false;
+            if (!ApplyWireIntent(x, y, in intent, in context, ref changed))
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
 
-            return WireMatches(in intent, Main.tile[x, y])
+            return changed
                 ? LayerResult.Ok(message, LayerLogFormat.WiredLabel)
-                : LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+                : LayerResult.Ok();
         }
 
-        /// <summary>Removes every wire color and any actuator at the world cell.</summary>
-        private static bool ClearWiringAt(int x, int y, in PasteContext context)
+        /// <summary>Queues removal of every wire color and actuator at the world cell.</summary>
+        private static bool ClearWiringAt(int x, int y, in PasteContext context, ref bool changed)
         {
-            bool changed = false;
+            if (Main.tile[x, y].RedWire)
+            {
+                changed = true;
+                if (!TileExecutor.EnqueueClearWire(x, y, in context))
+                    return false;
+            }
 
-            if (Main.tile[x, y].RedWire) { TileExecutor.EnqueueClearWire(x, y, in context); changed = true; }
-            if (Main.tile[x, y].BlueWire) { TileExecutor.EnqueueClearWire2(x, y, in context); changed = true; }
-            if (Main.tile[x, y].GreenWire) { TileExecutor.EnqueueClearWire3(x, y, in context); changed = true; }
-            if (Main.tile[x, y].YellowWire) { TileExecutor.EnqueueClearWire4(x, y, in context); changed = true; }
-            if (Main.tile[x, y].HasActuator) { TileExecutor.EnqueueClearActuator(x, y, in context); changed = true; }
+            if (Main.tile[x, y].BlueWire)
+            {
+                changed = true;
+                if (!TileExecutor.EnqueueClearWire2(x, y, in context))
+                    return false;
+            }
 
-            return changed;
+            if (Main.tile[x, y].GreenWire)
+            {
+                changed = true;
+                if (!TileExecutor.EnqueueClearWire3(x, y, in context))
+                    return false;
+            }
+
+            if (Main.tile[x, y].YellowWire)
+            {
+                changed = true;
+                if (!TileExecutor.EnqueueClearWire4(x, y, in context))
+                    return false;
+            }
+
+            if (Main.tile[x, y].HasActuator)
+            {
+                changed = true;
+                if (!TileExecutor.EnqueueClearActuator(x, y, in context))
+                    return false;
+            }
+
+            return true;
         }
 
-        /// <summary>Reconciles live wire/actuator state to payload intent using WorldGen place/kill APIs.</summary>
-        private static bool ApplyWireIntent(int x, int y, in PayloadCell.WireData intent)
+        /// <summary>Queues wire/actuator reconciliation to payload intent through TileExecutor.</summary>
+        private static bool ApplyWireIntent(int x, int y, in PayloadCell.WireData intent, in PasteContext context, ref bool changed)
         {
-            bool changed = false;
-
             if (Main.tile[x, y].RedWire != intent.RedWire)
             {
-                if (intent.RedWire) WorldGen.PlaceWire(x, y);
-                else SuppressTileDrop.KillWire(x, y);
                 changed = true;
+                bool queued = intent.RedWire
+                    ? TileExecutor.EnqueuePlaceWire(x, y, in context)
+                    : TileExecutor.EnqueueClearWire(x, y, in context);
+                if (!queued)
+                    return false;
             }
 
             if (Main.tile[x, y].BlueWire != intent.BlueWire)
             {
-                if (intent.BlueWire) WorldGen.PlaceWire2(x, y);
-                else SuppressTileDrop.KillWire2(x, y);
                 changed = true;
+                bool queued = intent.BlueWire
+                    ? TileExecutor.EnqueuePlaceWire2(x, y, in context)
+                    : TileExecutor.EnqueueClearWire2(x, y, in context);
+                if (!queued)
+                    return false;
             }
 
             if (Main.tile[x, y].GreenWire != intent.GreenWire)
             {
-                if (intent.GreenWire) WorldGen.PlaceWire3(x, y);
-                else SuppressTileDrop.KillWire3(x, y);
                 changed = true;
+                bool queued = intent.GreenWire
+                    ? TileExecutor.EnqueuePlaceWire3(x, y, in context)
+                    : TileExecutor.EnqueueClearWire3(x, y, in context);
+                if (!queued)
+                    return false;
             }
 
             if (Main.tile[x, y].YellowWire != intent.YellowWire)
             {
-                if (intent.YellowWire) WorldGen.PlaceWire4(x, y);
-                else SuppressTileDrop.KillWire4(x, y);
                 changed = true;
+                bool queued = intent.YellowWire
+                    ? TileExecutor.EnqueuePlaceWire4(x, y, in context)
+                    : TileExecutor.EnqueueClearWire4(x, y, in context);
+                if (!queued)
+                    return false;
             }
 
             if (Main.tile[x, y].HasActuator != intent.HasActuator)
             {
-                if (intent.HasActuator) WorldGen.PlaceActuator(x, y);
-                else SuppressTileDrop.KillActuator(x, y);
+                bool queued = intent.HasActuator
+                    ? TileExecutor.EnqueuePlaceActuator(x, y, in context)
+                    : TileExecutor.EnqueueClearActuator(x, y, in context);
                 changed = true;
+                if (!queued)
+                    return false;
             }
 
-            return changed;
+            return true;
         }
 
         private static bool WireMatches(in PayloadCell.WireData intent, in Tile live) =>

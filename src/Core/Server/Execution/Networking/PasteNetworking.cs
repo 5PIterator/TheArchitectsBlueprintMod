@@ -142,7 +142,10 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 request.RetryOnInvalidPlacement,
                 request.ClearStrategy,
                 request.ClearItemDropStrategy,
-                request.SweepStrategy);
+                request.SweepStrategy,
+                request.ArrowSpeed,
+                request.ArrowMinSpeed,
+                request.ArrowMaxSpeed);
             var policy = EffectivePastePolicy.Resolve(config, hints);
             var pastingSystem = ModContent.GetInstance<PastingSystem>();
             if (!pastingSystem.ExecutePaste(projection, policy, out var startReason))

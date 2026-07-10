@@ -182,17 +182,79 @@ Configs: {
 	ClientLogConfig: {
 		DisplayName: Client Diagnostics
 		Tooltip: These options apply only on your machine. They are not sent to the server and do not change host paste rules or map compilation.
-		Headers.Logging: Logging
 
-		CategoryFilter: {
-			Label: Log category filter
+		Headers: {
+			Logging: Logging
+			LogTags: Log tag families
+		}
+
+		EnableDebugLogs: {
+			Label: Enable debug logs
 			Tooltip:
 				'''
-				Limit which log categories are written to the mod log and chat.
-				Use TileExecutor only to hide Paste and other categories while debugging tile mutations.
+				Master switch for debug-level log records.
+				When disabled, debug lines are suppressed; info, warning, and error logs still emit.
 				'''
-			All.Label: All categories
-			TileExecutorOnly.Label: TileExecutor only
+		}
+
+		TagPaste: {
+			Label: Paste
+			Tooltip: Paste planning, phases, task execution, and paste lifecycle ([Paste]).
+		}
+
+		TagTileExecutor: {
+			Label: TileExecutor
+			Tooltip: Tile mutation queue, projectile launch/impact, and apply results ([TileExecutor]).
+		}
+
+		TagInventory: {
+			Label: Inventory
+			Tooltip: Inventory lookup, reserve/consume, store destination, and store attempts ([Inventory]).
+		}
+
+		TagProjection: {
+			Label: Projection
+			Tooltip: Projection and ProjectionSystem client state ([Projection], [ProjectionSystem]).
+		}
+
+		TagSelection: {
+			Label: Selection
+			Tooltip: Selection, SelectionSystem, and Blueprint client state ([Selection], [SelectionSystem], [Blueprint]).
+		}
+
+		TagLayers: {
+			Label: Layers
+			Tooltip: Layer registration, ordering, and custom sub-layer warnings ([Layers]).
+		}
+
+		TagTileMapping: {
+			Label: Tile mapping
+			Tooltip: Tile mapping compile and discovery actions ([TileMapping]).
+		}
+
+		TagInteractionMap: {
+			Label: Interaction map
+			Tooltip: Interaction map load and entry validation ([InteractionMap]).
+		}
+
+		TagNetworking: {
+			Label: Networking
+			Tooltip: Paste networking packet handling ([PasteNet]).
+		}
+
+		TagToolAction: {
+			Label: Tool action
+			Tooltip: Tool action manager errors ([ToolAction]).
+		}
+
+		TagTemplate: {
+			Label: Template
+			Tooltip: Template copy warnings ([Template]).
+		}
+
+		TagOther: {
+			Label: Other / uncategorized
+			Tooltip: Log lines with no category tag or unknown tags.
 		}
 
 		PrintDebugLogsToChat: {
@@ -226,6 +288,7 @@ Configs: {
 
 		Headers: {
 			Preferences: Preferences
+			Arrow: Arrow
 			Debug: Debug Header
 		}
 
@@ -298,6 +361,26 @@ Configs: {
 			}
 		}
 
+		Arrow: {
+			Label: Arrow
+			Tooltip: Flight timing and velocity for paste arrows.
+
+			Speed: {
+				Label: Arrow speed
+				Tooltip: How long each arrow takes to complete its flight, in ticks. Lower values are faster.
+			}
+
+			MinSpeed: {
+				Label: Arrow min velocity
+				Tooltip: Minimum travel speed for paste arrows.
+			}
+
+			MaxSpeed: {
+				Label: Arrow max velocity
+				Tooltip: Maximum travel speed for paste arrows.
+			}
+		}
+
 		Overlay: {
 			Label: Overlay
 			Tooltip: ""
@@ -316,6 +399,7 @@ Configs: {
 			GlobalLimits: Global limits
 			PhasePolicy: Phase policy
 			LayerPolicy: Layer policy
+			ProjectilePolicy: Projectile Policy Header
 		}
 
 		Limits: {
@@ -364,6 +448,11 @@ Configs: {
 				MaxTilesPerCategory: {
 					Label: Max tiles per category
 					Tooltip: Maximum tiles processed per layer category in a single step.
+				}
+
+				MaxConcurrentArrows: {
+					Label: Max concurrent arrows
+					Tooltip: Maximum paste arrows in flight per operation at once.
 				}
 			}
 		}
@@ -616,6 +705,25 @@ Configs: {
 
 			Label: Layer policy
 		}
+	}
+
+	ArrowPastePreference: {
+		Speed: {
+			Label: Arrow speed
+			Tooltip: How long each arrow takes to complete its flight, in ticks. Lower values are faster.
+		}
+
+		MinSpeed: {
+			Label: Arrow min velocity
+			Tooltip: Minimum travel speed for paste arrows.
+		}
+
+		MaxSpeed: {
+			Label: Arrow max velocity
+			Tooltip: Maximum travel speed for paste arrows.
+		}
+
+		Tooltip: ""
 	}
 
 	TileMappingConfig: {
@@ -956,6 +1064,11 @@ Configs: {
 		MaxTilesPerCategory: {
 			Label: Max tiles per category
 			Tooltip: ""
+		}
+
+		MaxConcurrentArrows: {
+			Label: Max concurrent arrows
+			Tooltip: Maximum paste arrows in flight per operation at once.
 		}
 	}
 
@@ -1368,4 +1481,4 @@ Configs: {
 	}
 }
 
-Projectiles.PasteTileProjectile.DisplayName: Paste Tile Projectile
+Projectiles.PasteArrow.DisplayName: Paste Arrow

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core.Layers;
 using TheArchitectsBlueprintMod.Core.Phases;
 using Terraria;
 using Terraria.ModLoader;
@@ -12,13 +13,19 @@ namespace TheArchitectsBlueprintMod.Core
         bool retryOnInvalidPlacement,
         ClearStyle clearStyle,
         ClearItemDropStyle clearItemDropStyle,
-        SweepStyle sweepStyle)
+        SweepStyle sweepStyle,
+        int arrowSpeed,
+        float arrowMinSpeed,
+        float arrowMaxSpeed)
     {
         public bool RetryOnMissingItems { get; } = retryOnMissingItems;
         public bool RetryOnInvalidPlacement { get; } = retryOnInvalidPlacement;
         public ClearStyle ClearStyle { get; } = clearStyle;
         public ClearItemDropStyle ClearItemDropStyle { get; } = clearItemDropStyle;
         public SweepStyle SweepStyle { get; } = sweepStyle;
+        public int ArrowSpeed { get; } = arrowSpeed;
+        public float ArrowMinSpeed { get; } = arrowMinSpeed;
+        public float ArrowMaxSpeed { get; } = arrowMaxSpeed;
 
         /// <summary>Reads local client ModConfig values for outbound paste requests.</summary>
         public static PasteClientHints FromClientConfig()
@@ -29,7 +36,10 @@ namespace TheArchitectsBlueprintMod.Core
                 client.Place.Strategy.RetryOnInvalidPlacement,
                 client.Plan.Strategy.Style,
                 client.Clear.Strategy.ItemDrop,
-                client.Sweep.Strategy.Style);
+                client.Sweep.Strategy.Style,
+                client.Arrow.Speed,
+                client.Arrow.MinSpeed,
+                client.Arrow.MaxSpeed);
         }
     }
 
@@ -41,6 +51,9 @@ namespace TheArchitectsBlueprintMod.Core
         public PastePhasePolicy<CutPhaseStrategy> CutPhase { get; init; }
         public PastePhasePolicy<PlacePhaseStrategy> PlacePhase { get; init; }
         public PastePhasePolicy<SweepPhaseStrategy> SweepPhase { get; init; }
+        public int ArrowSpeed { get; init; }
+        public float ArrowMinSpeed { get; init; }
+        public float ArrowMaxSpeed { get; init; }
 
         /// <summary>
         /// Merges server policy with optional client hints.
@@ -95,6 +108,9 @@ namespace TheArchitectsBlueprintMod.Core
                 CutPhase = server.Phases.Cut.ToPolicy(cutStrategy),
                 PlacePhase = server.Phases.Place.ToPolicy(placeStrategy),
                 SweepPhase = server.Phases.Sweep.ToPolicy(sweepStrategy),
+                ArrowSpeed = hints.ArrowSpeed,
+                ArrowMinSpeed = hints.ArrowMinSpeed,
+                ArrowMaxSpeed = hints.ArrowMaxSpeed,
             };
         }
     }
@@ -107,7 +123,8 @@ namespace TheArchitectsBlueprintMod.Core
         InventoryLookup? inventoryLookup,
         in EffectivePastePolicy policy,
         PasteTileLookup? lookup = null,
-        TileEffectSession? effectSession = null)
+        TileEffectSession? effectSession = null,
+        IReadOnlyList<FrameOperations.FrameCandidate>? pendingFramePlaceCandidates = null)
     {
         public readonly Player Player = Main.player[playerIndex];
         public readonly SweepStyle SweepStrategy = policy.SweepPhase.Strategy.Style;
@@ -127,7 +144,11 @@ namespace TheArchitectsBlueprintMod.Core
         public readonly PastePhasePolicy<CutPhaseStrategy> CutPhase = policy.CutPhase;
         public readonly PastePhasePolicy<PlacePhaseStrategy> PlacePhase = policy.PlacePhase;
         public readonly PastePhasePolicy<SweepPhaseStrategy> SweepPhase = policy.SweepPhase;
+        public readonly int ArrowSpeed = policy.ArrowSpeed;
+        public readonly float ArrowMinSpeed = policy.ArrowMinSpeed;
+        public readonly float ArrowMaxSpeed = policy.ArrowMaxSpeed;
         public readonly PasteTileLookup? Lookup = lookup;
         public readonly TileEffectSession? EffectSession = effectSession;
+        public readonly IReadOnlyList<FrameOperations.FrameCandidate>? PendingFramePlaceCandidates = pendingFramePlaceCandidates;
     }
 }

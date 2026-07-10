@@ -5,7 +5,6 @@ using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 using TheArchitectsBlueprintMod.Utils;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -392,29 +391,15 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             Tile dest = Main.tile[x, y];
 
             if (dest.HasTile && dest.TileType != tileType && context.UseReplacePlace)
-                TileExecutor.EnqueueVoidKillTile(x, y, in context);
+            {
+                if (!TileExecutor.EnqueueVoidKillTile(x, y, in context))
+                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+            }
 
-            ApplyPayloadCellBlockOnly(x, y, in segment.PayloadCell);
-            LayerSync.SyncTileSquare(x, y);
+            if (!TileExecutor.EnqueueApplyPayloadBlock(x, y, in segment.PayloadCell, in context))
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+
             return LayerResult.Ok(message, okLabel);
-        }
-
-        /// <summary>Applies solid-tile identity and framing from the payload without clobbering other layers.</summary>
-        private static void ApplyPayloadCellBlockOnly(int x, int y, in PayloadCell payload)
-        {
-            if (payload.IsEmpty || !payload.Detail.HasTile || payload.Block.Type >= TileLoader.TileCount)
-                return;
-
-            Tile dest = Main.tile[x, y];
-            dest.HasTile = true;
-            dest.TileType = (ushort)payload.Block.Type;
-
-            TileWallWireStateData state = DetailOperations.ReadState(x, y);
-            var block = payload.Block;
-            state.TileFrameX = (short)block.FrameX;
-            state.TileFrameY = (short)block.FrameY;
-            state.BlockType = payload.Detail.BlockType;
-            DetailOperations.WriteState(x, y, in state);
         }
 
         /// <summary>Returns the next clear index: branch columns top-down, then trunk column top-down.</summary>

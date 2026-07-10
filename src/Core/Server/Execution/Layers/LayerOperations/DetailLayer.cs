@@ -59,35 +59,26 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             Tile live = Main.tile[wx, wy];
             string message = LayerLogFormat.FormatDetailState(live);
 
-            bool changed = false;
-            if (live.IsActuated)
+            bool alreadyCleared = !live.IsActuated
+                && !live.IsHalfBlock
+                && live.Slope == SlopeType.Solid
+                && live.BlockType == BlockType.Solid;
+            if (alreadyCleared)
+                return LayerResult.Ok();
+
+            if (!TileExecutor.EnqueueApplyDetailState(
+                    wx,
+                    wy,
+                    isActuated: false,
+                    isHalfBlock: false,
+                    slope: SlopeType.Solid,
+                    blockType: BlockType.Solid,
+                    in context))
             {
-                TileWallWireStateData state = DetailOperations.ReadState(wx, wy);
-                state.IsActuated = false;
-                DetailOperations.WriteState(wx, wy, in state);
-                changed = true;
+                return LayerResult.Fail(LayerFailReason.ClearBlocked, message);
             }
 
-            if (live.IsHalfBlock)
-            {
-                WorldGen.PoundTile(wx, wy);
-                changed = true;
-            }
-
-            if (live.Slope != SlopeType.Solid)
-            {
-                WorldGen.SlopeTile(wx, wy, 0);
-                changed = true;
-            }
-            else if (live.BlockType != BlockType.Solid)
-            {
-                TileWallWireStateData state = DetailOperations.ReadState(wx, wy);
-                state.BlockType = BlockType.Solid;
-                DetailOperations.WriteState(wx, wy, in state);
-                changed = true;
-            }
-
-            return changed ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel) : LayerResult.Ok();
+            return LayerResult.Ok(message, LayerLogFormat.ClearedLabel);
         }
 
         public override LayerResult Place(TileBatch batch, in PasteContext context)
@@ -105,46 +96,26 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             string message = LayerLogFormat.FormatDetailState(in src);
 
             Tile live = Main.tile[wx, wy];
-            bool changed = false;
+            bool alreadyMatching = src.IsHalfBlock == live.IsHalfBlock
+                && src.Slope == live.Slope
+                && src.IsActuated == live.IsActuated
+                && src.BlockType == live.BlockType;
+            if (alreadyMatching)
+                return LayerResult.Ok();
 
-            if (src.IsHalfBlock != live.IsHalfBlock)
+            if (!TileExecutor.EnqueueApplyDetailState(
+                    wx,
+                    wy,
+                    isActuated: src.IsActuated,
+                    isHalfBlock: src.IsHalfBlock,
+                    slope: src.Slope,
+                    blockType: src.BlockType,
+                    in context))
             {
-                WorldGen.PoundTile(wx, wy);
-                changed = true;
-                live = Main.tile[wx, wy];
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            if (src.Slope != live.Slope)
-            {
-                if (src.Slope == SlopeType.Solid)
-                    WorldGen.SlopeTile(wx, wy, 0);
-                else
-                    WorldGen.SlopeTile(wx, wy, (int)src.Slope, noEffects: false);
-                changed = true;
-                live = Main.tile[wx, wy];
-            }
-
-            TileWallWireStateData state = DetailOperations.ReadState(wx, wy);
-            bool stateChanged = false;
-            if (state.IsActuated != src.IsActuated)
-            {
-                state.IsActuated = src.IsActuated;
-                stateChanged = true;
-            }
-
-            if (state.BlockType != src.BlockType)
-            {
-                state.BlockType = src.BlockType;
-                stateChanged = true;
-            }
-
-            if (stateChanged)
-            {
-                DetailOperations.WriteState(wx, wy, in state);
-                changed = true;
-            }
-
-            return changed ? LayerResult.Ok(message, LayerLogFormat.DetailedLabel) : LayerResult.Ok();
+            return LayerResult.Ok(message, LayerLogFormat.DetailedLabel);
         }
     }
 }

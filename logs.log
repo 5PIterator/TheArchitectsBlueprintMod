@@ -1,304 +1,376 @@
-[Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=0x0 carriedInclusion=False
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=0x0 carriedInclusion=False
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.749] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.749] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.766] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.766] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.783] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.783] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.816] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.816] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.833] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.833] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.850] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.850] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.866] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.866] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.883] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.883] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.900] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.900] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.916] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.916] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.933] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.933] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.950] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.950] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.966] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.966] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:28.983] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:28.983] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.000] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.000] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.017] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.017] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.033] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.033] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.049] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.049] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.067] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.067] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.100] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.100] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.117] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.117] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.134] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.134] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.150] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.150] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.167] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.167] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.183] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.183] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.200] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.200] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.217] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.217] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.234] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.234] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.250] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.250] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.267] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.267] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.284] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.284] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.300] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.300] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.317] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.317] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.333] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.333] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.350] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.350] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.367] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.367] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.384] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.384] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.417] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.417] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.433] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.433] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.450] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.450] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.467] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.467] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.484] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.484] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.500] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.500] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.517] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.517] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.533] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.533] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.550] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.550] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.567] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.567] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.584] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.584] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.600] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.600] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.617] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.617] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.634] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.634] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.650] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.650] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.667] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.667] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.684] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.684] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.700] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.700] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.717] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.717] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.734] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.734] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.750] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.750] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.767] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.767] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.784] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.784] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.800] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.817] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.817] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.834] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.834] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.850] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.850] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.867] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.867] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.884] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.884] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.901] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.901] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.917] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.917] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.934] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.934] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.951] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.951] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.967] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.967] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-[14:30:29.984] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
-TheArchitectsBlueprintMod: [14:30:29.984] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Blueprint] Selection.Define: owner=0 area=(3168,330) 1x1 prev=1x1 carriedInclusion=True
-[SelectionSystem] SelectionSystem.SetPoints: owner=0 A=(3168,330) B=(3168,330) area=(3168,330) 1x1
+[15:15:23.072] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3186,334) 6x9
+[Paste] START | area=(3186,334) 6x9 | sourceClear=False | srcTiles=54 tgtTiles=54 | sweep=Detail planClear=All clearItemDrop=Store retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
+[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
+[Paste] Identify place layer=Frame rel=(2,0) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,0) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,1) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,1) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,2) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,2) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,3) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,3) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(1,4) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,4) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,4) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(4,4) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(1,5) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,5) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,5) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(4,5) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(0,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(1,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(4,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(5,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(0,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(1,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(4,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(5,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Block rel=(0,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify place layer=Block rel=(1,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify place layer=Block rel=(2,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify place layer=Block rel=(3,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify place layer=Block rel=(4,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify place layer=Block rel=(5,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify clear layer=Frame rel=(2,0) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,0) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,1) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,1) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,2) tiles=4
+TheArchitectsBlueprintMod: [15:15:23.072] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3186,334) 6x9
+[Paste] START | area=(3186,334) 6x9 | sourceClear=False | srcTiles=54 tgtTiles=54 | sweep=Detail planClear=All clearItemDrop=Store retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
+[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
+[Paste] Identify place layer=Frame rel=(2,0) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,0) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,1) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,1) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,2) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,2) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,3) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,3) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(1,4) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,4) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,4) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(4,4) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(1,5) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,5) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,5) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(4,5) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(0,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(1,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(4,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(5,6) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(0,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(1,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(2,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(3,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(4,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Frame rel=(5,7) tiles=4 placementValid=True hasItems=False
+[Paste] Identify place layer=Block rel=(0,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify place layer=Block rel=(1,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify place layer=Block rel=(2,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify place layer=Block rel=(3,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify place layer=Block rel=(4,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify place layer=Block rel=(5,8) tiles=1 placementValid=True hasItems=True
+[Paste] Identify clear layer=Frame rel=(2,0) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,0) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,1) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,1) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,2) tiles=4
+[Plan] [Frame] [0/0] [0/0] [3188, 334] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3188, 336] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3187, 338] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3189, 338] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3186, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3188, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3190, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Block] [0/0] [0/0] [3186, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3187, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3188, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3189, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3190, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3191, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Frame] [0/0] [0/0] [3188, 334] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3188, 336] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3188, 334] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3188, 336] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3187, 338] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3189, 338] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3186, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3188, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3190, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
+[Plan] [Block] [0/0] [0/0] [3186, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3187, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3188, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3189, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3190, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3191, 342] Terraria:Platforms - Queued place batch (1 tiles)
+[Plan] [Frame] [0/0] [0/0] [3188, 334] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3188, 336] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[15:15:23.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Identify clear layer=Frame rel=(3,2) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,3) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,3) tiles=4
+[Paste] Identify clear layer=Frame rel=(1,4) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,4) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,4) tiles=4
+[Paste] Identify clear layer=Frame rel=(4,4) tiles=4
+[Paste] Identify clear layer=Frame rel=(1,5) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,5) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,5) tiles=4
+[Paste] Identify clear layer=Frame rel=(4,5) tiles=4
+[Paste] Identify clear layer=Frame rel=(0,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(1,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(4,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(5,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(0,7) tiles=4
+[Paste] Identify clear layer=Frame rel=(1,7) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,7) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,7) tiles=4
+[Paste] Identify clear layer=Frame rel=(4,7) tiles=4
+[Paste] Identify clear layer=Frame rel=(5,7) tiles=4
+[Paste] Identify clear layer=Block rel=(0,8) tiles=1
+[Paste] Identify clear layer=Block rel=(1,8) tiles=1
+[Paste] Identify clear layer=Block rel=(2,8) tiles=1
+[Paste] Identify clear layer=Block rel=(3,8) tiles=1
+[Paste] Identify clear layer=Block rel=(4,8) tiles=1
+[Paste] Identify clear layer=Block rel=(5,8) tiles=1
+[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
+[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+TheArchitectsBlueprintMod: [15:15:23.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Identify clear layer=Frame rel=(3,2) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,3) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,3) tiles=4
+[Paste] Identify clear layer=Frame rel=(1,4) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,4) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,4) tiles=4
+[Paste] Identify clear layer=Frame rel=(4,4) tiles=4
+[Paste] Identify clear layer=Frame rel=(1,5) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,5) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,5) tiles=4
+[Paste] Identify clear layer=Frame rel=(4,5) tiles=4
+[Paste] Identify clear layer=Frame rel=(0,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(1,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(4,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(5,6) tiles=4
+[Paste] Identify clear layer=Frame rel=(0,7) tiles=4
+[Paste] Identify clear layer=Frame rel=(1,7) tiles=4
+[Paste] Identify clear layer=Frame rel=(2,7) tiles=4
+[Paste] Identify clear layer=Frame rel=(3,7) tiles=4
+[Paste] Identify clear layer=Frame rel=(4,7) tiles=4
+[Paste] Identify clear layer=Frame rel=(5,7) tiles=4
+[Paste] Identify clear layer=Block rel=(0,8) tiles=1
+[Paste] Identify clear layer=Block rel=(1,8) tiles=1
+[Paste] Identify clear layer=Block rel=(2,8) tiles=1
+[Paste] Identify clear layer=Block rel=(3,8) tiles=1
+[Paste] Identify clear layer=Block rel=(4,8) tiles=1
+[Paste] Identify clear layer=Block rel=(5,8) tiles=1
+[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
+[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+[15:15:23.083] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Plan] [Frame] [0/0] [0/0] [3187, 338] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3189, 338] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3186, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3188, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3190, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Block] [0/0] [0/0] [3186, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3187, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3188, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3189, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3190, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3191, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+--- [Plan] END (placeBatches=13, clearBatches=13) ---
+--- [Clear] START (tasks=13) ---
+TheArchitectsBlueprintMod: [15:15:23.083] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Plan] [Frame] [0/0] [0/0] [3187, 338] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3189, 338] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3186, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3188, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Frame] [0/0] [0/0] [3190, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
+[Plan] [Block] [0/0] [0/0] [3186, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3187, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3188, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3189, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3190, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+[Plan] [Block] [0/0] [0/0] [3191, 342] Terraria:Platforms - Queued clear batch (1 tiles)
+--- [Plan] END (placeBatches=13, clearBatches=13) ---
+--- [Clear] START (tasks=13) ---
+[15:15:23.182] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=7
+[Paste] Clear execute layer=Frame world=(3188,334) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:23.182] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=7
+[Paste] Clear execute layer=Frame world=(3188,334) success=True failReason=None remaining=0
+[15:15:23.299] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=6
+[Paste] Clear execute layer=Frame world=(3188,336) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:23.299] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=6
+[Paste] Clear execute layer=Frame world=(3188,336) success=True failReason=None remaining=0
+[15:15:23.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=5
+[Paste] Clear execute layer=Frame world=(3187,338) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:23.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=5
+[Paste] Clear execute layer=Frame world=(3187,338) success=True failReason=None remaining=0
+[15:15:23.516] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=4
+[Paste] Clear execute layer=Frame world=(3189,338) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:23.516] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=4
+[Paste] Clear execute layer=Frame world=(3189,338) success=True failReason=None remaining=0
+[15:15:23.632] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=3
+[Paste] Clear execute layer=Frame world=(3186,340) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:23.632] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=3
+[Paste] Clear execute layer=Frame world=(3186,340) success=True failReason=None remaining=0
+[15:15:23.749] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=2
+[Paste] Clear execute layer=Frame world=(3188,340) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:23.749] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=2
+[Paste] Clear execute layer=Frame world=(3188,340) success=True failReason=None remaining=0
+[15:15:23.866] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=1
+[Paste] Clear execute layer=Frame world=(3190,340) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:23.866] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=1
+[Paste] Clear execute layer=Frame world=(3190,340) success=True failReason=None remaining=0
+[15:15:23.966] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=6
+[Paste] Clear execute layer=Block world=(3186,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:23.966] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=6
+[Paste] Clear execute layer=Block world=(3186,342) success=True failReason=None remaining=0
+[15:15:24.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=5
+[Paste] Clear execute layer=Block world=(3187,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:24.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=5
+[Paste] Clear execute layer=Block world=(3187,342) success=True failReason=None remaining=0
+[15:15:24.183] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=4
+[Paste] Clear execute layer=Block world=(3188,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:24.183] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=4
+[Paste] Clear execute layer=Block world=(3188,342) success=True failReason=None remaining=0
+[15:15:24.299] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=3
+[Paste] Clear execute layer=Block world=(3189,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:24.299] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=3
+[Paste] Clear execute layer=Block world=(3189,342) success=True failReason=None remaining=0
+[15:15:24.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=2
+[Paste] Clear execute layer=Block world=(3190,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:24.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=2
+[Paste] Clear execute layer=Block world=(3190,342) success=True failReason=None remaining=0
+[15:15:24.516] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=1
+[Paste] Clear execute layer=Block world=(3191,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:24.516] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=1
+[Paste] Clear execute layer=Block world=(3191,342) success=True failReason=None remaining=0
+[15:15:24.868] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=13, remaining=0) ---
+--- [Place] START (tasks=13) ---
+TheArchitectsBlueprintMod: [15:15:24.868] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=13, remaining=0) ---
+--- [Place] START (tasks=13) ---
+[15:15:24.984] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=6
+[Paste] Place begin layer=Block batch=1 rel=(0,8) world=(3186,342) payload[hasTile=True type=19 frame=(36,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(0,8) world=(3186,342) payload[hasTile=True type=19 frame=(36,0)]
+[Paste] Place [PlaceTile] (3186,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3186,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:24.984] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=6
+[Paste] Place begin layer=Block batch=1 rel=(0,8) world=(3186,342) payload[hasTile=True type=19 frame=(36,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(0,8) world=(3186,342) payload[hasTile=True type=19 frame=(36,0)]
+[Paste] Place [PlaceTile] (3186,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3186,342) success=True failReason=None remaining=0
+[15:15:25.101] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=5
+[Paste] Place begin layer=Block batch=1 rel=(1,8) world=(3187,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(1,8) world=(3187,342) payload[hasTile=True type=19 frame=(0,0)]
+[Paste] Place [PlaceTile] (3187,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3187,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:25.101] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=5
+[Paste] Place begin layer=Block batch=1 rel=(1,8) world=(3187,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(1,8) world=(3187,342) payload[hasTile=True type=19 frame=(0,0)]
+[Paste] Place [PlaceTile] (3187,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3187,342) success=True failReason=None remaining=0
+[15:15:25.201] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=4
+[Paste] Place begin layer=Block batch=1 rel=(2,8) world=(3188,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(2,8) world=(3188,342) payload[hasTile=True type=19 frame=(0,0)]
+[Paste] Place [PlaceTile] (3188,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3188,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:25.201] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=4
+[Paste] Place begin layer=Block batch=1 rel=(2,8) world=(3188,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(2,8) world=(3188,342) payload[hasTile=True type=19 frame=(0,0)]
+[Paste] Place [PlaceTile] (3188,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3188,342) success=True failReason=None remaining=0
+[15:15:25.318] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=3
+[Paste] Place begin layer=Block batch=1 rel=(3,8) world=(3189,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(3,8) world=(3189,342) payload[hasTile=True type=19 frame=(0,0)]
+[Paste] Place [PlaceTile] (3189,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3189,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:25.318] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=3
+[Paste] Place begin layer=Block batch=1 rel=(3,8) world=(3189,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(3,8) world=(3189,342) payload[hasTile=True type=19 frame=(0,0)]
+[Paste] Place [PlaceTile] (3189,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3189,342) success=True failReason=None remaining=0
+[15:15:25.418] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=2
+[Paste] Place begin layer=Block batch=1 rel=(4,8) world=(3190,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(4,8) world=(3190,342) payload[hasTile=True type=19 frame=(0,0)]
+[Paste] Place [PlaceTile] (3190,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3190,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:25.418] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=2
+[Paste] Place begin layer=Block batch=1 rel=(4,8) world=(3190,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(4,8) world=(3190,342) payload[hasTile=True type=19 frame=(0,0)]
+[Paste] Place [PlaceTile] (3190,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3190,342) success=True failReason=None remaining=0
+[15:15:25.534] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
+[Paste] Place begin layer=Block batch=1 rel=(5,8) world=(3191,342) payload[hasTile=True type=19 frame=(18,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(5,8) world=(3191,342) payload[hasTile=True type=19 frame=(18,0)]
+[Paste] Place [PlaceTile] (3191,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3191,342) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:25.534] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
+[Paste] Place begin layer=Block batch=1 rel=(5,8) world=(3191,342) payload[hasTile=True type=19 frame=(18,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] BlockLayer.Place batch=1rel=(5,8) world=(3191,342) payload[hasTile=True type=19 frame=(18,0)]
+[Paste] Place [PlaceTile] (3191,342) Platforms style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Block world=(3191,342) success=True failReason=None remaining=0
+[15:15:25.635] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=7
+[Paste] Place begin layer=Frame batch=4 rel=(2,0) world=(3188,334) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3188,335) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3188,334) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:25.635] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=7
+[Paste] Place begin layer=Frame batch=4 rel=(2,0) world=(3188,334) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3188,335) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3188,334) success=True failReason=None remaining=0
+[15:15:25.751] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=6
+[Paste] Place begin layer=Frame batch=4 rel=(2,2) world=(3188,336) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3188,337) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3188,336) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:25.751] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=6
+[Paste] Place begin layer=Frame batch=4 rel=(2,2) world=(3188,336) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3188,337) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3188,336) success=True failReason=None remaining=0
+[15:15:25.851] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=5
+[Paste] Place begin layer=Frame batch=4 rel=(1,4) world=(3187,338) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3187,339) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3187,338) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:25.851] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=5
+[Paste] Place begin layer=Frame batch=4 rel=(1,4) world=(3187,338) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3187,339) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3187,338) success=True failReason=None remaining=0
+[15:15:25.968] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=4
+[Paste] Place begin layer=Frame batch=4 rel=(3,4) world=(3189,338) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3189,339) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3189,338) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:25.968] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=4
+[Paste] Place begin layer=Frame batch=4 rel=(3,4) world=(3189,338) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3189,339) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3189,338) success=True failReason=None remaining=0
+[15:15:26.085] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=3
+[Paste] Place begin layer=Frame batch=4 rel=(0,6) world=(3186,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3186,341) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3186,340) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:26.085] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=3
+[Paste] Place begin layer=Frame batch=4 rel=(0,6) world=(3186,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3186,341) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3186,340) success=True failReason=None remaining=0
+[15:15:26.185] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=2
+[Paste] Place begin layer=Frame batch=4 rel=(2,6) world=(3188,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3188,341) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3188,340) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:26.185] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=2
+[Paste] Place begin layer=Frame batch=4 rel=(2,6) world=(3188,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3188,341) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3188,340) success=True failReason=None remaining=0
+[15:15:26.302] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=1
+[Paste] Place begin layer=Frame batch=4 rel=(4,6) world=(3190,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3190,341) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3190,340) success=True failReason=None remaining=0
+TheArchitectsBlueprintMod: [15:15:26.302] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=1
+[Paste] Place begin layer=Frame batch=4 rel=(4,6) world=(3190,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
+[Paste] Place [PlaceObject] (3190,341) FishingCrate style=0 mode=direct base=- => OK
+[Paste] Place execute layer=Frame world=(3190,340) success=True failReason=None remaining=0
+[15:15:26.619] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=13, remaining=0) ---
+TheArchitectsBlueprintMod: [15:15:26.619] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=13, remaining=0) ---

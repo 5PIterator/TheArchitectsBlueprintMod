@@ -6,6 +6,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Utils;
 
 namespace TheArchitectsBlueprintMod.UI
@@ -140,7 +141,12 @@ namespace TheArchitectsBlueprintMod.UI
             _drawOrder.Clear();
         }
 
-        public void Draw(OverlayDrawableKind? onlyKind = null, OverlayDrawableKind? skipKind = null, bool lateFillsOnly = false, bool excludeLateFills = false)
+        public void Draw(
+            OverlayDrawableKind? onlyKind = null,
+            OverlayDrawableKind? skipKind = null,
+            bool lateFillsOnly = false,
+            bool excludeLateFills = false,
+            Func<string?, bool>? familyVisible = null)
         {
             List<string>? expired = null;
             for (int i = 0; i < _drawOrder.Count; i++)
@@ -152,6 +158,9 @@ namespace TheArchitectsBlueprintMod.UI
                     (expired ??= []).Add(key);
                     continue;
                 }
+
+                if (familyVisible is not null && !familyVisible(item.Family))
+                    continue;
 
                 OverlayDrawableKind kind = item.Drawable.Kind;
                 if (onlyKind.HasValue && kind != onlyKind.Value)
@@ -338,7 +347,7 @@ namespace TheArchitectsBlueprintMod.UI
             if (!ShouldDrawWorldOverlay())
                 return;
 
-            Instance._catalog.Draw(excludeLateFills: true);
+            Instance._catalog.Draw(excludeLateFills: true, familyVisible: IsOverlayFamilyVisible);
         }
 
         private static void DrawOverlayLate()
@@ -346,7 +355,7 @@ namespace TheArchitectsBlueprintMod.UI
             if (!ShouldDrawWorldOverlay())
                 return;
 
-            Instance._catalog.Draw(lateFillsOnly: true);
+            Instance._catalog.Draw(lateFillsOnly: true, familyVisible: IsOverlayFamilyVisible);
         }
 
         internal static bool IsLateFillKind(OverlayDrawableKind kind) =>
@@ -360,6 +369,15 @@ namespace TheArchitectsBlueprintMod.UI
                 IsMapFullscreen = Main.mapFullscreen
             };
             return ctx.ShouldDrawWorldOverlay;
+        }
+
+        private static bool IsOverlayFamilyVisible(string? family)
+        {
+            if (Main.myPlayer < 0)
+                return false;
+
+            ArchitectOverlayScope heldScope = Main.LocalPlayer.GetModPlayer<ArchitectOverlayPlayer>().HeldOverlayScope;
+            return ArchitectOverlayVisibility.IsFamilyVisible(family, heldScope);
         }
 
         internal static void DrawPoints(Point[] points, Color color)

@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using TheArchitectsBlueprintMod.Core;
-using TheArchitectsBlueprintMod.Utils;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.ID;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
@@ -55,17 +53,24 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             Tile live = Main.tile[x, y];
             string message = LayerLogFormat.FormatPaintState(live);
 
-            bool changed = false;
-            if (live.HasTile && live.TileColor != PaintID.None && WorldGen.paintTile(x, y, PaintID.None))
-                changed = true;
-            if (live.WallType != WallID.None && live.WallColor != PaintID.None && WorldGen.paintWall(x, y, PaintID.None))
-                changed = true;
-            if (live.HasTile && ClearBlockCoating(x, y))
-                changed = true;
-            if (live.WallType != WallID.None && ClearWallCoating(x, y))
-                changed = true;
+            if (!HasPaintOrCoating(live))
+                return LayerResult.Ok();
 
-            return changed ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel) : LayerResult.Ok();
+            if (!TileExecutor.EnqueueApplyPaintState(
+                    x,
+                    y,
+                    PaintID.None,
+                    PaintID.None,
+                    tileInvisible: false,
+                    wallInvisible: false,
+                    tileFullbright: false,
+                    wallFullbright: false,
+                    in context))
+            {
+                return LayerResult.Fail(LayerFailReason.ClearBlocked, message);
+            }
+
+            return LayerResult.Ok(message, LayerLogFormat.ClearedLabel);
         }
 
         public override LayerResult Place(TileBatch batch, in PasteContext context)
@@ -80,17 +85,25 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             Tile live = Main.tile[wx, wy];
             string message = LayerLogFormat.FormatPaintState(tile.PayloadCell);
 
-            bool changed = false;
-            if (live.HasTile && live.TileColor != src.TileColor && WorldGen.paintTile(wx, wy, src.TileColor))
-                changed = true;
-            if (live.WallType != WallID.None && live.WallColor != src.WallColor && WorldGen.paintWall(wx, wy, src.WallColor))
-                changed = true;
-            if (live.HasTile && ApplyBlockCoatingIfNeeded(wx, wy, in src))
-                changed = true;
-            if (live.WallType != WallID.None && ApplyWallCoatingIfNeeded(wx, wy, in src))
-                changed = true;
+            bool matching = PaintStateMatches(tile.PayloadTile, live);
+            if (matching)
+                return LayerResult.Ok();
 
-            return changed ? LayerResult.Ok(message, LayerLogFormat.PaintedLabel) : LayerResult.Ok();
+            if (!TileExecutor.EnqueueApplyPaintState(
+                    wx,
+                    wy,
+                    src.TileColor,
+                    src.WallColor,
+                    src.TileInvisible,
+                    src.WallInvisible,
+                    src.TileFullbright,
+                    src.WallFullbright,
+                    in context))
+            {
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+            }
+
+            return LayerResult.Ok(message, LayerLogFormat.PaintedLabel);
         }
 
         private static bool HasPaintOrCoating(Tile tile) =>
@@ -108,57 +121,5 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             && intent.IsWallInvisible == target.IsWallInvisible
             && intent.IsTileFullbright == target.IsTileFullbright
             && intent.IsWallFullbright == target.IsWallFullbright;
-
-        private static bool ClearBlockCoating(int x, int y)
-        {
-            Tile tile = Main.tile[x, y];
-            TileColorCache cache = tile.BlockColorAndCoating();
-            if (!cache.Invisible && !cache.FullBright)
-                return false;
-
-            cache.Invisible = false;
-            cache.FullBright = false;
-            cache.ApplyToBlock(Main.tile[x, y]);
-            return true;
-        }
-
-        private static bool ClearWallCoating(int x, int y)
-        {
-            Tile tile = Main.tile[x, y];
-            TileColorCache cache = tile.WallColorAndCoating();
-            if (!cache.Invisible && !cache.FullBright)
-                return false;
-
-            cache.Invisible = false;
-            cache.FullBright = false;
-            cache.ApplyToWall(Main.tile[x, y]);
-            return true;
-        }
-
-        private static bool ApplyBlockCoatingIfNeeded(int x, int y, in PayloadCell.PaintData src)
-        {
-            Tile tile = Main.tile[x, y];
-            TileColorCache cache = tile.BlockColorAndCoating();
-            if (cache.Invisible == src.TileInvisible && cache.FullBright == src.TileFullbright)
-                return false;
-
-            cache.Invisible = src.TileInvisible;
-            cache.FullBright = src.TileFullbright;
-            cache.ApplyToBlock(Main.tile[x, y]);
-            return true;
-        }
-
-        private static bool ApplyWallCoatingIfNeeded(int x, int y, in PayloadCell.PaintData src)
-        {
-            Tile tile = Main.tile[x, y];
-            TileColorCache cache = tile.WallColorAndCoating();
-            if (cache.Invisible == src.WallInvisible && cache.FullBright == src.WallFullbright)
-                return false;
-
-            cache.Invisible = src.WallInvisible;
-            cache.FullBright = src.WallFullbright;
-            cache.ApplyToWall(Main.tile[x, y]);
-            return true;
-        }
     }
 }

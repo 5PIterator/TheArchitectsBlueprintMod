@@ -390,7 +390,476 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return tiles[sampleIndex];
         }
 
-        public static void PasteFrame(IReadOnlyList<PasteTile> tiles)
+        /// <summary>One logical frame object: origin world point and every footprint cell in the batch.</summary>
+        internal readonly struct FrameCandidate
+        {
+            public Point OriginWorld { get; }
+            public PasteTile OriginTile { get; }
+            public IReadOnlyList<PasteTile> Tiles { get; }
+
+            public FrameCandidate(Point originWorld, PasteTile originTile, IReadOnlyList<PasteTile> tiles)
+            {
+                OriginWorld = originWorld;
+                OriginTile = originTile;
+                Tiles = tiles;
+            }
+        }
+
+        /// <summary>Resolves the placement or clearing origin world position for a single footprint cell.</summary>
+        public static Point ResolveOriginWorld(in PasteTile tile, bool forClear)
+        {
+            // --- Derive TileObjectData origin offset from framing tile and map it to world coordinates.
+            bool hasTile = forClear ? tile.Target.HasTile : tile.PayloadCell.HasTile();
+            Tile framing = forClear ? tile.Target : tile.PayloadCell.ToTile();
+            if (!hasTile || !TileLoaderSupport.IsKnownTileType(framing.TileType))
+                return tile.World;
+
+            var data = TileObjectData.GetTileData(framing);
+            if (data is null)
+                return tile.World;
+
+            int w = Math.Max(1, data.Width);
+            int h = Math.Max(1, data.Height);
+            int subX = ResolveSubX(framing.TileFrameX, data, w);
+            int subY = ResolveSubY(framing.TileFrameY, data, h);
+            var origin = data.Origin;
+            int ox = Math.Clamp(origin.X, 0, w - 1);
+            int oy = Math.Clamp(origin.Y, 0, h - 1);
+            return new Point(tile.World.X + (ox - subX), tile.World.Y + (oy - subY));
+        }
+
+        /// <summary>Groups batch tiles into logical frame objects keyed by origin world position.</summary>
+        public static List<FrameCandidate> GroupIntoCandidates(IReadOnlyList<PasteTile> tiles, bool forClear)
+        {
+            // --- Bucket every footprint cell by its resolved origin, then build one candidate per bucket.
+            var groups = new Dictionary<Point, List<PasteTile>>();
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                PasteTile tile = tiles[i];
+                Point origin = ResolveOriginWorld(in tile, forClear);
+                if (!groups.TryGetValue(origin, out List<PasteTile>? group))
+                {
+                    group = new List<PasteTile>();
+                    groups[origin] = group;
+                }
+
+                group.Add(tile);
+            }
+
+            var candidates = new List<FrameCandidate>(groups.Count);
+            foreach (KeyValuePair<Point, List<PasteTile>> entry in groups)
+            {
+                PasteTile originTile = ResolveOriginPasteTileFromGroup(entry.Value, entry.Key, forClear);
+                candidates.Add(new FrameCandidate(entry.Key, originTile, entry.Value));
+            }
+
+            return candidates;
+        }
+
+        /// <summary>Picks the origin paste tile for a grouped candidate footprint.</summary>
+        private static PasteTile ResolveOriginPasteTileFromGroup(
+            IReadOnlyList<PasteTile> tiles,
+            Point originWorld,
+            bool forClear)
+        {
+            // --- Prefer the cell whose world position matches the origin; otherwise fall back to framing helpers.
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                if (tiles[i].World == originWorld)
+                    return tiles[i];
+            }
+
+            return forClear ? GetClearingOriginTile(tiles) : GetPlacementOriginTile(tiles);
+        }
+
+        /// <summary>Returns the origin paste tile for a frame candidate.</summary>
+        public static PasteTile ResolveOriginPasteTile(FrameCandidate candidate, bool forClear) =>
+            ResolveOriginPasteTileFromGroup(candidate.Tiles, candidate.OriginWorld, forClear);
+
+        /// <summary>Returns true when this candidate should use single-tile placement instead of PlaceObject.</summary>
+        public static bool UsesTilePlacement(IReadOnlyList<PasteTile> tiles, in PasteTile origin)
+        {
+            // --- Route grass, base-tile conversions, and 1x1 objects through TileOperations.
+            if (!origin.PayloadCell.HasTile())
+                return false;
+
+            ushort tileType = origin.PayloadCell.Block.Type;
+            if (!TileLoaderSupport.IsKnownTileType(tileType))
+                return false;
+
+            int style = origin.PayloadCell.Detail.Style;
+            if (InteractionMapProvider.GetRequiredBaseTile(tileType, style).HasValue || TileID.Sets.Grass[tileType])
+                return true;
+
+            if (tiles.Count != 1)
+                return false;
+
+            var data = TileObjectData.GetTileData(tileType, style);
+            return data is null || (data.Width <= 1 && data.Height <= 1);
+        }
+
+        /// <summary>Returns true when every footprint cell already matches the payload intent exactly.</summary>
+        public static bool IsCandidateAlreadyPlaced(FrameCandidate candidate)
+        {
+            // --- Treat the candidate as done only when type and framing match on every cell.
+            for (int i = 0; i < candidate.Tiles.Count; i++)
+            {
+                if (!TileComparison.MatchExact(candidate.Tiles[i]))
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>Returns true when Terraria placement rules allow scheduling this frame candidate now.</summary>
+        public static bool CanPlaceFrameCandidate(FrameCandidate candidate, in PasteContext context)
+        {
+            // --- Validate replace rules, then use TileObject.CanPlace for full anchor-aware placement checks.
+            PasteTile origin = candidate.OriginTile;
+            if (!origin.PayloadCell.HasTile())
+                return true;
+
+            ushort tileType = origin.PayloadCell.Block.Type;
+            if (!TileLoaderSupport.IsKnownTileType(tileType))
+                return false;
+
+            int x = origin.World.X;
+            int y = origin.World.Y;
+            int style = origin.PayloadCell.Detail.Style;
+            Tile dest = Main.tile[x, y];
+            if (dest.HasTile && dest.TileType == tileType)
+                return true;
+
+            if (UsesTilePlacement(candidate.Tiles, in origin))
+                return TileLoaderSupport.IsCanPlaceAllowedAt(x, y, tileType, in context);
+
+            if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
+                return false;
+
+            if (context.IsSweepCheat)
+                return true;
+
+            return TileObject.CanPlace(x, y, tileType, style, 0, out _, onlyCheck: true);
+        }
+
+        /// <summary>Returns the index of the first currently placeable frame candidate in bottom-up order.</summary>
+        public static int SelectNextPlaceCandidateIndex(
+            IReadOnlyList<FrameCandidate> localCandidates,
+            IReadOnlyList<FrameCandidate> allPending,
+            in PasteContext context)
+        {
+            // --- Prefer lower objects first, skipping candidates blocked by unplaced pending support.
+            int selected = -1;
+            for (int i = 0; i < localCandidates.Count; i++)
+            {
+                FrameCandidate candidate = localCandidates[i];
+                if (!CanPlaceFrameCandidate(candidate, in context))
+                    continue;
+
+                if (IsBlockedFromPlace(candidate, allPending))
+                    continue;
+
+                if (selected < 0 || ComparePlaceOrder(candidate, localCandidates[selected]) < 0)
+                    selected = i;
+            }
+
+            return selected;
+        }
+
+        /// <summary>Returns the index of the next frame candidate that can be cleared without orphaning pending support.</summary>
+        public static int SelectNextClearCandidateIndex(IReadOnlyList<FrameCandidate> candidates, in PasteContext context)
+        {
+            // --- Clear top-most unblocked objects first so stacked frames lose support in a safe order.
+            int selected = -1;
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                if (IsBlockedFromClear(candidates[i], candidates))
+                    continue;
+
+                if (selected < 0 || CompareClearOrder(candidates[i], candidates[selected]) < 0)
+                    selected = i;
+            }
+
+            return selected;
+        }
+
+        /// <summary>Returns true when clearing <paramref name="supporter"/> would leave <paramref name="supported"/> unsupported.</summary>
+        public static bool IsSupportedBy(FrameCandidate supported, FrameCandidate supporter) =>
+            IsSupportedByClear(supported, supporter);
+
+        /// <summary>Returns true when a placed object depends on another object's footprint for clear-time support.</summary>
+        public static bool IsSupportedByClear(FrameCandidate supported, FrameCandidate supporter)
+        {
+            // --- A stacked object depends on another pending footprint cell satisfying its anchor checks.
+            if (supported.OriginWorld == supporter.OriginWorld)
+                return false;
+
+            Tile framing = supported.OriginTile.Target;
+            return IsSupportedByAnchorFootprint(framing, supported.OriginWorld, supporter);
+        }
+
+        /// <summary>Returns true when a payload object depends on another pending object for placement support.</summary>
+        public static bool IsSupportedByPlacement(FrameCandidate supported, FrameCandidate supporter)
+        {
+            // --- Mirror clear support checks using payload intent so stacked place order is bottom-up.
+            if (supported.OriginWorld == supporter.OriginWorld)
+                return false;
+
+            if (!supported.OriginTile.PayloadCell.HasTile())
+                return false;
+
+            Tile framing = supported.OriginTile.PayloadCell.ToTile();
+            return IsSupportedByAnchorFootprint(framing, supported.OriginWorld, supporter);
+        }
+
+        /// <summary>Returns true when supporter footprint cells satisfy supported object's anchor requirements.</summary>
+        private static bool IsSupportedByAnchorFootprint(
+            Tile framingTile,
+            Point supportedOriginWorld,
+            FrameCandidate supporter)
+        {
+            // --- Walk supporter footprint cells and test each against the dependent object's anchor geometry.
+            if (!framingTile.HasTile || !TileLoaderSupport.IsKnownTileType(framingTile.TileType))
+                return false;
+
+            var data = TileObjectData.GetTileData(framingTile);
+            if (data is null)
+                return false;
+
+            for (int i = 0; i < supporter.Tiles.Count; i++)
+            {
+                if (IsAnchorSupportWorld(data, supportedOriginWorld, supporter.Tiles[i].World))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Returns true when another pending candidate must be placed before this one.</summary>
+        public static bool IsBlockedFromPlace(FrameCandidate candidate, IReadOnlyList<FrameCandidate> pending)
+        {
+            // --- Defer placement while a lower pending object this candidate anchors to is not yet in the world.
+            for (int i = 0; i < pending.Count; i++)
+            {
+                FrameCandidate other = pending[i];
+                if (other.OriginWorld == candidate.OriginWorld)
+                    continue;
+
+                if (IsSupportedByPlacement(candidate, other) && !IsCandidatePresentInWorld(other))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Returns true when the candidate's payload object already exists in the live world.</summary>
+        public static bool IsCandidatePresentInWorld(FrameCandidate candidate)
+        {
+            // --- Exact match is ideal; type presence at origin is enough for stacked-support ordering.
+            if (IsCandidateAlreadyPlaced(candidate))
+                return true;
+
+            PasteTile origin = candidate.OriginTile;
+            if (!origin.PayloadCell.HasTile())
+                return true;
+
+            Tile live = Main.tile[origin.World.X, origin.World.Y];
+            return live.HasTile && live.TileType == origin.PayloadCell.Block.Type;
+        }
+
+        /// <summary>Returns true when another pending candidate still depends on this candidate for support.</summary>
+        public static bool IsBlockedFromClear(FrameCandidate candidate, IReadOnlyList<FrameCandidate> pending)
+        {
+            // --- Defer clearing while any remaining object would lose required anchor support.
+            for (int i = 0; i < pending.Count; i++)
+            {
+                FrameCandidate other = pending[i];
+                if (other.OriginWorld == candidate.OriginWorld)
+                    continue;
+
+                if (IsSupportedByClear(other, candidate))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Returns true when a world cell satisfies this object's anchor requirements.</summary>
+        private static bool IsAnchorSupportWorld(TileObjectData data, Point objectOriginWorld, Point supportWorld)
+        {
+            // --- Map standard bottom/top anchor check rows from the placement origin into world space.
+            if (data.AnchorBottom != default)
+            {
+                AnchorData anchor = data.AnchorBottom;
+                int ox = data.Origin.X;
+                int oy = data.Origin.Y;
+                int checkY = objectOriginWorld.Y - oy + data.Height;
+                if (supportWorld.Y != checkY)
+                    return false;
+
+                int checkStartX = objectOriginWorld.X - ox + anchor.checkStart;
+                if (supportWorld.X < checkStartX || supportWorld.X >= checkStartX + anchor.tileCount)
+                    return false;
+
+                return AnchorAcceptsLiveTile(anchor, supportWorld, data);
+            }
+
+            if (data.AnchorTop != default)
+            {
+                AnchorData anchor = data.AnchorTop;
+                int ox = data.Origin.X;
+                int oy = data.Origin.Y;
+                int checkY = objectOriginWorld.Y - oy - 1;
+                if (supportWorld.Y != checkY)
+                    return false;
+
+                int checkStartX = objectOriginWorld.X - ox + anchor.checkStart;
+                if (supportWorld.X < checkStartX || supportWorld.X >= checkStartX + anchor.tileCount)
+                    return false;
+
+                return AnchorAcceptsLiveTile(anchor, supportWorld, data);
+            }
+
+            if (data.AnchorLeft != default)
+            {
+                AnchorData anchor = data.AnchorLeft;
+                int ox = data.Origin.X;
+                int oy = data.Origin.Y;
+                int checkX = objectOriginWorld.X - ox - 1;
+                if (supportWorld.X != checkX)
+                    return false;
+
+                int checkStartY = objectOriginWorld.Y - oy + anchor.checkStart;
+                if (supportWorld.Y < checkStartY || supportWorld.Y >= checkStartY + anchor.tileCount)
+                    return false;
+
+                return AnchorAcceptsLiveTile(anchor, supportWorld, data);
+            }
+
+            if (data.AnchorRight != default)
+            {
+                AnchorData anchor = data.AnchorRight;
+                int ox = data.Origin.X;
+                int oy = data.Origin.Y;
+                int checkX = objectOriginWorld.X - ox + data.Width;
+                if (supportWorld.X != checkX)
+                    return false;
+
+                int checkStartY = objectOriginWorld.Y - oy + anchor.checkStart;
+                if (supportWorld.Y < checkStartY || supportWorld.Y >= checkStartY + anchor.tileCount)
+                    return false;
+
+                return AnchorAcceptsLiveTile(anchor, supportWorld, data);
+            }
+
+            return false;
+        }
+
+        /// <summary>Returns true when the live tile at the anchor check position satisfies the anchor type.</summary>
+        private static bool AnchorAcceptsLiveTile(AnchorData anchor, Point supportWorld, TileObjectData data)
+        {
+            // --- Use solidity heuristics for standard anchors and tile-type tables for restricted anchors.
+            const AnchorType StandardSupportMask =
+                AnchorType.SolidTile |
+                AnchorType.SolidWithTop |
+                AnchorType.SolidSide |
+                AnchorType.SolidBottom |
+                AnchorType.EmptyTile;
+
+            Tile support = Main.tile[supportWorld.X, supportWorld.Y];
+            if ((anchor.type & StandardSupportMask) != AnchorType.None)
+                return support.HasTile;
+
+            if (data.AnchorValidTiles is { Length: > 0 })
+                return support.HasTile && data.isValidTileAnchor(support.TileType);
+
+            return anchor.type != AnchorType.None && support.HasTile;
+        }
+
+        private static bool HasOtherAnchorData(TileObjectData data) =>
+            HasSpecialDirectionalAnchor(data)
+            || (data.AnchorValidTiles is { Length: > 0 })
+            || (data.AnchorInvalidTiles is { Length: > 0 });
+
+        private static int ComparePlaceOrder(FrameCandidate a, FrameCandidate b)
+        {
+            int yCmp = b.OriginWorld.Y.CompareTo(a.OriginWorld.Y);
+            if (yCmp != 0)
+                return yCmp;
+
+            return a.OriginWorld.X.CompareTo(b.OriginWorld.X);
+        }
+
+        private static int CompareClearOrder(FrameCandidate a, FrameCandidate b)
+        {
+            int yCmp = a.OriginWorld.Y.CompareTo(b.OriginWorld.Y);
+            if (yCmp != 0)
+                return yCmp;
+
+            return a.OriginWorld.X.CompareTo(b.OriginWorld.X);
+        }
+
+        /// <summary>Builds a log label for the candidate origin tile.</summary>
+        public static string FormatCandidateMessage(FrameCandidate candidate, bool forClear)
+        {
+            PasteTile origin = candidate.OriginTile;
+            return forClear
+                ? LayerLogFormat.FormatTile(origin.Target)
+                : origin.PayloadCell.HasTile()
+                    ? LayerLogFormat.FormatTile(origin.PayloadTile)
+                    : LayerLogFormat.FormatFromSubject(in origin, PasteSubject.Payload);
+        }
+
+        /// <summary>Removes a completed candidate from the batch and requeues any remaining footprint cells.</summary>
+        public static LayerResult RemoveCandidateFromBatch(
+            TileBatch batch,
+            FrameCandidate candidate,
+            string? message,
+            string? okLabel)
+        {
+            // --- Drop every world cell owned by the handled candidate and keep the rest of the batch.
+            var removed = new HashSet<Point>();
+            for (int i = 0; i < candidate.Tiles.Count; i++)
+                removed.Add(candidate.Tiles[i].World);
+
+            var remaining = new List<PasteTile>(batch.Tiles.Count);
+            for (int i = 0; i < batch.Tiles.Count; i++)
+            {
+                if (!removed.Contains(batch.Tiles[i].World))
+                    remaining.Add(batch.Tiles[i]);
+            }
+
+            return remaining.Count > 0
+                ? LayerResult.OkWithRemaining(batch.WithRemainingTiles(remaining), message, okLabel)
+                : LayerResult.Ok(message, okLabel);
+        }
+
+        /// <summary>Merges a partial place pass back into the operation batch while preserving other candidates.</summary>
+        public static LayerResult MergePlaceRemaining(TileBatch batch, FrameCandidate candidate, LayerResult placeResult)
+        {
+            // --- Replace only the handled candidate cells with the tiles that still need a follow-up pass.
+            var removed = new HashSet<Point>();
+            for (int i = 0; i < candidate.Tiles.Count; i++)
+                removed.Add(candidate.Tiles[i].World);
+
+            var remaining = new List<PasteTile>(batch.Tiles.Count);
+            for (int i = 0; i < batch.Tiles.Count; i++)
+            {
+                if (!removed.Contains(batch.Tiles[i].World))
+                    remaining.Add(batch.Tiles[i]);
+            }
+
+            IReadOnlyList<PasteTile> partial = placeResult.RemainingTiles;
+            for (int i = 0; i < partial.Count; i++)
+                remaining.Add(partial[i]);
+
+            return LayerResult.OkWithRemaining(
+                batch.WithRemainingTiles(remaining),
+                placeResult.Message,
+                placeResult.OkLabel);
+        }
+
+        public static bool PasteFrame(IReadOnlyList<PasteTile> tiles, in PasteContext context)
         {
             for (int i = 0; i < tiles.Count; i++)
             {
@@ -398,20 +867,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 int wx = t.World.X, wy = t.World.Y;
                 if (t.PayloadCell.HasTile() && Main.tile[wx, wy].HasTile)
                 {
-                    int idx = wx + wy * (int)Main.tile.Width;
-                    var state = Main.tile.GetData<TileWallWireStateData>();
                     var b = t.PayloadCell.Block;
-                    state[idx].TileFrameX = (short)b.FrameX;
-                    state[idx].TileFrameY = (short)b.FrameY;
+                    if (!TileExecutor.EnqueueApplyTileFrame(wx, wy, b.FrameX, b.FrameY, in context))
+                        return false;
                 }
             }
 
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                var t = tiles[i];
-                TileLoaderSupport.RunPostPlacementHooks(t.World.X, t.World.Y);
-                LayerSync.SyncTileSquare(t.World.X, t.World.Y);
-            }
+            return true;
         }
 
         public static LayerResult Clear(IReadOnlyList<PasteTile> tiles, in PasteContext context, string? message = null)
@@ -428,11 +890,28 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 if (!Main.tile[wx, wy].HasTile)
                     continue;
 
-                TileExecutor.EnqueueClearTile(wx, wy, in context);
+                if (!TileExecutor.EnqueueClearTile(wx, wy, in context))
+                    return LayerResult.Fail(LayerFailReason.ClearBlocked, message);
+
                 changed = true;
             }
 
             return changed ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel) : LayerResult.Ok();
+        }
+
+        /// <summary>Clears one frame object by killing only its placement origin tile.</summary>
+        public static LayerResult ClearOrigin(in PasteTile originTile, in PasteContext context, string? message = null)
+        {
+            // --- Let WorldGen framing remove the footprint after a single origin kill mutation is scheduled.
+            message ??= LayerLogFormat.FormatTile(originTile.Target);
+            int x = originTile.World.X;
+            int y = originTile.World.Y;
+            if (!Main.tile[x, y].HasTile)
+                return LayerResult.Ok(message, LayerLogFormat.ClearedLabel);
+
+            return TileExecutor.EnqueueClearTile(x, y, in context)
+                ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel)
+                : LayerResult.Fail(LayerFailReason.ClearBlocked, message);
         }
 
         public static LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
@@ -459,7 +938,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
             if (dest.HasTile && dest.TileType == tileType)
             {
-                PasteFrame(tiles);
+                if (!PasteFrame(tiles, in context))
+                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
                 return LayerResult.Ok(message, okLabel);
             }
 
@@ -472,7 +952,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (context.UseReplacePlace && dest.HasTile)
                 TileExecutor.EnqueueVoidKillTile(x, y, in context);
 
-            if (!context.IsSweepCheat && !TileLoader.CanPlace(x, y, tileType))
+            if (!context.IsSweepCheat
+                && !TileObject.CanPlace(x, y, tileType, style, 0, out _, onlyCheck: true))
             {
                 PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
@@ -534,7 +1015,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             Tile dest = Main.tile[x, y];
             if (dest.HasTile && dest.TileType == tileType)
             {
-                FrameOperations.PasteFrame(tiles);
+                if (!FrameOperations.PasteFrame(tiles, in context))
+                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, LayerLogFormat.FormatTile(origin.PayloadTile));
                 return LayerResult.Ok(
                     LayerLogFormat.FormatTile(origin.PayloadTile),
                     LayerLogFormat.PlacedLabel(in context));
@@ -658,22 +1140,5 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return InteractionMapProvider.GetTileItemIds((ushort)payloadCell.Block.Type, style);
         }
 
-        public static void WriteState(int x, int y, in TileWallWireStateData state)
-        {
-            Main.tile[x, y].Get<TileWallWireStateData>() = state;
-        }
-
-        /// <summary>Reads live <see cref="TileWallWireStateData"/>; commit mutations with <see cref="WriteState"/>.</summary>
-        public static TileWallWireStateData ReadState(int x, int y) =>
-            Main.tile[x, y].Get<TileWallWireStateData>();
-    }
-
-    internal static class LayerSync
-    {
-        public static void SyncTileSquare(int x, int y)
-        {
-            if (Main.netMode == NetmodeID.Server)
-                NetMessage.SendTileSquare(-1, x, y, 1, 1);
-        }
     }
 }

@@ -10,6 +10,7 @@ namespace TheArchitectsBlueprintMod.Core
     public sealed class TileExecutorSystem : ModSystem
     {
         private static readonly Dictionary<int, TileEffectSession> Sessions = new();
+        private static readonly List<int> SessionKeyScratch = [];
 
         internal static void RegisterSession(TileEffectSession session)
         {
@@ -22,13 +23,17 @@ namespace TheArchitectsBlueprintMod.Core
         internal static void UnregisterSession(int operationId)
         {
             if (Sessions.TryGetValue(operationId, out TileEffectSession? session))
+            {
+                TileExecutor.TerminateSession(session);
                 session.Clear();
+            }
+
             Sessions.Remove(operationId);
         }
 
         internal static bool TryCompleteProjectileImpact(
             int operationId,
-            int mutationId,
+            int arrowId,
             bool arrivedAtDestination,
             Point dropTile,
             out bool actionSucceeded)
@@ -37,42 +42,36 @@ namespace TheArchitectsBlueprintMod.Core
             if (!Sessions.TryGetValue(operationId, out TileEffectSession? session))
                 return false;
 
-            return TileExecutor.CompleteProjectileImpact(
-                session,
-                mutationId,
-                arrivedAtDestination,
-                dropTile,
-                out actionSucceeded);
+            bool marked = session.TryMarkArrowArrived(arrowId, arrivedAtDestination, dropTile);
+            actionSucceeded = marked;
+            return marked;
         }
 
-        internal static bool TryGetProjectileDestination(int operationId, int mutationId, out Vector2 destination)
+        internal static bool TryGetProjectileDestination(int operationId, int arrowId, out Vector2 destination)
         {
             destination = default;
             if (!Sessions.TryGetValue(operationId, out TileEffectSession? session))
                 return false;
 
-            if (!session.PendingImpacts.TryGetValue(mutationId, out TileMutation mutation))
+            return session.TryGetArrowDestination(arrowId, out destination);
+        }
+
+        internal static bool TryGetProjectileItemType(int operationId, int arrowId, out int itemType)
+        {
+            itemType = 0;
+            if (!Sessions.TryGetValue(operationId, out TileEffectSession? session))
                 return false;
 
-            PasteContext ctx = session.ContextFactory();
-            if (mutation.ProjectileMode == PasteProjectileMode.Place)
-            {
-                destination = InventoryManager.GetTileWorldCenter(mutation.World);
-                return true;
-            }
+            return session.TryGetArrowItemType(arrowId, out itemType);
+        }
 
-            if (ctx.InventoryLookup is not null
-                && mutation.TargetInventoryIndex >= 0
-                && ctx.InventoryLookup.TryGetInventory(mutation.TargetInventoryIndex, out Inventory inventory))
-            {
-                destination = InventoryManager.GetInventoryWorldCenter(
-                    inventory,
-                    ctx.Player);
-                return true;
-            }
+        internal static bool TryGetArrowFlightProfile(int operationId, int arrowId, out ArrowFlightProfile profile)
+        {
+            profile = default;
+            if (!Sessions.TryGetValue(operationId, out TileEffectSession? session))
+                return false;
 
-            return ctx.InventoryLookup is not null
-                && ctx.InventoryLookup.TryResolveStoreDestination(ctx.Player, out destination);
+            return session.TryGetArrowFlightProfile(arrowId, out profile);
         }
 
         internal static void ProcessSessions()
@@ -80,19 +79,39 @@ namespace TheArchitectsBlueprintMod.Core
             if (Main.gameMenu || Sessions.Count == 0)
                 return;
 
-            var keys = new List<int>(Sessions.Keys);
-            for (int i = 0; i < keys.Count; i++)
+            SessionKeyScratch.Clear();
+            foreach (int key in Sessions.Keys)
+                SessionKeyScratch.Add(key);
+
+            for (int i = 0; i < SessionKeyScratch.Count; i++)
             {
-                if (!Sessions.TryGetValue(keys[i], out TileEffectSession? session))
+                if (!Sessions.TryGetValue(SessionKeyScratch[i], out TileEffectSession? session))
                     continue;
 
-                while (session.TryDequeue(out TileMutation mutation))
-                    TileExecutor.ProcessQueuedMutation(session, mutation);
+                while (session.Pending.Count > 0)
+                {
+                    TileMutation next = session.Pending.Peek();
+                    if (next.ProjectileMode is not null && !session.CanLaunchArrow())
+                        break;
 
-                session.CompleteOrphanedImpacts();
+                    if (!session.TryDequeue(out TileMutation mutation))
+                        break;
+
+                    TileExecutor.ProcessQueuedMutation(session, mutation);
+                }
+
+                PasteArrow.ProcessActive(session);
             }
         }
 
-        public override void OnWorldUnload() => Sessions.Clear();
+        public override void OnWorldUnload()
+        {
+            foreach (TileEffectSession session in Sessions.Values)
+                TileExecutor.TerminateSession(session);
+
+            Sessions.Clear();
+            SessionKeyScratch.Clear();
+            TileEffectSession.ResetOperationIdSequence();
+        }
     }
 }

@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using TheArchitectsBlueprintMod.Core;
-using TheArchitectsBlueprintMod.Utils;
 using Terraria;
-using Terraria.ID;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
@@ -70,17 +68,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 if (Main.tile[x, y].LiquidAmount == 0)
                     continue;
 
-                SuppressTileDrop.EmptyLiquid(x, y);
                 changed = true;
-
-                if (Main.netMode == NetmodeID.Server)
-                    NetMessage.SendData(MessageID.LiquidUpdate, -1, -1, null, x, y);
-            }
-
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                int x = tiles[i].World.X, y = tiles[i].World.Y;
-                if (Main.tile[x, y].LiquidAmount != 0)
+                if (!TileExecutor.EnqueueSetLiquid(x, y, liquidType: 0, amount: 0, in context))
                     return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
@@ -94,16 +83,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return LayerResult.Ok();
 
             string okLabel = LayerLogFormat.PlacedLabel(in context);
-
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                PasteTile tile = tiles[i];
-                int x = tile.World.X, y = tile.World.Y;
-                var src = tile.PayloadCell.Liquid;
-                string message = LayerLogFormat.FormatLiquid(tile.PayloadTile);
-                if (!TryWriteLiquid(x, y, src.Type, src.Amount))
-                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
-            }
+            bool changed = false;
 
             for (int i = 0; i < tiles.Count; i++)
             {
@@ -112,34 +92,17 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 var src = tile.PayloadCell.Liquid;
                 string message = LayerLogFormat.FormatLiquid(tile.PayloadTile);
                 Tile worldTile = Main.tile[x, y];
-                if (worldTile.LiquidAmount != src.Amount || worldTile.LiquidType != src.Type)
-                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+                if (worldTile.LiquidAmount == src.Amount && worldTile.LiquidType == src.Type)
+                    continue;
 
-                if (Main.netMode == NetmodeID.Server)
-                    NetMessage.SendData(MessageID.LiquidUpdate, -1, -1, null, x, y);
+                changed = true;
+                if (!TileExecutor.EnqueueSetLiquid(x, y, src.Type, src.Amount, in context))
+                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            return LayerResult.Ok(LayerLogFormat.FormatLiquid(tiles[0].PayloadTile), okLabel);
-        }
-
-        /// <summary>
-        /// Writes liquid through the live tile handle; raw <see cref="Main.tile.GetData{T}()"/> writes do not update <see cref="Tile.LiquidAmount"/>.
-        /// </summary>
-        private static bool TryWriteLiquid(int x, int y, int liquidType, byte amount)
-        {
-            if (!WorldGen.InWorld(x, y))
-                return false;
-
-            if (WorldGen.PlaceLiquid(x, y, (byte)liquidType, amount))
-                return true;
-
-            Tile dest = Main.tile[x, y];
-            ref LiquidData liquid = ref dest.Get<LiquidData>();
-            liquid.LiquidType = liquidType;
-            liquid.Amount = amount;
-            liquid.SkipLiquid = false;
-            liquid.CheckingLiquid = false;
-            return Main.tile[x, y].LiquidAmount == amount && Main.tile[x, y].LiquidType == liquidType;
+            return changed
+                ? LayerResult.Ok(LayerLogFormat.FormatLiquid(tiles[0].PayloadTile), okLabel)
+                : LayerResult.Ok();
         }
 
         /// <summary>

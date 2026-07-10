@@ -18,6 +18,7 @@ namespace TheArchitectsBlueprintMod.Debug
     internal sealed class TABLog : ModSystem
     {
         public const string TileExecutorCategory = "TileExecutor";
+        public const string InventoryCategory = "Inventory";
 
         private static Mod? _mod;
         private static uint _batchFrame = uint.MaxValue;
@@ -109,11 +110,8 @@ namespace TheArchitectsBlueprintMod.Debug
         /// </summary>
         public static bool IsCategoryEnabled(string? category) => ShouldEmitCategory(category);
 
-        /// <summary>
-        /// Always true: debug/info log records are always written to mod logs when their category passes <see cref="CategoryFilter"/>.
-        /// Kept for existing call sites that guard expensive message construction.
-        /// </summary>
-        public static bool IsDebugEnabled => ShouldEmitCategory(null) || ShouldEmitCategory(TileExecutorCategory);
+        /// <summary>True when debug records are globally enabled in client logging config.</summary>
+        public static bool IsDebugEnabled => ClientLogConfig.Instance?.EnableDebugLogs ?? true;
 
         /// <summary>
         /// Queues a debug message for the current frame batch.
@@ -178,17 +176,31 @@ namespace TheArchitectsBlueprintMod.Debug
         /// </summary>
         private static bool ShouldEmitCategory(string? category)
         {
-            LogCategoryFilter filter = ClientLogConfig.Instance?.CategoryFilter ?? LogCategoryFilter.All;
-            return filter switch
+            ClientLogConfig? cfg = ClientLogConfig.Instance;
+            if (cfg is null)
+                return true;
+
+            return category switch
             {
-                LogCategoryFilter.TileExecutorOnly => category == TileExecutorCategory,
-                _ => true,
+                "Paste" => cfg.TagPaste,
+                "Projection" or "ProjectionSystem" => cfg.TagProjection,
+                "Selection" or "SelectionSystem" or "Blueprint" => cfg.TagSelection,
+                "Layers" => cfg.TagLayers,
+                "TileMapping" => cfg.TagTileMapping,
+                "InteractionMap" => cfg.TagInteractionMap,
+                "PasteNet" => cfg.TagNetworking,
+                "ToolAction" => cfg.TagToolAction,
+                "Template" => cfg.TagTemplate,
+                TileExecutorCategory => cfg.TagTileExecutor,
+                InventoryCategory => cfg.TagInventory,
+                null or "" => cfg.TagOther,
+                _ => cfg.TagOther,
             };
         }
 
         private static void Enqueue(string message, string? category, int level, bool echoToChat, Color chatColor)
         {
-            if (_mod is null || !ShouldEmitCategory(category))
+            if (_mod is null || (level == 0 && !IsDebugEnabled) || !ShouldEmitCategory(category))
                 return;
 
             // --- A new frame started before the previous batch was flushed; flush the stale batch first.

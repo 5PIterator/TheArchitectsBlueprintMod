@@ -40,8 +40,14 @@ namespace TheArchitectsBlueprintMod.Core
 
         private void BeginGesture(Player player, Mode mode, Point cursorTile)
         {
-            if (!BlueprintSystem.GetTopmostBlueprintAt(cursorTile, out Blueprint target))
+            // Prefer the blueprint under the cursor; otherwise allow starting outside bounds on the topmost defined blueprint.
+            Blueprint? target = BlueprintSystem.GetTopmostBlueprintAt(cursorTile, out Blueprint atCursor)
+                ? atCursor
+                : BlueprintSystem.GetTopmostBlueprint();
+            if (target is null || !target.IsDefined)
                 return;
+
+            BlueprintSystem.BringBlueprintToFront(target);
 
             var state = GetState(player);
             state.Mode = mode;
@@ -152,10 +158,16 @@ namespace TheArchitectsBlueprintMod.Core
 
             Rectangle rect = Blueprint.FromPoints(state.Anchor, state.Current);
             Rectangle targetBounds = state.Target.Area;
+            Rectangle clamped = Rectangle.Intersect(targetBounds, rect);
+            if (clamped.IsEmpty)
+            {
+                ClearGestureOverlay();
+                return;
+            }
+
             Color c = state.Mode == Mode.Include
                 ? ArchitectVisualPalette.IncludePreviewColor
                 : ArchitectVisualPalette.ExcludePreviewColor;
-            Rectangle clamped = Rectangle.Intersect(targetBounds, rect);
             OverlaySystem.RegTileBounds("preview", clamped, c, 2, InclusionGestureFamily);
         }
 

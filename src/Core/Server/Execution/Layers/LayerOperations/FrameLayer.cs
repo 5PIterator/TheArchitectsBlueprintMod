@@ -79,33 +79,26 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             FrameOperations.HasTileAnchor(tileType, style)
             || FrameOperations.HasWallAnchor(tileType, style)
             || FrameOperations.HasOtherAnchor(tileType, style);
+
         private static bool UsesBaseTilePlacement(ushort tileType, int style) =>
             InteractionMapProvider.GetRequiredBaseTile(tileType, style).HasValue;
-
-        private static bool UsesTilePlacement(IReadOnlyList<PasteTile> tiles, in PasteTile origin)
-        {
-            if (!origin.PayloadCell.HasTile())
-                return false;
-
-            ushort tileType = origin.PayloadCell.Block.Type;
-            if (!TileLoaderSupport.IsKnownTileType(tileType))
-                return false;
-
-            int style = origin.PayloadCell.Detail.Style;
-            if (UsesBaseTilePlacement(tileType, style) || TileID.Sets.Grass[tileType])
-                return true;
-
-            if (tiles.Count != 1)
-                return false;
-
-            var data = TileObjectData.GetTileData(tileType, style);
-            return data is null || (data.Width <= 1 && data.Height <= 1);
-        }
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].HasTile;
 
-        public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
+        public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
+        {
+            // --- Planning-time gate: only queue work when the origin can be placed with current world support.
+            if (!tile.PayloadCell.HasTile() || context.IsSweepCheat)
+                return true;
+
+            var candidate = new FrameOperations.FrameCandidate(
+                FrameOperations.ResolveOriginWorld(in tile, forClear: false),
+                tile,
+                [tile]);
+
+            return FrameOperations.CanPlaceFrameCandidate(candidate, in context);
+        }
 
         public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
@@ -141,42 +134,94 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
         }
 
-        public override LayerResult Clear(TileBatch batch, in PasteContext context) =>
-            FrameOperations.Clear(batch.Tiles, in context);
+        public override LayerResult Clear(TileBatch batch, in PasteContext context)
+        {
+            // --- Clear one frame object per pass in support-safe order and requeue the remaining candidates.
+            if (batch.IsEmpty)
+                return LayerResult.Ok();
+
+            List<FrameOperations.FrameCandidate> candidates = FrameOperations.GroupIntoCandidates(batch.Tiles, forClear: true);
+            int index = FrameOperations.SelectNextClearCandidateIndex(candidates, in context);
+            FrameOperations.FrameCandidate candidate = index >= 0
+                ? candidates[index]
+                : candidates[0];
+            string message = FrameOperations.FormatCandidateMessage(candidate, forClear: true);
+            string okLabel = LayerLogFormat.ClearedLabel;
+
+            if (index < 0)
+                return LayerResult.OkWithRemaining(batch, message, okLabel);
+
+            PasteTile origin = FrameOperations.ResolveOriginPasteTile(candidate, forClear: true);
+            if (!Main.tile[origin.World.X, origin.World.Y].HasTile)
+                return FrameOperations.RemoveCandidateFromBatch(batch, candidate, message, okLabel);
+
+            LayerResult result = FrameOperations.ClearOrigin(in origin, in context, message);
+            if (!result.Success)
+                return result;
+
+            return FrameOperations.RemoveCandidateFromBatch(batch, candidate, result.Message, result.OkLabel);
+        }
 
         public override LayerResult Place(TileBatch batch, in PasteContext context)
         {
+            // --- Place only the first currently valid frame candidate, then requeue any remaining objects.
+            if (batch.IsEmpty)
+                return LayerResult.Ok();
+
             IReadOnlyList<PasteTile> tiles = batch.Tiles;
-            var origin = tiles.Count > 0 ? tiles[0] : default;
-            string message = origin.PayloadCell.HasTile()
-                ? LayerLogFormat.FormatTile(origin.PayloadTile)
-                : LayerLogFormat.FormatFromSubject(in origin, PasteSubject.Payload);
-            bool useTilePlace = UsesTilePlacement(tiles, in origin);
-            var res = useTilePlace
-                ? TileOperations.Place(tiles, in context)
-                : FrameOperations.Place(tiles, in context);
-            if (res.Success)
-            {
-                if (res.RemainingTiles.Count > 0 || tiles.Count == 0)
-                    return res;
+            List<FrameOperations.FrameCandidate> candidates = FrameOperations.GroupIntoCandidates(tiles, forClear: false);
+            IReadOnlyList<FrameOperations.FrameCandidate> allPending =
+                context.PendingFramePlaceCandidates ?? candidates;
+            string okLabel = LayerLogFormat.PlacedLabel(in context);
+            int index = FrameOperations.SelectNextPlaceCandidateIndex(candidates, allPending, in context);
+            FrameOperations.FrameCandidate candidate = index >= 0
+                ? candidates[index]
+                : candidates[0];
+            string message = FrameOperations.FormatCandidateMessage(candidate, forClear: false);
 
-                var placementOrigin = useTilePlace ? origin : FrameOperations.GetPlacementOriginTile(tiles);
-                if (!context.IsSweepCheat && !Consume(in placementOrigin, in context))
-                    return LayerResult.Fail(
-                        LayerFailReason.MissingItems,
-                        LayerLogFormat.FormatTile(placementOrigin.PayloadTile));
-
-                return res;
-            }
-
-            if (res.FailReason == LayerFailReason.InvalidPlacement && tiles.Count > 0)
+            if (index < 0)
             {
                 if (!context.RetryOnInvalidPlacement)
                     return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
-                return LayerResult.OkWithRemaining(batch, message, LayerLogFormat.PlacedLabel(in context));
+                return LayerResult.OkWithRemaining(batch, message, okLabel);
             }
 
-            return res;
+            if (FrameOperations.IsCandidateAlreadyPlaced(candidate))
+                return FrameOperations.RemoveCandidateFromBatch(batch, candidate, message, okLabel);
+
+            PasteTile origin = candidate.OriginTile;
+            if (!context.IsSweepCheat
+                && origin.PayloadCell.HasTile()
+                && !TileExecutor.HasItemForTile(
+                    (ushort)origin.PayloadCell.Block.Type,
+                    origin.PayloadCell.Detail.Style,
+                    in context))
+            {
+                return LayerResult.Fail(LayerFailReason.MissingItems, message);
+            }
+
+            LayerResult res = FrameOperations.UsesTilePlacement(candidate.Tiles, in origin)
+                ? TileOperations.Place(candidate.Tiles, in context)
+                : FrameOperations.Place(candidate.Tiles, in context);
+
+            if (!res.Success)
+            {
+                if (res.FailReason == LayerFailReason.InvalidPlacement && context.RetryOnInvalidPlacement)
+                    return LayerResult.OkWithRemaining(batch, message, okLabel);
+                return res;
+            }
+
+            if (res.RemainingTiles.Count > 0)
+                return FrameOperations.MergePlaceRemaining(batch, candidate, res);
+
+            if (!context.IsSweepCheat && !Consume(in origin, in context))
+                return LayerResult.Fail(LayerFailReason.MissingItems, message);
+
+            return FrameOperations.RemoveCandidateFromBatch(
+                batch,
+                candidate,
+                res.Message ?? message,
+                res.OkLabel ?? okLabel);
         }
     }
 }

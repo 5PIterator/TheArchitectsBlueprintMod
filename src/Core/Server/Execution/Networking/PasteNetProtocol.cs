@@ -63,6 +63,9 @@ namespace TheArchitectsBlueprintMod.Core.Server
         public ClearStyle ClearStrategy { get; private set; }
         public ClearItemDropStyle ClearItemDropStrategy { get; private set; }
         public SweepStyle SweepStrategy { get; private set; }
+        public int ArrowSpeed { get; private set; }
+        public float ArrowMinSpeed { get; private set; }
+        public float ArrowMaxSpeed { get; private set; }
         public List<Point> ExcludedRelatives { get; private set; } = [];
         public byte[] PayloadBytes { get; private set; } = [];
 
@@ -102,6 +105,9 @@ namespace TheArchitectsBlueprintMod.Core.Server
             request.ClearStrategy = hints.ClearStyle;
             request.ClearItemDropStrategy = hints.ClearItemDropStyle;
             request.SweepStrategy = hints.SweepStyle;
+            request.ArrowSpeed = hints.ArrowSpeed;
+            request.ArrowMinSpeed = hints.ArrowMinSpeed;
+            request.ArrowMaxSpeed = hints.ArrowMaxSpeed;
             request.SourceArea = projection.SourceArea;
             request.CutSource = !projection.SourceArea.IsEmpty && projection.CutSource;
             request.ExcludedRelatives = CollectExcludedRelatives(projection);
@@ -122,6 +128,9 @@ namespace TheArchitectsBlueprintMod.Core.Server
             writer.Write((byte)ClearStrategy);
             writer.Write((byte)ClearItemDropStrategy);
             writer.Write((byte)SweepStrategy);
+            writer.Write(ArrowSpeed);
+            writer.Write(ArrowMinSpeed);
+            writer.Write(ArrowMaxSpeed);
             writer.Write(ExcludedRelatives.Count);
             for (int i = 0; i < ExcludedRelatives.Count; i++)
             {
@@ -160,6 +169,10 @@ namespace TheArchitectsBlueprintMod.Core.Server
             if (!TryParseSweepStrategy(sweepByte, out SweepStyle sweepStrategy))
                 throw new InvalidDataException($"Paste request has invalid sweep strategy byte: {sweepByte}.");
             request.SweepStrategy = sweepStrategy;
+
+            request.ArrowSpeed = reader.ReadInt32();
+            request.ArrowMinSpeed = reader.ReadSingle();
+            request.ArrowMaxSpeed = reader.ReadSingle();
 
             int excludedCount = reader.ReadInt32();
             if (excludedCount < 0 || excludedCount > MaxExcludedRelativeCells)

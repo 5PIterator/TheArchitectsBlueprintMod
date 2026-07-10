@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Debug;
 
 namespace TheArchitectsBlueprintMod.Core
 {
@@ -108,11 +109,17 @@ namespace TheArchitectsBlueprintMod.Core
                 out sourceChest))
             {
                 itemType = 0;
+                TABLog.Debug(
+                    $"ReserveTile miss tile={tileType} style={style}",
+                    TABLog.InventoryCategory);
                 return false;
             }
 
             placeStyle = Math.Max(0, item!.placeStyle);
             itemType = ConsumeReservedItem(item);
+            TABLog.Debug(
+                $"ReserveTile ok tile={tileType} style={style} item={itemType} source={(fromChest ? "chest" : "player")} origin=({origin.X:0.##},{origin.Y:0.##})",
+                TABLog.InventoryCategory);
             return true;
         }
 
@@ -134,10 +141,16 @@ namespace TheArchitectsBlueprintMod.Core
                 out sourceChest))
             {
                 itemType = 0;
+                TABLog.Debug(
+                    $"ReserveWall miss wall={wallType}",
+                    TABLog.InventoryCategory);
                 return false;
             }
 
             itemType = ConsumeReservedItem(item!);
+            TABLog.Debug(
+                $"ReserveWall ok wall={wallType} item={itemType} source={(fromChest ? "chest" : "player")} origin=({origin.X:0.##},{origin.Y:0.##})",
+                TABLog.InventoryCategory);
             return true;
         }
 
@@ -176,6 +189,9 @@ namespace TheArchitectsBlueprintMod.Core
                 remaining = TryStoreInInventory(_inventories[i], itemId, remaining);
             }
 
+            TABLog.Debug(
+                $"StoreAttempt item={itemId} requested={stack} preferred={preferredInventoryIndex} remaining={remaining}",
+                TABLog.InventoryCategory);
             return remaining;
         }
 
@@ -193,7 +209,10 @@ namespace TheArchitectsBlueprintMod.Core
             destination = default;
             inventoryIndex = -1;
             if (_inventories.Count == 0)
+            {
+                TABLog.Debug("StoreDestination miss: no inventories", TABLog.InventoryCategory);
                 return false;
+            }
 
             if (itemId > 0)
             {
@@ -204,6 +223,9 @@ namespace TheArchitectsBlueprintMod.Core
 
                     inventoryIndex = i;
                     destination = InventoryManager.GetInventoryWorldCenter(_inventories[i], player);
+                    TABLog.Debug(
+                        $"StoreDestination item={itemId} -> index={inventoryIndex} mode=storable",
+                        TABLog.InventoryCategory);
                     return true;
                 }
             }
@@ -215,11 +237,17 @@ namespace TheArchitectsBlueprintMod.Core
 
                 inventoryIndex = i;
                 destination = InventoryManager.GetChestWorldCenter(chest);
+                TABLog.Debug(
+                    $"StoreDestination item={itemId} -> index={inventoryIndex} mode=chestFallback",
+                    TABLog.InventoryCategory);
                 return true;
             }
 
             inventoryIndex = 0;
             destination = player.Center;
+            TABLog.Debug(
+                $"StoreDestination item={itemId} -> index=0 mode=playerFallback",
+                TABLog.InventoryCategory);
             return true;
         }
 

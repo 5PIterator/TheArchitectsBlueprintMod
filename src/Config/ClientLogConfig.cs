@@ -3,12 +3,6 @@ using Terraria.ModLoader.Config;
 
 namespace TheArchitectsBlueprintMod.Config
 {
-    public enum LogCategoryFilter
-    {
-        All,
-        TileExecutorOnly,
-    }
-
     /// <summary>
     /// Client-only logging preferences. Does not change paste behavior or tile-map compilation on the server.
     /// </summary>
@@ -20,8 +14,46 @@ namespace TheArchitectsBlueprintMod.Config
 
         [Header("Logging")]
 
-        [DefaultValue(LogCategoryFilter.All)]
-        public LogCategoryFilter CategoryFilter;
+        [DefaultValue(true)]
+        public bool EnableDebugLogs;
+
+        [Header("LogTags")]
+
+        [DefaultValue(true)]
+        public bool TagPaste;
+
+        [DefaultValue(true)]
+        public bool TagTileExecutor;
+
+        [DefaultValue(true)]
+        public bool TagInventory;
+
+        [DefaultValue(true)]
+        public bool TagProjection;
+
+        [DefaultValue(true)]
+        public bool TagSelection;
+
+        [DefaultValue(true)]
+        public bool TagLayers;
+
+        [DefaultValue(true)]
+        public bool TagTileMapping;
+
+        [DefaultValue(true)]
+        public bool TagInteractionMap;
+
+        [DefaultValue(true)]
+        public bool TagNetworking;
+
+        [DefaultValue(true)]
+        public bool TagToolAction;
+
+        [DefaultValue(true)]
+        public bool TagTemplate;
+
+        [DefaultValue(true)]
+        public bool TagOther;
 
         [DefaultValue(false)]
         public bool PrintDebugLogsToChat;
