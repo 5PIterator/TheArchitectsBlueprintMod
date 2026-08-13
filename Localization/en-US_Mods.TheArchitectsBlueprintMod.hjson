@@ -7,6 +7,19 @@ UI: {
 	EditProjectName: Edit project name
 	ExportReadableJsonHoverOff: Export compact .tab
 	ExportReadableJsonHoverOn: Export readable .json
+	OpenPayloadBrowser: Open payload browser
+	PrintManifest: Print item manifest
+
+	Manifest: {
+		Header: --- Payload Manifest ---
+		Empty: No placeable materials in this payload.
+		NoProjection: No projection selected.
+		NoPayload: Projection has no payload.
+		EntryCounts: "{0}/{1} (-{2})"
+		SourcesPrefix: " <-- "
+		Unresolved: "{0} unresolved mapping(s):"
+		Satisfied: All remaining materials are available.
+	}
 
 	Metadata: {
 		dimensions: Dimensions
@@ -188,13 +201,18 @@ Configs: {
 			LogTags: Log tag families
 		}
 
-		EnableDebugLogs: {
-			Label: Enable debug logs
+		MinimumLogLevel: {
+			Label: Minimum log level
 			Tooltip:
 				'''
-				Master switch for debug-level log records.
-				When disabled, debug lines are suppressed; info, warning, and error logs still emit.
+				Only records at this severity or higher are written to the mod log (and to chat when enabled).
+				Debug is the most verbose; Error is the least.
 				'''
+		}
+
+		TagGeneric: {
+			Label: Generic
+			Tooltip: Concise paste phase progress and task results ([Generic]). Shown only to the paste operation owner.
 		}
 
 		TagPaste: {
@@ -252,17 +270,22 @@ Configs: {
 			Tooltip: Template copy warnings ([Template]).
 		}
 
+		TagManifest: {
+			Label: Manifest
+			Tooltip: Paste item manifest output ([Manifest]).
+		}
+
 		TagOther: {
 			Label: Other / uncategorized
-			Tooltip: Log lines with no category tag or unknown tags.
+			Tooltip: Log lines with no category tag or unknown tags (excluding Generic paste progress).
 		}
 
 		PrintDebugLogsToChat: {
 			Label: Print debug logs to chat
 			Tooltip:
 				'''
-				Debug logs are always written to the mod log.
-				Enable this to also print debug entries into chat.
+				Also echo debug entries into chat when they meet the minimum log level.
+				Owner-scoped paste diagnostics only appear for the local paste owner.
 				Client only — other players are unaffected.
 				'''
 		}
@@ -271,10 +294,39 @@ Configs: {
 			Label: Print info logs to chat
 			Tooltip:
 				'''
-				Info logs are always written to the mod log.
-				Enable this to print concise paste phase results to chat.
+				Also echo info entries into chat when they meet the minimum log level.
+				Concise paste phase results ([Generic]) appear only for the paste operation owner.
 				Client only — other players are unaffected.
 				'''
+		}
+
+		TagFrameLayer: {
+			Label: Frame layer
+			Tooltip: Frame identify/place/clear candidate tracing ([FrameLayer]).
+		}
+	}
+
+	TabLogLevel: {
+		Tooltip: ""
+
+		Debug: {
+			Label: Debug
+			Tooltip: Verbose diagnostic detail.
+		}
+
+		Info: {
+			Label: Info
+			Tooltip: Concise operational progress.
+		}
+
+		Warn: {
+			Label: Warn
+			Tooltip: Recoverable problems and configuration issues.
+		}
+
+		Error: {
+			Label: Error
+			Tooltip: Failures that need attention.
 		}
 	}
 
@@ -750,6 +802,21 @@ Configs: {
 			Tooltip: When enabled, Custom.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
+		EnableWandDiscovery: {
+			Label: Wand
+			Tooltip: When enabled, Wands.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnablePaintDiscovery: {
+			Label: Paint
+			Tooltip: When enabled, Paints.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnableVineDiscovery: {
+			Label: Vine
+			Tooltip: When enabled, Vines.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
 		EnableBiomeConversions: {
 			Label: Biome
 			Tooltip: When enabled, Biome.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
@@ -763,6 +830,21 @@ Configs: {
 		RunPlacementDiscovery: {
 			Label: Run placement discovery
 			Tooltip: One-shot action. Save config with this enabled to run placement discovery.
+		}
+
+		RunWandDiscovery: {
+			Label: Run wand discovery
+			Tooltip: One-shot action. Save config with this enabled to run wand discovery.
+		}
+
+		RunPaintDiscovery: {
+			Label: Run paint discovery
+			Tooltip: One-shot action. Save config with this enabled to run paint discovery.
+		}
+
+		RunVineDiscovery: {
+			Label: Run vine discovery
+			Tooltip: One-shot action. Save config with this enabled to run vine discovery.
 		}
 
 		RunBiomeDiscovery: {
@@ -782,7 +864,7 @@ Configs: {
 
 		RunFullDiscoveryAndCompile: {
 			Label: Run full discovery + compile
-			Tooltip: One-shot action. Save config with this enabled to run placement, biome, shimmer discovery, then compile.
+			Tooltip: One-shot action. Save config with this enabled to run placement, wand, vine, biome, shimmer discovery, then compile.
 		}
 	}
 

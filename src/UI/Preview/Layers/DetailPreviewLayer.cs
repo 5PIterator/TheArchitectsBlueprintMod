@@ -1,8 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Terraria;
 using Terraria.Enums;
-using Terraria.GameContent.Drawing;
 using Terraria.ID;
 using TheArchitectsBlueprintMod.Core;
 
@@ -18,68 +16,26 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
         {
             // --- Draw tiles whose sprite depends on detail state; plain blocks use BlockPreviewLayer.
 
-            if (!cell.Detail.HasTile)
-                return;
-
-            Tile tile = cell.ToTile();
-            if (!TileDrawing.IsVisible(tile))
-                return;
-
             PayloadCell.DetailData detail = cell.Detail;
             if (!detail.IsActuated && !detail.IsHalfBlock && detail.Slope == SlopeType.Solid && detail.BlockType == BlockType.Solid)
                 return;
 
-            ushort tileType = cell.Block.Type;
-            Main.instance.LoadTiles(tileType);
+            if (!PreviewTileDraw.TryPrepare(cell, out PreviewTileDraw.PreparedTile prepared))
+                return;
 
-            // Preview tile draw data should not depend on wall animation/frame state.
-            TileWallWireStateData state = tile.Get<TileWallWireStateData>();
-            int tileFrameNumber = state.TileFrameNumber;
-            state.WallFrameX = 0;
-            state.WallFrameY = 0;
-            state.WallFrameNumber = 0;
-            state.TileFrameNumber = tileFrameNumber;
-            tile.Get<TileWallWireStateData>() = state;
-            tile.Get<WallTypeData>() = default;
+            if (!PreviewTileDraw.TryResolve(in prepared, out PreviewTileDraw.DrawSprite sprite))
+                return;
 
-            TileDrawing renderer = Main.instance.TilesRenderer;
-            int payloadX = relX;
-            int payloadY = relY;
-
-            short frameX = tile.TileFrameX;
-            short frameY = tile.TileFrameY;
-            renderer.GetTileDrawData(
-                payloadX,
-                payloadY,
-                tile,
-                tileType,
-                ref frameX,
-                ref frameY,
-                out int tileWidth,
-                out int tileHeight,
-                out int tileTop,
-                out int halfBrickHeight,
-                out int addFrX,
-                out int addFrY,
-                out SpriteEffects effects,
-                out Texture2D glowTexture,
-                out Rectangle glowSourceRect,
-                out Color glowColor);
-
-            Texture2D texture = renderer.GetTileDrawTexture(tile, payloadX, payloadY);
-            var source = new Rectangle(frameX + addFrX, frameY + addFrY, tileWidth, tileHeight - halfBrickHeight);
-            Vector2 pos = ctx.Position + new Vector2(
-                relX * PreviewDrawContext.TilePixelSize - (tileWidth - PreviewDrawContext.TilePixelSize) / 2f,
-                relY * PreviewDrawContext.TilePixelSize + tileTop + halfBrickHeight);
-
+            Vector2 pos = PreviewTileDraw.GetDrawPosition(in ctx, relX, relY, in sprite);
             Color drawTint = detail.IsActuated ? ctx.Tint * 0.4f : ctx.Tint;
             SlopeType slope = detail.Slope;
             if (slope != SlopeType.Solid)
-                DrawSlopeTile(ctx.SpriteBatch, texture, source, pos, ctx.Scale, effects, slope, drawTint);
+                DrawSlopeTile(ctx.SpriteBatch, sprite.Texture, sprite.Source, pos, ctx.Scale, sprite.Effects, slope, drawTint);
             else
-                ctx.SpriteBatch.Draw(texture, pos * ctx.Scale, source, drawTint, 0f, Vector2.Zero, ctx.Scale, effects, 0f);
+                ctx.SpriteBatch.Draw(sprite.Texture, pos * ctx.Scale, sprite.Source, drawTint, 0f, Vector2.Zero, ctx.Scale, sprite.Effects, 0f);
         }
 
+        /// <summary>Draws a sloped tile by clipping each vertical column to the slope silhouette.</summary>
         private static void DrawSlopeTile(
             SpriteBatch sb,
             Texture2D texture,
@@ -90,6 +46,8 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
             SlopeType slope,
             Color tint)
         {
+            // --- Slice the source into one-pixel columns and keep only the slope-visible span of each.
+
             static void DrawColumn(
                 SpriteBatch batch,
                 Texture2D tex,

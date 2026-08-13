@@ -38,16 +38,35 @@ internal static class PastingDebug
         int x,
         int y,
         bool success,
-        string phase)
+        string phase,
+        ushort? itemCheckTileType = null,
+        TileItemAvailability? itemIssue = null,
+        int? alternate = null,
+        short? frameX = null,
+        short? frameY = null)
     {
+        // --- Emit style/mode result, and include alternate/frame when provided for multi-style diagnosis.
+
         if (!TABLog.IsDebugEnabled) return;
 
         string tileName = ContentNameResolver.GetTileName(tileType) ?? $"Tile{tileType}";
         string mode = baseTileId.HasValue ? "conversion" : "direct";
         string baseName = baseTileId.HasValue ? (ContentNameResolver.GetTileName(baseTileId.Value) ?? $"Tile{baseTileId}") : "-";
-        string result = success ? "OK" : "FAIL";
+        string result = success ? "OK" : FormatPlacementFailure(itemCheckTileType, itemIssue);
 
-        TABLog.Debug($"Place [{phase}] ({x},{y}) {tileName} style={style} mode={mode} base={baseName} => {result}", "Paste");
+        // Append alternate/frame when callers supply them (PlaceObject multi-style path).
+        string variant = string.Empty;
+        if (alternate.HasValue || frameX.HasValue || frameY.HasValue)
+        {
+            string altText = alternate.HasValue ? alternate.Value.ToString() : "?";
+            string fxText = frameX.HasValue ? frameX.Value.ToString() : "?";
+            string fyText = frameY.HasValue ? frameY.Value.ToString() : "?";
+            variant = $" alt={altText} frame=({fxText},{fyText})";
+        }
+
+        TABLog.Debug(
+            $"Place [{phase}] ({x},{y}) {tileName} style={style}{variant} mode={mode} base={baseName} => {result}",
+            "Paste");
     }
 
     /// <summary>
@@ -60,5 +79,22 @@ internal static class PastingDebug
         string tileName = ContentNameResolver.GetTileName(tileType) ?? $"Tile{tileType}";
         string mode = baseTileId.HasValue ? "conversion" : "direct";
         TABLog.Debug($"Interaction lookup: {tileName} style={style} => first={firstItem ?? "?"} mode={mode}", "Paste");
+    }
+
+    private static string FormatPlacementFailure(ushort? itemCheckTileType, TileItemAvailability? itemIssue)
+    {
+        if (!itemIssue.HasValue || itemIssue == TileItemAvailability.Available)
+            return "FAIL";
+
+        string checkedName = itemCheckTileType.HasValue
+            ? (ContentNameResolver.GetTileName(itemCheckTileType.Value) ?? $"Tile{itemCheckTileType}")
+            : "?";
+        string reason = itemIssue switch
+        {
+            TileItemAvailability.MissingFromInventory => "missing item",
+            TileItemAvailability.UnresolvedInteraction => "unresolved interaction",
+            _ => "FAIL",
+        };
+        return $"FAIL ({reason} for {checkedName})";
     }
 }

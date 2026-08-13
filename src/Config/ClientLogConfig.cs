@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
+using TheArchitectsBlueprintMod.Debug;
 
 namespace TheArchitectsBlueprintMod.Config
 {
@@ -14,10 +15,13 @@ namespace TheArchitectsBlueprintMod.Config
 
         [Header("Logging")]
 
-        [DefaultValue(true)]
-        public bool EnableDebugLogs;
+        [DefaultValue(TabLogLevel.Debug)]
+        public TabLogLevel MinimumLogLevel = TabLogLevel.Debug;
 
         [Header("LogTags")]
+
+        [DefaultValue(true)]
+        public bool TagGeneric;
 
         [DefaultValue(true)]
         public bool TagPaste;
@@ -38,6 +42,9 @@ namespace TheArchitectsBlueprintMod.Config
         public bool TagLayers;
 
         [DefaultValue(true)]
+        public bool TagFrameLayer;
+
+        [DefaultValue(true)]
         public bool TagTileMapping;
 
         [DefaultValue(true)]
@@ -51,6 +58,9 @@ namespace TheArchitectsBlueprintMod.Config
 
         [DefaultValue(true)]
         public bool TagTemplate;
+
+        [DefaultValue(true)]
+        public bool TagManifest;
 
         [DefaultValue(true)]
         public bool TagOther;

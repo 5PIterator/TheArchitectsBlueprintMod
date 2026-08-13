@@ -35,6 +35,34 @@ namespace TheArchitectsBlueprintMod.Core
         ApplyPayloadBlock = 21,
     }
 
+    /// <summary>One liquid write inside a pool-level <see cref="TileMutationKind.SetLiquid"/> mutation.</summary>
+    internal readonly record struct LiquidPoolCell(Point World, int LiquidType, byte Amount);
+
+    /// <summary>
+    /// Tile and wall paint colors plus coating flags carried by an <see cref="TileMutationKind.ApplyPaintState"/> mutation.
+    /// </summary>
+    internal readonly record struct PaintMutationState(
+        byte TileColor = 0,
+        byte WallColor = 0,
+        bool TileInvisible = false,
+        bool WallInvisible = false,
+        bool TileFullbright = false,
+        bool WallFullbright = false)
+    {
+        /// <summary>True when wall color or wall coatings should be written.</summary>
+        public bool WantsWallAppearance =>
+            WallColor != 0 || WallInvisible || WallFullbright;
+
+        /// <summary>True when any paint color or coating facet is set.</summary>
+        public bool HasAny =>
+            TileColor != 0
+            || WallColor != 0
+            || TileInvisible
+            || WallInvisible
+            || TileFullbright
+            || WallFullbright;
+    }
+
     /// <summary>Queued world mutation executed by <see cref="TileExecutorSystem"/>.</summary>
     internal readonly record struct TileMutation(
         int MutationId,
@@ -51,8 +79,15 @@ namespace TheArchitectsBlueprintMod.Core
         int ItemType = 0,
         int ItemStack = 1,
         PayloadCell Payload = default,
-        int TargetInventoryIndex = -1)
+        int TargetInventoryIndex = -1,
+        short PostPlaceFrameX = -1,
+        short PostPlaceFrameY = -1,
+        PaintMutationState Paint = default)
     {
+        public const short NoPostPlaceFrame = -1;
+
+        public bool HasPostPlaceFrame => PostPlaceFrameX != NoPostPlaceFrame;
+
         public static TileMutation New(
             int mutationId,
             int operationId,
@@ -68,7 +103,10 @@ namespace TheArchitectsBlueprintMod.Core
             int itemType = 0,
             int itemStack = 1,
             PayloadCell payload = default,
-            int targetInventoryIndex = -1) =>
+            int targetInventoryIndex = -1,
+            short postPlaceFrameX = NoPostPlaceFrame,
+            short postPlaceFrameY = NoPostPlaceFrame,
+            PaintMutationState paint = default) =>
             new(
                 MutationId: mutationId,
                 OperationId: operationId,
@@ -84,6 +122,9 @@ namespace TheArchitectsBlueprintMod.Core
                 ItemType: itemType,
                 ItemStack: itemStack,
                 Payload: payload,
-                TargetInventoryIndex: targetInventoryIndex);
+                TargetInventoryIndex: targetInventoryIndex,
+                PostPlaceFrameX: postPlaceFrameX,
+                PostPlaceFrameY: postPlaceFrameY,
+                Paint: paint);
     }
 }

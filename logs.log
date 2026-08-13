@@ -1,376 +1,142 @@
-[15:15:23.072] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3186,334) 6x9
-[Paste] START | area=(3186,334) 6x9 | sourceClear=False | srcTiles=54 tgtTiles=54 | sweep=Detail planClear=All clearItemDrop=Store retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
-[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
-[Paste] Identify place layer=Frame rel=(2,0) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,0) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,1) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,1) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,2) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,2) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,3) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,3) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(1,4) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,4) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,4) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(4,4) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(1,5) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,5) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,5) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(4,5) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(0,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(1,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(4,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(5,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(0,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(1,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(4,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(5,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Block rel=(0,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify place layer=Block rel=(1,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify place layer=Block rel=(2,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify place layer=Block rel=(3,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify place layer=Block rel=(4,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify place layer=Block rel=(5,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify clear layer=Frame rel=(2,0) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,0) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,1) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,1) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,2) tiles=4
-TheArchitectsBlueprintMod: [15:15:23.072] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3186,334) 6x9
-[Paste] START | area=(3186,334) 6x9 | sourceClear=False | srcTiles=54 tgtTiles=54 | sweep=Detail planClear=All clearItemDrop=Store retryOnMissingItems=True retryOnInvalidPlacement=True requireItems=True
-[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
-[Paste] Identify place layer=Frame rel=(2,0) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,0) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,1) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,1) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,2) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,2) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,3) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,3) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(1,4) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,4) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,4) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(4,4) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(1,5) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,5) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,5) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(4,5) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(0,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(1,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(4,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(5,6) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(0,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(1,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(2,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(3,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(4,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Frame rel=(5,7) tiles=4 placementValid=True hasItems=False
-[Paste] Identify place layer=Block rel=(0,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify place layer=Block rel=(1,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify place layer=Block rel=(2,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify place layer=Block rel=(3,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify place layer=Block rel=(4,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify place layer=Block rel=(5,8) tiles=1 placementValid=True hasItems=True
-[Paste] Identify clear layer=Frame rel=(2,0) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,0) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,1) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,1) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,2) tiles=4
-[Plan] [Frame] [0/0] [0/0] [3188, 334] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3188, 336] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3187, 338] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3189, 338] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3186, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3188, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3190, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Block] [0/0] [0/0] [3186, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3187, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3188, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3189, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3190, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3191, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Frame] [0/0] [0/0] [3188, 334] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3188, 336] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3188, 334] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3188, 336] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3187, 338] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3189, 338] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3186, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3188, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3190, 340] Terraria:FishingCrate - Queued place batch (4 tiles)
-[Plan] [Block] [0/0] [0/0] [3186, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3187, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3188, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3189, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3190, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3191, 342] Terraria:Platforms - Queued place batch (1 tiles)
-[Plan] [Frame] [0/0] [0/0] [3188, 334] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3188, 336] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[15:15:23.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Identify clear layer=Frame rel=(3,2) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,3) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,3) tiles=4
-[Paste] Identify clear layer=Frame rel=(1,4) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,4) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,4) tiles=4
-[Paste] Identify clear layer=Frame rel=(4,4) tiles=4
-[Paste] Identify clear layer=Frame rel=(1,5) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,5) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,5) tiles=4
-[Paste] Identify clear layer=Frame rel=(4,5) tiles=4
-[Paste] Identify clear layer=Frame rel=(0,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(1,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(4,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(5,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(0,7) tiles=4
-[Paste] Identify clear layer=Frame rel=(1,7) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,7) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,7) tiles=4
-[Paste] Identify clear layer=Frame rel=(4,7) tiles=4
-[Paste] Identify clear layer=Frame rel=(5,7) tiles=4
-[Paste] Identify clear layer=Block rel=(0,8) tiles=1
-[Paste] Identify clear layer=Block rel=(1,8) tiles=1
-[Paste] Identify clear layer=Block rel=(2,8) tiles=1
-[Paste] Identify clear layer=Block rel=(3,8) tiles=1
-[Paste] Identify clear layer=Block rel=(4,8) tiles=1
-[Paste] Identify clear layer=Block rel=(5,8) tiles=1
-[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
-[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
-TheArchitectsBlueprintMod: [15:15:23.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Identify clear layer=Frame rel=(3,2) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,3) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,3) tiles=4
-[Paste] Identify clear layer=Frame rel=(1,4) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,4) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,4) tiles=4
-[Paste] Identify clear layer=Frame rel=(4,4) tiles=4
-[Paste] Identify clear layer=Frame rel=(1,5) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,5) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,5) tiles=4
-[Paste] Identify clear layer=Frame rel=(4,5) tiles=4
-[Paste] Identify clear layer=Frame rel=(0,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(1,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(4,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(5,6) tiles=4
-[Paste] Identify clear layer=Frame rel=(0,7) tiles=4
-[Paste] Identify clear layer=Frame rel=(1,7) tiles=4
-[Paste] Identify clear layer=Frame rel=(2,7) tiles=4
-[Paste] Identify clear layer=Frame rel=(3,7) tiles=4
-[Paste] Identify clear layer=Frame rel=(4,7) tiles=4
-[Paste] Identify clear layer=Frame rel=(5,7) tiles=4
-[Paste] Identify clear layer=Block rel=(0,8) tiles=1
-[Paste] Identify clear layer=Block rel=(1,8) tiles=1
-[Paste] Identify clear layer=Block rel=(2,8) tiles=1
-[Paste] Identify clear layer=Block rel=(3,8) tiles=1
-[Paste] Identify clear layer=Block rel=(4,8) tiles=1
-[Paste] Identify clear layer=Block rel=(5,8) tiles=1
-[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
-[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
-[15:15:23.083] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Plan] [Frame] [0/0] [0/0] [3187, 338] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3189, 338] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3186, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3188, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3190, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Block] [0/0] [0/0] [3186, 342] Terraria:Platforms - Queued clear batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3187, 342] Terraria:Platforms - Queued clear batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3188, 342] Terraria:Platforms - Queued clear batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3189, 342] Terraria:Platforms - Queued clear batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3190, 342] Terraria:Platforms - Queued clear batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3191, 342] Terraria:Platforms - Queued clear batch (1 tiles)
---- [Plan] END (placeBatches=13, clearBatches=13) ---
---- [Clear] START (tasks=13) ---
-TheArchitectsBlueprintMod: [15:15:23.083] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Plan] [Frame] [0/0] [0/0] [3187, 338] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3189, 338] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3186, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3188, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Frame] [0/0] [0/0] [3190, 340] Terraria:FishingCrate - Queued clear batch (4 tiles)
-[Plan] [Block] [0/0] [0/0] [3186, 342] Terraria:Platforms - Queued clear batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3187, 342] Terraria:Platforms - Queued clear batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3188, 342] Terraria:Platforms - Queued clear batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3189, 342] Terraria:Platforms - Queued clear batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3190, 342] Terraria:Platforms - Queued clear batch (1 tiles)
-[Plan] [Block] [0/0] [0/0] [3191, 342] Terraria:Platforms - Queued clear batch (1 tiles)
---- [Plan] END (placeBatches=13, clearBatches=13) ---
---- [Clear] START (tasks=13) ---
-[15:15:23.182] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=7
-[Paste] Clear execute layer=Frame world=(3188,334) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:23.182] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=7
-[Paste] Clear execute layer=Frame world=(3188,334) success=True failReason=None remaining=0
-[15:15:23.299] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=6
-[Paste] Clear execute layer=Frame world=(3188,336) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:23.299] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=6
-[Paste] Clear execute layer=Frame world=(3188,336) success=True failReason=None remaining=0
-[15:15:23.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=5
-[Paste] Clear execute layer=Frame world=(3187,338) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:23.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=5
-[Paste] Clear execute layer=Frame world=(3187,338) success=True failReason=None remaining=0
-[15:15:23.516] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=4
-[Paste] Clear execute layer=Frame world=(3189,338) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:23.516] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=4
-[Paste] Clear execute layer=Frame world=(3189,338) success=True failReason=None remaining=0
-[15:15:23.632] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=3
-[Paste] Clear execute layer=Frame world=(3186,340) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:23.632] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=3
-[Paste] Clear execute layer=Frame world=(3186,340) success=True failReason=None remaining=0
-[15:15:23.749] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=2
-[Paste] Clear execute layer=Frame world=(3188,340) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:23.749] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=2
-[Paste] Clear execute layer=Frame world=(3188,340) success=True failReason=None remaining=0
-[15:15:23.866] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=1
-[Paste] Clear execute layer=Frame world=(3190,340) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:23.866] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Frame (idx=6) tasks=1
-[Paste] Clear execute layer=Frame world=(3190,340) success=True failReason=None remaining=0
-[15:15:23.966] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=6
-[Paste] Clear execute layer=Block world=(3186,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:23.966] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=6
-[Paste] Clear execute layer=Block world=(3186,342) success=True failReason=None remaining=0
-[15:15:24.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=5
-[Paste] Clear execute layer=Block world=(3187,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:24.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=5
-[Paste] Clear execute layer=Block world=(3187,342) success=True failReason=None remaining=0
-[15:15:24.183] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=4
-[Paste] Clear execute layer=Block world=(3188,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:24.183] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=4
-[Paste] Clear execute layer=Block world=(3188,342) success=True failReason=None remaining=0
-[15:15:24.299] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=3
-[Paste] Clear execute layer=Block world=(3189,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:24.299] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=3
-[Paste] Clear execute layer=Block world=(3189,342) success=True failReason=None remaining=0
-[15:15:24.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=2
-[Paste] Clear execute layer=Block world=(3190,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:24.400] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=2
-[Paste] Clear execute layer=Block world=(3190,342) success=True failReason=None remaining=0
-[15:15:24.516] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=1
-[Paste] Clear execute layer=Block world=(3191,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:24.516] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Clear layer Block (idx=8) tasks=1
-[Paste] Clear execute layer=Block world=(3191,342) success=True failReason=None remaining=0
-[15:15:24.868] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=13, remaining=0) ---
---- [Place] START (tasks=13) ---
-TheArchitectsBlueprintMod: [15:15:24.868] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Clear] END (processed=13, remaining=0) ---
---- [Place] START (tasks=13) ---
-[15:15:24.984] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=6
-[Paste] Place begin layer=Block batch=1 rel=(0,8) world=(3186,342) payload[hasTile=True type=19 frame=(36,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(0,8) world=(3186,342) payload[hasTile=True type=19 frame=(36,0)]
-[Paste] Place [PlaceTile] (3186,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3186,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:24.984] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=6
-[Paste] Place begin layer=Block batch=1 rel=(0,8) world=(3186,342) payload[hasTile=True type=19 frame=(36,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(0,8) world=(3186,342) payload[hasTile=True type=19 frame=(36,0)]
-[Paste] Place [PlaceTile] (3186,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3186,342) success=True failReason=None remaining=0
-[15:15:25.101] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=5
-[Paste] Place begin layer=Block batch=1 rel=(1,8) world=(3187,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(1,8) world=(3187,342) payload[hasTile=True type=19 frame=(0,0)]
-[Paste] Place [PlaceTile] (3187,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3187,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:25.101] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=5
-[Paste] Place begin layer=Block batch=1 rel=(1,8) world=(3187,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(1,8) world=(3187,342) payload[hasTile=True type=19 frame=(0,0)]
-[Paste] Place [PlaceTile] (3187,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3187,342) success=True failReason=None remaining=0
-[15:15:25.201] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=4
-[Paste] Place begin layer=Block batch=1 rel=(2,8) world=(3188,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(2,8) world=(3188,342) payload[hasTile=True type=19 frame=(0,0)]
-[Paste] Place [PlaceTile] (3188,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3188,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:25.201] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=4
-[Paste] Place begin layer=Block batch=1 rel=(2,8) world=(3188,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(2,8) world=(3188,342) payload[hasTile=True type=19 frame=(0,0)]
-[Paste] Place [PlaceTile] (3188,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3188,342) success=True failReason=None remaining=0
-[15:15:25.318] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=3
-[Paste] Place begin layer=Block batch=1 rel=(3,8) world=(3189,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(3,8) world=(3189,342) payload[hasTile=True type=19 frame=(0,0)]
-[Paste] Place [PlaceTile] (3189,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3189,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:25.318] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=3
-[Paste] Place begin layer=Block batch=1 rel=(3,8) world=(3189,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(3,8) world=(3189,342) payload[hasTile=True type=19 frame=(0,0)]
-[Paste] Place [PlaceTile] (3189,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3189,342) success=True failReason=None remaining=0
-[15:15:25.418] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=2
-[Paste] Place begin layer=Block batch=1 rel=(4,8) world=(3190,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(4,8) world=(3190,342) payload[hasTile=True type=19 frame=(0,0)]
-[Paste] Place [PlaceTile] (3190,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3190,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:25.418] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=2
-[Paste] Place begin layer=Block batch=1 rel=(4,8) world=(3190,342) payload[hasTile=True type=19 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(4,8) world=(3190,342) payload[hasTile=True type=19 frame=(0,0)]
-[Paste] Place [PlaceTile] (3190,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3190,342) success=True failReason=None remaining=0
-[15:15:25.534] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
-[Paste] Place begin layer=Block batch=1 rel=(5,8) world=(3191,342) payload[hasTile=True type=19 frame=(18,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(5,8) world=(3191,342) payload[hasTile=True type=19 frame=(18,0)]
-[Paste] Place [PlaceTile] (3191,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3191,342) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:25.534] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Block (idx=1) tasks=1
-[Paste] Place begin layer=Block batch=1 rel=(5,8) world=(3191,342) payload[hasTile=True type=19 frame=(18,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] BlockLayer.Place batch=1rel=(5,8) world=(3191,342) payload[hasTile=True type=19 frame=(18,0)]
-[Paste] Place [PlaceTile] (3191,342) Platforms style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Block world=(3191,342) success=True failReason=None remaining=0
-[15:15:25.635] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=7
-[Paste] Place begin layer=Frame batch=4 rel=(2,0) world=(3188,334) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3188,335) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3188,334) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:25.635] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=7
-[Paste] Place begin layer=Frame batch=4 rel=(2,0) world=(3188,334) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3188,335) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3188,334) success=True failReason=None remaining=0
-[15:15:25.751] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=6
-[Paste] Place begin layer=Frame batch=4 rel=(2,2) world=(3188,336) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3188,337) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3188,336) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:25.751] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=6
-[Paste] Place begin layer=Frame batch=4 rel=(2,2) world=(3188,336) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3188,337) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3188,336) success=True failReason=None remaining=0
-[15:15:25.851] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=5
-[Paste] Place begin layer=Frame batch=4 rel=(1,4) world=(3187,338) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3187,339) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3187,338) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:25.851] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=5
-[Paste] Place begin layer=Frame batch=4 rel=(1,4) world=(3187,338) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3187,339) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3187,338) success=True failReason=None remaining=0
-[15:15:25.968] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=4
-[Paste] Place begin layer=Frame batch=4 rel=(3,4) world=(3189,338) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3189,339) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3189,338) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:25.968] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=4
-[Paste] Place begin layer=Frame batch=4 rel=(3,4) world=(3189,338) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3189,339) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3189,338) success=True failReason=None remaining=0
-[15:15:26.085] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=3
-[Paste] Place begin layer=Frame batch=4 rel=(0,6) world=(3186,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3186,341) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3186,340) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:26.085] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=3
-[Paste] Place begin layer=Frame batch=4 rel=(0,6) world=(3186,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3186,341) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3186,340) success=True failReason=None remaining=0
-[15:15:26.185] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=2
-[Paste] Place begin layer=Frame batch=4 rel=(2,6) world=(3188,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3188,341) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3188,340) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:26.185] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=2
-[Paste] Place begin layer=Frame batch=4 rel=(2,6) world=(3188,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3188,341) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3188,340) success=True failReason=None remaining=0
-[15:15:26.302] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=1
-[Paste] Place begin layer=Frame batch=4 rel=(4,6) world=(3190,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3190,341) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3190,340) success=True failReason=None remaining=0
-TheArchitectsBlueprintMod: [15:15:26.302] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Place layer Frame (idx=3) tasks=1
-[Paste] Place begin layer=Frame batch=4 rel=(4,6) world=(3190,340) payload[hasTile=True type=376 frame=(0,0)] source[hasTile=False type=0] target[hasTile=False type=0]
-[Paste] Place [PlaceObject] (3190,341) FishingCrate style=0 mode=direct base=- => OK
-[Paste] Place execute layer=Frame world=(3190,340) success=True failReason=None remaining=0
-[15:15:26.619] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=13, remaining=0) ---
-TheArchitectsBlueprintMod: [15:15:26.619] [Main Thread/INFO] [TheArchitectsBlueprintMod]: --- [Place] END (processed=13, remaining=0) ---
+[13:39:14.184] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Manifest] Manifest map planning mapLoaded=True ownedLoad=True reusedExisting=False
+[InteractionMap] Manifest map planning mapLoaded=True ownedLoad=True reusedExisting=False
+[Manifest] Tile main=189 candidates=2 chosen=itemId=751 ammo=- met=False preferred=itemId=751
+[Manifest] Paint main=27 candidates=10 chosen=itemId=1543 ammo=1099 met=False preferred=itemId=1543
+[Manifest] Paint main=22 candidates=10 chosen=itemId=1543 ammo=1094 met=False preferred=itemId=1543
+[Manifest] Paint main=29 candidates=10 chosen=itemId=1543 ammo=1967 met=False preferred=itemId=1543
+[Manifest] Paint main=5 candidates=10 chosen=itemId=1543 ammo=1077 met=False preferred=itemId=1543
+[Manifest] Paint main=2 candidates=10 chosen=itemId=1543 ammo=1074 met=False preferred=itemId=1543
+[Manifest] Paint main=1 candidates=10 chosen=itemId=1543 ammo=1073 met=False preferred=itemId=1543
+[Manifest] Wall main=73 candidates=2 chosen=itemId=752 ammo=- met=False preferred=itemId=752
+[Manifest] Paint main=14 candidates=10 chosen=itemId=1543 ammo=1086 met=False preferred=itemId=1543
+[Manifest] Paint main=10 candidates=10 chosen=itemId=1543 ammo=1082 met=False preferred=itemId=1543
+[Manifest] Paint main=28 candidates=10 chosen=itemId=1543 ammo=1966 met=False preferred=itemId=1543
+[Manifest] Paint main=13 candidates=10 chosen=itemId=1543 ammo=1085 met=False preferred=itemId=1543
+[Manifest] Paint main=1001 candidates=5 chosen=itemId=1543 ammo=4668 met=False preferred=itemId=1543
+[Manifest] Paint main=3 candidates=10 chosen=itemId=1543 ammo=1075 met=False preferred=itemId=1543
+[Manifest] Paint main=15 candidates=10 chosen=itemId=1543 ammo=1087 met=False preferred=itemId=1543
+[Manifest] Paint main=12 candidates=10 chosen=itemId=1543 ammo=1084 met=False preferred=itemId=1543
+[Manifest] Paint main=16 candidates=10 chosen=itemId=1543 ammo=1088 met=False preferred=itemId=1543
+[Manifest] Paint main=21 candidates=10 chosen=itemId=1543 ammo=1093 met=False preferred=itemId=1543
+[Manifest] Paint main=1000 candidates=5 chosen=itemId=1543 ammo=5344 met=False preferred=itemId=1543
+[Manifest] Wire main=4 candidates=2 chosen=itemId=849 ammo=849 met=False preferred=itemId=849
+[Manifest] Paint main=24 candidates=10 chosen=itemId=1543 ammo=1096 met=False preferred=itemId=1543
+[Manifest] Paint main=23 candidates=10 chosen=itemId=1543 ammo=1095 met=False preferred=itemId=1543
+[Manifest] Paint main=9 candidates=10 chosen=itemId=1543 ammo=1081 met=False preferred=itemId=1543
+[Manifest] Paint main=19 candidates=10 chosen=itemId=1543 ammo=1091 met=False preferred=itemId=1543
+[Manifest] Paint main=7 candidates=10 chosen=itemId=1543 ammo=1079 met=False preferred=itemId=1543
+[Manifest] Paint main=20 candidates=10 chosen=itemId=1543 ammo=1092 met=False preferred=itemId=1543
+[Manifest] Paint main=17 candidates=10 chosen=itemId=1543 ammo=1089 met=False preferred=itemId=1543
+[Manifest] Paint main=25 candidates=10 chosen=itemId=1543 ammo=1097 met=False preferred=itemId=1543
+[Manifest] Paint main=30 candidates=10 chosen=itemId=1543 ammo=1968 met=False preferred=itemId=1543
+[Manifest] Paint main=18 candidates=10 chosen=itemId=1543 ammo=1090 met=False preferred=itemId=1543
+[Manifest] Paint main=6 candidates=10 chosen=itemId=1543 ammo=1078 met=False preferred=itemId=1543
+[Manifest] Paint main=26 candidates=10 chosen=itemId=1543 ammo=1098 met=False preferred=itemId=1543
+[Manifest] Paint main=11 candidates=10 chosen=itemId=1543 ammo=1083 met=False preferred=itemId=1543
+[Manifest] Tile main=189 candidates=2 chosen=itemId=751 ammo=- met=False preferred=itemId=751
+[Manifest] Paint main=27 candidates=10 chosen=itemId=1543 ammo=1099 met=False preferred=itemId=1543
+[Manifest] Paint main=22 candidates=10 chosen=itemId=1543 ammo=1094 met=False preferred=itemId=1543
+[Manifest] Paint main=29 candidates=10 chosen=itemId=1543 ammo=1967 met=False preferred=itemId=1543
+[Manifest] Paint main=5 candidates=10 chosen=itemId=1543 ammo=1077 met=False preferred=itemId=1543
+[Manifest] Paint main=2 candidates=10 chosen=itemId=1543 ammo=1074 met=False preferred=itemId=1543
+[Manifest] Paint main=1 candidates=10 chosen=itemId=1543 ammo=1073 met=False preferred=itemId=1543
+[Manifest] Wall main=73 candidates=2 chosen=itemId=752 ammo=- met=False preferred=itemId=752
+[Manifest] Paint main=14 candidates=10 chosen=itemId=1543 ammo=1086 met=False preferred=itemId=1543
+[Manifest] Paint main=10 candidates=10 chosen=itemId=1543 ammo=1082 met=False preferred=itemId=1543
+[Manifest] Paint main=28 candidates=10 chosen=itemId=1543 ammo=1966 met=False preferred=itemId=1543
+[Manifest] Paint main=13 candidates=10 chosen=itemId=1543 ammo=1085 met=False preferred=itemId=1543
+[Manifest] Paint main=3 candidates=10 chosen=itemId=1543 ammo=1075 met=False preferred=itemId=1543
+[Manifest] Paint main=15 candidates=10 chosen=itemId=1543 ammo=1087 met=False preferred=itemId=1543
+[Manifest] Paint main=12 candidates=10 chosen=itemId=1543 ammo=1084 met=False preferred=itemId=1543
+[Manifest] Paint main=16 candidates=10 chosen=itemId=1543 ammo=1088 met=False preferred=itemId=1543
+[Manifest] Paint main=21 candidates=10 chosen=itemId=1543 ammo=1093 met=False preferred=itemId=1543
+[Manifest] Wire main=4 candidates=2 chosen=itemId=849 ammo=849 met=False preferred=itemId=849
+[Manifest] Paint main=24 candidates=10 chosen=itemId=1543 ammo=1096 met=False preferred=itemId=1543
+[Manifest] Paint main=23 candidates=10 chosen=itemId=1543 ammo=1095 met=False preferred=itemId=1543
+[Manifest] Paint main=9 candidates=10 chosen=itemId=1543 ammo=1081 met=False preferred=itemId=1543
+[Manifest] Paint main=19 candidates=10 chosen=itemId=1543 ammo=1091 met=False preferred=itemId=1543
+[Manifest] Paint main=7 candidates=10 chosen=itemId=1543 ammo=1079 met=False preferred=itemId=1543
+[Manifest] Paint main=20 candidates=10 chosen=itemId=1543 ammo=1092 met=False preferred=itemId=1543
+[Manifest] Paint main=17 candidates=10 chosen=itemId=1543 ammo=1089 met=False preferred=itemId=1543
+[Manifest] Paint main=25 candidates=10 chosen=itemId=1543 ammo=1097 met=False preferred=itemId=1543
+[Manifest] Paint main=30 candidates=10 chosen=itemId=1543 ammo=1968 met=False preferred=itemId=1543
+[Manifest] Paint main=18 candidates=10 chosen=itemId=1543 ammo=1090 met=False preferred=itemId=1543
+[Manifest] Paint main=6 candidates=10 chosen=itemId=1543 ammo=1078 met=False preferred=itemId=1543
+[Manifest] Paint main=26 candidates=10 chosen=itemId=1543 ammo=1098 met=False preferred=itemId=1543
+[Manifest] Paint main=11 candidates=10 chosen=itemId=1543 ammo=1083 met=False preferred=itemId=1543
+TheArchitectsBlueprintMod: [13:39:14.184] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Manifest] Manifest map planning mapLoaded=True ownedLoad=True reusedExisting=False
+[InteractionMap] Manifest map planning mapLoaded=True ownedLoad=True reusedExisting=False
+[Manifest] Tile main=189 candidates=2 chosen=itemId=751 ammo=- met=False preferred=itemId=751
+[Manifest] Paint main=27 candidates=10 chosen=itemId=1543 ammo=1099 met=False preferred=itemId=1543
+[Manifest] Paint main=22 candidates=10 chosen=itemId=1543 ammo=1094 met=False preferred=itemId=1543
+[Manifest] Paint main=29 candidates=10 chosen=itemId=1543 ammo=1967 met=False preferred=itemId=1543
+[Manifest] Paint main=5 candidates=10 chosen=itemId=1543 ammo=1077 met=False preferred=itemId=1543
+[Manifest] Paint main=2 candidates=10 chosen=itemId=1543 ammo=1074 met=False preferred=itemId=1543
+[Manifest] Paint main=1 candidates=10 chosen=itemId=1543 ammo=1073 met=False preferred=itemId=1543
+[Manifest] Wall main=73 candidates=2 chosen=itemId=752 ammo=- met=False preferred=itemId=752
+[Manifest] Paint main=14 candidates=10 chosen=itemId=1543 ammo=1086 met=False preferred=itemId=1543
+[Manifest] Paint main=10 candidates=10 chosen=itemId=1543 ammo=1082 met=False preferred=itemId=1543
+[Manifest] Paint main=28 candidates=10 chosen=itemId=1543 ammo=1966 met=False preferred=itemId=1543
+[Manifest] Paint main=13 candidates=10 chosen=itemId=1543 ammo=1085 met=False preferred=itemId=1543
+[Manifest] Paint main=1001 candidates=5 chosen=itemId=1543 ammo=4668 met=False preferred=itemId=1543
+[Manifest] Paint main=3 candidates=10 chosen=itemId=1543 ammo=1075 met=False preferred=itemId=1543
+[Manifest] Paint main=15 candidates=10 chosen=itemId=1543 ammo=1087 met=False preferred=itemId=1543
+[Manifest] Paint main=12 candidates=10 chosen=itemId=1543 ammo=1084 met=False preferred=itemId=1543
+[Manifest] Paint main=16 candidates=10 chosen=itemId=1543 ammo=1088 met=False preferred=itemId=1543
+[Manifest] Paint main=21 candidates=10 chosen=itemId=1543 ammo=1093 met=False preferred=itemId=1543
+[Manifest] Paint main=1000 candidates=5 chosen=itemId=1543 ammo=5344 met=False preferred=itemId=1543
+[Manifest] Wire main=4 candidates=2 chosen=itemId=849 ammo=849 met=False preferred=itemId=849
+[Manifest] Paint main=24 candidates=10 chosen=itemId=1543 ammo=1096 met=False preferred=itemId=1543
+[Manifest] Paint main=23 candidates=10 chosen=itemId=1543 ammo=1095 met=False preferred=itemId=1543
+[Manifest] Paint main=9 candidates=10 chosen=itemId=1543 ammo=1081 met=False preferred=itemId=1543
+[Manifest] Paint main=19 candidates=10 chosen=itemId=1543 ammo=1091 met=False preferred=itemId=1543
+[Manifest] Paint main=7 candidates=10 chosen=itemId=1543 ammo=1079 met=False preferred=itemId=1543
+[Manifest] Paint main=20 candidates=10 chosen=itemId=1543 ammo=1092 met=False preferred=itemId=1543
+[Manifest] Paint main=17 candidates=10 chosen=itemId=1543 ammo=1089 met=False preferred=itemId=1543
+[Manifest] Paint main=25 candidates=10 chosen=itemId=1543 ammo=1097 met=False preferred=itemId=1543
+[Manifest] Paint main=30 candidates=10 chosen=itemId=1543 ammo=1968 met=False preferred=itemId=1543
+[Manifest] Paint main=18 candidates=10 chosen=itemId=1543 ammo=1090 met=False preferred=itemId=1543
+[Manifest] Paint main=6 candidates=10 chosen=itemId=1543 ammo=1078 met=False preferred=itemId=1543
+[Manifest] Paint main=26 candidates=10 chosen=itemId=1543 ammo=1098 met=False preferred=itemId=1543
+[Manifest] Paint main=11 candidates=10 chosen=itemId=1543 ammo=1083 met=False preferred=itemId=1543
+[Manifest] Tile main=189 candidates=2 chosen=itemId=751 ammo=- met=False preferred=itemId=751
+[Manifest] Paint main=27 candidates=10 chosen=itemId=1543 ammo=1099 met=False preferred=itemId=1543
+[Manifest] Paint main=22 candidates=10 chosen=itemId=1543 ammo=1094 met=False preferred=itemId=1543
+[Manifest] Paint main=29 candidates=10 chosen=itemId=1543 ammo=1967 met=False preferred=itemId=1543
+[Manifest] Paint main=5 candidates=10 chosen=itemId=1543 ammo=1077 met=False preferred=itemId=1543
+[Manifest] Paint main=2 candidates=10 chosen=itemId=1543 ammo=1074 met=False preferred=itemId=1543
+[Manifest] Paint main=1 candidates=10 chosen=itemId=1543 ammo=1073 met=False preferred=itemId=1543
+[Manifest] Wall main=73 candidates=2 chosen=itemId=752 ammo=- met=False preferred=itemId=752
+[Manifest] Paint main=14 candidates=10 chosen=itemId=1543 ammo=1086 met=False preferred=itemId=1543
+[Manifest] Paint main=10 candidates=10 chosen=itemId=1543 ammo=1082 met=False preferred=itemId=1543
+[Manifest] Paint main=28 candidates=10 chosen=itemId=1543 ammo=1966 met=False preferred=itemId=1543
+[Manifest] Paint main=13 candidates=10 chosen=itemId=1543 ammo=1085 met=False preferred=itemId=1543
+[Manifest] Paint main=3 candidates=10 chosen=itemId=1543 ammo=1075 met=False preferred=itemId=1543
+[Manifest] Paint main=15 candidates=10 chosen=itemId=1543 ammo=1087 met=False preferred=itemId=1543
+[Manifest] Paint main=12 candidates=10 chosen=itemId=1543 ammo=1084 met=False preferred=itemId=1543
+[Manifest] Paint main=16 candidates=10 chosen=itemId=1543 ammo=1088 met=False preferred=itemId=1543
+[Manifest] Paint main=21 candidates=10 chosen=itemId=1543 ammo=1093 met=False preferred=itemId=1543
+[Manifest] Wire main=4 candidates=2 chosen=itemId=849 ammo=849 met=False preferred=itemId=849
+[Manifest] Paint main=24 candidates=10 chosen=itemId=1543 ammo=1096 met=False preferred=itemId=1543
+[Manifest] Paint main=23 candidates=10 chosen=itemId=1543 ammo=1095 met=False preferred=itemId=1543
+[Manifest] Paint main=9 candidates=10 chosen=itemId=1543 ammo=1081 met=False preferred=itemId=1543
+[Manifest] Paint main=19 candidates=10 chosen=itemId=1543 ammo=1091 met=False preferred=itemId=1543
+[Manifest] Paint main=7 candidates=10 chosen=itemId=1543 ammo=1079 met=False preferred=itemId=1543
+[Manifest] Paint main=20 candidates=10 chosen=itemId=1543 ammo=1092 met=False preferred=itemId=1543
+[Manifest] Paint main=17 candidates=10 chosen=itemId=1543 ammo=1089 met=False preferred=itemId=1543
+[Manifest] Paint main=25 candidates=10 chosen=itemId=1543 ammo=1097 met=False preferred=itemId=1543
+[Manifest] Paint main=30 candidates=10 chosen=itemId=1543 ammo=1968 met=False preferred=itemId=1543
+[Manifest] Paint main=18 candidates=10 chosen=itemId=1543 ammo=1090 met=False preferred=itemId=1543
+[Manifest] Paint main=6 candidates=10 chosen=itemId=1543 ammo=1078 met=False preferred=itemId=1543
+[Manifest] Paint main=26 candidates=10 chosen=itemId=1543 ammo=1098 met=False preferred=itemId=1543
+[Manifest] Paint main=11 candidates=10 chosen=itemId=1543 ammo=1083 met=False preferred=itemId=1543
+[13:39:14.185] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Manifest] --- Payload Manifest ---
+[Manifest] [i/s28:751]: 0/28 (-28)
+[Manifest] [i/s21:752]: 0/21 (-21)
+[Manifest] [i/s3:849]: 0/3 (-3)
+[Manifest] [i:1543]: 0/1 (-1)
+TheArchitectsBlueprintMod: [13:39:14.185] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Manifest] --- Payload Manifest ---
+[Manifest] [i/s28:751]: 0/28 (-28)
+[Manifest] [i/s21:752]: 0/21 (-21)
+[Manifest] [i/s3:849]: 0/3 (-3)
+[Manifest] [i:1543]: 0/1 (-1)

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 using Terraria;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
@@ -37,9 +38,19 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
 
-        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
+        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
+        {
+            if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
+            PayloadCell.LiquidData intent = tile.PayloadCell.Liquid;
+            return HasRequiredLiquidItems(in intent, tile.Target, in context);
+        }
 
-        public override bool CanConsume(in PasteTile tile, in PasteContext context) => true;
+        public override bool CanConsume(in PasteTile tile, in PasteContext context)
+        {
+            if (!context.RequireItems || context.Items is null) return true;
+            PayloadCell.LiquidData intent = tile.PayloadCell.Liquid;
+            return HasRequiredLiquidItems(in intent, tile.Target, in context);
+        }
 
         public override bool Consume(in PasteTile tile, in PasteContext context) => true;
 
@@ -51,7 +62,15 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return intent.LiquidAmount == tile.Target.LiquidAmount && intent.LiquidType == tile.Target.LiquidType;
         }
 
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
+        public override IReadOnlyList<int>? GetItem(in PasteTile tile)
+        {
+            var src = tile.PayloadCell.Liquid;
+            if (src.Amount <= 0)
+                return null;
+
+            IReadOnlyList<int> itemIds = InteractionMapProvider.GetLiquidItemIds(src.Type);
+            return itemIds.Count > 0 ? itemIds : null;
+        }
 
         public override LayerResult Clear(TileBatch batch, in PasteContext context)
         {
@@ -78,31 +97,46 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override LayerResult Place(TileBatch batch, in PasteContext context)
         {
+            // --- Collect every changed pool cell, then enqueue one pool mutation / one place arrow.
             IReadOnlyList<PasteTile> tiles = batch.Tiles;
             if (tiles.Count == 0)
                 return LayerResult.Ok();
 
             string okLabel = LayerLogFormat.PlacedLabel(in context);
-            bool changed = false;
+            bool consumeItem = context.RequireItems && !context.IsSweepCheat;
+            var changedCells = new List<LiquidPoolCell>(tiles.Count);
 
             for (int i = 0; i < tiles.Count; i++)
             {
                 PasteTile tile = tiles[i];
                 int x = tile.World.X, y = tile.World.Y;
                 var src = tile.PayloadCell.Liquid;
-                string message = LayerLogFormat.FormatLiquid(tile.PayloadTile);
                 Tile worldTile = Main.tile[x, y];
                 if (worldTile.LiquidAmount == src.Amount && worldTile.LiquidType == src.Type)
                     continue;
 
-                changed = true;
-                if (!TileExecutor.EnqueueSetLiquid(x, y, src.Type, src.Amount, in context))
-                    return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+                changedCells.Add(new LiquidPoolCell(new Point(x, y), src.Type, src.Amount));
             }
 
-            return changed
-                ? LayerResult.Ok(LayerLogFormat.FormatLiquid(tiles[0].PayloadTile), okLabel)
-                : LayerResult.Ok();
+            if (changedCells.Count == 0)
+                return LayerResult.Ok();
+
+            string message = LayerLogFormat.FormatLiquid(tiles[0].PayloadTile);
+            if (!TileExecutor.EnqueueSetLiquidPool(changedCells, in context, consumeItem))
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+
+            return LayerResult.Ok(message, okLabel);
+        }
+
+        private static bool HasRequiredLiquidItems(in PayloadCell.LiquidData intent, in Tile target, in PasteContext context)
+        {
+            if (intent.Amount <= 0)
+                return true;
+
+            if (target.LiquidAmount == intent.Amount && target.LiquidType == intent.Type)
+                return true;
+
+            return TileExecutor.HasItemForLiquid(intent.Type, in context);
         }
 
         /// <summary>

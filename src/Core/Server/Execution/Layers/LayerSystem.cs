@@ -16,6 +16,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         None,
         Unknown,
         MissingItems,
+        /// <summary>No interaction map entry (or item mapping) exists for the required tile/wall.</summary>
+        UnresolvedInteraction,
         InvalidPlacement,
         /// <summary>Clear could not break the tile (e.g. future pickaxe power check).</summary>
         InsufficientPickaxePower,

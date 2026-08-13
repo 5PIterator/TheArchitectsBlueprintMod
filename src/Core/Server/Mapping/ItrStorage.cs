@@ -116,6 +116,33 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             _map = null;
             InteractionMapProvider.Current = null;
 
+            if (tileIds is null)
+            {
+                TryLoadInteractionMap(null, wallIds);
+                return;
+            }
+
+            var expandedTileIds = new HashSet<int>(tileIds);
+            if (!TryLoadInteractionMap(expandedTileIds, wallIds) || _map is null)
+                return;
+
+            if (!ExpandTileIdsWithRequiredBases(expandedTileIds, _map))
+                return;
+
+            _map = null;
+            InteractionMapProvider.Current = null;
+            TryLoadInteractionMap(expandedTileIds, wallIds);
+
+            if (TABLog.IsDebugEnabled)
+            {
+                TABLog.Debug(
+                    $"Interaction map loaded with {expandedTileIds.Count} tile ids (payload + conversion bases)",
+                    "InteractionMap");
+            }
+        }
+
+        private static bool TryLoadInteractionMap(IReadOnlySet<int>? tileIds, IReadOnlySet<int>? wallIds)
+        {
             string binaryPath = GetCompiledInteractionMapPath();
             if (File.Exists(binaryPath))
             {
@@ -124,7 +151,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 {
                     _map = map;
                     InteractionMapProvider.Current = _map;
-                    return;
+                    return true;
                 }
 
                 TABLog.Warn($"Failed to load compiled interaction map '{binaryPath}': {error}", "InteractionMap");
@@ -132,7 +159,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
             string jsonPath = GetCompiledInteractionMapJsonPath();
             if (!File.Exists(jsonPath))
-                return;
+                return false;
 
             try
             {
@@ -141,7 +168,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 {
                     _map = map;
                     InteractionMapProvider.Current = _map;
-                    return;
+                    return true;
                 }
 
                 TABLog.Warn($"Failed to load readable interaction map '{jsonPath}': {error}", "InteractionMap");
@@ -150,6 +177,19 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             {
                 TABLog.Warn($"Failed to read readable interaction map '{jsonPath}': {ex.Message}", "InteractionMap");
             }
+
+            return false;
+        }
+
+        /// <summary>Adds interaction-map base tile ids required by conversion placements in <paramref name="tileIds"/>.</summary>
+        private static bool ExpandTileIdsWithRequiredBases(HashSet<int> tileIds, InteractionMap map)
+        {
+            int[] snapshot = [.. tileIds];
+
+            for (int i = 0; i < snapshot.Length; i++)
+                map.CollectConversionBaseTiles(snapshot[i], 0, tileIds);
+
+            return tileIds.Count > snapshot.Length;
         }
 
         /// <summary>
@@ -168,11 +208,12 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
     /// </summary>
     internal static class ItrLoader
     {
-        private static readonly string[] InteractionMapTypes = ["custom", "placement", "biome", "shimmer"];
+        private static readonly string[] InteractionMapTypes = ["custom", "wand", "paint", "vine", "placement", "biome", "shimmer"];
 
         /// <summary>
         /// Loads all interaction .itr files from the directory into the map.
-        /// Order: custom, placement, biome, shimmer (shimmer applies Shimmer Bucket transform).
+        /// Order: custom, wand, vine, placement, biome, shimmer (shimmer applies Shimmer Bucket transform).
+        /// Custom loads before generated maps so curated entries win dedupe at compile time.
         /// </summary>
         public static void LoadAllInto(string directory, InteractionMap map, Action<string> msg)
         {
@@ -209,6 +250,9 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             mapType switch
             {
                 "custom" => cfg.EnableCustomInteractionMap,
+                "wand" => cfg.EnableWandDiscovery,
+                "paint" => cfg.EnablePaintDiscovery,
+                "vine" => cfg.EnableVineDiscovery,
                 "placement" => cfg.EnablePlacementDiscovery,
                 "biome" => cfg.EnableBiomeConversions,
                 "shimmer" => cfg.EnableShimmerTransforms,

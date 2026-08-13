@@ -74,14 +74,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         {
             if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
             if (!tile.PayloadCell.HasTile()) return true;
-            int style = tile.PayloadCell.Detail.Style;
+            int style = tile.PayloadCell.ResolvePlacementStyle();
             return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
         }
 
         public override bool CanConsume(in PasteTile tile, in PasteContext context)
         {
             if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
-            int style = tile.PayloadCell.Detail.Style;
+            int style = tile.PayloadCell.ResolvePlacementStyle();
             return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
         }
 
@@ -91,7 +91,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public override IReadOnlyList<int>? GetItem(in PasteTile tile)
         {
             if (!tile.PayloadCell.HasTile()) return null;
-            int style = tile.PayloadCell.Detail.Style;
+            int style = tile.PayloadCell.ResolvePlacementStyle();
             return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
         }
 

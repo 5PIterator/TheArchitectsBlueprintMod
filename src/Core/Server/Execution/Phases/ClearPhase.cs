@@ -40,6 +40,10 @@ namespace TheArchitectsBlueprintMod.Core.Phases
 
         public override void ExecuteTick()
         {
+            // Finish in-flight clears before later clear layers observe world state.
+            if (Operation.TryWaitForCurrentLayerEffects(Operation.clearTasks))
+                return;
+
             Operation.AdvanceToNextNonEmptyLayer(Operation.clearTasks);
             if (Operation._currentLayerIndex >= Operation.clearTasks.Count)
             {

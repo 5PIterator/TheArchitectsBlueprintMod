@@ -21,9 +21,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
     /// <summary>
     /// Paste-order layer. Each concrete layer owns match, identify, clear, and place.
-    /// After a successful place, <see cref="Place"/> calls <see cref="Consume"/> (and planning uses <see cref="CanConsume"/>).
+    /// After a successful place, <see cref="Place"/> calls <see cref="Consume"/> (and place-time checks use <see cref="CanConsume"/>).
     /// Identify returns which relatives (<see cref="Blueprint.BlueprintCell"/>) this layer claims for the current source tile (empty = no match).
-    /// <see cref="PlacementValid"/> and <see cref="HasRequiredItems"/> split planning: world/rules vs inventory when <see cref="PasteContext.RequireItems"/> applies.
+    /// Plan only queues identified work; <see cref="PlacementValid"/> and <see cref="HasRequiredItems"/> are Place-time concerns (and identify diagnostics).
     /// </summary>
     internal abstract class Layer(string id, LayerType layerType)
     {
@@ -67,16 +67,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public abstract bool CanClear(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context);
 
         /// <summary>
-        /// Whether world/rules allow placing this tile (ignores inventory when items are required — use <see cref="HasRequiredItems"/>).
+        /// Whether world/rules allow placing this tile at Place time (ignores inventory — use <see cref="HasRequiredItems"/>).
         /// </summary>
         public abstract bool PlacementValid(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context);
 
         /// <summary>
-        /// Whether required items are available when <see cref="PasteContext.RequireItems"/> and inventory are in use.
+        /// Whether required items are available at Place time when <see cref="PasteContext.RequireItems"/> and inventory are in use.
         /// </summary>
         public abstract bool HasRequiredItems(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context);
 
-        /// <summary>Both placement validity and item requirements (when applicable).</summary>
+        /// <summary>Both placement validity and item requirements (when applicable) for Place-time decisions.</summary>
         public bool CanPlace(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context) =>
             PlacementValid(in tile, in lookup, in context) && HasRequiredItems(in tile, in lookup, in context);
 

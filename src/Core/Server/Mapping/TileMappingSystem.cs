@@ -21,6 +21,9 @@ namespace TheArchitectsBlueprintMod.Core
         private enum QueuedMappingAction
         {
             DiscoverPlacement,
+            DiscoverWand,
+            DiscoverPaint,
+            DiscoverVine,
             DiscoverBiome,
             DiscoverShimmer,
             CompileOnly,
@@ -43,6 +46,12 @@ namespace TheArchitectsBlueprintMod.Core
         {
             if (cfg.RunPlacementDiscovery)
                 PendingActions.Enqueue(QueuedMappingAction.DiscoverPlacement);
+            if (cfg.RunWandDiscovery)
+                PendingActions.Enqueue(QueuedMappingAction.DiscoverWand);
+            if (cfg.RunPaintDiscovery)
+                PendingActions.Enqueue(QueuedMappingAction.DiscoverPaint);
+            if (cfg.RunVineDiscovery)
+                PendingActions.Enqueue(QueuedMappingAction.DiscoverVine);
             if (cfg.RunBiomeDiscovery)
                 PendingActions.Enqueue(QueuedMappingAction.DiscoverBiome);
             if (cfg.RunShimmerDiscovery)
@@ -215,6 +224,27 @@ namespace TheArchitectsBlueprintMod.Core
                     return;
                 }
 
+                case QueuedMappingAction.DiscoverWand:
+                {
+                    Log("Config action: wand discovery.");
+                    WandDiscovery.Run(mod, Log);
+                    return;
+                }
+
+                case QueuedMappingAction.DiscoverPaint:
+                {
+                    Log("Config action: paint discovery.");
+                    PaintDiscovery.Run(mod, Log);
+                    return;
+                }
+
+                case QueuedMappingAction.DiscoverVine:
+                {
+                    Log("Config action: vine discovery.");
+                    VineDiscovery.Run(mod, Log);
+                    return;
+                }
+
                 case QueuedMappingAction.DiscoverBiome:
                 {
                     if (!TryGetDiscoveryPlayer(out Player? player))
@@ -256,6 +286,9 @@ namespace TheArchitectsBlueprintMod.Core
 
                     Log("Config action: full discovery + compile.");
                     PlacementDiscovery.Run(mod, player, Log, allowStepping: false);
+                    WandDiscovery.Run(mod, Log);
+                    PaintDiscovery.Run(mod, Log);
+                    VineDiscovery.Run(mod, Log);
                     BiomeDiscovery.Run(mod, player, Log, allowStepping: false);
                     ShimmerDiscovery.Run(mod, Log, player, allowStepping: false);
                     Compile(mod, Log);

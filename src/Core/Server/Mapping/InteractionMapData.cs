@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Terraria.ID;
+using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Debug;
 
 namespace TheArchitectsBlueprintMod.Core.TileMapping
@@ -22,7 +24,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         public string? Base { get; set; }
         /// <summary>Placement style for direct placement (e.g. torch variant). Null for style-agnostic; interpreted as 0 when indexing.</summary>
         public int? Style { get; set; }
-        /// <summary>Interactions per item; null = infinite.</summary>
+        /// <summary>Interactions per item; null omits serialization. Direct tile/wall placement defaults to 1 at runtime.</summary>
         public int? Yield { get; set; }
         /// <summary>Ammo consumed instead of the tool.</summary>
         public string? Ammo { get; set; }
@@ -181,12 +183,25 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
         /// <summary>
         /// Gets the base tile ID for the preferred interaction (first in priority-sorted list).
-        /// Null for direct placement; non-null for conversion.
+        /// Null for direct placement; non-null when the preferred path is a conversion.
         /// </summary>
         public int? GetRequiredBaseTile(int tileId, int? style = null)
         {
             var list = GetByMain("Tile", tileId, style);
             return list.Count > 0 ? list[0].BaseId : null;
+        }
+
+        /// <summary>
+        /// Adds every conversion base tile referenced by interactions for <paramref name="tileId"/>.
+        /// </summary>
+        internal void CollectConversionBaseTiles(int tileId, int? style, ISet<int> tileIds)
+        {
+            var list = GetByMain("Tile", tileId, style);
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i].BaseId is int baseId)
+                    tileIds.Add(baseId);
+            }
         }
 
         /// <summary>
@@ -202,6 +217,25 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     ids.Add(e.ItemId.Value);
             }
             return ids;
+        }
+
+        /// <summary>
+        /// True when the interaction map registers more than one placement style for a tile type.
+        /// </summary>
+        internal bool HasMultipleTilePlacementStyles(int tileId)
+        {
+            int styleSlots = 0;
+            foreach (var key in _byMain.Keys)
+            {
+                if (!string.Equals(key.Layer, "Tile", StringComparison.OrdinalIgnoreCase) || key.MainId != tileId)
+                    continue;
+
+                styleSlots++;
+                if (styleSlots > 1)
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -343,14 +377,152 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         public static int? GetRequiredBaseTile(ushort tileType, int? style = null)
             => Current?.GetRequiredBaseTile(tileType, style);
 
+        /// <summary>True when the placement map defines multiple styles for a tile (e.g. LogicGate).</summary>
+        public static bool HasMultipleTilePlacementStyles(ushort tileType) =>
+            Current?.HasMultipleTilePlacementStyles(tileType) ?? false;
+
         /// <summary>
         /// Gets the first (preferred) interaction for the tile. For debug logging.
         /// </summary>
         internal static InteractionEntry? GetFirstTileInteraction(ushort tileType, int? style = null)
+            => ResolvePreferred("Tile", tileType, style);
+
+        /// <summary>
+        /// Gets the preferred interaction for a layer/main, optionally filtered by base tile.
+        /// </summary>
+        internal static InteractionEntry? ResolvePreferred(
+            string layer,
+            int mainId,
+            int? style = null,
+            int? baseId = null)
         {
-            var list = Current?.GetByMain("Tile", tileType, style);
-            return list is { Count: > 0 } ? list[0] : null;
+            // --- Prefer exact BaseId matches; otherwise first priority entry, with no-base fallback for conversions.
+
+            IReadOnlyList<InteractionEntry> list = Current?.GetByMain(layer, mainId, style) ?? [];
+            if (list.Count == 0)
+                return null;
+
+            if (!baseId.HasValue)
+                return list[0];
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                InteractionEntry entry = list[i];
+                if (entry.BaseId == baseId)
+                    return entry;
+            }
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                InteractionEntry entry = list[i];
+                if (!entry.BaseId.HasValue)
+                    return entry;
+            }
+
+            return null;
         }
+
+        /// <summary>
+        /// Yields priority-sorted interactions for a layer/main, optionally filtered by conversion base.
+        /// </summary>
+        internal static IEnumerable<InteractionEntry> EnumerateInteractions(
+            string layer,
+            int mainId,
+            int? style = null,
+            int? baseId = null)
+        {
+            // --- Walk GetByMain in stored priority order; optionally keep only matching BaseId.
+
+            IReadOnlyList<InteractionEntry> list = Current?.GetByMain(layer, mainId, style) ?? [];
+            if (list.Count == 0)
+                yield break;
+
+            if (baseId.HasValue)
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    InteractionEntry entry = list[i];
+                    if (entry.BaseId == baseId)
+                        yield return entry;
+                }
+
+                yield break;
+            }
+
+            for (int i = 0; i < list.Count; i++)
+                yield return list[i];
+        }
+
+        /// <summary>Gets item IDs that can place the given layer/main, in map priority order.</summary>
+        internal static IReadOnlyList<int> GetItemIds(string layer, int mainId, int? style = null) =>
+            Current?.GetItemIds(layer, mainId, style) ?? [];
+
+        internal static InteractionEntry? ResolveTileInteraction(ushort tileType, int? style, int? baseId) =>
+            ResolvePreferred("Tile", tileType, style, baseId);
+
+        /// <summary>
+        /// Yields candidate tile interactions in priority order, optionally filtered to a conversion base.
+        /// </summary>
+        internal static IEnumerable<InteractionEntry> EnumerateTileInteractions(int tileType, int? style, int? baseId) =>
+            EnumerateInteractions("Tile", tileType, style, baseId);
+
+        internal static InteractionEntry? ResolveWallInteraction(ushort wallType) =>
+            ResolvePreferred("Wall", wallType, null);
+
+        /// <summary>
+        /// Yields wall interactions in priority order.
+        /// </summary>
+        internal static IEnumerable<InteractionEntry> EnumerateWallInteractions(int wallType) =>
+            EnumerateInteractions("Wall", wallType);
+
+        internal static InteractionEntry? ResolveWireInteraction(int wireKind) =>
+            ResolvePreferred("Wire", wireKind, null);
+
+        /// <summary>
+        /// Yields wire/actuator interactions in priority order for the given wire kind.
+        /// </summary>
+        internal static IEnumerable<InteractionEntry> EnumerateWireInteractions(int wireKind) =>
+            EnumerateInteractions("Wire", wireKind);
+
+        /// <summary>
+        /// Gets item IDs that can place the given wire kind (0 red, 1 green, 2 blue, 3 yellow, 4 actuator).
+        /// </summary>
+        internal static IReadOnlyList<int> GetWireItemIds(int wireKind) =>
+            GetItemIds("Wire", wireKind);
+
+        /// <summary>
+        /// Yields paint/coating interactions in priority order for the given paint main id.
+        /// </summary>
+        internal static IEnumerable<InteractionEntry> EnumeratePaintInteractions(int paintMainId) =>
+            EnumerateInteractions("Paint", paintMainId);
+
+        /// <summary>Gets item IDs that can apply the given paint or coating main.</summary>
+        internal static IReadOnlyList<int> GetPaintItemIds(int paintMainId) =>
+            GetItemIds("Paint", paintMainId);
+
+        internal static InteractionEntry? ResolvePaintInteraction(byte tileColor, byte wallColor)
+        {
+            if (tileColor != PaintID.None)
+                return ResolvePreferred("Paint", tileColor, null);
+            if (wallColor != PaintID.None)
+                return ResolvePreferred("Paint", wallColor, null);
+            return null;
+        }
+
+        internal static InteractionEntry? ResolveLiquidInteraction(int liquidType) =>
+            ResolvePreferred("Liquid", liquidType, null);
+
+        /// <summary>
+        /// Yields liquid interactions in priority order for the given liquid type.
+        /// </summary>
+        internal static IEnumerable<InteractionEntry> EnumerateLiquidInteractions(int liquidType) =>
+            EnumerateInteractions("Liquid", liquidType);
+
+        /// <summary>
+        /// Gets item IDs that can place the given liquid type (bottomless buckets, buckets, bombs).
+        /// </summary>
+        internal static IReadOnlyList<int> GetLiquidItemIds(int liquidType) =>
+            GetItemIds("Liquid", liquidType);
     }
 
     /// <summary>
@@ -499,20 +671,23 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             if (a is null) return 1;
             if (b is null) return -1;
 
-            int aBase = string.IsNullOrEmpty(a.Base) ? 0 : 1;
-            int bBase = string.IsNullOrEmpty(b.Base) ? 0 : 1;
+            int aBase = HasConversionBase(a) ? 1 : 0;
+            int bBase = HasConversionBase(b) ? 1 : 0;
             int cmp = aBase.CompareTo(bBase);
             if (cmp != 0) return cmp;
 
-            int aYield = a.Yield.HasValue ? 1 : 0;
-            int bYield = b.Yield.HasValue ? 1 : 0;
+            int aYield = InteractionBudget.GetEffectiveYield(a) is > 0 ? 1 : 0;
+            int bYield = InteractionBudget.GetEffectiveYield(b) is > 0 ? 1 : 0;
             cmp = aYield.CompareTo(bYield);
             if (cmp != 0) return cmp;
 
-            int aAmmo = string.IsNullOrEmpty(a.Ammo) ? 0 : 1;
-            int bAmmo = string.IsNullOrEmpty(b.Ammo) ? 0 : 1;
+            int aAmmo = a.AmmoId.HasValue || !string.IsNullOrEmpty(a.Ammo) ? 1 : 0;
+            int bAmmo = b.AmmoId.HasValue || !string.IsNullOrEmpty(b.Ammo) ? 1 : 0;
             return aAmmo.CompareTo(bAmmo);
         }
+
+        private static bool HasConversionBase(InteractionEntry entry) =>
+            entry.BaseId.HasValue || !string.IsNullOrEmpty(entry.Base);
     }
 
     /// <summary>

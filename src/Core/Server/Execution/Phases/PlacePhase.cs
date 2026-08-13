@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using TheArchitectsBlueprintMod.Core.Layers;
 using TheArchitectsBlueprintMod.Debug;
 
@@ -37,6 +39,10 @@ namespace TheArchitectsBlueprintMod.Core.Phases
 
         public override void ExecuteTick()
         {
+            // Finish in-flight wall/block mutations before Paint (and later layers) run.
+            if (Operation.TryWaitForCurrentLayerEffects(Operation.placeTasks))
+                return;
+
             Operation.AdvanceToNextNonEmptyLayer(Operation.placeTasks);
             if (Operation._currentLayerIndex >= Operation.placeTasks.Count)
             {
@@ -50,16 +56,110 @@ namespace TheArchitectsBlueprintMod.Core.Phases
             TABLog.Debug($"Place layer {layerPlace.Id} (idx={Operation._currentLayerIndex}) tasks={qPlace.Count}", "Paste");
             Operation._currentStepPlaceTiles.Clear();
             Operation._currentStepClearTiles.Clear();
-            PasteContext placeContext = layerPlace.Id == LayerSystem.Frame.Id
-                ? Operation.BuildFramePlaceContext(Operation._currentLayerIndex)
-                : Operation.Context;
+            if (layerPlace.Id == LayerSystem.Frame.Id)
+            {
+                ProcessFramePlaceQueue(
+                    qPlace,
+                    Operation._currentLayerIndex,
+                    Operation._currentStepPlaceTiles,
+                    Operation._overlayDoneThisLayer);
+                return;
+            }
+
             ProcessPlaceQueue(
                 qPlace,
-                placeContext,
+                Operation.Context,
                 TickSize,
                 Operation._currentStepPlaceTiles,
                 Operation._overlayDoneThisLayer,
                 successfulPlacedWorldTiles: null);
+        }
+
+        /// <summary>Places the globally best ready frame candidate instead of blindly dequeuing FIFO tasks.</summary>
+        private void ProcessFramePlaceQueue(
+            Queue<PlacingTask> queue,
+            int frameLayerIndex,
+            List<Point> currentStepTiles,
+            HashSet<Point>? overlayDoneThisLayer)
+        {
+            if (queue.Count == 0)
+                return;
+
+            int batchTotal = TickSize;
+            for (int pass = 0; pass < batchTotal && queue.Count > 0; pass++)
+            {
+                PasteContext context = Operation.BuildFramePlaceContext(frameLayerIndex);
+                IReadOnlyList<FrameOperations.FrameCandidate>? pending = context.PendingFramePlaceCandidates;
+                if (pending is null || pending.Count == 0)
+                    break;
+
+                int globalIndex = FrameOperations.SelectNextGlobalPlaceCandidateIndex(pending, in context);
+                if (globalIndex < 0)
+                {
+                    TABLog.Debug(
+                        $"Frame place tick: no ready candidate queue={queue.Count} pending={pending.Count}",
+                        "Paste");
+                    break;
+                }
+
+                Point selectedOrigin = pending[globalIndex].OriginWorld;
+                if (!TryExtractFramePlaceTask(queue, selectedOrigin, out PlacingTask readyTask))
+                {
+                    TABLog.Debug(
+                        $"Frame place tick: ready origin=({selectedOrigin.X},{selectedOrigin.Y}) missing from queue",
+                        "Paste");
+                    break;
+                }
+
+                TABLog.Debug(
+                    $"Frame place tick: selected origin=({selectedOrigin.X},{selectedOrigin.Y}) queue={queue.Count}",
+                    "Paste");
+                PasteProgress progress = Operation.CreateBatchProgress(pass + 1, batchTotal);
+                readyTask.AddTilesTo(currentStepTiles, Operation.PasteConfig.Limits.Server.MaxTilesPerCategory);
+                if (readyTask.Execute(in context, in progress, out PasteProgressOutcome outcome, out var failReason, out string? detail))
+                {
+                    Operation.RecordTaskCompletion(outcome, failReason, detail);
+                    if (overlayDoneThisLayer is not null)
+                    {
+                        for (int ti = 0; ti < readyTask.Tiles.Count; ti++)
+                            overlayDoneThisLayer.Add(readyTask.Tiles[ti].World);
+                    }
+                }
+                else
+                {
+                    queue.Enqueue(readyTask);
+                    if (readyTask.Tiles.Count > 0)
+                    {
+                        TABLog.Debug(
+                            $"Requeue place task world=({readyTask.Tiles[0].World.X},{readyTask.Tiles[0].World.Y}) remainingTiles={readyTask.Tiles.Count}",
+                            "Paste");
+                    }
+                }
+            }
+        }
+
+        /// <summary>Removes and returns the queued place task that owns <paramref name="originWorld"/>.</summary>
+        private static bool TryExtractFramePlaceTask(
+            Queue<PlacingTask> queue,
+            Point originWorld,
+            out PlacingTask readyTask)
+        {
+            readyTask = null!;
+            int queueCount = queue.Count;
+            var retained = new List<PlacingTask>(queueCount);
+            for (int i = 0; i < queueCount; i++)
+            {
+                PlacingTask task = queue.Dequeue();
+                if (readyTask is null && FrameOperations.BatchContainsPlaceOrigin(task.Tiles, originWorld))
+                    readyTask = task;
+                else
+                    retained.Add(task);
+            }
+
+            for (int i = 0; i < retained.Count; i++)
+                queue.Enqueue(retained[i]);
+
+            return readyTask is not null;
         }
     }
 }

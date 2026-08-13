@@ -124,11 +124,12 @@ namespace TheArchitectsBlueprintMod.Core
         in EffectivePastePolicy policy,
         PasteTileLookup? lookup = null,
         TileEffectSession? effectSession = null,
-        IReadOnlyList<FrameOperations.FrameCandidate>? pendingFramePlaceCandidates = null)
+        IReadOnlyList<FrameOperations.FrameCandidate>? pendingFramePlaceCandidates = null,
+        InteractionBudget? interactionBudget = null)
     {
         public readonly Player Player = Main.player[playerIndex];
         public readonly SweepStyle SweepStrategy = policy.SweepPhase.Strategy.Style;
-        public readonly bool IsSweepCheat = policy.SweepPhase.Strategy.Style == SweepStyle.Cheat;
+        public readonly bool IsSweepCheat = policy.SweepPhase.Active && policy.SweepPhase.Strategy.Style == SweepStyle.Cheat;
         public readonly bool RetryOnMissingItems = policy.PlacePhase.Strategy.RetryOnMissingItems;
         public readonly bool RetryOnInvalidPlacement = policy.PlacePhase.Strategy.RetryOnInvalidPlacement;
         public readonly bool RequireItems = policy.PlacePhase.Strategy.RequireItems;
@@ -150,5 +151,6 @@ namespace TheArchitectsBlueprintMod.Core
         public readonly PasteTileLookup? Lookup = lookup;
         public readonly TileEffectSession? EffectSession = effectSession;
         public readonly IReadOnlyList<FrameOperations.FrameCandidate>? PendingFramePlaceCandidates = pendingFramePlaceCandidates;
+        public readonly InteractionBudget? InteractionBudget = interactionBudget;
     }
 }

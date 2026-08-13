@@ -102,7 +102,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             // --- Skip checks when requirements are disabled; otherwise query interaction-map item ids for payload tile + style.
             if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
             if (!tile.PayloadCell.HasTile()) return true;
-            int style = tile.PayloadCell.Detail.Style;
+            int style = tile.PayloadCell.ResolvePlacementStyle();
             return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
         }
 
@@ -111,7 +111,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         {
             // --- Use the same tile+style item lookup as planning checks to keep queue behavior deterministic.
             if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
-            int style = tile.PayloadCell.Detail.Style;
+            int style = tile.PayloadCell.ResolvePlacementStyle();
             return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
         }
 
@@ -124,7 +124,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         {
             // --- Resolve tile-item mappings from the interaction map using payload tile type + style.
             if (!tile.PayloadCell.HasTile()) return null;
-            int style = tile.PayloadCell.Detail.Style;
+            int style = tile.PayloadCell.ResolvePlacementStyle();
             return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
         }
 

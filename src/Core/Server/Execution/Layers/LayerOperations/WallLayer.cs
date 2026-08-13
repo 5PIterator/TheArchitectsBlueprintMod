@@ -45,15 +45,23 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool Consume(in PasteTile tile, in PasteContext context) => true;
 
-        public override bool Match(in PasteTile tile) =>
-            TileComparison.IsSourceCutIntent(in tile)
-                ? tile.Source.WallType == tile.Target.WallType
-                : tile.PayloadTile.WallType == tile.Target.WallType;
+        public override bool Match(in PasteTile tile)
+        {
+            // --- Wall layer owns wall type only; paint/coatings are PaintLayer responsibility.
+
+            if (TileComparison.IsSourceCutIntent(in tile))
+                return tile.Source.WallType == tile.Target.WallType;
+
+            return tile.PayloadTile.WallType == tile.Target.WallType;
+        }
 
         public override IReadOnlyList<int>? GetItem(in PasteTile tile)
         {
             ushort wallType = (ushort)tile.PayloadCell.Wall.Type;
             if (wallType == WallID.None) return null;
+            InteractionEntry? entry = InteractionMapProvider.ResolveWallInteraction(wallType);
+            if (entry?.ItemId is int toolId && toolId > 0)
+                return [toolId];
             return InteractionMapProvider.GetWallItemIds(wallType);
         }
 
@@ -94,8 +102,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
             string message = LayerLogFormat.FormatWall(tile.PayloadTile);
 
-            if (!TileExecutor.HasItemForWall(wallType, in context))
-                return LayerResult.Fail(LayerFailReason.MissingItems, message);
+            if (!TileExecutor.TryCheckWallItem(wallType, in context, out LayerFailReason itemFailReason))
+                return LayerResult.Fail(itemFailReason, message);
 
             if (!TileExecutor.EnqueuePlaceWall(x, y, wallType, in context, consumeItem: true))
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);

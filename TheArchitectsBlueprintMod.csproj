@@ -15,9 +15,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="Content\Templates\SourceMaps\Custom.itr" />
-		<EmbeddedResource Include="Content\Templates\SourceMaps\BiomeConfig.itr" />
-		<EmbeddedResource Include="Content\Templates\SourceMaps\BaseContext.itr" />
+		<!-- Packaged in .tmod; TemplateInitializer copies to SavePath/TheArchitectsBlueprintMod on first launch. -->
+		<AdditionalFiles Include="Content\Templates\**\*.itr" />
 		<EmbeddedResource Include="Content\Config\LayerOrder.json" LogicalName="TheArchitectsBlueprintMod.LayerOrder.json" />
 	</ItemGroup>
 

@@ -144,19 +144,31 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             return WallLoader.GetWall(id)?.FullName ?? $"Wall_{id}";
         }
 
+        /// <summary>Stable export name: Terraria search id for vanilla; ModLiquid FullName when ModLiquidLib is present.</summary>
         public static string GetLiquidTypeName(int type)
         {
+            // --- Prefer vanilla LiquidID names, then ModLiquidLib FullName, else a numeric fallback.
+
             if (LiquidID.Search.TryGetName(type, out string name))
                 return name;
+
+            string? modName = ModLiquidLibBridge.TryGetLiquidFullName(type);
+            if (!string.IsNullOrEmpty(modName))
+                return modName;
+
             return $"Liquid_{type}";
         }
 
+        /// <summary>Resolves a liquid by vanilla search name or ModLiquidLib FullName/Name.</summary>
         public static int? ResolveLiquidType(string name)
         {
+            // --- Resolve vanilla IDs first, then optional ModLiquidLib identities.
+
             if (string.IsNullOrEmpty(name)) return null;
             if (LiquidID.Search.TryGetId(name, out int id))
                 return id;
-            return null;
+
+            return ModLiquidLibBridge.TryResolveLiquidName(name);
         }
 
         /// <summary>Wire kinds: 0=Red, 1=Green, 2=Blue, 3=Yellow, 4=Actuator. No WireID in tModLoader.</summary>
@@ -179,8 +191,18 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             };
         }
 
+        /// <summary>Synthetic Paint-layer main IDs for coatings (outside the vanilla PaintID range).</summary>
+        public const int EchoCoatingId = 1000;
+        public const int IlluminantCoatingId = 1001;
+
         public static string GetPaintName(int paintId)
         {
+            // --- Prefer coating aliases, then PaintID search, then a numeric fallback.
+
+            if (paintId == EchoCoatingId)
+                return "EchoCoating";
+            if (paintId == IlluminantCoatingId)
+                return "IlluminantCoating";
             if (PaintID.Search.TryGetName(paintId, out string name))
                 return name;
             return $"Paint_{paintId}";
@@ -188,7 +210,13 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
         public static int? ResolvePaintId(string name)
         {
+            // --- Resolve coating names first, then vanilla PaintID names.
+
             if (string.IsNullOrEmpty(name)) return null;
+            if (string.Equals(name, "EchoCoating", StringComparison.OrdinalIgnoreCase))
+                return EchoCoatingId;
+            if (string.Equals(name, "IlluminantCoating", StringComparison.OrdinalIgnoreCase))
+                return IlluminantCoatingId;
             if (PaintID.Search.TryGetId(name, out int id))
                 return id;
             return null;

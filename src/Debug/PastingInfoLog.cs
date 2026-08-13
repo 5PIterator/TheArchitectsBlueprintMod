@@ -21,15 +21,23 @@ internal static class PastingInfoLog
             case PasteProgressKind.PhaseStart:
             {
                 string suffix = progress.PhaseTotal > 0 ? $" (tasks={progress.PhaseTotal})" : string.Empty;
-                TABLog.Info($"--- [{progress.Phase}] START{suffix} ---", chatColor: Color.LightSkyBlue);
+                TABLog.Info(
+                    $"--- [{progress.Phase}] START{suffix} ---",
+                    TABLog.GenericCategory,
+                    chatColor: Color.LightSkyBlue,
+                    ownerPlayer: progress.OwnerPlayer);
                 return;
             }
             case PasteProgressKind.PhaseEnd:
             {
-                Color color = progress.PhaseRemaining == 0 ? Color.LightGreen : Color.LightYellow;
+                Color color = progress.FailedCount > 0 || progress.PhaseRemaining > 0
+                    ? Color.LightYellow
+                    : Color.LightGreen;
                 TABLog.Info(
-                    $"--- [{progress.Phase}] END (processed={progress.PhaseProcessed}, remaining={progress.PhaseRemaining}) ---",
-                    chatColor: color);
+                    FormatPhaseEnd(in progress),
+                    TABLog.GenericCategory,
+                    chatColor: color,
+                    ownerPlayer: progress.OwnerPlayer);
                 return;
             }
             case PasteProgressKind.TaskResult:
@@ -40,7 +48,7 @@ internal static class PastingInfoLog
                 string layer = string.IsNullOrEmpty(progress.LayerId) ? "-" : progress.LayerId;
                 string message =
                     $"[{progress.Phase}] [{layer}] [{progress.BatchIndex}/{progress.BatchTotal}] [{progress.PhaseIndex}/{progress.PhaseTotal}] [{progress.WorldX}, {progress.WorldY}] {contentName} - {result}";
-                TABLog.Info(message, chatColor: color);
+                TABLog.Info(message, TABLog.GenericCategory, chatColor: color, ownerPlayer: progress.OwnerPlayer);
                 return;
             }
             default:
@@ -49,10 +57,21 @@ internal static class PastingInfoLog
     }
 
     /// <summary>
+    /// Formats a Plan END banner with queued place and clear batch counts.
+    /// </summary>
+    internal static string FormatPlanEnd(int placeBatches, int clearBatches)
+    {
+        // --- Plan only reports queue depth; Place owns missing-item and invalid-placement failures.
+        return $"--- [Plan] END (placeBatches={placeBatches}, clearBatches={clearBatches}) ---";
+    }
+
+    /// <summary>
     /// Returns whether sweep applied the payload intent at the destination world tile.
     /// </summary>
     internal static bool IsSweepSatisfied(in PasteTile tile)
     {
+        // --- Require structural match, then paint/coating facets when the payload carries them.
+
         int x = tile.World.X, y = tile.World.Y;
         if (!WorldGen.InWorld(x, y))
             return false;
@@ -62,13 +81,24 @@ internal static class PastingInfoLog
             return !world.HasTile && world.WallType == WallID.None;
 
         if (tile.PayloadCell.HasTile())
-            return world.HasTile && world.TileType == tile.PayloadCell.Block.Type;
+        {
+            if (!world.HasTile || world.TileType != tile.PayloadCell.Block.Type)
+                return false;
+            return PaintLayer.PaintStateMatches(tile.PayloadCell.Paint, world);
+        }
 
         if (tile.PayloadCell.Wall.Type != WallID.None)
-            return world.WallType == tile.PayloadCell.Wall.Type;
+        {
+            if (world.WallType != tile.PayloadCell.Wall.Type)
+                return false;
+            return PaintLayer.PaintStateMatches(tile.PayloadCell.Paint, world);
+        }
 
         if (tile.PayloadCell.Liquid.Amount > 0)
             return world.LiquidAmount == tile.PayloadCell.Liquid.Amount && world.LiquidType == tile.PayloadCell.Liquid.Type;
+
+        if (HasPaintOrCoating(tile.PayloadCell.Paint))
+            return PaintLayer.PaintStateMatches(tile.PayloadCell.Paint, world);
 
         return true;
     }
@@ -106,7 +136,45 @@ internal static class PastingInfoLog
                 return "liquid type mismatch";
         }
 
+        if (HasPaintOrCoating(tile.PayloadCell.Paint)
+            && !PaintLayer.PaintStateMatches(tile.PayloadCell.Paint, world))
+            return "paint or coating mismatch";
+
         return "intent not applied";
+    }
+
+    private static bool HasPaintOrCoating(in PayloadCell.PaintData paint) =>
+        paint.TileColor != PaintID.None
+        || paint.WallColor != PaintID.None
+        || paint.TileInvisible
+        || paint.WallInvisible
+        || paint.TileFullbright
+        || paint.WallFullbright;
+
+    /// <summary>
+    /// Explains a fail reason for Generic paste messages.
+    /// </summary>
+    internal static string ExplainFailReason(LayerFailReason reason, string? detail)
+    {
+        // --- Prefer explicit detail so combined planning reasons stay visible.
+
+        if (!string.IsNullOrWhiteSpace(detail))
+            return detail;
+
+        if (reason != LayerFailReason.None)
+            return ExplainFailReason(reason);
+
+        return "unknown issue";
+    }
+
+    private static string FormatPhaseEnd(in PasteProgress progress)
+    {
+        string baseText =
+            $"--- [{progress.Phase}] END (processed={progress.PhaseProcessed}, remaining={progress.PhaseRemaining}, ok={progress.SuccessCount}, errors={progress.FailedCount}";
+        if (progress.FailedCount <= 0 || string.IsNullOrWhiteSpace(progress.FailureSummary))
+            return $"{baseText}) ---";
+
+        return $"{baseText}: {progress.FailureSummary}) ---";
     }
 
     private static string ResolveResult(in PasteProgress progress)
@@ -114,13 +182,23 @@ internal static class PastingInfoLog
         return progress.Outcome switch
         {
             PasteProgressOutcome.Ok => progress.OkLabel ?? progress.ResolveGenericOkLabel(),
+            PasteProgressOutcome.InProgress => FormatInProgressResult(in progress),
             PasteProgressOutcome.Retry => FormatRetryResult(in progress),
-            PasteProgressOutcome.Skipped =>
-                $"Skipped: {ExplainFailReason(progress.FailReason, progress.ResultDetail)}",
             PasteProgressOutcome.Failed =>
                 $"Error: {ExplainFailReason(progress.FailReason, progress.ResultDetail)}",
             _ => "Error: unknown issue",
         };
+    }
+
+    private static string FormatInProgressResult(in PasteProgress progress)
+    {
+        if (PasteProgress.HasBatchProgressSuffix(progress.ContentMessage))
+            return "Progress";
+
+        if (!string.IsNullOrWhiteSpace(progress.OkLabel))
+            return progress.OkLabel;
+
+        return "Progress";
     }
 
     private static string FormatRetryResult(in PasteProgress progress)
@@ -133,31 +211,17 @@ internal static class PastingInfoLog
 
     private static Color ResolveResultColor(in PasteProgress progress)
     {
-        if (progress.Outcome == PasteProgressOutcome.Retry && PasteProgress.HasBatchProgressSuffix(progress.ContentMessage))
-            return Color.MediumPurple;
-
         if (progress.IsTerminalOutcome())
             return Color.Red;
 
         return progress.Outcome switch
         {
             PasteProgressOutcome.Ok => Color.LightGreen,
+            PasteProgressOutcome.InProgress => Color.MediumPurple,
             PasteProgressOutcome.Retry => Color.Khaki,
-            PasteProgressOutcome.Skipped => Color.LightYellow,
             PasteProgressOutcome.Failed => Color.Red,
             _ => Color.Red,
         };
-    }
-
-    private static string ExplainFailReason(LayerFailReason reason, string? detail)
-    {
-        if (reason != LayerFailReason.None)
-            return ExplainFailReason(reason);
-
-        if (!string.IsNullOrWhiteSpace(detail))
-            return detail;
-
-        return "unknown issue";
     }
 
     private static string ExplainFailReason(LayerFailReason reason) =>
@@ -165,6 +229,7 @@ internal static class PastingInfoLog
         {
             LayerFailReason.None => "unknown issue",
             LayerFailReason.MissingItems => "missing items",
+            LayerFailReason.UnresolvedInteraction => "unresolved interaction",
             LayerFailReason.InvalidPlacement => "invalid placement",
             LayerFailReason.InsufficientPickaxePower => "insufficient pickaxe power",
             LayerFailReason.ClearBlocked => "clear blocked",

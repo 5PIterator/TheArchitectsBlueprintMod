@@ -9,7 +9,7 @@ using Terraria.ObjectData;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
-    /// <summary>Simple solid tiles: one cell per <see cref="Identify"/>; multi-tile objects and frames belong to other layers.</summary>
+    /// <summary>Residual tiles not claimed by Frame/Falling/Custom; dependency-anchored and multi-style objects belong to Frame.</summary>
     internal sealed class BlockLayer : Layer
     {
         public static readonly BlockLayer Definition = new();
@@ -65,8 +65,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!tile.PayloadCell.HasTile()) return true;
             if (!context.RequireItems || context.Items is null) return true;
             ushort tileType = tile.PayloadCell.Block.Type;
-            int style = tile.PayloadCell.Detail.Style;
-            return TileExecutor.HasItemForTile(tileType, style, in context);
+            int style = tile.PayloadCell.ResolvePlacementStyle();
+            return TileInteractionChecks.HasTilePlacementItems(
+                tileType,
+                style,
+                tile.World.X,
+                tile.World.Y,
+                in context);
         }
 
         public override bool Consume(in PasteTile tile, in PasteContext context) =>
@@ -76,8 +81,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         {
             Tile intent = tile.PayloadTile;
             if (!intent.HasTile) return null;
-            int style = tile.PayloadCell.Detail.Style;
-            return InteractionMapProvider.GetTileItemIds(intent.TileType, style);
+            int style = tile.PayloadCell.ResolvePlacementStyle();
+            return TileInteractionChecks.GetToolItemIds(intent.TileType, style, tile.World.X, tile.World.Y);
         }
 
         public override LayerResult Clear(TileBatch batch, in PasteContext context)
@@ -105,7 +110,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             {
                 var samplePasteTile = tiles[0];
                 TABLog.Debug(
-                    $"BlockLayer.Place batch={tiles.Count}"+
+                    $"BlockLayer.Place batch={tiles.Count} "+
                     $"rel=({samplePasteTile.Relative.X},{samplePasteTile.Relative.Y}) "+
                     $"world=({samplePasteTile.World.X},{samplePasteTile.World.Y}) "+
                     $"payload[hasTile={samplePasteTile.PayloadCell.HasTile()} type={samplePasteTile.PayloadCell.Block.Type} "+
@@ -125,7 +130,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return LayerResult.Fail(res.FailReason, message);
 
             if (res.RemainingTiles.Count > 0)
+            {
+                TABLog.Debug(
+                    $"BlockLayer.Place partial world=({origin.World.X},{origin.World.Y}) "
+                    + $"remaining={res.RemainingTiles.Count}",
+                    "Paste");
                 return LayerResult.OkWithRemaining(batch.WithRemainingTiles(res.RemainingTiles), message, LayerLogFormat.PlacedLabel(in context));
+            }
 
             if (!context.IsSweepCheat && !Consume(in origin, in context))
                 return LayerResult.Fail(LayerFailReason.MissingItems, message);
@@ -142,7 +153,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             ushort tileType = intent.TileType;
             if (!TileLoaderSupport.IsKnownTileType(tileType)) return false;
 
-            int style = tile.PayloadCell.Detail.Style;
+            int style = tile.PayloadCell.ResolvePlacementStyle();
             int alternate = tile.PayloadCell.Detail.Alternate;
             Tile targetTile = Main.tile[x, y];
 
@@ -167,35 +178,26 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private static bool HasRequiredItemsSingle(in PasteTile tile, in PasteContext context)
         {
-            int x = tile.World.X, y = tile.World.Y;
             Tile intent = tile.PayloadTile;
             if (!intent.HasTile) return true;
 
             ushort tileType = intent.TileType;
             if (!TileLoaderSupport.IsKnownTileType(tileType)) return true;
 
-            int style = tile.PayloadCell.Detail.Style;
-            int alternate = tile.PayloadCell.Detail.Alternate;
-            int? baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
-            Tile targetTile = Main.tile[x, y];
-
+            int style = tile.PayloadCell.ResolvePlacementStyle();
+            Tile targetTile = Main.tile[tile.World.X, tile.World.Y];
             if (targetTile.HasTile && targetTile.TileType == tileType) return true;
 
-            if (baseTileId.HasValue)
-            {
-                ushort baseType = (ushort)baseTileId.Value;
-                if (!targetTile.HasTile || targetTile.TileType != baseType)
-                {
-                    if (!TileExecutor.HasItemForTile(baseType, 0, in context)) return false;
-                    return TileExecutor.HasItemForTile(tileType, style, in context);
-                }
-            }
-            else if (targetTile.HasTile && !context.IsSweepCheat)
-            {
+            int? baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
+            if (!baseTileId.HasValue && targetTile.HasTile && !context.IsSweepCheat)
                 return false;
-            }
 
-            return TileExecutor.HasItemForTile(tileType, style, in context);
+            return TileInteractionChecks.HasTilePlacementItems(
+                tileType,
+                style,
+                tile.World.X,
+                tile.World.Y,
+                in context);
         }
     }
 }

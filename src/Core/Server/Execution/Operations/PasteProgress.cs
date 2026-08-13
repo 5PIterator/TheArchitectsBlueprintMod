@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Text;
 using Terraria;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
@@ -17,13 +19,13 @@ internal enum PasteProgressKind
 }
 
 /// <summary>
-/// Task-level result semantics for sinks (OK, deferred retry, policy skip, terminal failure).
+/// Task-level result semantics for sinks (OK, successful progress, deferred retry, terminal failure).
 /// </summary>
 internal enum PasteProgressOutcome
 {
     Ok,
+    InProgress,
     Retry,
-    Skipped,
     Failed,
 }
 
@@ -58,6 +60,9 @@ internal readonly struct PasteProgress
     public int PhaseTotal { get; init; }
     public int PhaseProcessed { get; init; }
     public int PhaseRemaining { get; init; }
+    public int SuccessCount { get; init; }
+    public int FailedCount { get; init; }
+    public string? FailureSummary { get; init; }
     public int WorldX { get; init; }
     public int WorldY { get; init; }
     public string? ContentMessage { get; init; }
@@ -101,12 +106,15 @@ internal readonly struct PasteProgress
             PhaseTotal = PhaseTotal,
             PhaseProcessed = PhaseProcessed,
             PhaseRemaining = PhaseRemaining,
+            SuccessCount = SuccessCount,
+            FailedCount = FailedCount,
+            FailureSummary = FailureSummary,
             WorldX = world.X,
             WorldY = world.Y,
             ContentMessage = contentMessage,
             OkLabel = okLabel,
             Outcome = outcome,
-            Success = outcome is PasteProgressOutcome.Ok or PasteProgressOutcome.Skipped,
+            Success = outcome is PasteProgressOutcome.Ok,
             FailReason = failReason,
             ResultDetail = detail,
         };
@@ -119,14 +127,19 @@ internal readonly struct PasteProgress
         in PasteContext context,
         bool taskCompletes)
     {
+        // --- Success with remaining work is progress; policy exits and hard failures are terminal.
+
         if (res.Success)
-            return taskCompletes ? PasteProgressOutcome.Ok : PasteProgressOutcome.Retry;
+            return taskCompletes ? PasteProgressOutcome.Ok : PasteProgressOutcome.InProgress;
 
         if (!context.RetryOnMissingItems && res.FailReason == LayerFailReason.MissingItems)
-            return PasteProgressOutcome.Skipped;
+            return PasteProgressOutcome.Failed;
+
+        if (res.FailReason == LayerFailReason.UnresolvedInteraction)
+            return PasteProgressOutcome.Failed;
 
         if (!context.RetryOnInvalidPlacement && res.FailReason == LayerFailReason.InvalidPlacement)
-            return PasteProgressOutcome.Skipped;
+            return PasteProgressOutcome.Failed;
 
         if (!taskCompletes)
             return PasteProgressOutcome.Retry;
@@ -139,11 +152,13 @@ internal readonly struct PasteProgress
     /// </summary>
     internal static PasteProgressOutcome ClassifyClearAttempt(in LayerResult res, bool taskCompletes)
     {
+        // --- Success with remaining work is progress; policy exits and hard failures are terminal.
+
         if (res.Success)
-            return taskCompletes ? PasteProgressOutcome.Ok : PasteProgressOutcome.Retry;
+            return taskCompletes ? PasteProgressOutcome.Ok : PasteProgressOutcome.InProgress;
 
         if (res.FailReason == LayerFailReason.InsufficientPickaxePower)
-            return PasteProgressOutcome.Skipped;
+            return PasteProgressOutcome.Failed;
 
         if (!taskCompletes)
             return PasteProgressOutcome.Retry;
@@ -161,7 +176,7 @@ internal readonly struct PasteProgress
         in LayerResult res,
         PasteProgressOutcome outcome)
     {
-        if (outcome != PasteProgressOutcome.Retry || !res.Success || res.TileBatch is null || res.TileBatch.Tiles.Count == 0)
+        if (outcome != PasteProgressOutcome.InProgress || !res.Success || res.TileBatch is null || res.TileBatch.Tiles.Count == 0)
             return contentMessage;
 
         string? suffix = batch.FormatBatchProgressSuffix(batch.Count, res.TileBatch.Tiles.Count);
@@ -177,13 +192,7 @@ internal readonly struct PasteProgress
     /// <summary>
     /// True when the task leaves the queue without applying place/sweep intent.
     /// </summary>
-    internal bool IsTerminalOutcome() =>
-        Outcome switch
-        {
-            PasteProgressOutcome.Failed => true,
-            PasteProgressOutcome.Skipped when Phase is PasteInfoPhase.Place or PasteInfoPhase.Sweep => true,
-            _ => false,
-        };
+    internal bool IsTerminalOutcome() => Outcome == PasteProgressOutcome.Failed;
 
     /// <summary>Returns a generic ok label when the layer did not supply one.</summary>
     internal string ResolveGenericOkLabel() =>
@@ -204,8 +213,12 @@ internal readonly struct PasteProgress
 internal sealed class PasteProgressTracker
 {
     private readonly int _ownerPlayer;
+    private readonly Dictionary<string, int> _failureCounts = new();
+
     public int PhaseTotal { get; private set; }
     public int PhaseProcessed { get; private set; }
+    public int SuccessCount { get; private set; }
+    public int FailedCount { get; private set; }
     public PasteInfoPhase Phase { get; private set; }
     public PlaceStyle PlacementStyle { get; set; } = PlaceStyle.Place;
     public SweepStyle SweepStrategy { get; set; } = SweepStyle.Detail;
@@ -217,11 +230,19 @@ internal sealed class PasteProgressTracker
         _ownerPlayer = ownerPlayer;
     }
 
+    /// <summary>
+    /// Opens a phase and resets per-phase totals used by end-of-phase summaries.
+    /// </summary>
     public PasteProgress BeginPhase(PasteInfoPhase phase, int phaseTotal)
     {
+        // --- Reset counters so each phase reports only its own completions and failures.
+
         Phase = phase;
         PhaseTotal = phaseTotal;
         PhaseProcessed = 0;
+        SuccessCount = 0;
+        FailedCount = 0;
+        _failureCounts.Clear();
 
         return new PasteProgress
         {
@@ -253,6 +274,8 @@ internal sealed class PasteProgressTracker
         PhaseIndex = PhaseProcessed + 1,
         PhaseTotal = PhaseTotal,
         PhaseProcessed = PhaseProcessed,
+        SuccessCount = SuccessCount,
+        FailedCount = FailedCount,
     };
 
     /// <summary>Builds a plan-phase task log snapshot (no tick batch during queue build).</summary>
@@ -270,17 +293,48 @@ internal sealed class PasteProgressTracker
         PhaseIndex = 0,
         PhaseTotal = 0,
         PhaseProcessed = 0,
+        SuccessCount = SuccessCount,
+        FailedCount = FailedCount,
     };
 
     /// <summary>
-    /// Records one task leaving the queue (success, policy skip, or terminal outcome).
+    /// Records one task leaving the queue (success or terminal failure).
     /// </summary>
-    public void RecordCompletion()
+    public void RecordCompletion(
+        PasteProgressOutcome outcome,
+        LayerFailReason failReason = LayerFailReason.None,
+        string? detail = null)
     {
+        // --- Count only terminal exits; intermediate progress/retries stay in the queue.
+
         if (PhaseProcessed < PhaseTotal)
             PhaseProcessed++;
+
+        if (outcome == PasteProgressOutcome.Ok)
+        {
+            SuccessCount++;
+            return;
+        }
+
+        if (outcome != PasteProgressOutcome.Failed)
+            return;
+
+        FailedCount++;
+        RecordFailureReason(failReason, detail);
     }
 
+    /// <summary>
+    /// Records the failure reason for a terminal execution failure.
+    /// </summary>
+    public void RecordFailureReason(LayerFailReason reason, string? detail = null)
+    {
+        string key = FormatFailureKey(reason, detail);
+        _failureCounts[key] = _failureCounts.TryGetValue(key, out int count) ? count + 1 : 1;
+    }
+
+    /// <summary>
+    /// Builds the phase-end progress payload including success/error totals.
+    /// </summary>
     public PasteProgress EndPhase(int remaining) => new()
     {
         CorrelationId = CorrelationId,
@@ -293,5 +347,46 @@ internal sealed class PasteProgressTracker
         PhaseTotal = PhaseTotal,
         PhaseProcessed = PhaseProcessed,
         PhaseRemaining = remaining,
+        SuccessCount = SuccessCount,
+        FailedCount = FailedCount,
+        FailureSummary = FormatFailureSummary(),
     };
+
+    /// <summary>
+    /// Formats grouped failure totals for phase-end summaries.
+    /// </summary>
+    public string FormatFailureSummary()
+    {
+        if (_failureCounts.Count == 0)
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        foreach (KeyValuePair<string, int> pair in _failureCounts)
+        {
+            if (sb.Length > 0)
+                sb.Append(", ");
+            sb.Append(pair.Value);
+            sb.Append(' ');
+            sb.Append(pair.Key);
+        }
+
+        return sb.ToString();
+    }
+
+    private static string FormatFailureKey(LayerFailReason reason, string? detail)
+    {
+        if (!string.IsNullOrWhiteSpace(detail))
+            return detail.Trim();
+
+        return reason switch
+        {
+            LayerFailReason.MissingItems => "missing items",
+            LayerFailReason.UnresolvedInteraction => "unresolved interaction",
+            LayerFailReason.InvalidPlacement => "invalid placement",
+            LayerFailReason.InsufficientPickaxePower => "insufficient pickaxe power",
+            LayerFailReason.ClearBlocked => "clear blocked",
+            LayerFailReason.Unknown => "unknown block",
+            _ => "unknown issue",
+        };
+    }
 }

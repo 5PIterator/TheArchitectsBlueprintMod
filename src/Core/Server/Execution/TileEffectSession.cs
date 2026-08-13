@@ -41,6 +41,8 @@ namespace TheArchitectsBlueprintMod.Core
         private readonly List<TileMutation> _mutations = [];
         private readonly List<PasteArrowSlot> _activeArrows = [];
         private readonly Dictionary<int, int> _arrowSlotById = new();
+        private readonly Dictionary<int, LiquidPoolCell[]> _liquidPools = new();
+        private readonly Dictionary<int, PlacementReservationLedger> _placementLedgers = new();
         private readonly List<int> _resolveScratch = [];
 
         public TileEffectSession(int operationId, Func<PasteContext> contextFactory)
@@ -60,6 +62,32 @@ namespace TheArchitectsBlueprintMod.Core
         public int PendingImpactCount => _activeArrows.Count;
 
         public bool IsIdle => Pending.Count == 0 && _activeArrows.Count == 0;
+
+        /// <summary>Returns true when a frame placement mutation for the tile is queued or still in flight.</summary>
+        public bool HasPendingOrInFlightPlacementAt(Point world, ushort tileType)
+        {
+            foreach (TileMutation mutation in Pending)
+            {
+                if (IsFramePlacementKind(mutation.Kind)
+                    && mutation.World == world
+                    && mutation.Type == tileType)
+                    return true;
+            }
+
+            for (int i = 0; i < _mutations.Count; i++)
+            {
+                TileMutation mutation = _mutations[i];
+                if (!IsFramePlacementKind(mutation.Kind)
+                    || mutation.World != world
+                    || mutation.Type != tileType
+                    || !IsMutationInFlight(i))
+                    continue;
+
+                return true;
+            }
+
+            return false;
+        }
 
         public bool CanLaunchArrow() => _activeArrows.Count < TileExecutor.GetMaxConcurrentArrows();
 
@@ -81,6 +109,40 @@ namespace TheArchitectsBlueprintMod.Core
             Pending.Enqueue(mutation);
             TileExecutorLog.Registered(in mutation);
         }
+
+        /// <summary>Attaches the pool cells written when a liquid placement mutation arrives.</summary>
+        public void AttachLiquidPool(int mutationId, LiquidPoolCell[] cells)
+        {
+            // --- Store pool payload beside the single SetLiquid mutation that owns the arrow.
+            if (cells is null || cells.Length == 0)
+                return;
+
+            _liquidPools[mutationId] = cells;
+        }
+
+        /// <summary>Returns the pool cells for a liquid placement mutation when one was attached.</summary>
+        public bool TryGetLiquidPool(int mutationId, out LiquidPoolCell[] cells) =>
+            _liquidPools.TryGetValue(mutationId, out cells!);
+
+        /// <summary>Drops pool payload after apply or abort settlement.</summary>
+        public void ClearLiquidPool(int mutationId) => _liquidPools.Remove(mutationId);
+
+        /// <summary>Attaches ownership metadata for an in-flight place arrow.</summary>
+        public void AttachPlacementLedger(int mutationId, PlacementReservationLedger ledger)
+        {
+            // --- Keep refundable debits/budget spends off the visual mutation ItemType/ItemStack fields.
+            if (ledger is null)
+                return;
+
+            _placementLedgers[mutationId] = ledger;
+        }
+
+        /// <summary>Takes ownership ledger for settlement, removing it from the session.</summary>
+        public bool TryTakePlacementLedger(int mutationId, out PlacementReservationLedger ledger) =>
+            _placementLedgers.Remove(mutationId, out ledger!);
+
+        /// <summary>Discards ownership ledger after a successful placement commits.</summary>
+        public void ClearPlacementLedger(int mutationId) => _placementLedgers.Remove(mutationId);
 
         public bool TryDequeue(out TileMutation mutation)
         {
@@ -250,6 +312,20 @@ namespace TheArchitectsBlueprintMod.Core
             _activeArrows.Clear();
             _arrowSlotById.Clear();
             _resolveScratch.Clear();
+        }
+
+        private static bool IsFramePlacementKind(TileMutationKind kind) =>
+            kind is TileMutationKind.PlaceObject or TileMutationKind.PlaceTile;
+
+        private bool IsMutationInFlight(int mutationIndex)
+        {
+            for (int i = 0; i < _activeArrows.Count; i++)
+            {
+                if (_activeArrows[i].MutationIndex == mutationIndex)
+                    return true;
+            }
+
+            return false;
         }
 
         private void RemoveSlotAt(int slotIndex, int arrowId)

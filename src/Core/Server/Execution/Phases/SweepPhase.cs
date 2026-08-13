@@ -99,20 +99,22 @@ namespace TheArchitectsBlueprintMod.Core.Phases
                 PasteProgress progress = Operation.CreateBatchProgress(applied + 1, batchTotal);
                 if (!WorldGen.InWorld(wx, wy))
                 {
+                    const string outsideDetail = "target tile outside world";
                     PasteProgress progressEvent = progress.WithTaskResult(
                         pt.World,
                         PasteProgressOutcome.Failed,
                         contentMessage: LayerLogFormat.FormatSweepPayload(in pt),
                         okLabel: "Error",
-                        detail: "target tile outside world");
+                        detail: outsideDetail);
                     PastingInfoLog.Write(in progressEvent);
-                    Operation.RecordTaskCompletion();
+                    Operation.RecordTaskCompletion(PasteProgressOutcome.Failed, detail: outsideDetail);
                     applied++;
                     continue;
                 }
 
-                bool queued = TileExecutor.EnqueueSweep(pt, Operation.Context);
-                bool sweepOk = queued && PastingInfoLog.IsSweepSatisfied(in pt);
+                // Apply first, then verify — deferred enqueue used to log Error before the tile existed.
+                bool sweepApplied = TileExecutor.EnqueueSweep(pt, Operation.Context);
+                bool sweepOk = sweepApplied && PastingInfoLog.IsSweepSatisfied(in pt);
                 PasteProgressOutcome outcome = sweepOk ? PasteProgressOutcome.Ok : PasteProgressOutcome.Failed;
                 string? detail = sweepOk ? null : PastingInfoLog.ExplainSweepFailure(in pt);
                 string sweepOkLabel = sweepOk
@@ -125,7 +127,7 @@ namespace TheArchitectsBlueprintMod.Core.Phases
                     okLabel: sweepOkLabel,
                     detail: detail);
                 PastingInfoLog.Write(in progressEvent2);
-                Operation.RecordTaskCompletion();
+                Operation.RecordTaskCompletion(outcome, detail: detail);
 
                 if (Operation._currentStepPlaceTiles.Count < Operation.PasteConfig.Limits.Server.MaxTilesPerCategory)
                     Operation._currentStepPlaceTiles.Add(pt.World);

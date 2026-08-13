@@ -9,7 +9,7 @@ using TheArchitectsBlueprintMod.Debug;
 namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Runs all discovery steps (placement, biome, shimmer) and then compiles the tile map.
+    /// Runs all discovery steps (placement, wand, paint, vine, biome, shimmer) and then compiles the tile map.
     /// Usage: /tab.discAll. When holding Debug Stick: left-click to step through each phase, right-click to cancel.
     /// </summary>
     public sealed class FullDiscoveryCommand : ModCommand
@@ -46,6 +46,18 @@ namespace TheArchitectsBlueprintMod.Core
         {
             reply("Discovery: Placement...");
             PlacementDiscovery.Run(mod, player, reply, allowStepping: false);
+            yield return null;
+
+            reply("Discovery: Wand...");
+            WandDiscovery.Run(mod, reply);
+            yield return null;
+
+            reply("Discovery: Paint...");
+            PaintDiscovery.Run(mod, reply);
+            yield return null;
+
+            reply("Discovery: Vine...");
+            VineDiscovery.Run(mod, reply);
             yield return null;
 
             reply("Discovery: Biome...");

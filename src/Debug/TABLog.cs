@@ -17,8 +17,10 @@ namespace TheArchitectsBlueprintMod.Debug
     /// </summary>
     internal sealed class TABLog : ModSystem
     {
+        public const string GenericCategory = "Generic";
         public const string TileExecutorCategory = "TileExecutor";
         public const string InventoryCategory = "Inventory";
+        public const string ManifestCategory = "Manifest";
 
         private static Mod? _mod;
         private static uint _batchFrame = uint.MaxValue;
@@ -28,9 +30,10 @@ namespace TheArchitectsBlueprintMod.Debug
         {
             public required string Message { get; init; }
             public string? Category { get; init; }
-            public int Level { get; init; }
+            public TabLogLevel Level { get; init; }
             public bool EchoToChat { get; init; }
             public Color ChatColor { get; init; }
+            public int? OwnerPlayer { get; init; }
         }
 
         /// <summary>
@@ -53,13 +56,14 @@ namespace TheArchitectsBlueprintMod.Debug
         /// </summary>
         public override void Unload()
         {
+            Flush();
             _mod = null;
             _batchFrame = uint.MaxValue;
             _pending.Clear();
         }
 
         /// <summary>
-        /// Flushes buffered debug/info records for the current frame. Called from <see cref="TABLogSystem"/>.
+        /// Flushes buffered debug/info records for the current frame.
         /// </summary>
         internal static void Flush()
         {
@@ -76,13 +80,13 @@ namespace TheArchitectsBlueprintMod.Debug
                 PendingEntry entry = _pending[i];
                 string line = FormatLine(entry.Message, entry.Category);
 
-                if (entry.Level == 0)
+                if (entry.Level == TabLogLevel.Debug)
                     debugLines.AppendLine(line);
-                else if (entry.Level == 1)
+                else if (entry.Level == TabLogLevel.Info)
                     infoLines.AppendLine(line);
 
                 if (entry.EchoToChat)
-                    Chat(entry.Message, entry.Category, entry.ChatColor);
+                    Chat(entry.Message, entry.Category, entry.ChatColor, entry.OwnerPlayer);
             }
 
             if (debugLines.Length > 0)
@@ -110,61 +114,91 @@ namespace TheArchitectsBlueprintMod.Debug
         /// </summary>
         public static bool IsCategoryEnabled(string? category) => ShouldEmitCategory(category);
 
-        /// <summary>True when debug records are globally enabled in client logging config.</summary>
-        public static bool IsDebugEnabled => ClientLogConfig.Instance?.EnableDebugLogs ?? true;
+        /// <summary>True when the given severity meets the client minimum log level.</summary>
+        public static bool IsLevelEnabled(TabLogLevel level) => MeetsThreshold(level);
+
+        /// <summary>True when debug records meet the client minimum log level.</summary>
+        public static bool IsDebugEnabled => IsLevelEnabled(TabLogLevel.Debug);
 
         /// <summary>
         /// Queues a debug message for the current frame batch.
         /// </summary>
-        public static void Debug(string message, string? category = null)
+        public static void Debug(string message, string? category = null, int? ownerPlayer = null)
         {
-            Enqueue(message, category, level: 0, echoToChat: IsDebugChatEnabled, chatColor: Color.LightGray);
+            Enqueue(
+                message,
+                category,
+                TabLogLevel.Debug,
+                echoToChat: IsDebugChatEnabled,
+                chatColor: Color.LightGray,
+                ownerPlayer);
         }
 
         /// <summary>
         /// Queues an info message for the current frame batch.
         /// </summary>
-        public static void Info(string message, string? category = null, Color? chatColor = null)
+        public static void Info(string message, string? category = null, Color? chatColor = null, int? ownerPlayer = null)
+            => Info(message, category, chatColor, ownerPlayer, echoToChat: IsInfoChatEnabled);
+
+        /// <summary>
+        /// Queues an info message for the current frame batch, optionally echoing to chat.
+        /// </summary>
+        public static void Info(
+            string message,
+            string? category,
+            Color? chatColor,
+            int? ownerPlayer,
+            bool echoToChat)
         {
-            Enqueue(message, category, level: 1, echoToChat: IsInfoChatEnabled, chatColor: chatColor ?? Color.LightYellow);
+            Enqueue(
+                message,
+                category,
+                TabLogLevel.Info,
+                echoToChat,
+                chatColor: chatColor ?? Color.LightYellow,
+                ownerPlayer);
         }
 
         /// <summary>
-        /// Logs a warning. Always emitted immediately regardless of config.
+        /// Logs a warning immediately when the level and category filters allow it.
         /// </summary>
         public static void Warn(string message, string? category = null)
         {
             Flush();
-            Log(message, category, level: 2);
+            Log(message, category, TabLogLevel.Warn);
         }
 
         /// <summary>
-        /// Logs an error. Always emitted immediately regardless of config.
+        /// Logs an error immediately when the level and category filters allow it.
         /// </summary>
         public static void Error(string message, string? category = null)
         {
             Flush();
-            Log(message, category, level: 3);
+            Log(message, category, TabLogLevel.Error);
         }
 
         /// <summary>
-        /// Logs an error with exception. Always emitted immediately regardless of config.
+        /// Logs an error with exception immediately when the level and category filters allow it.
         /// </summary>
         public static void Error(string message, Exception ex, string? category = null)
         {
             Flush();
 
             var mod = _mod;
-            if (mod is null || !ShouldEmitCategory(category))
+            if (mod is null || !MeetsThreshold(TabLogLevel.Error) || !ShouldEmitCategory(category))
                 return;
 
             var full = FormatLine(message, category);
             mod.Logger.Error(full, ex);
         }
 
-        public static void Chat(string message, string? category = null, Color? color = null)
+        /// <summary>
+        /// Prints a formatted line to local chat when category and owner filters allow it.
+        /// </summary>
+        public static void Chat(string message, string? category = null, Color? color = null, int? ownerPlayer = null)
         {
-            if (Main.netMode == NetmodeID.Server || !ShouldEmitCategory(category))
+            // --- Dedicated servers have no chat UI; owner-scoped lines only show for that local player.
+            if (Main.netMode == NetmodeID.Server || !ShouldEmitCategory(category) || !ShouldShowForOwner(ownerPlayer))
                 return;
 
             string full = FormatLine(message, category);
@@ -172,7 +206,32 @@ namespace TheArchitectsBlueprintMod.Debug
         }
 
         /// <summary>
-        /// Appends a debug/info record to the current frame batch, rolling the batch forward when the frame changes.
+        /// Returns whether the severity is at or above the configured client minimum.
+        /// </summary>
+        private static bool MeetsThreshold(TabLogLevel level)
+        {
+            // --- Prefer the live client config; fall back to Info when no client config is loaded.
+            TabLogLevel minimum = ClientLogConfig.Instance?.MinimumLogLevel ?? TabLogLevel.Info;
+            return level >= minimum;
+        }
+
+        /// <summary>
+        /// Returns whether owner-scoped client diagnostics should appear for this runtime.
+        /// </summary>
+        private static bool ShouldShowForOwner(int? ownerPlayer)
+        {
+            // --- Unscoped lines always pass; scoped lines are client-only and local-owner-only.
+            if (ownerPlayer is null)
+                return true;
+
+            if (Main.netMode == NetmodeID.Server)
+                return false;
+
+            return Main.myPlayer == ownerPlayer.Value;
+        }
+
+        /// <summary>
+        /// Maps a category string onto the matching client tag toggle.
         /// </summary>
         private static bool ShouldEmitCategory(string? category)
         {
@@ -182,10 +241,12 @@ namespace TheArchitectsBlueprintMod.Debug
 
             return category switch
             {
+                GenericCategory => cfg.TagGeneric,
                 "Paste" => cfg.TagPaste,
                 "Projection" or "ProjectionSystem" => cfg.TagProjection,
                 "Selection" or "SelectionSystem" or "Blueprint" => cfg.TagSelection,
                 "Layers" => cfg.TagLayers,
+                "FrameLayer" => cfg.TagFrameLayer,
                 "TileMapping" => cfg.TagTileMapping,
                 "InteractionMap" => cfg.TagInteractionMap,
                 "PasteNet" => cfg.TagNetworking,
@@ -193,14 +254,27 @@ namespace TheArchitectsBlueprintMod.Debug
                 "Template" => cfg.TagTemplate,
                 TileExecutorCategory => cfg.TagTileExecutor,
                 InventoryCategory => cfg.TagInventory,
+                ManifestCategory => cfg.TagManifest,
                 null or "" => cfg.TagOther,
                 _ => cfg.TagOther,
             };
         }
 
-        private static void Enqueue(string message, string? category, int level, bool echoToChat, Color chatColor)
+        /// <summary>
+        /// Appends a debug/info record to the current frame batch, rolling the batch forward when the frame changes.
+        /// </summary>
+        private static void Enqueue(
+            string message,
+            string? category,
+            TabLogLevel level,
+            bool echoToChat,
+            Color chatColor,
+            int? ownerPlayer)
         {
-            if (_mod is null || (level == 0 && !IsDebugEnabled) || !ShouldEmitCategory(category))
+            if (_mod is null
+                || !MeetsThreshold(level)
+                || !ShouldEmitCategory(category)
+                || !ShouldShowForOwner(ownerPlayer))
                 return;
 
             // --- A new frame started before the previous batch was flushed; flush the stale batch first.
@@ -216,23 +290,27 @@ namespace TheArchitectsBlueprintMod.Debug
                 Level = level,
                 EchoToChat = echoToChat,
                 ChatColor = chatColor,
+                OwnerPlayer = ownerPlayer,
             });
         }
 
-        private static void Log(string message, string? category, int level)
+        /// <summary>
+        /// Writes a warn/error line immediately to the matching native logger sink.
+        /// </summary>
+        private static void Log(string message, string? category, TabLogLevel level)
         {
             var mod = _mod;
-            if (mod is null || !ShouldEmitCategory(category))
+            if (mod is null || !MeetsThreshold(level) || !ShouldEmitCategory(category))
                 return;
 
             var full = FormatLine(message, category);
 
             switch (level)
             {
-                case 0: mod.Logger.Debug(full); break;
-                case 1: mod.Logger.Info(full); break;
-                case 2: mod.Logger.Warn(full); break;
-                case 3: mod.Logger.Error(full); break;
+                case TabLogLevel.Debug: mod.Logger.Debug(full); break;
+                case TabLogLevel.Info: mod.Logger.Info(full); break;
+                case TabLogLevel.Warn: mod.Logger.Warn(full); break;
+                case TabLogLevel.Error: mod.Logger.Error(full); break;
                 default: mod.Logger.Info(full); break;
             }
         }

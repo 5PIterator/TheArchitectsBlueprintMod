@@ -9,6 +9,7 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using Terraria.ObjectData;
 using Terraria.DataStructures;
+using TheArchitectsBlueprintMod.Utils;
 namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
@@ -24,9 +25,9 @@ namespace TheArchitectsBlueprintMod.Core
             public Terraria.LiquidData LiquidData;
             public TileWallBrightnessInvisibilityData TWBIData;
             public TileWallWireStateData TWWStateData;
-            /// <summary><see cref="TileObjectData.GetTileInfo(Tile, ref int, ref int)"/> style, captured at cell build.</summary>
+            /// <summary>Authoritative placement style captured at cell build (drop item placeStyle / TileObjectData).</summary>
             public int TileStyle;
-            /// <summary><see cref="TileObjectData.GetTileInfo(Tile, ref int, ref int)"/> alternate, captured at cell build.</summary>
+            /// <summary>Placement alternate captured at cell build.</summary>
             public int TileAlternate;
         };
         public readonly struct WallData(TileData? data)
@@ -110,6 +111,18 @@ namespace TheArchitectsBlueprintMod.Core
         /// </summary>
         public static PayloadCell FromTile(Tile tile)
         {
+            // --- Snapshot tile slices and resolve placement style without world coordinates.
+
+            return FromTile(tile, x: -1, y: -1);
+        }
+
+        /// <summary>
+        /// Creates a new <see cref="PayloadCell"/> from a live world tile at the given coordinates.
+        /// </summary>
+        public static PayloadCell FromTile(Tile tile, int x, int y)
+        {
+            // --- Snapshot tile slices, then resolve style via world-aware drop placeStyle when possible.
+
             var data = new TileData
             {
                 TileType = tile.Get<TileTypeData>(),
@@ -120,9 +133,11 @@ namespace TheArchitectsBlueprintMod.Core
             };
             data.TWWStateData.TileFrameNumber = 0;
             data.TWWStateData.WallFrameNumber = 0;
+
+            // Resolve authoritative placeStyle (avoids treating stateful FrameX as style).
             int style = 0, alternate = 0;
             if (tile.HasTile && data.TileType.Type > 0 && data.TileType.Type < TileLoader.TileCount)
-                TileObjectData.GetTileInfo(tile, ref style, ref alternate);
+                TileBreakDropResolver.ResolvePlacementVariant(tile, x, y, out style, out alternate);
             data.TileStyle = style;
             data.TileAlternate = alternate;
             PayloadCell cell = new(data);
@@ -210,6 +225,14 @@ namespace TheArchitectsBlueprintMod.Core
 
         public bool HasTile() => !IsEmpty && Detail.HasTile;
 
+        /// <summary>Returns the placement style stored on this payload cell at capture/import time.</summary>
+        public int ResolvePlacementStyle()
+        {
+            // --- Use the cached style field; do not re-derive from sprite frames.
+
+            return _data?.TileStyle ?? 0;
+        }
+
         /// <summary>Copies cached style/alternate from <see cref="FromTile"/> / <see cref="FromJson"/>.</summary>
         public void GetTileInfo(ref int style, ref int alternate)
         {
@@ -220,8 +243,8 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            style = _data.TileStyle;
             alternate = _data.TileAlternate;
+            style = _data.TileStyle;
         }
     }
 
@@ -290,7 +313,7 @@ namespace TheArchitectsBlueprintMod.Core
                     if (!WorldGen.InWorld(wx, wy))
                         continue;
 
-                    PayloadCell cell = PayloadCell.FromTile(Framing.GetTileSafely(wx, wy));
+                    PayloadCell cell = PayloadCell.FromTile(Framing.GetTileSafely(wx, wy), wx, wy);
                     if (cell.HasSparseContent)
                         entries.Add(new Entry(new Point(x, y), cell));
                 }

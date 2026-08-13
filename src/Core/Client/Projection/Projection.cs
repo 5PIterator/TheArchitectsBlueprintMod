@@ -41,7 +41,6 @@ namespace TheArchitectsBlueprintMod.Core
         {
             ArgumentNullException.ThrowIfNull(selection);
             AssignSelection(selection);
-            RefreshTargetTiles();
         }
 
         /// <summary>
@@ -89,8 +88,8 @@ namespace TheArchitectsBlueprintMod.Core
 
         /// <summary>
         /// Tile-footprint rectangles of containers detected within reach of this projection's
-        /// <see cref="TargetArea"/>. Empty means no nearby containers (paste falls back to player inventory).
-        /// Updated by <see cref="ProjectionSystem"/> whenever the projection overlay rebuilds.
+        /// <see cref="TargetArea"/>. Empty means no nearby containers; paste may still use the owner
+        /// player's inventory when that player is inside the same reach window.
         /// </summary>
         public List<Rectangle> Inventories { get; private set; } = [];
 
@@ -196,7 +195,8 @@ namespace TheArchitectsBlueprintMod.Core
             ArgumentNullException.ThrowIfNull(selection);
             _selection = selection.Clone();
             Define(_selection.Area);
-            RefreshTargetTiles();
+            // Define seeds every cell as included; copy the selection snapshot mask onto target tiles.
+            SyncInclusion();
             if (TABLog.IsDebugEnabled)
                 TABLog.Debug(
                     $"Projection.AssignSelection (init): id={Id} owner={Owner} area=({Area.X},{Area.Y}) {Area.Width}x{Area.Height}",
@@ -413,13 +413,13 @@ namespace TheArchitectsBlueprintMod.Core
 
         /// <summary>
         /// Scans <see cref="Main.chest"/> for entries whose full tile footprint lies within
-        /// <see cref="TargetArea"/> plus two tiles outward.
+        /// <see cref="TargetArea"/> plus <see cref="Inventory.ReachTiles"/> outward.
         /// </summary>
         public void RefreshInventories()
         {
+            // --- Rebuild nearby chest footprints from authoritative world chest state.
             Inventories.Clear();
-            Rectangle searchArea = TargetArea;
-            searchArea.Inflate(2, 2);
+            Rectangle searchArea = InventoryManager.GetInventorySearchArea(TargetArea);
 
             for (int ci = 0; ci < Main.maxChests; ci++)
             {

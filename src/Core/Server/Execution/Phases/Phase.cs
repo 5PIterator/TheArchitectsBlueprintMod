@@ -53,9 +53,9 @@ namespace TheArchitectsBlueprintMod.Core.Phases
                 ClearingTask task = queue.Dequeue();
                 PasteProgress progress = Operation.CreateBatchProgress(i + 1, batchTotal);
                 task.AddTilesTo(currentStepTiles, Operation.PasteConfig.Limits.Server.MaxTilesPerCategory);
-                if (task.Execute(in context, in progress))
+                if (task.Execute(in context, in progress, out PasteProgressOutcome outcome, out var failReason, out string? detail))
                 {
-                    Operation.RecordTaskCompletion();
+                    Operation.RecordTaskCompletion(outcome, failReason, detail);
                     success++;
                     if (overlayDoneThisLayer is not null)
                     {
@@ -92,16 +92,16 @@ namespace TheArchitectsBlueprintMod.Core.Phases
                 PlacingTask task = queue.Dequeue();
                 PasteProgress progress = Operation.CreateBatchProgress(i + 1, batchTotal);
                 task.AddTilesTo(currentStepTiles, Operation.PasteConfig.Limits.Server.MaxTilesPerCategory);
-                if (task.Execute(in context, in progress))
+                if (task.Execute(in context, in progress, out PasteProgressOutcome outcome, out var failReason, out string? detail))
                 {
-                    Operation.RecordTaskCompletion();
+                    Operation.RecordTaskCompletion(outcome, failReason, detail);
                     success++;
                     if (overlayDoneThisLayer is not null)
                     {
                         for (int ti = 0; ti < task.Tiles.Count; ti++)
                             overlayDoneThisLayer.Add(task.Tiles[ti].World);
                     }
-                    if (successfulPlacedWorldTiles is not null)
+                    if (successfulPlacedWorldTiles is not null && outcome == PasteProgressOutcome.Ok)
                     {
                         for (int ti = 0; ti < task.Tiles.Count; ti++)
                             successfulPlacedWorldTiles.Add(task.Tiles[ti].World);

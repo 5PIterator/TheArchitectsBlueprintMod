@@ -22,6 +22,15 @@ namespace TheArchitectsBlueprintMod.Config
         public bool EnableCustomInteractionMap;
 
         [DefaultValue(true)]
+        public bool EnableWandDiscovery;
+
+        [DefaultValue(true)]
+        public bool EnablePaintDiscovery;
+
+        [DefaultValue(true)]
+        public bool EnableVineDiscovery;
+
+        [DefaultValue(true)]
         public bool EnableBiomeConversions;
 
         [DefaultValue(true)]
@@ -31,6 +40,15 @@ namespace TheArchitectsBlueprintMod.Config
 
         [DefaultValue(false)]
         public bool RunPlacementDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunWandDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunPaintDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunVineDiscovery;
 
         [DefaultValue(false)]
         public bool RunBiomeDiscovery;
@@ -56,6 +74,9 @@ namespace TheArchitectsBlueprintMod.Config
 
             // One-shot action toggles: saving with true enqueues work, then they reset to false.
             RunPlacementDiscovery = false;
+            RunWandDiscovery = false;
+            RunPaintDiscovery = false;
+            RunVineDiscovery = false;
             RunBiomeDiscovery = false;
             RunShimmerDiscovery = false;
             RunCompileNow = false;

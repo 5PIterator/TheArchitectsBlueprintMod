@@ -52,6 +52,7 @@ namespace TheArchitectsBlueprintMod.Core
         private readonly PasteTileLookup Lookup;
         private readonly List<Inventory> _inventories = [];
         private readonly InventoryLookup _inventoryLookup = new();
+        private readonly InteractionBudget _interactionBudget = new();
 
         internal readonly List<Queue<ClearingTask>> clearTasks = [];
         internal readonly List<Queue<ClearingTask>> cutTasks = [];
@@ -203,7 +204,11 @@ namespace TheArchitectsBlueprintMod.Core
         internal PasteProgress CreateBatchProgress(int batchNumber, int batchTotal) =>
             _progress.ForBatch(batchNumber, batchTotal);
 
-        internal void RecordTaskCompletion() => _progress.RecordCompletion();
+        internal void RecordTaskCompletion(
+            PasteProgressOutcome outcome,
+            LayerFailReason failReason = LayerFailReason.None,
+            string? detail = null) =>
+            _progress.RecordCompletion(outcome, failReason, detail);
 
         /// <summary>
         /// Called when this operation leaves <see cref="PastingSystem"/> (completion, cancel, or invalid projection).
@@ -230,7 +235,8 @@ namespace TheArchitectsBlueprintMod.Core
                 inventoryLookup: _inventoryLookup,
                 policy: _policy,
                 lookup: Lookup,
-                effectSession: EffectSession);
+                effectSession: EffectSession,
+                interactionBudget: _interactionBudget);
         }
 
         /// <summary>Builds place context with every pending frame candidate from the frame layer queue.</summary>
@@ -243,7 +249,8 @@ namespace TheArchitectsBlueprintMod.Core
                 policy: _policy,
                 lookup: Lookup,
                 effectSession: EffectSession,
-                pendingFramePlaceCandidates: CollectPendingFramePlaceCandidates(frameLayerIndex));
+                pendingFramePlaceCandidates: CollectPendingFramePlaceCandidates(frameLayerIndex),
+                interactionBudget: _interactionBudget);
         }
 
         /// <summary>Collects logical frame objects still waiting in the frame place queue.</summary>
@@ -267,13 +274,42 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>
-        /// Reloads chest inventories referenced by the projection.
+        /// Reloads nearby chest inventories and optionally the in-range player inventory fallback.
         /// </summary>
         private void RefreshInventories()
         {
+            // --- Rescan chests, assign distance priorities, then append in-range player as priority 0.
             _inventories.Clear();
-            foreach (Rectangle inventory in Projection.Inventories)
-                _inventories.Add(Inventory.FromRectangle(inventory));
+
+            // Refresh chest footprints from world state so paste does not rely on a stale client cache.
+            Projection.RefreshInventories();
+            Rectangle targetArea = Projection.TargetArea;
+
+            int discoveryIndex = 0;
+            foreach (Rectangle footprint in Projection.Inventories)
+            {
+                int priority = InventoryManager.ComputeChestPriority(footprint, targetArea);
+                _inventories.Add(Inventory.FromRectangle(footprint, priority, discoveryIndex));
+                discoveryIndex++;
+            }
+
+            // Player inventory is only eligible inside the same reach window used for chests.
+            Player player = Main.player[Projection.Owner];
+            if (InventoryManager.IsPlayerInInventoryRange(player, targetArea))
+                _inventories.Add(Inventory.FromPlayer(player, Inventory.PlayerPriority, discoveryIndex));
+
+            // Prefer nearer chests first for store iteration; keep discovery order for equal distances.
+            _inventories.Sort(CompareInventoryPriority);
+        }
+
+        /// <summary>Orders inventory sources by descending priority, then ascending discovery index.</summary>
+        private static int CompareInventoryPriority(Inventory a, Inventory b)
+        {
+            // --- Higher priority first; equal priorities keep discovery order.
+            int byPriority = b.Priority.CompareTo(a.Priority);
+            if (byPriority != 0)
+                return byPriority;
+            return a.DiscoveryIndex.CompareTo(b.DiscoveryIndex);
         }
 
         /// <summary>
@@ -377,7 +413,11 @@ namespace TheArchitectsBlueprintMod.Core
             TABLog.Debug(
                 $"Prep: begin prepTileBudget={_planPhase.TickSize} sourceTiles={Projection.SourceTiles.Length} lookupTiles={Lookup.Count} targetTiles={Projection.TargetTiles.Length} clearStrategy={_planPhase.Strategy.Style} sourceAreaClear={ApplySourceClear}",
                 "Paste");
-            TABLog.Info("--- [Plan] START ---", chatColor: Color.LightSkyBlue);
+            TABLog.Info(
+                "--- [Plan] START ---",
+                TABLog.GenericCategory,
+                chatColor: Color.LightSkyBlue,
+                ownerPlayer: Projection.Owner);
         }
 
         /// <summary>
@@ -620,8 +660,10 @@ namespace TheArchitectsBlueprintMod.Core
             TABLog.Debug($"Prep: queues ready | placeBatches={placeBatches} clearBatches={clearBatches}", "Paste");
             TABLog.Debug($"Prep: complete placeBatches={placeBatches} clearBatches={clearBatches}", "Paste");
             TABLog.Info(
-                $"--- [Plan] END (placeBatches={placeBatches}, clearBatches={clearBatches}) ---",
-                chatColor: Color.LightGreen);
+                PastingInfoLog.FormatPlanEnd(placeBatches, clearBatches),
+                TABLog.GenericCategory,
+                chatColor: Color.LightGreen,
+                ownerPlayer: Projection.Owner);
             if (placeBatches == 0)
             {
                 TABLog.Warn(
@@ -885,7 +927,7 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>
-        /// Queues every place layer that applies to the given tile.
+        /// Identifies and queues every place layer for the given tile.
         /// </summary>
         private void QueuePlaceLayersForTile(
             Point rel,
@@ -895,33 +937,42 @@ namespace TheArchitectsBlueprintMod.Core
             HashSet<Point>[] queuedPlaceByLayer,
             HashSet<Point> allowedPlaceRelatives)
         {
-            // --- Vacant payload intent is handled by clear (and sweep when enabled), not place layers.
+            // --- Identify payload layers and enqueue place work; Place owns item/validity failures.
+
+            // Vacant payload intent is handled by clear (and sweep when enabled), not place layers.
             if (tile.PayloadCell.IsEmpty)
                 return;
 
-            // --- Sweep phase applies payload directly; layer place identification is unnecessary when sweep runs.
+            // Sweep phase applies payload directly; layer place identification is unnecessary when sweep runs.
             if (_sweepPhase.Active)
                 return;
 
-            // --- Identify place candidates from the payload intent.
-
+            // Identify place candidates from the payload intent.
             var identifiedLayers = LayerSystem.Identify(in tile, in lookup, Pipeline, planningContext, PasteConfig, PasteSubject.Payload);
             for (int i = 0; i < identifiedLayers.Count; i++)
             {
                 var identified = identifiedLayers[i];
-                TABLog.Debug($"Identify place layer={identified.Layer.Id} rel=({rel.X},{rel.Y}) tiles={identified.Tiles.Count} placementValid={identified.PlacementValid} hasItems={identified.HasRequiredItems}", "Paste");
+                TABLog.Debug(
+                    $"Identify place layer={identified.Layer.Id} rel=({rel.X},{rel.Y}) tiles={identified.Tiles.Count} "
+                    + $"placementValid={identified.PlacementValid} hasItems={identified.HasRequiredItems}",
+                    "Paste");
+
+                // Note pre-clear inventory gaps; Place still decides after Store clears return items.
+                if (planningContext.RequireItems && !identified.HasRequiredItems)
+                {
+                    TABLog.Debug(
+                        $"Plan queues place despite missing items layer={identified.Layer.Id} "
+                        + $"rel=({rel.X},{rel.Y}) — Place/TileExecutor will recheck after Clear",
+                        "Paste");
+                }
             }
 
+            // Queue every identified place batch; Place/TileExecutor own item and validity failures.
             for (int i = 0; i < identifiedLayers.Count; i++)
             {
                 var identified = identifiedLayers[i];
                 var clamped = ClampIdentified(identified.Tiles);
                 if (clamped.Count == 0)
-                    continue;
-
-                if (!planningContext.IsSweepCheat
-                    && ((!planningContext.RetryOnMissingItems && !identified.HasRequiredItems)
-                        || (!planningContext.RetryOnInvalidPlacement && !identified.PlacementValid)))
                     continue;
 
                 for (int j = 0; j < clamped.Count; j++)
@@ -1180,6 +1231,31 @@ namespace TheArchitectsBlueprintMod.Core
 
             while (_currentLayerIndex < queues.Count && queues[_currentLayerIndex].Count == 0)
                 _currentLayerIndex++;
+        }
+
+        /// <summary>
+        /// True when the current layer queue is empty but tile effects from that layer are still in flight.
+        /// </summary>
+        internal bool TryWaitForCurrentLayerEffects<T>(List<Queue<T>> queues)
+        {
+            // --- Keep Wall (and earlier) place arrows finished before Paint observes live walls.
+
+            if (_currentLayerIndex < 0 || _currentLayerIndex >= queues.Count)
+                return false;
+
+            if (queues[_currentLayerIndex].Count > 0 || EffectSession.IsIdle)
+                return false;
+
+            string layerId = _currentPhase == _placePhase
+                ? Pipeline.PlaceOrder[_currentLayerIndex].Id
+                : _currentPhase == _clearPhase
+                    ? Pipeline.ClearOrder[_currentLayerIndex].Id
+                    : "?";
+            TABLog.Debug(
+                $"Waiting for tile effects before leaving layer={layerId} "
+                + $"queued={EffectSession.PendingMutationCount} inFlight={EffectSession.PendingImpactCount}",
+                "Paste");
+            return true;
         }
 
         private void BuildBlindExecutionQueues()

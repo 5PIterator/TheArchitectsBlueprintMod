@@ -99,37 +99,21 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return HasValidTrunkBaseBelow(in tile, in context);
         }
 
-        /// <summary>Checks whether inventory has the required item for this tile when item checks are enabled.</summary>
+        /// <summary>Natural tree/cactus segments write payload directly and do not consume placement items.</summary>
         public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context)
         {
-            // --- Skip checks when requirements are disabled; otherwise query interaction-map item ids for payload tile + style.
-            if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
-            if (!tile.PayloadCell.HasTile()) return true;
-            int style = tile.PayloadCell.Detail.Style;
-            return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
+            // --- Direct EnqueueApplyPayloadBlock placement never reserves inventory.
+            return true;
         }
 
-        /// <summary>Checks whether this tile can consume an inventory item now.</summary>
-        public override bool CanConsume(in PasteTile tile, in PasteContext context)
-        {
-            // --- Use the same tile+style item lookup as planning checks to keep queue behavior deterministic.
-            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
-            int style = tile.PayloadCell.Detail.Style;
-            return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
-        }
+        /// <summary>Natural tree/cactus placement does not consume inventory.</summary>
+        public override bool CanConsume(in PasteTile tile, in PasteContext context) => true;
 
-        /// <summary>Consumes one item for a successful placement.</summary>
-        public override bool Consume(in PasteTile tile, in PasteContext context) =>
-            TileOperations.Consume(in tile, in context);
+        /// <summary>No inventory debit for direct payload-block tree/cactus writes.</summary>
+        public override bool Consume(in PasteTile tile, in PasteContext context) => true;
 
-        /// <summary>Returns candidate inventory items that can place this payload tile.</summary>
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile)
-        {
-            // --- Resolve tile-item mappings from the interaction map using payload tile type + style.
-            if (!tile.PayloadCell.HasTile()) return null;
-            int style = tile.PayloadCell.Detail.Style;
-            return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
-        }
+        /// <summary>Returns null because tree/cactus segments are not item-placed.</summary>
+        public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
 
         /// <summary>Clears one cluster tile per pass: branches top-down, then trunk column top-down.</summary>
         public override LayerResult Clear(TileBatch batch, in PasteContext context)
@@ -178,9 +162,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     return LayerResult.OkWithRemaining(batch, message, okLabel);
                 return result;
             }
-
-            if (!context.IsSweepCheat && !Consume(in segment, in context))
-                return LayerResult.Fail(LayerFailReason.MissingItems, message);
 
             return RemoveSegmentAt(batch, index, result.Message ?? message, result.OkLabel ?? okLabel);
         }
@@ -510,7 +491,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             int x = tile.World.X;
             int y = tile.World.Y;
             ushort tileType = (ushort)tile.PayloadCell.Block.Type;
-            int style = tile.PayloadCell.Detail.Style;
+            int style = tile.PayloadCell.ResolvePlacementStyle();
 
             if (IsValidSupportTile(Main.tile[x, y], tileType, style))
                 return true;

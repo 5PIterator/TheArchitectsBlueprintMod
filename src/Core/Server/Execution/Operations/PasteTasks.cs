@@ -36,15 +36,32 @@ namespace TheArchitectsBlueprintMod.Core
             => Batch.CollectOverlayPoints(dst, maxRemaining);
 
         /// <summary>
-        /// Executes this clearing task. Returns true if the task is complete, false if it needs to be retried with the remaining tiles.
+        /// Executes this clearing task and reports whether it left the queue.
         /// </summary>
-        public bool Execute(in PasteContext context, in PasteProgress progress)
+        public bool Execute(
+            in PasteContext context,
+            in PasteProgress progress,
+            out PasteProgressOutcome outcome,
+            out LayerFailReason failReason,
+            out string? detail)
         {
+            // --- Run the layer clear, classify the result, then keep or complete the task.
+
             if (Batch.IsEmpty)
+            {
+                outcome = PasteProgressOutcome.Ok;
+                failReason = LayerFailReason.None;
+                detail = null;
                 return true;
+            }
 
             if (!WorldGen.InWorld(Batch.Head.World.X, Batch.Head.World.Y))
+            {
+                outcome = PasteProgressOutcome.Ok;
+                failReason = LayerFailReason.None;
+                detail = null;
                 return true;
+            }
 
             PasteTile head = Batch.Head;
 
@@ -52,7 +69,9 @@ namespace TheArchitectsBlueprintMod.Core
             TABLog.Debug($"Clear execute layer={_layer.Id} world=({Batch.Head.World.X},{Batch.Head.World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
 
             bool taskCompletes = ResolveClearTaskCompletes(in res);
-            PasteProgressOutcome outcome = PasteProgress.ClassifyClearAttempt(in res, taskCompletes);
+            outcome = PasteProgress.ClassifyClearAttempt(in res, taskCompletes);
+            failReason = res.FailReason;
+            detail = res.Detail;
             string? contentMessage = PasteProgress.AppendBatchProgressToContent(res.Message, Batch, in res, outcome);
             PastingInfoLog.Write(progress.WithTaskResult(
                 in head,
@@ -102,15 +121,32 @@ namespace TheArchitectsBlueprintMod.Core
             => Batch.CollectOverlayPoints(dst, maxRemaining);
 
         /// <summary>
-        /// Executes this placing task. Returns true if the task is complete, false if it needs to be retried with the remaining tiles.
+        /// Executes this placing task and reports whether it left the queue.
         /// </summary>
-        internal bool Execute(in PasteContext context, in PasteProgress progress)
+        internal bool Execute(
+            in PasteContext context,
+            in PasteProgress progress,
+            out PasteProgressOutcome outcome,
+            out LayerFailReason failReason,
+            out string? detail)
         {
+            // --- Run the layer place, classify the result, then keep or complete the task.
+
             if (Batch.IsEmpty)
+            {
+                outcome = PasteProgressOutcome.Ok;
+                failReason = LayerFailReason.None;
+                detail = null;
                 return true;
+            }
 
             if (!WorldGen.InWorld(Batch.Head.World.X, Batch.Head.World.Y))
+            {
+                outcome = PasteProgressOutcome.Ok;
+                failReason = LayerFailReason.None;
+                detail = null;
                 return true;
+            }
 
             var head = Batch.Head;
             if (_layer.Id == LayerSystem.Wiring.Id)
@@ -164,7 +200,9 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             bool taskCompletes = ResolvePlaceTaskCompletes(in res, in context);
-            PasteProgressOutcome outcome = PasteProgress.ClassifyPlaceAttempt(in res, in context, taskCompletes);
+            outcome = PasteProgress.ClassifyPlaceAttempt(in res, in context, taskCompletes);
+            failReason = res.FailReason;
+            detail = res.Detail;
             string? contentMessage = PasteProgress.AppendBatchProgressToContent(res.Message, Batch, in res, outcome);
             PastingInfoLog.Write(progress.WithTaskResult(
                 in head,
@@ -177,6 +215,8 @@ namespace TheArchitectsBlueprintMod.Core
 
             if (!res.Success)
             {
+                if (res.FailReason == LayerFailReason.UnresolvedInteraction)
+                    return true;
                 if (!context.RetryOnMissingItems && res.FailReason == LayerFailReason.MissingItems)
                     return true;
                 if (!context.RetryOnInvalidPlacement && res.FailReason == LayerFailReason.InvalidPlacement)
@@ -197,6 +237,9 @@ namespace TheArchitectsBlueprintMod.Core
         {
             if (res.Success)
                 return res.TileBatch is null || res.TileBatch.Tiles.Count == 0;
+
+            if (res.FailReason == LayerFailReason.UnresolvedInteraction)
+                return true;
 
             if (!context.RetryOnMissingItems && res.FailReason == LayerFailReason.MissingItems)
                 return true;

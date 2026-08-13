@@ -336,6 +336,70 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 || (data.AnchorInvalidTiles is { Length: > 0 });
         }
 
+        /// <summary>Returns true when object data declares any tile, wall, or restricted placement anchor.</summary>
+        public static bool HasFrameAnchor(Tile tile) =>
+            HasTileAnchor(tile) || HasWallAnchor(tile) || HasOtherAnchor(tile);
+
+        /// <summary>Returns true when the type/style declares any tile, wall, or restricted placement anchor.</summary>
+        public static bool HasFrameAnchor(int tileType, int style) =>
+            HasTileAnchor(tileType, style) || HasWallAnchor(tileType, style) || HasOtherAnchor(tileType, style);
+
+        /// <summary>Returns true when TileObjectData defines a multi-cell placement footprint.</summary>
+        public static bool IsMultiCellObject(int tileType, int style)
+        {
+            // --- Multi-cell objects need PlaceObject and Frame ordering regardless of anchors.
+            var data = TileObjectData.GetTileData(tileType, style);
+            return data is not null && (data.Width > 1 || data.Height > 1);
+        }
+
+        /// <summary>
+        /// Returns true for tiles whose placement depends on anchors, multi-cell structure, or multiple placement styles.
+        /// Excludes ordinary 1×1 blocks that only auto-frame; does not use solidity.
+        /// </summary>
+        public static bool IsFrameClassification(Tile tile)
+        {
+            // --- Prefer live style-aware anchors, then type+resolved-style dependency checks.
+            if (!tile.HasTile || !IsFrameEligibleTileType(tile.TileType))
+                return false;
+
+            // Live TileObjectData already encodes the placed style/alternate.
+            if (HasFrameAnchor(tile))
+                return true;
+
+            // Resolve style from frames for multi-style and multi-cell checks.
+            int style = 0, alternate = 0;
+            TileObjectData.GetTileInfo(tile, ref style, ref alternate);
+            return MatchesFramePlacementCharacteristics(tile.TileType, style);
+        }
+
+        /// <summary>
+        /// Type-only Frame classification using <paramref name="style"/> (defaults to 0 when style is unknown).
+        /// </summary>
+        public static bool IsFrameClassification(int tileType, int style = 0)
+        {
+            // --- Known non-falling tiles with dependency, footprint, or multi-style placement needs.
+            if (!IsFrameEligibleTileType(tileType))
+                return false;
+
+            return MatchesFramePlacementCharacteristics(tileType, style);
+        }
+
+        /// <summary>Returns true when type/style has anchors, a multi-cell footprint, or multiple placement styles.</summary>
+        public static bool MatchesFramePlacementCharacteristics(int tileType, int style)
+        {
+            // --- Dependency anchors, multi-cell footprints, or multi-style interaction-map entries.
+            if (HasFrameAnchor(tileType, style))
+                return true;
+
+            if (InteractionMapProvider.HasMultipleTilePlacementStyles((ushort)tileType))
+                return true;
+
+            return IsMultiCellObject(tileType, style);
+        }
+
+        private static bool IsFrameEligibleTileType(int tileType) =>
+            TileLoaderSupport.IsKnownTileType(tileType) && !TileID.Sets.Falling[tileType];
+
         public static PasteTile GetPlacementOriginTile(IReadOnlyList<PasteTile> tiles) =>
             GetOriginTile(tiles, static tile => tile.PayloadCell.HasTile(), static tile => tile.PayloadCell.ToTile());
 
@@ -479,7 +543,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>Returns true when this candidate should use single-tile placement instead of PlaceObject.</summary>
         public static bool UsesTilePlacement(IReadOnlyList<PasteTile> tiles, in PasteTile origin)
         {
-            // --- Route grass, base-tile conversions, and 1x1 objects through TileOperations.
+            // --- Route grass, base-tile conversions, tracks, and plain 1x1 objects through TileOperations.
             if (!origin.PayloadCell.HasTile())
                 return false;
 
@@ -487,9 +551,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!TileLoaderSupport.IsKnownTileType(tileType))
                 return false;
 
-            int style = origin.PayloadCell.Detail.Style;
+            int style = origin.PayloadCell.ResolvePlacementStyle();
             if (InteractionMapProvider.GetRequiredBaseTile(tileType, style).HasValue || TileID.Sets.Grass[tileType])
                 return true;
+
+            // Minecart tracks are multi-style but still place via PlaceTile, not PlaceObject.
+            if (tileType == TileID.MinecartTrack)
+                return true;
+
+            if (InteractionMapProvider.HasMultipleTilePlacementStyles(tileType))
+                return false;
 
             if (tiles.Count != 1)
                 return false;
@@ -512,7 +583,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         }
 
         /// <summary>Returns true when Terraria placement rules allow scheduling this frame candidate now.</summary>
-        public static bool CanPlaceFrameCandidate(FrameCandidate candidate, in PasteContext context)
+        public static bool CanPlaceFrameCandidate(
+            FrameCandidate candidate,
+            in PasteContext context,
+            IReadOnlyList<FrameCandidate>? allPending = null)
         {
             // --- Validate replace rules, then use TileObject.CanPlace for full anchor-aware placement checks.
             PasteTile origin = candidate.OriginTile;
@@ -525,10 +599,17 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
             int x = origin.World.X;
             int y = origin.World.Y;
-            int style = origin.PayloadCell.Detail.Style;
+            int style = origin.PayloadCell.ResolvePlacementStyle();
             Tile dest = Main.tile[x, y];
             if (dest.HasTile && dest.TileType == tileType)
                 return true;
+
+            // --- Defer selection until inventory can supply the item when retry-on-missing is enabled.
+            if (context.RequireItems
+                && context.RetryOnMissingItems
+                && !context.IsSweepCheat
+                && !HasRequiredItemsForFrameCandidate(candidate, in context))
+                return false;
 
             if (UsesTilePlacement(candidate.Tiles, in origin))
                 return TileLoaderSupport.IsCanPlaceAllowedAt(x, y, tileType, in context);
@@ -539,7 +620,51 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (context.IsSweepCheat)
                 return true;
 
-            return TileObject.CanPlace(x, y, tileType, style, 0, out _, onlyCheck: true);
+            if (TileObject.CanPlace(x, y, tileType, style, origin.PayloadCell.Detail.Alternate, out _, onlyCheck: true))
+                return true;
+
+            if (allPending is null)
+                return false;
+
+            return HasReadyFramePlacementSupport(candidate, allPending, in context);
+        }
+
+        /// <summary>Returns true when tracked inventories can supply the candidate's placement item.</summary>
+        public static bool HasRequiredItemsForFrameCandidate(FrameCandidate candidate, in PasteContext context)
+        {
+            // --- Empty payload and sweep cheat never require a consumable item.
+            if (!context.RequireItems || context.IsSweepCheat)
+                return true;
+
+            PasteTile origin = candidate.OriginTile;
+            if (!origin.PayloadCell.HasTile())
+                return true;
+
+            return TileInteractionChecks.HasTilePlacementItems(
+                (ushort)origin.PayloadCell.Block.Type,
+                origin.PayloadCell.ResolvePlacementStyle(),
+                origin.World.X,
+                origin.World.Y,
+                in context);
+        }
+
+        /// <summary>Returns the index of the best globally ready frame candidate in bottom-up order.</summary>
+        public static int SelectNextGlobalPlaceCandidateIndex(
+            IReadOnlyList<FrameCandidate> allPending,
+            in PasteContext context) =>
+            SelectNextPlaceCandidateIndex(allPending, allPending, in context);
+
+        /// <summary>Returns true when a place batch still owns the given placement origin.</summary>
+        public static bool BatchContainsPlaceOrigin(IReadOnlyList<PasteTile> tiles, Point originWorld)
+        {
+            List<FrameCandidate> candidates = GroupIntoCandidates(tiles, forClear: false);
+            for (int i = 0; i < candidates.Count; i++)
+            {
+                if (candidates[i].OriginWorld == originWorld)
+                    return true;
+            }
+
+            return false;
         }
 
         /// <summary>Returns the index of the first currently placeable frame candidate in bottom-up order.</summary>
@@ -553,10 +678,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             for (int i = 0; i < localCandidates.Count; i++)
             {
                 FrameCandidate candidate = localCandidates[i];
-                if (!CanPlaceFrameCandidate(candidate, in context))
+                if (IsBlockedFromPlace(candidate, allPending, in context))
                     continue;
 
-                if (IsBlockedFromPlace(candidate, allPending))
+                if (!CanPlaceFrameCandidate(candidate, in context, allPending))
                     continue;
 
                 if (selected < 0 || ComparePlaceOrder(candidate, localCandidates[selected]) < 0)
@@ -632,11 +757,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     return true;
             }
 
-            return false;
+            return IsVerticallyStackedSupport(data, supportedOriginWorld, supporter);
         }
 
         /// <summary>Returns true when another pending candidate must be placed before this one.</summary>
-        public static bool IsBlockedFromPlace(FrameCandidate candidate, IReadOnlyList<FrameCandidate> pending)
+        public static bool IsBlockedFromPlace(
+            FrameCandidate candidate,
+            IReadOnlyList<FrameCandidate> pending,
+            in PasteContext context)
         {
             // --- Defer placement while a lower pending object this candidate anchors to is not yet in the world.
             for (int i = 0; i < pending.Count; i++)
@@ -645,7 +773,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 if (other.OriginWorld == candidate.OriginWorld)
                     continue;
 
-                if (IsSupportedByPlacement(candidate, other) && !IsCandidatePresentInWorld(other))
+                if (IsSupportedByPlacement(candidate, other) && !IsCandidatePresentInWorld(other, in context))
                     return true;
             }
 
@@ -653,7 +781,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         }
 
         /// <summary>Returns true when the candidate's payload object already exists in the live world.</summary>
-        public static bool IsCandidatePresentInWorld(FrameCandidate candidate)
+        public static bool IsCandidatePresentInWorld(FrameCandidate candidate, in PasteContext context)
         {
             // --- Exact match is ideal; type presence at origin is enough for stacked-support ordering.
             if (IsCandidateAlreadyPlaced(candidate))
@@ -663,8 +791,36 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!origin.PayloadCell.HasTile())
                 return true;
 
+            ushort tileType = origin.PayloadCell.Block.Type;
             Tile live = Main.tile[origin.World.X, origin.World.Y];
-            return live.HasTile && live.TileType == origin.PayloadCell.Block.Type;
+            if (live.HasTile && live.TileType == tileType)
+                return true;
+
+            return context.EffectSession?.HasPendingOrInFlightPlacementAt(origin.World, tileType) == true;
+        }
+
+        /// <summary>Returns true when every frame-on-frame supporter is live or already scheduled.</summary>
+        private static bool HasReadyFramePlacementSupport(
+            FrameCandidate candidate,
+            IReadOnlyList<FrameCandidate> pending,
+            in PasteContext context)
+        {
+            bool dependsOnFrameSupport = false;
+            for (int i = 0; i < pending.Count; i++)
+            {
+                FrameCandidate other = pending[i];
+                if (other.OriginWorld == candidate.OriginWorld)
+                    continue;
+
+                if (!IsSupportedByPlacement(candidate, other))
+                    continue;
+
+                dependsOnFrameSupport = true;
+                if (!IsCandidatePresentInWorld(other, in context))
+                    return false;
+            }
+
+            return dependsOnFrameSupport;
         }
 
         /// <summary>Returns true when another pending candidate still depends on this candidate for support.</summary>
@@ -752,13 +908,28 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return AnchorAcceptsLiveTile(anchor, supportWorld, data);
             }
 
+            if (data.AnchorWall)
+            {
+                // Wall-anchored objects defer when another pending frame occupies their footprint.
+                int ox = data.Origin.X;
+                int oy = data.Origin.Y;
+                int topLeftX = objectOriginWorld.X - ox;
+                int topLeftY = objectOriginWorld.Y - oy;
+                return supportWorld.X >= topLeftX && supportWorld.X < topLeftX + data.Width
+                    && supportWorld.Y >= topLeftY && supportWorld.Y < topLeftY + data.Height;
+            }
+
             return false;
         }
 
         /// <summary>Returns true when the live tile at the anchor check position satisfies the anchor type.</summary>
         private static bool AnchorAcceptsLiveTile(AnchorData anchor, Point supportWorld, TileObjectData data)
         {
-            // --- Use solidity heuristics for standard anchors and tile-type tables for restricted anchors.
+            // --- Restricted anchors (e.g. crates stacking on crates) must win over coarse solidity checks.
+            Tile support = Main.tile[supportWorld.X, supportWorld.Y];
+            if (data.AnchorValidTiles is { Length: > 0 })
+                return support.HasTile && data.isValidTileAnchor(support.TileType);
+
             const AnchorType StandardSupportMask =
                 AnchorType.SolidTile |
                 AnchorType.SolidWithTop |
@@ -766,14 +937,66 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 AnchorType.SolidBottom |
                 AnchorType.EmptyTile;
 
-            Tile support = Main.tile[supportWorld.X, supportWorld.Y];
             if ((anchor.type & StandardSupportMask) != AnchorType.None)
                 return support.HasTile;
 
-            if (data.AnchorValidTiles is { Length: > 0 })
-                return support.HasTile && data.isValidTileAnchor(support.TileType);
-
             return anchor.type != AnchorType.None && support.HasTile;
+        }
+
+        /// <summary>Returns true when supporter sits directly below supported object's footprint with valid anchor overlap.</summary>
+        private static bool IsVerticallyStackedSupport(
+            TileObjectData data,
+            Point supportedOriginWorld,
+            FrameCandidate supporter)
+        {
+            if (data.AnchorBottom == default && data.AnchorValidTiles is not { Length: > 0 })
+                return false;
+
+            int ox = data.Origin.X;
+            int oy = data.Origin.Y;
+            int supportedBottom = supportedOriginWorld.Y - oy + data.Height - 1;
+            int requiredSupportRow = supportedBottom + 1;
+
+            int supportedLeft = supportedOriginWorld.X - ox;
+            int supportedRight = supportedLeft + data.Width - 1;
+
+            int supporterMinY = int.MaxValue;
+            int supporterMinX = int.MaxValue;
+            int supporterMaxX = int.MinValue;
+            for (int i = 0; i < supporter.Tiles.Count; i++)
+            {
+                Point world = supporter.Tiles[i].World;
+                if (world.Y < supporterMinY)
+                    supporterMinY = world.Y;
+
+                if (world.X < supporterMinX)
+                    supporterMinX = world.X;
+
+                if (world.X > supporterMaxX)
+                    supporterMaxX = world.X;
+            }
+
+            if (supporterMinY != requiredSupportRow)
+                return false;
+
+            if (supporterMaxX < supportedLeft || supporterMinX > supportedRight)
+                return false;
+
+            return SupporterPayloadSatisfiesAnchor(data, supporter);
+        }
+
+        /// <summary>Returns true when supporter payload type satisfies supported object's anchor restrictions.</summary>
+        private static bool SupporterPayloadSatisfiesAnchor(TileObjectData data, FrameCandidate supporter)
+        {
+            PasteTile origin = supporter.OriginTile;
+            if (!origin.PayloadCell.HasTile())
+                return false;
+
+            ushort supporterType = origin.PayloadCell.Block.Type;
+            if (data.AnchorValidTiles is { Length: > 0 })
+                return data.isValidTileAnchor(supporterType);
+
+            return true;
         }
 
         private static bool HasOtherAnchorData(TileObjectData data) =>
@@ -932,8 +1155,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            int style = origin.PayloadCell.Detail.Style;
+            int style = origin.PayloadCell.ResolvePlacementStyle();
             int alternate = origin.PayloadCell.Detail.Alternate;
+            short frameX = origin.PayloadCell.Block.FrameX;
+            short frameY = origin.PayloadCell.Block.FrameY;
             Tile dest = Main.tile[x, y];
 
             if (dest.HasTile && dest.TileType == tileType)
@@ -945,7 +1170,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
             if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
             {
-                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
+                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
@@ -953,25 +1178,35 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 TileExecutor.EnqueueVoidKillTile(x, y, in context);
 
             if (!context.IsSweepCheat
-                && !TileObject.CanPlace(x, y, tileType, style, 0, out _, onlyCheck: true))
+                && !TileObject.CanPlace(x, y, tileType, style, alternate, out _, onlyCheck: true))
             {
-                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
+                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            if (!TileExecutor.HasItemForTile(tileType, style, in context))
+            if (!TileExecutor.TryCheckTileItem(tileType, style, in context, out LayerFailReason itemFailReason))
             {
-                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
-                return LayerResult.Fail(LayerFailReason.MissingItems, message);
+                TileItemAvailability issue = TileExecutor.GetTileItemAvailability(tileType, style, in context);
+                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject", tileType, issue, alternate, frameX, frameY);
+                return LayerResult.Fail(itemFailReason, message);
             }
 
-            if (!TileExecutor.EnqueuePlaceObject(x, y, tileType, style, alternate, in context, consumeItem: true))
+            if (!TileExecutor.EnqueuePlaceObject(
+                    x,
+                    y,
+                    tileType,
+                    style,
+                    alternate,
+                    in context,
+                    consumeItem: true,
+                    postPlaceFrameX: frameX,
+                    postPlaceFrameY: frameY))
             {
-                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject");
+                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            PastingDebug.LogPlacement(tileType, style, null, x, y, true, "PlaceObject");
+            PastingDebug.LogPlacement(tileType, style, null, x, y, true, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
             return LayerResult.Ok(message, okLabel);
         }
 
@@ -993,7 +1228,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 : LayerResult.Fail(LayerFailReason.ClearBlocked, message);
         }
 
-        public static LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context)
+        public static LayerResult Place(IReadOnlyList<PasteTile> tiles, in PasteContext context, bool styleAgnostic = false)
         {
             if (tiles.Count == 0) return LayerResult.Ok();
 
@@ -1008,11 +1243,18 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, LayerLogFormat.FormatTile(origin.PayloadTile));
             }
 
-            int style = origin.PayloadCell.Detail.Style;
+            int style = origin.PayloadCell.ResolvePlacementStyle();
             var baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
             PastingDebug.LogInteractionLookup(tileType, style, baseTileId, null);
 
             Tile dest = Main.tile[x, y];
+            if (context.EffectSession?.HasPendingOrInFlightPlacementAt(new Point(x, y), tileType) == true)
+            {
+                return LayerResult.Ok(
+                    LayerLogFormat.FormatTile(origin.PayloadTile),
+                    LayerLogFormat.PlacedLabel(in context));
+            }
+
             if (dest.HasTile && dest.TileType == tileType)
             {
                 if (!FrameOperations.PasteFrame(tiles, in context))
@@ -1038,16 +1280,23 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 ushort baseType = (ushort)baseTileId.Value;
                 if (!dest.HasTile || dest.TileType != baseType)
                 {
+                    if (context.EffectSession?.HasPendingOrInFlightPlacementAt(new Point(x, y), baseType) == true)
+                    {
+                        PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, true, "PlaceBaseTile");
+                        return LayerResult.OkWithRemaining(tiles, message, okLabel);
+                    }
+
                     if (!TileLoaderSupport.IsCanPlaceAllowedAt(x, y, baseType, in context))
                     {
                         PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
                         return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
                     }
 
-                    if (!TileExecutor.HasItemForTile(baseType, 0, in context))
+                    if (!TileExecutor.TryCheckTileItem(baseType, 0, in context, out LayerFailReason baseItemFailReason))
                     {
-                        PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                        return LayerResult.Fail(LayerFailReason.MissingItems, message);
+                        TileItemAvailability issue = TileExecutor.GetTileItemAvailability(baseType, 0, in context);
+                        PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceBaseTile", baseType, issue);
+                        return LayerResult.Fail(baseItemFailReason, message);
                     }
 
                     if (!TileExecutor.EnqueuePlaceTile(x, y, baseType, 0, in context, forced: context.IsSweepCheat, consumeItem: true))
@@ -1090,14 +1339,26 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 }
             }
 
-            if (!TileExecutor.HasItemForTile(tileType, style, in context))
+            if (!TileExecutor.TryCheckTileItem(tileType, style, in context, out LayerFailReason itemFailReason, baseTileId))
             {
-                PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
-                return LayerResult.Fail(LayerFailReason.MissingItems, message);
+                TileItemAvailability issue = TileExecutor.GetTileItemAvailability(tileType, style, in context, baseTileId);
+                PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile", tileType, issue);
+                return LayerResult.Fail(itemFailReason, message);
             }
 
             bool forcePlace = context.IsSweepCheat || baseTileId.HasValue || context.UseReplacePlace;
-            if (!TileExecutor.EnqueuePlaceTile(x, y, tileType, style, in context, forcePlace, consumeItem: true))
+            short frameX = origin.PayloadCell.Block.FrameX;
+            short frameY = origin.PayloadCell.Block.FrameY;
+            if (!TileExecutor.EnqueuePlaceTile(
+                    x,
+                    y,
+                    tileType,
+                    style,
+                    in context,
+                    forcePlace,
+                    consumeItem: true,
+                    postPlaceFrameX: frameX,
+                    postPlaceFrameY: frameY))
             {
                 PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
@@ -1108,6 +1369,54 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         }
 
         public static bool Consume(in PasteTile tile, in PasteContext context) => true;
+    }
+
+    /// <summary>Shared interaction-aware tile item checks for placement layers.</summary>
+    internal static class TileInteractionChecks
+    {
+        public static bool HasTilePlacementItems(ushort tileType, int style, int x, int y, in PasteContext context)
+        {
+            Tile target = Main.tile[x, y];
+            if (target.HasTile && target.TileType == tileType)
+                return true;
+
+            int? requiredBase = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
+            if (requiredBase.HasValue)
+            {
+                ushort baseType = (ushort)requiredBase.Value;
+                if (!target.HasTile || target.TileType != baseType)
+                {
+                    if (!TileExecutor.HasItemForTile(baseType, 0, in context))
+                        return false;
+                    return TileExecutor.HasItemForTile(tileType, style, in context, baseType);
+                }
+
+                return TileExecutor.HasItemForTile(tileType, style, in context, baseType);
+            }
+
+            return TileExecutor.HasItemForTile(tileType, style, in context);
+        }
+
+        public static IReadOnlyList<int>? GetToolItemIds(ushort tileType, int style, int x, int y)
+        {
+            Tile target = Main.tile[x, y];
+            int? requiredBase = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
+            int? baseId = null;
+            if (requiredBase.HasValue)
+            {
+                ushort baseType = (ushort)requiredBase.Value;
+                if (target.HasTile && target.TileType == baseType)
+                    baseId = requiredBase;
+            }
+
+            foreach (InteractionEntry entry in InteractionMapProvider.EnumerateTileInteractions(tileType, style, baseId))
+            {
+                if (entry.ItemId is int toolId && toolId > 0)
+                    return [toolId];
+            }
+
+            return InteractionMapProvider.GetTileItemIds(tileType, style);
+        }
     }
 
     internal static class DetailOperations
@@ -1136,7 +1445,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!payloadCell.HasTile() || !IsMechanismTileType((ushort)payloadCell.Block.Type))
                 return null;
 
-            int style = payloadCell.Detail.Style;
+            int style = payloadCell.ResolvePlacementStyle();
             return InteractionMapProvider.GetTileItemIds((ushort)payloadCell.Block.Type, style);
         }
 

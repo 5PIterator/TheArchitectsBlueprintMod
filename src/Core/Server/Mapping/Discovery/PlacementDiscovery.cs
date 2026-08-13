@@ -12,12 +12,12 @@ using TheArchitectsBlueprintMod.Utils;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.ObjectData;
 namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Discovers placement interactions for items with createTile/createWall.
-    /// 1. Frames (multitiles) → direct placement. 2. Try direct placement, map successes. 3. Failures → try baseTileContext from BaseContext.itr.
+    /// 1. Frame-classified tiles (anchors, multitiles, multi-style) → direct map entry without chamber simulation.
+    /// 2. Try direct placement, map successes. 3. Failures → try baseTileContext from BaseContext.itr.
     /// Run via command to produce Placement.itr.
     /// </summary>
     internal sealed class PlacementDiscovery : DiscoveryBase
@@ -92,7 +92,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 if (createWall >= 0 && item.consumable)
                 {
                     yield return null;
-                    map.AddWall(createWall, InteractionEntry.Create("Wall", item: ContentNameResolver.GetItemName(i), itemId: i, style: null));
+                map.AddWall(createWall, InteractionEntry.Create("Wall", item: ContentNameResolver.GetItemName(i), itemId: i, style: null, yield: 1));
                     wallsAdded++;
                 }
             }
@@ -125,9 +125,9 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             string tileName = ContentNameResolver.GetTileName(createTile);
             string itemPrefix = $"[{itemName}] ";
 
-            if (IsFrameTile(createTile))
+            if (FrameLayer.IsFrameTileType((ushort)createTile))
             {
-                map.AddTile(createTile, InteractionEntry.Create("Tile", item: itemName, itemId: itemId, style: item.placeStyle >= 0 ? item.placeStyle : null));
+                map.AddTile(createTile, InteractionEntry.Create("Tile", item: itemName, itemId: itemId, style: item.placeStyle >= 0 ? item.placeStyle : null, yield: 1));
                 return 1;
             }
 
@@ -141,7 +141,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             if (directSuccess)
             {
                 chamber.RestoreCell(testX, testY, saved);
-                map.AddTile(createTile, InteractionEntry.Create("Tile", item: itemName, itemId: itemId, style: item.placeStyle >= 0 ? item.placeStyle : null));
+                map.AddTile(createTile, InteractionEntry.Create("Tile", item: itemName, itemId: itemId, style: item.placeStyle >= 0 ? item.placeStyle : null, yield: 1));
                 return 1;
             }
 
@@ -151,11 +151,24 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 chamber.ClearAndSetTile(testX, testY, baseTileId);
                 WorldGen.PlaceTile(testX, testY, createTile, mute: true, forced: true, plr: -1, style: placeStyle);
                 var tile = Main.tile[testX, testY];
-                if (tile.HasTile && tile.TileType == createTile)
-                {
-                    map.AddTile(createTile, InteractionEntry.Create("Tile", baseId: baseTileId, @base: ContentNameResolver.GetTileName(baseTileId), item: itemName, itemId: itemId, yield: 1, style: item.placeStyle >= 0 ? item.placeStyle : null));
-                    added++;
-                }
+                if (!tile.HasTile)
+                    continue;
+
+                // Some items (e.g. moss) produce a different tile on certain bases than item.createTile
+                // (BrownMoss on GrayBrick -> BrownMossBrick, not BrownMoss).
+                int resultTileId = tile.TileType;
+                if (resultTileId == baseTileId)
+                    continue;
+
+                map.AddTile(resultTileId, InteractionEntry.Create(
+                    "Tile",
+                    baseId: baseTileId,
+                    @base: ContentNameResolver.GetTileName(baseTileId),
+                    item: itemName,
+                    itemId: itemId,
+                    yield: 1,
+                    style: item.placeStyle >= 0 ? item.placeStyle : null));
+                added++;
             }
 
             if (added == 0)
@@ -190,26 +203,12 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     "Tile",
                     item: ContentNameResolver.GetItemName(itemId),
                     itemId: itemId,
-                    style: item.placeStyle >= 0 ? item.placeStyle : null));
+                    style: item.placeStyle >= 0 ? item.placeStyle : null,
+                    yield: 1));
                 added++;
             }
 
             return added;
-        }
-
-        /// <summary>
-        /// Returns true for any tile that should be registered directly without chamber simulation.
-        /// condition (tile-anchored, wall-anchored, or other-anchored). The layer system handles
-        /// anchor validation at paste time, so discovery does not need to simulate anchor requirements.
-        /// </summary>
-        private static bool IsFrameTile(int tileType)
-        {
-            if (tileType < 0 || tileType >= TileLoader.TileCount) return false;
-            var data = TileObjectData.GetTileData(tileType, 0);
-            if (data is null) return false;
-            return FrameOperations.HasTileAnchor(tileType, 0)
-                || FrameOperations.HasWallAnchor(tileType, 0)
-                || FrameOperations.HasOtherAnchor(tileType, 0);
         }
 
         private static IEnumerable<int> LoadBaseTileContext(Mod mod, Action<string> log)

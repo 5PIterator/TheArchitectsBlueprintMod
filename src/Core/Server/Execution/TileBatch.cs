@@ -118,6 +118,10 @@ namespace TheArchitectsBlueprintMod.Core
 
         public void ReplaceWith(IReadOnlyList<PasteTile> tiles)
         {
+            // --- OkWithRemaining may pass this batch's own tile list; clearing that list would drop all work.
+            if (ReferenceEquals(_tiles, tiles))
+                return;
+
             _tiles.Clear();
             for (int i = 0; i < tiles.Count; i++)
                 _tiles.Add(tiles[i]);
@@ -127,6 +131,9 @@ namespace TheArchitectsBlueprintMod.Core
         public void ReplaceWith(TileBatch batch)
         {
             // --- Keep the original full-cluster snapshot while swapping in the next remaining queue.
+            if (ReferenceEquals(this, batch))
+                return;
+
             ReplaceWith(batch.Tiles);
             if (_clusterContext is null && batch._clusterContext is not null)
                 _clusterContext = batch._clusterContext;

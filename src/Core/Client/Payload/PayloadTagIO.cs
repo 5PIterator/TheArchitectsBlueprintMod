@@ -548,10 +548,12 @@ namespace TheArchitectsBlueprintMod.Core
 
                 if (tag.ContainsKey("liquid"))
                 {
+                    // Named liquids must resolve; do not silently fall back to water.
                     string? liquidName = tag.GetString("liquid");
                     int? resolved = ContentNameResolver.ResolveLiquidType(liquidName);
-                    if (resolved.HasValue)
-                        data.LiquidData.LiquidType = resolved.Value;
+                    if (!resolved.HasValue)
+                        return false;
+                    data.LiquidData.LiquidType = resolved.Value;
                 }
 
                 if (tag.ContainsKey("lAmt") && TryGetByte(tag, "lAmt", out byte lAmt))
