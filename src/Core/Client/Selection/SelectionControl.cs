@@ -74,6 +74,17 @@ namespace TheArchitectsBlueprintMod.Core
 
         public static SelectionSystem SelectionSystem => ModContent.GetInstance<SelectionSystem>();
 
+        /// <summary>True while the local player is mid-PIN edge define or SET drag.</summary>
+        public bool IsActivelyGesturing(Player player)
+        {
+            // --- Reject remote or menu players, then treat any non-idle gesture mode as active.
+
+            if (player is null || player.whoAmI != Main.myPlayer || Main.gameMenu)
+                return false;
+
+            return _gesture.Mode != Mode.None;
+        }
+
         /// <summary>Begins a PIN gesture (left click).</summary>
         public void BeginPin(Player player, Point cursorTile)
         {
@@ -91,6 +102,8 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Begins a SET gesture (left click).</summary>
         public void BeginSet(Player player, Point cursorTile)
         {
+            // --- Hit-test the selection, bring it to front, then start the matching drag.
+
             var state = GetState(player);
 
             Selection selection = SelectionSystem.GetSelection();
@@ -104,6 +117,9 @@ namespace TheArchitectsBlueprintMod.Core
                 DragKind dragKind = DragKindFromHit(region);
                 if (dragKind != DragKind.None)
                 {
+                    // Focus the selection so the toolbox follows it instead of a later projection.
+                    ModContent.GetInstance<BlueprintSystem>().BringBlueprintToFront(selection);
+                    SelectionSystem.UpdateSelectionOverlay(player);
                     BeginDrag(state, dragKind, player, selection, cursorTile);
                     return;
                 }

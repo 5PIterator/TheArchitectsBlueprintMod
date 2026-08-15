@@ -6,6 +6,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 
 namespace TheArchitectsBlueprintMod.Utils
 {
@@ -114,7 +115,7 @@ namespace TheArchitectsBlueprintMod.Utils
         /// <summary>Reads placeStyle when the item places the given tile type.</summary>
         private static bool TryGetPlacementItemPlaceStyle(int itemType, int tileType, out int placeStyle)
         {
-            // --- Accept only content samples whose createTile matches the live tile.
+            // --- Accept only samples whose createTile is this tile or its furniture counterpart.
 
             placeStyle = 0;
             if (itemType <= ItemID.None || itemType >= ItemLoader.ItemCount)
@@ -123,11 +124,22 @@ namespace TheArchitectsBlueprintMod.Utils
             if (!ContentSamples.ItemsByType.TryGetValue(itemType, out Item? sample) || sample is null)
                 return false;
 
-            if (sample.createTile != tileType || sample.placeStyle < 0)
+            if (!PlacesTileType(sample.createTile, tileType) || sample.placeStyle < 0)
                 return false;
 
             placeStyle = sample.placeStyle;
             return true;
+        }
+
+        /// <summary>True when the item's createTile is this tile or its open/closed furniture counterpart.</summary>
+        private static bool PlacesTileType(int createTile, int tileType)
+        {
+            // --- Door items create the closed tile; captured open doors still use that placeStyle.
+
+            if (createTile == tileType)
+                return true;
+
+            return InteractionMap.TryGetAlternateFurnitureTile(tileType, out int alternate) && alternate == createTile;
         }
 
         /// <summary>Returns the break drop for the wall at world coordinates, if any.</summary>

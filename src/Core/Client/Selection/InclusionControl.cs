@@ -32,6 +32,17 @@ namespace TheArchitectsBlueprintMod.Core
 
         private readonly GestureState _gesture = new();
 
+        /// <summary>True while the local player is mid-INCLUDE or EXCLUDE rectangle gesture.</summary>
+        public bool IsActivelyGesturing(Player player)
+        {
+            // --- Reject remote or menu players, then treat include/exclude modes as active.
+
+            if (player is null || player.whoAmI != Main.myPlayer || Main.gameMenu)
+                return false;
+
+            return _gesture.Mode != Mode.None;
+        }
+
         /// <summary>Begins an INCLUDE rectangle gesture (left click).</summary>
         public void BeginInc(Player player, Point cursorTile) => BeginGesture(player, Mode.Include, cursorTile);
 

@@ -22,7 +22,37 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             if (!TileMappingAuthority.UsesLocalMappingFilesystem())
                 return;
 
+            MigrateSourceMapExtensions();
             CopyTemplates(Mod);
+        }
+
+        /// <summary>Renames leftover SourceMaps <c>*.itr</c> files to <c>*.itr.json</c>.</summary>
+        private static void MigrateSourceMapExtensions()
+        {
+            // --- Append .json so Conversion.itr becomes Conversion.itr.json without overwriting.
+
+            string directory = TileMappingSystem.GetSourceMapsDirectory();
+            if (!Directory.Exists(directory))
+                return;
+
+            foreach (string path in Directory.EnumerateFiles(directory, "*.itr"))
+            {
+                if (path.EndsWith(TileMappingSystem.SourceMapExtension, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                string destPath = path + ".json";
+                if (File.Exists(destPath))
+                    continue;
+
+                try
+                {
+                    File.Move(path, destPath);
+                }
+                catch (Exception ex)
+                {
+                    TABLog.Warn($"Failed to rename {path} to {destPath}: {ex.Message}", "Template");
+                }
+            }
         }
 
         private static void CopyTemplates(Mod mod)

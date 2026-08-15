@@ -362,7 +362,19 @@ namespace TheArchitectsBlueprintMod.Core
                     continue;
 
                 if (cell.Detail.HasTile)
-                    tileIds.Add(cell.Block.Type);
+                {
+                    int tileType = cell.Block.Type;
+                    tileIds.Add(tileType);
+                    // Open doors look up ClosedDoor mappings; load the counterpart too.
+                    if (InteractionMap.TryGetAlternateFurnitureTile(tileType, out int alternateTile))
+                        tileIds.Add(alternateTile);
+
+                    // Include fake place targets so Echo rows stay available for filtered paste maps.
+                    int style = cell.ResolvePlacementStyle();
+                    InteractionEntry? entry = InteractionMapProvider.GetFirstTileInteraction((ushort)tileType, style);
+                    if (entry?.FakeId is int fakeId && fakeId > 0)
+                        tileIds.Add(fakeId);
+                }
 
                 if (cell.Wall.Type != WallID.None)
                     wallIds.Add(cell.Wall.Type);

@@ -81,12 +81,12 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
             Log($"Discovered {discovered} items with shimmer transforms.");
             SaveShimmerMap(mod, map, Log);
-            Log($"Part 1 complete. Output: {GetOutputPath("ShimmerMap.itr")}");
+            Log($"Part 1 complete. Output: {GetOutputPath("ShimmerMap")}");
             yield return null;
 
             Log("Part 2: Pairing with Placement.itr and exporting Shimmer.itr...");
             BuildAndSaveShimmerItr(mod, map, Log);
-            Log($"Shimmer discovery complete. Output: {GetOutputPath("Shimmer.itr")}");
+            Log($"Shimmer discovery complete. Output: {GetOutputPath("Shimmer")}");
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "shimmerMap"),
                 Data = output,
             };
-            SaveJson(GetOutputPath("ShimmerMap.itr"), doc, log, "ShimmerMap");
+            SaveJson(GetOutputPath("ShimmerMap"), doc, log, "ShimmerMap");
         }
 
         private static Dictionary<string, List<ShimmerResultOutput>> ToNameBasedShimmerMap(ShimmerMapInternal map)
@@ -212,7 +212,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "shimmer"),
                 Data = output,
             };
-            SaveJson(GetOutputPath("Shimmer.itr"), doc, log, "Shimmer");
+            SaveJson(GetOutputPath("Shimmer"), doc, log, "Shimmer");
         }
 
         /// <summary>

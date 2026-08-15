@@ -30,7 +30,9 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             Vector2 position,
             float scale,
             Color tint,
-            Func<Point, bool>? includeCell = null)
+            Func<Point, bool>? includeCell = null,
+            int? worldOriginX = null,
+            int? worldOriginY = null)
         {
             var cellLookup = new Dictionary<Point, PayloadCell>(entries.Count);
             foreach (Payload.Entry entry in entries)
@@ -46,6 +48,8 @@ namespace TheArchitectsBlueprintMod.UI.Preview
                 Scale = scale,
                 Tint = tint,
                 CellLookup = cellLookup,
+                WorldOriginX = worldOriginX,
+                WorldOriginY = worldOriginY,
             };
 
             for (int i = 0; i < DrawOrder.Length; i++)

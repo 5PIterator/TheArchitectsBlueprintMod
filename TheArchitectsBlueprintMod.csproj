@@ -17,6 +17,7 @@
 	<ItemGroup>
 		<!-- Packaged in .tmod; TemplateInitializer copies to SavePath/TheArchitectsBlueprintMod on first launch. -->
 		<AdditionalFiles Include="Content\Templates\**\*.itr" />
+		<AdditionalFiles Include="Content\Templates\**\*.itr.json" />
 		<EmbeddedResource Include="Content\Config\LayerOrder.json" LogicalName="TheArchitectsBlueprintMod.LayerOrder.json" />
 	</ItemGroup>
 

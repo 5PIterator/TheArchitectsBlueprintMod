@@ -33,7 +33,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             ArgumentNullException.ThrowIfNull(msg);
 
             var debugPath = GetDebugPath("PaintDiscovery_Debug.txt");
-            var outputPath = GetOutputPath("Paints.itr");
+            var outputPath = GetOutputPath("Paints");
             using var debugWriter = new StreamWriter(debugPath, append: false);
 
             void Log(string s)
@@ -255,7 +255,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "paint"),
                 Data = output,
             };
-            SaveJson(GetOutputPath("Paints.itr"), doc, log, "PaintInteractionMap");
+            SaveJson(GetOutputPath("Paints"), doc, log, "PaintInteractionMap");
         }
 
         private readonly record struct PaintAmmo(string Main, string AmmoName);

@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -12,7 +13,7 @@ using TheArchitectsBlueprintMod.Utils;
 
 namespace TheArchitectsBlueprintMod.UI
 {
-    /// <summary>Displays and handles the extensible toolbox attached to the frontmost projection.</summary>
+    /// <summary>Displays and handles the extensible toolbox attached to the frontmost defined selection or projection.</summary>
     [Autoload(Side = ModSide.Client)]
     public sealed class ProjectionToolboxControl : ModSystem
     {
@@ -22,18 +23,27 @@ namespace TheArchitectsBlueprintMod.UI
         private const int ToolboxOffsetPx = 4;
         private const int ToolboxButtonCount = 2;
 
-        private Projection? _projection;
+        private Blueprint? _target;
         private int _hoveredButtonIndex = -1;
         private bool _prevLeftDown;
 
-        /// <summary>Registers a toolbox row for the frontmost projection.</summary>
-        internal void RegisterToolbox(string family)
-        {
-            // --- Resolve the frontmost projection and register one screen-space toolbox drawable.
+        /// <summary>True when the local pointer is over a toolbox button.</summary>
+        internal bool IsHovering => _hoveredButtonIndex >= 0;
 
-            _projection = ModContent.GetInstance<BlueprintSystem>().GetTopmostProjection();
-            if (_projection is not { IsDefined: true })
+        /// <summary>Registers a toolbox row for the frontmost defined selection or projection.</summary>
+        internal void RegisterToolbox(Player player)
+        {
+            // --- Attach one toolbox drawable to the frontmost defined selection or projection.
+
+            ArgumentNullException.ThrowIfNull(player);
+
+            string family = $"toolbox:{player.whoAmI}";
+            _target = ModContent.GetInstance<BlueprintSystem>().GetTopmostDefinedSelectionOrProjection();
+            if (_target is not { IsDefined: true })
+            {
+                OverlaySystem.UnregisterFamily(family);
                 return;
+            }
 
             OverlaySystem.RegScreen(
                 "toolbox",
@@ -44,7 +54,7 @@ namespace TheArchitectsBlueprintMod.UI
         /// <summary>Updates toolbox hover and dispatches clicks to the selected tool.</summary>
         public override void UpdateUI(GameTime gameTime)
         {
-            // --- Validate projection UI state, hit-test each row button, then handle fresh clicks.
+            // --- Validate blueprint UI state, hit-test each row button, then handle fresh clicks.
 
             _hoveredButtonIndex = -1;
 
@@ -57,7 +67,7 @@ namespace TheArchitectsBlueprintMod.UI
             Point mouse = new(Main.mouseX, Main.mouseY);
             for (int i = 0; i < ToolboxButtonCount; i++)
             {
-                if (!GetButtonRect(_projection!.Area, i).Contains(mouse))
+                if (!GetButtonRect(_target!.Area, i).Contains(mouse))
                     continue;
 
                 _hoveredButtonIndex = i;
@@ -77,9 +87,9 @@ namespace TheArchitectsBlueprintMod.UI
         /// <summary>Clears toolbox state when leaving the current world.</summary>
         public override void OnWorldUnload()
         {
-            // --- Release the tracked projection and reset pointer edge state.
+            // --- Release the tracked blueprint and reset pointer edge state.
 
-            _projection = null;
+            _target = null;
             _hoveredButtonIndex = -1;
             _prevLeftDown = false;
         }
@@ -87,24 +97,26 @@ namespace TheArchitectsBlueprintMod.UI
         /// <summary>Determines whether the local player can interact with the tracked toolbox.</summary>
         private bool CanInteractWithToolbox(out Player? player)
         {
-            // --- Require an active projection overlay and reject conflicting UI gestures.
+            // --- Require an active toolbox overlay and reject conflicting UI gestures.
 
             player = null;
-            if (Main.dedServ || Main.gameMenu || _projection is not { IsDefined: true })
+            if (Main.dedServ || Main.gameMenu || _target is not { IsDefined: true })
                 return false;
 
             player = Main.LocalPlayer;
             if (player is not { active: true } || player.dead)
                 return false;
 
-            string family = $"projection:{player.whoAmI}";
+            string family = $"toolbox:{player.whoAmI}";
             ArchitectOverlayScope heldScope = player.GetModPlayer<ArchitectOverlayPlayer>().HeldOverlayScope;
             if (!ArchitectOverlayVisibility.IsFamilyVisible(family, heldScope))
                 return false;
 
             return !ActionWheel.IsActive
                 && !ActionWheel.IsPendingOpen
-                && !ModContent.GetInstance<ProjectionControl>().IsActivelyDragging(player);
+                && !ModContent.GetInstance<ProjectionControl>().IsActivelyDragging(player)
+                && !ModContent.GetInstance<SelectionControl>().IsActivelyGesturing(player)
+                && !ModContent.GetInstance<InclusionControl>().IsActivelyGesturing(player);
         }
 
         /// <summary>Runs the action assigned to a toolbox button.</summary>
@@ -123,49 +135,75 @@ namespace TheArchitectsBlueprintMod.UI
             }
         }
 
-        /// <summary>Opens the payload browser for the toolbox projection.</summary>
+        /// <summary>Opens the payload browser for the toolbox projection, spawning one from a selection when needed.</summary>
         private void OpenPayloadBrowser()
         {
-            // --- Avoid duplicate sessions and scope the browser to the tracked projection.
+            // --- Avoid duplicate sessions, then scope the browser to a live projection.
 
-            if (_projection is null
-                || PayloadBrowser.HasActive
+            if (PayloadBrowser.HasActive
                 && global::TheArchitectsBlueprintMod.UI.TmodGUI.TmodGUI.GetActiveWidget() is TmodPayloadBrowserWidget)
             {
                 return;
             }
 
+            Projection? projection = EnsureProjectionForToolboxAction();
+            if (projection is null)
+                return;
+
             SoundEngine.PlaySound(SoundID.MenuTick);
-            TmodPayloadBrowserWidget.Open(_projection);
+            TmodPayloadBrowserWidget.Open(projection);
         }
 
         /// <summary>Prints the paste item manifest for the toolbox projection into chat.</summary>
         private void PrintManifest()
         {
-            // --- Resolve the tracked projection and emit a local chat bill of materials.
+            // --- Resolve or spawn a projection, then emit a local chat bill of materials.
 
-            if (_projection is null)
+            Projection? projection = EnsureProjectionForToolboxAction();
+            if (projection is null)
                 return;
 
             SoundEngine.PlaySound(SoundID.MenuTick);
-            ManifestPrinter.Print(_projection);
+            ManifestPrinter.Print(projection);
+        }
+
+        /// <summary>Returns the toolbox projection, creating a COPY projection from a selection when that is the target.</summary>
+        private Projection? EnsureProjectionForToolboxAction()
+        {
+            // --- Reuse a defined projection, or spawn a COPY projection from a defined selection.
+
+            if (_target is Projection projection && projection.IsDefined)
+                return projection;
+
+            if (_target is not Selection selection || !selection.IsDefined)
+                return null;
+
+            // Require a live local player before capturing world tiles into a new projection.
+            Player player = Main.LocalPlayer;
+            if (player is not { active: true } || player.dead)
+                return null;
+
+            // Spawn in place without a COPY drag so the button click does not pick up the ghost.
+            Projection spawned = ModContent.GetInstance<ProjectionSystem>().NewProjection(player, selection);
+            _target = spawned;
+            return spawned;
         }
 
         /// <summary>Draws the toolbox row and each registered projection tool button.</summary>
         private void DrawToolbox()
         {
-            // --- Draw a compact row above the projection, followed by its button icons.
+            // --- Draw a compact row above the blueprint, followed by its button icons.
 
-            if (_projection is not { IsDefined: true })
+            if (_target is not { IsDefined: true })
                 return;
 
-            Rectangle toolboxRect = GetToolboxRect(_projection.Area);
+            Rectangle toolboxRect = GetToolboxRect(_target.Area);
             Texture2D pixel = ModUtils.DummyTexture;
             Main.spriteBatch.Draw(pixel, toolboxRect, new Color(35, 40, 83, 220));
             DrawBorder(toolboxRect, new Color(89, 116, 213));
 
             for (int i = 0; i < ToolboxButtonCount; i++)
-                DrawButton(i, GetButtonRect(_projection.Area, i), i == _hoveredButtonIndex);
+                DrawButton(i, GetButtonRect(_target.Area, i), i == _hoveredButtonIndex);
         }
 
         /// <summary>Draws one toolbox button from its stable row index.</summary>
@@ -209,24 +247,24 @@ namespace TheArchitectsBlueprintMod.UI
             };
         }
 
-        /// <summary>Positions the toolbox row above the projection's top-left corner.</summary>
-        private static Rectangle GetToolboxRect(Rectangle projectionArea)
+        /// <summary>Positions the toolbox row above the blueprint's top-left corner.</summary>
+        private static Rectangle GetToolboxRect(Rectangle blueprintArea)
         {
-            // --- Convert the projection anchor to screen pixels and size the row for all buttons.
+            // --- Convert the blueprint anchor to screen pixels and size the row for all buttons.
 
             int width = ToolboxPaddingPx * 2 + ToolboxButtonCount * ButtonSizePx;
             int height = ToolboxPaddingPx * 2 + ButtonSizePx;
-            int x = projectionArea.Left * TilePixelSize - (int)Main.screenPosition.X;
-            int y = projectionArea.Top * TilePixelSize - (int)Main.screenPosition.Y - height - ToolboxOffsetPx;
+            int x = blueprintArea.Left * TilePixelSize - (int)Main.screenPosition.X;
+            int y = blueprintArea.Top * TilePixelSize - (int)Main.screenPosition.Y - height - ToolboxOffsetPx;
             return new Rectangle(x, y, width, height);
         }
 
         /// <summary>Returns the screen rectangle for a toolbox button.</summary>
-        private static Rectangle GetButtonRect(Rectangle projectionArea, int buttonIndex)
+        private static Rectangle GetButtonRect(Rectangle blueprintArea, int buttonIndex)
         {
             // --- Offset the indexed button horizontally within the toolbox row.
 
-            Rectangle toolbox = GetToolboxRect(projectionArea);
+            Rectangle toolbox = GetToolboxRect(blueprintArea);
             int x = toolbox.X + ToolboxPaddingPx + buttonIndex * ButtonSizePx;
             int y = toolbox.Y + ToolboxPaddingPx;
             return new Rectangle(x, y, ButtonSizePx, ButtonSizePx);

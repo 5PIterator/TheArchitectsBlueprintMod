@@ -17,7 +17,7 @@ namespace TheArchitectsBlueprintMod.Core
         public override CommandType Type => CommandType.Chat;
 
         public override string Usage => "/tab.discShimmer";
-        public override string Description => "Runs shimmer discovery; writes ShimmerMap.itr and Shimmer.itr.";
+        public override string Description => "Runs shimmer discovery; writes ShimmerMap.itr.json and Shimmer.itr.json.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {

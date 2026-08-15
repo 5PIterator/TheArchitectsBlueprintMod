@@ -52,12 +52,20 @@ namespace TheArchitectsBlueprintMod.Core
             WandDiscovery.Run(mod, reply);
             yield return null;
 
+            reply("Discovery: Rubble...");
+            RubbleDiscovery.Run(mod, reply);
+            yield return null;
+
             reply("Discovery: Paint...");
             PaintDiscovery.Run(mod, reply);
             yield return null;
 
-            reply("Discovery: Vine...");
-            VineDiscovery.Run(mod, reply);
+            reply("Discovery: Plant...");
+            PlantDiscovery.Run(mod, reply);
+            yield return null;
+
+            reply("Discovery: Conversion...");
+            ConversionDiscovery.Run(mod, reply);
             yield return null;
 
             reply("Discovery: Biome...");

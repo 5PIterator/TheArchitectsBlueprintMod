@@ -17,7 +17,7 @@ namespace TheArchitectsBlueprintMod.Core
         public override CommandType Type => CommandType.Chat;
 
         public override string Usage => "/tab.discBiome";
-        public override string Description => "Runs biome conversion discovery and writes Biome.itr.";
+        public override string Description => "Runs biome conversion discovery and writes Biome.itr.json.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {

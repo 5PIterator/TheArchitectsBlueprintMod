@@ -62,7 +62,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             int testY = (int)(player.Center.Y / 16f) - 5;
 
             var debugPath = GetDebugPath("BiomeDiscovery_Debug.txt");
-            var outputPath = GetOutputPath("Biome.itr");
+            var outputPath = GetOutputPath("Biome");
             using var debugWriter = new StreamWriter(debugPath, append: false);
 
             void Log(string s)
@@ -255,7 +255,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             yield return null;
 
             Save(mod, map, Log);
-            Log($"Biome discovery complete. Output: {GetOutputPath("Biome.itr")}");
+            Log($"Biome discovery complete. Output: {GetOutputPath("Biome")}");
         }
 
         /// <summary>
@@ -495,7 +495,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "biome"),
                 Data = output,
             };
-            SaveJson(GetOutputPath("Biome.itr"), doc, log, "BiomeInteractionMap");
+            SaveJson(GetOutputPath("Biome"), doc, log, "BiomeInteractionMap");
         }
 
         private static Dictionary<string, ConversionEntryOutput> ToNameBasedOutput(BiomeInteractionMap map)

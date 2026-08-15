@@ -203,17 +203,18 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
     }
 
     /// <summary>
-    /// Loads source .itr files into InteractionMap. Standardized pipeline for custom, placement, biome, shimmer.
+    /// Loads source .itr.json files into InteractionMap. Standardized pipeline for custom, placement, biome, shimmer.
     /// Config files (baseContext, biomeConfig) are loaded separately by their consumers.
     /// </summary>
     internal static class ItrLoader
     {
-        private static readonly string[] InteractionMapTypes = ["custom", "wand", "paint", "vine", "placement", "biome", "shimmer"];
+        private static readonly string[] InteractionMapTypes = ["custom", "wand", "rubble", "paint", "plant", "placement", "conversion", "biome", "shimmer"];
 
         /// <summary>
-        /// Loads all interaction .itr files from the directory into the map.
-        /// Order: custom, wand, vine, placement, biome, shimmer (shimmer applies Shimmer Bucket transform).
-        /// Custom loads before generated maps so curated entries win dedupe at compile time.
+        /// Loads all interaction .itr.json files from the directory into the map.
+        /// Order: custom, wand, rubble, paint, plant, placement, conversion, biome, shimmer (shimmer applies Shimmer Bucket transform).
+        /// Custom loads before generated maps so same-item curated overrides win export dedupe;
+        /// cross-item priority still comes from <see cref="InteractionPriorityComparer"/> (e.g. yield 1 before bombs).
         /// </summary>
         public static void LoadAllInto(string directory, InteractionMap map, Action<string> msg)
         {
@@ -251,9 +252,11 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             {
                 "custom" => cfg.EnableCustomInteractionMap,
                 "wand" => cfg.EnableWandDiscovery,
+                "rubble" => cfg.EnableRubbleDiscovery,
                 "paint" => cfg.EnablePaintDiscovery,
-                "vine" => cfg.EnableVineDiscovery,
+                "plant" => cfg.EnablePlantDiscovery,
                 "placement" => cfg.EnablePlacementDiscovery,
+                "conversion" => cfg.EnableConversionDiscovery,
                 "biome" => cfg.EnableBiomeConversions,
                 "shimmer" => cfg.EnableShimmerTransforms,
                 _ => true,
@@ -326,6 +329,8 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 Main = main,
                 Yield = ia.TryGetProperty("yield", out var y) && y.TryGetInt32(out int yv) ? yv : null,
                 Ammo = ia.TryGetProperty("ammo", out var a) ? a.GetString() : null,
+                Fake = ia.TryGetProperty("fake", out var f) ? f.GetString() : null,
+                Alias = ReadAliasNames(ia),
             };
 
             if (string.Equals(normLayer, "Tile", StringComparison.OrdinalIgnoreCase) || string.Equals(normLayer, "Wall", StringComparison.OrdinalIgnoreCase))
@@ -335,6 +340,32 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             }
 
             return entry;
+        }
+
+        /// <summary>Reads camelCase or PascalCase alias string arrays from an interaction element.</summary>
+        private static List<string>? ReadAliasNames(JsonElement ia)
+        {
+            // --- Prefer camelCase alias, then PascalCase Alias.
+
+            if (ia.TryGetProperty("alias", out var aliasEl) || ia.TryGetProperty("Alias", out aliasEl))
+            {
+                if (aliasEl.ValueKind != JsonValueKind.Array)
+                    return null;
+
+                var list = new List<string>();
+                foreach (var el in aliasEl.EnumerateArray())
+                {
+                    if (el.ValueKind != JsonValueKind.String)
+                        continue;
+                    string? name = el.GetString();
+                    if (!string.IsNullOrEmpty(name))
+                        list.Add(name);
+                }
+
+                return list.Count > 0 ? list : null;
+            }
+
+            return null;
         }
 
         private static string? ResolveMainFromJson(JsonElement ia, string layer)
@@ -421,6 +452,8 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 Style = ia.TryGetProperty("Style", out var s) && s.TryGetInt32(out int sv) ? sv : null,
                 Yield = ia.TryGetProperty("Yield", out var y) && y.TryGetInt32(out int yv) ? yv : null,
                 Ammo = ia.TryGetProperty("Ammo", out var a) ? a.GetString() : null,
+                Fake = ia.TryGetProperty("Fake", out var f) ? f.GetString() : null,
+                Alias = ReadAliasNames(ia),
             };
 
             if (string.Equals(layer, "Wall", StringComparison.OrdinalIgnoreCase))

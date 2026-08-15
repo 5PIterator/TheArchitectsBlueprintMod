@@ -16,7 +16,7 @@ namespace TheArchitectsBlueprintMod.Core
         public override CommandType Type => CommandType.Chat;
 
         public override string Usage => "/tab.discWand";
-        public override string Description => "Runs wand discovery and writes Wands.itr.";
+        public override string Description => "Runs wand discovery and writes Wands.itr.json.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {

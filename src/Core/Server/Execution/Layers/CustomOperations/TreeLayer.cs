@@ -6,6 +6,7 @@ using TheArchitectsBlueprintMod.Core.TileMapping;
 using TheArchitectsBlueprintMod.Utils;
 using Terraria;
 using Terraria.Enums;
+using Terraria.GameContent.Drawing;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -31,7 +32,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (tileType >= TileLoader.TileCount)
                 return false;
 
-            if (tileType == TileID.Cactus)
+            // Cactus and natural bamboo stalks are column plants pasted like tree clusters.
+            if (tileType == TileID.Cactus || tileType == TileID.Bamboo)
                 return true;
 
             return TileID.Sets.IsATreeTrunk[tileType]
@@ -99,21 +101,315 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return HasValidTrunkBaseBelow(in tile, in context);
         }
 
-        /// <summary>Natural tree/cactus segments write payload directly and do not consume placement items.</summary>
+        /// <summary>Checks Living Wood Wand + biome ammo for this tree/cactus segment when item checks are enabled.</summary>
         public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context)
         {
-            // --- Direct EnqueueApplyPayloadBlock placement never reserves inventory.
-            return true;
+            // --- Resolve the family ammo, then require the matching Living Wood Wand interaction.
+            if (!context.RequireItems || context.Items is null || context.IsSweepCheat)
+                return true;
+            if (!tile.PayloadCell.HasTile())
+                return true;
+            if (!TryResolveTreeInteraction(in tile, lookup, out InteractionEntry? entry) || entry is null)
+                return false;
+            return TileExecutor.HasItemForInteraction(entry, in context);
         }
 
-        /// <summary>Natural tree/cactus placement does not consume inventory.</summary>
-        public override bool CanConsume(in PasteTile tile, in PasteContext context) => true;
+        /// <summary>Checks whether Living Wood Wand ammo for this segment can be reserved now.</summary>
+        public override bool CanConsume(in PasteTile tile, in PasteContext context)
+        {
+            // --- Same ammo-resolved interaction check as HasRequiredItems without a paste lookup.
+            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null || context.IsSweepCheat)
+                return true;
+            if (!TryResolveTreeInteraction(in tile, context.Lookup, out InteractionEntry? entry) || entry is null)
+                return false;
+            return TileExecutor.HasItemForInteraction(entry, in context);
+        }
 
-        /// <summary>No inventory debit for direct payload-block tree/cactus writes.</summary>
-        public override bool Consume(in PasteTile tile, in PasteContext context) => true;
+        /// <summary>Debits Living Wood Wand ammo for one successfully placed tree/cactus segment.</summary>
+        public override bool Consume(in PasteTile tile, in PasteContext context)
+        {
+            // --- Reserve the ammo-matched interaction; ApplyPayloadBlock itself does not consume.
+            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.InventoryLookup is null || context.IsSweepCheat)
+                return true;
+            if (!TryResolveTreeInteraction(in tile, context.Lookup, out InteractionEntry? entry) || entry is null)
+                return false;
 
-        /// <summary>Returns null because tree/cactus segments are not item-placed.</summary>
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
+            return context.InventoryLookup.TryReserveForInteraction(
+                entry,
+                context.InteractionBudget,
+                context.Player,
+                out _);
+        }
+
+        /// <summary>Returns the Living Wood Wand tool id for this tree/cactus segment when mapped.</summary>
+        public override IReadOnlyList<int>? GetItem(in PasteTile tile)
+        {
+            // --- Prefer the resolved tool; fall back to any mapped tile item ids.
+            if (!tile.PayloadCell.HasTile())
+                return null;
+            if (TryResolveTreeInteraction(in tile, lookup: null, out InteractionEntry? entry)
+                && entry?.ItemId is int toolId
+                && toolId > 0)
+            {
+                return [toolId];
+            }
+
+            int style = tile.PayloadCell.ResolvePlacementStyle();
+            return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
+        }
+
+        /// <summary>
+        /// Resolves the Living Wood Wand interaction for this tree/cactus segment by tile style.
+        /// </summary>
+        public static bool TryResolveTreeInteraction(
+            in PasteTile tile,
+            PasteTileLookup? lookup,
+            out InteractionEntry? entry)
+        {
+            // --- Derive Trees/Palm style from support when possible, then take the styled map row.
+
+            entry = null;
+            if (!tile.PayloadCell.HasTile())
+                return false;
+
+            ushort tileType = (ushort)tile.PayloadCell.Block.Type;
+            int style = ResolveTreeStyle(in tile, lookup);
+
+            foreach (InteractionEntry candidate in InteractionMapProvider.EnumerateTileInteractions(tileType, style, baseId: null))
+            {
+                entry = candidate;
+                return true;
+            }
+
+            // Fall back to style 0 when a styled row is missing (older maps / mod trees).
+            if (style != 0)
+            {
+                foreach (InteractionEntry candidate in InteractionMapProvider.EnumerateTileInteractions(tileType, 0, baseId: null))
+                {
+                    entry = candidate;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>Resolves the placement style used for Living Wood Wand demand and map lookup.</summary>
+        public static int ResolveTreeStyle(in PasteTile tile, PasteTileLookup? lookup)
+        {
+            // --- Prefer payload-support style when the blueprint includes soil; never read Main.tile here.
+
+            ushort tileType = (ushort)tile.PayloadCell.Block.Type;
+            if ((tileType == TileID.Trees || tileType == TileID.PalmTree)
+                && TryGetPayloadSupportTileType(in tile, lookup, out ushort supportType, out int supportY)
+                && TryMapSupportTileToTreeStyle(tileType, supportType, supportY, out int derivedStyle))
+            {
+                return derivedStyle;
+            }
+
+            return tile.PayloadCell.ResolvePlacementStyle();
+        }
+
+        /// <summary>Derives Trees/PalmTree wiki style from the live world using native tree helpers.</summary>
+        public static bool TryResolveTreeStyleAtWorld(int x, int y, ushort tileType, out int style)
+        {
+            // --- Trees: TileDrawing.GetTreeVariant; palms: GetTreeBottom + sand under the foot.
+
+            style = 0;
+            if (tileType == TileID.Trees)
+                return TryResolveTreesStyleFromTreeVariant(x, y, out style);
+
+            if (tileType != TileID.PalmTree || !WorldGen.InWorld(x, y, 0))
+                return false;
+
+            WorldGen.GetTreeBottom(x, y, out int bottomX, out int bottomY);
+            int soilY = bottomY + 1;
+            if (!WorldGen.InWorld(bottomX, soilY, 0))
+                return false;
+
+            Tile soil = Main.tile[bottomX, soilY];
+            if (!soil.HasTile || IsTreeType(soil.TileType))
+                return false;
+
+            return TryMapSupportTileToTreeStyle(tileType, soil.TileType, soilY, out style);
+        }
+
+        /// <summary>
+        /// Reads <see cref="TileDrawing.GetTreeVariant"/> for a live Trees tile and maps it onto wiki style.
+        /// </summary>
+        public static bool TryResolveTreesStyleFromTreeVariant(int x, int y, out int style)
+        {
+            // --- Draw variants 0-5 match wiki styles; mushroom draw index 6 is wiki style 7.
+            // --- Underground mahogany shares draw variant 2 with surface (wiki style 6 is not distinguished).
+
+            style = 0;
+            if (!WorldGen.InWorld(x, y, 0))
+                return false;
+
+            Tile tile = Main.tile[x, y];
+            if (!tile.HasTile || tile.TileType != TileID.Trees)
+                return false;
+
+            int variant = TileDrawing.GetTreeVariant(x, y);
+            if (variant < 0)
+                return false;
+
+            style = variant == 6 ? 7 : variant;
+            return style is >= 0 and <= 7;
+        }
+
+        /// <summary>Yields wiki style → Living Wood Wand ammo pairs for <see cref="TileID.Trees"/>.</summary>
+        public static IEnumerable<(int Style, int AmmoItemId)> EnumerateTreesStyleAmmo()
+        {
+            // --- Styles match the Terraria wiki Tile ID table for tile 5.
+
+            yield return (0, ItemID.Wood);
+            yield return (1, ItemID.Ebonwood);
+            yield return (2, ItemID.RichMahogany);
+            yield return (3, ItemID.Pearlwood);
+            yield return (4, ItemID.BorealWood);
+            yield return (5, ItemID.Shadewood);
+            yield return (6, ItemID.RichMahogany);
+            yield return (7, ItemID.GlowingMushroom);
+        }
+
+        /// <summary>Yields palm beach-biome styles → Palm Wood ammo for <see cref="TileID.PalmTree"/>.</summary>
+        public static IEnumerable<(int Style, int AmmoItemId)> EnumeratePalmStyleAmmo()
+        {
+            // --- Styles align with GetPalmTreeVariant / sand biome: beach, corrupt, hallow, crimson.
+
+            yield return (0, ItemID.PalmWood);
+            yield return (1, ItemID.PalmWood);
+            yield return (2, ItemID.PalmWood);
+            yield return (3, ItemID.PalmWood);
+        }
+
+        /// <summary>Maps a trunk-support tile onto a Trees or PalmTree wiki style.</summary>
+        public static bool TryMapSupportTileToTreeStyle(
+            ushort treeTileType,
+            ushort supportType,
+            int supportY,
+            out int style)
+        {
+            // --- Trees use grass/snow styles; palms use sand biome styles.
+
+            style = 0;
+            if (treeTileType == TileID.PalmTree)
+            {
+                style = supportType switch
+                {
+                    TileID.Ebonsand => 1,
+                    TileID.Pearlsand => 2,
+                    TileID.Crimsand => 3,
+                    TileID.Sand => 0,
+                    _ => -1,
+                };
+                return style >= 0;
+            }
+
+            if (treeTileType != TileID.Trees)
+                return false;
+
+            style = supportType switch
+            {
+                TileID.Grass => 0,
+                TileID.CorruptGrass => 1,
+                TileID.JungleGrass => supportY >= Main.rockLayer ? 6 : 2,
+                TileID.HallowedGrass => 3,
+                TileID.SnowBlock => 4,
+                TileID.IceBlock => 4,
+                TileID.CrimsonGrass => 5,
+                TileID.MushroomGrass => 7,
+                _ => -1,
+            };
+            return style >= 0;
+        }
+
+        /// <summary>Resolves the wood, cactus, or gem ammo item for a tree/cactus payload segment.</summary>
+        public static int ResolveTreeAmmoItemId(in PasteTile tile, PasteTileLookup? lookup)
+        {
+            // --- Prefer the styled map interaction; fall back to fixed tile-type families.
+
+            if (TryResolveTreeInteraction(in tile, lookup, out InteractionEntry? entry)
+                && entry?.AmmoId is int ammoId
+                && ammoId > 0)
+            {
+                return ammoId;
+            }
+
+            ushort tileType = (ushort)tile.PayloadCell.Block.Type;
+
+            if (tileType == TileID.Cactus)
+                return ItemID.Cactus;
+
+            if (tileType == TileID.Bamboo)
+                return ItemID.BambooBlock;
+
+            if (TryResolveGemTreeAmmo(tileType, out int gemAmmo))
+                return gemAmmo;
+
+            if (tileType == TileID.TreeAsh)
+                return ItemID.AshWood;
+
+            if (tileType == TileID.PalmTree)
+                return ItemID.PalmWood;
+
+            return ItemID.Wood;
+        }
+
+        /// <summary>Maps gem-tree tile types onto their gem ammo item ids.</summary>
+        private static bool TryResolveGemTreeAmmo(ushort tileType, out int ammoItemId)
+        {
+            // --- Each gem tree tile id places with its matching gem as Living Wood Wand ammo.
+            ammoItemId = tileType switch
+            {
+                TileID.TreeAmethyst => ItemID.Amethyst,
+                TileID.TreeTopaz => ItemID.Topaz,
+                TileID.TreeSapphire => ItemID.Sapphire,
+                TileID.TreeEmerald => ItemID.Emerald,
+                TileID.TreeRuby => ItemID.Ruby,
+                TileID.TreeDiamond => ItemID.Diamond,
+                TileID.TreeAmber => ItemID.Amber,
+                _ => 0,
+            };
+            return ammoItemId > 0;
+        }
+
+        /// <summary>Finds non-tree support below this segment from payload lookup only.</summary>
+        private static bool TryGetPayloadSupportTileType(
+            in PasteTile tile,
+            PasteTileLookup? lookup,
+            out ushort supportType,
+            out int supportWorldY)
+        {
+            // --- Walk payload relatives downward; do not consult Main.tile.
+
+            supportType = 0;
+            supportWorldY = tile.World.Y;
+            if (lookup is null)
+                return false;
+
+            Point rel = tile.Relative;
+            for (int dy = 1; dy < 64; dy++)
+            {
+                Point belowRel = new(rel.X, rel.Y + dy);
+                if (!lookup.TryGetPasteTile(belowRel, out PasteTile below))
+                    break;
+
+                if (!below.PayloadCell.HasTile())
+                    continue;
+
+                ushort belowType = (ushort)below.PayloadCell.Block.Type;
+                if (IsTreeType(belowType))
+                    continue;
+
+                supportType = belowType;
+                supportWorldY = below.World.Y;
+                return true;
+            }
+
+            return false;
+        }
 
         /// <summary>Clears one cluster tile per pass: branches top-down, then trunk column top-down.</summary>
         public override LayerResult Clear(TileBatch batch, in PasteContext context)
@@ -162,6 +458,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     return LayerResult.OkWithRemaining(batch, message, okLabel);
                 return result;
             }
+
+            if (!context.IsSweepCheat && !Consume(in segment, in context))
+                return LayerResult.Fail(LayerFailReason.MissingItems, message);
 
             return RemoveSegmentAt(batch, index, result.Message ?? message, result.OkLabel ?? okLabel);
         }

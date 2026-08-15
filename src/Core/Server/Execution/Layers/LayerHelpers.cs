@@ -31,7 +31,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             Tile intent = tile.PayloadTile;
             if (intent.HasTile != tile.Target.HasTile) return false;
             if (!intent.HasTile) return !tile.Target.HasTile;
-            return intent.TileType == tile.Target.TileType;
+            if (intent.TileType == tile.Target.TileType)
+                return true;
+
+            // Treat a placed fake (e.g. Echo rubble) as satisfying the natural payload main.
+            int style = tile.PayloadCell.ResolvePlacementStyle();
+            InteractionEntry? entry = InteractionMapProvider.GetFirstTileInteraction(intent.TileType, style);
+            return entry?.FakeId is int fakeId && fakeId == tile.Target.TileType;
         }
 
         public static bool MatchSourceToTargetTileType(in PasteTile tile)
@@ -1148,10 +1154,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             string message = LayerLogFormat.FormatTile(origin.PayloadTile);
             string okLabel = LayerLogFormat.PlacedLabel(in context);
 
-            ushort tileType = (ushort)origin.PayloadCell.Block.Type;
-            if (!TileLoaderSupport.IsKnownTileType(tileType))
+            ushort payloadType = (ushort)origin.PayloadCell.Block.Type;
+            if (!TileLoaderSupport.IsKnownTileType(payloadType))
             {
-                PastingDebug.LogPlacement(tileType, 0, null, x, y, false, "PlaceObject");
+                PastingDebug.LogPlacement(payloadType, 0, null, x, y, false, "PlaceObject");
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
@@ -1159,18 +1165,32 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             int alternate = origin.PayloadCell.Detail.Alternate;
             short frameX = origin.PayloadCell.Block.FrameX;
             short frameY = origin.PayloadCell.Block.FrameY;
+            InteractionEntry? interaction = InteractionMapProvider.GetFirstTileInteraction(payloadType, style);
+            ushort placeType = interaction?.GetPlaceMainId() is int placeMain && placeMain > 0
+                ? (ushort)placeMain
+                : payloadType;
+            bool usesFake = interaction?.FakeId is int fakeId && fakeId > 0 && fakeId != payloadType;
             Tile dest = Main.tile[x, y];
 
-            if (dest.HasTile && dest.TileType == tileType)
+            if (dest.HasTile && (dest.TileType == placeType || dest.TileType == payloadType))
             {
+                if (usesFake || dest.TileType == placeType && placeType != payloadType)
+                    return LayerResult.Ok(message, okLabel);
+
                 if (!PasteFrame(tiles, in context))
                     return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
                 return LayerResult.Ok(message, okLabel);
             }
 
-            if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
+            if (!TileLoaderSupport.IsKnownTileType(placeType))
             {
-                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
+                PastingDebug.LogPlacement(placeType, style, null, x, y, false, "PlaceObject");
+                return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
+            }
+
+            if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, placeType, in context))
+            {
+                PastingDebug.LogPlacement(placeType, style, null, x, y, false, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
@@ -1178,35 +1198,36 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 TileExecutor.EnqueueVoidKillTile(x, y, in context);
 
             if (!context.IsSweepCheat
-                && !TileObject.CanPlace(x, y, tileType, style, alternate, out _, onlyCheck: true))
+                && !TileObject.CanPlace(x, y, placeType, style, alternate, out _, onlyCheck: true))
             {
-                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
+                PastingDebug.LogPlacement(placeType, style, null, x, y, false, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            if (!TileExecutor.TryCheckTileItem(tileType, style, in context, out LayerFailReason itemFailReason))
+            // Item lookup stays on payload type so natural→fake rows resolve Rubblemaker + ammo.
+            if (!TileExecutor.TryCheckTileItem(payloadType, style, in context, out LayerFailReason itemFailReason))
             {
-                TileItemAvailability issue = TileExecutor.GetTileItemAvailability(tileType, style, in context);
-                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject", tileType, issue, alternate, frameX, frameY);
+                TileItemAvailability issue = TileExecutor.GetTileItemAvailability(payloadType, style, in context);
+                PastingDebug.LogPlacement(placeType, style, null, x, y, false, "PlaceObject", placeType, issue, alternate, frameX, frameY);
                 return LayerResult.Fail(itemFailReason, message);
             }
 
             if (!TileExecutor.EnqueuePlaceObject(
                     x,
                     y,
-                    tileType,
+                    placeType,
                     style,
                     alternate,
                     in context,
                     consumeItem: true,
-                    postPlaceFrameX: frameX,
-                    postPlaceFrameY: frameY))
+                    postPlaceFrameX: usesFake ? TileMutation.NoPostPlaceFrame : frameX,
+                    postPlaceFrameY: usesFake ? TileMutation.NoPostPlaceFrame : frameY))
             {
-                PastingDebug.LogPlacement(tileType, style, null, x, y, false, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
+                PastingDebug.LogPlacement(placeType, style, null, x, y, false, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            PastingDebug.LogPlacement(tileType, style, null, x, y, true, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
+            PastingDebug.LogPlacement(placeType, style, null, x, y, true, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
             return LayerResult.Ok(message, okLabel);
         }
 
@@ -1236,27 +1257,40 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             int x = origin.World.X, y = origin.World.Y;
             if (!origin.PayloadCell.HasTile()) return LayerResult.Ok();
 
-            ushort tileType = (ushort)origin.PayloadCell.Block.Type;
-            if (!TileLoaderSupport.IsKnownTileType(tileType))
+            ushort payloadType = (ushort)origin.PayloadCell.Block.Type;
+            if (!TileLoaderSupport.IsKnownTileType(payloadType))
             {
-                PastingDebug.LogPlacement(tileType, 0, null, x, y, false, "PlaceTile");
+                PastingDebug.LogPlacement(payloadType, 0, null, x, y, false, "PlaceTile");
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, LayerLogFormat.FormatTile(origin.PayloadTile));
             }
 
             int style = origin.PayloadCell.ResolvePlacementStyle();
-            var baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
-            PastingDebug.LogInteractionLookup(tileType, style, baseTileId, null);
+            InteractionEntry? interaction = InteractionMapProvider.GetFirstTileInteraction(payloadType, style);
+            ushort placeType = interaction?.GetPlaceMainId() is int placeMain && placeMain > 0
+                ? (ushort)placeMain
+                : payloadType;
+            bool usesFake = interaction?.FakeId is int fakeId && fakeId > 0 && fakeId != payloadType;
+            var baseTileId = InteractionMapProvider.GetRequiredBaseTile(payloadType, style);
+            PastingDebug.LogInteractionLookup(payloadType, style, baseTileId, null);
 
             Tile dest = Main.tile[x, y];
-            if (context.EffectSession?.HasPendingOrInFlightPlacementAt(new Point(x, y), tileType) == true)
+            if (context.EffectSession?.HasPendingOrInFlightPlacementAt(new Point(x, y), placeType) == true
+                || context.EffectSession?.HasPendingOrInFlightPlacementAt(new Point(x, y), payloadType) == true)
             {
                 return LayerResult.Ok(
                     LayerLogFormat.FormatTile(origin.PayloadTile),
                     LayerLogFormat.PlacedLabel(in context));
             }
 
-            if (dest.HasTile && dest.TileType == tileType)
+            if (dest.HasTile && (dest.TileType == placeType || dest.TileType == payloadType))
             {
+                if (usesFake || (dest.TileType == placeType && placeType != payloadType))
+                {
+                    return LayerResult.Ok(
+                        LayerLogFormat.FormatTile(origin.PayloadTile),
+                        LayerLogFormat.PlacedLabel(in context));
+                }
+
                 if (!FrameOperations.PasteFrame(tiles, in context))
                     return LayerResult.Fail(LayerFailReason.InvalidPlacement, LayerLogFormat.FormatTile(origin.PayloadTile));
                 return LayerResult.Ok(
@@ -1264,13 +1298,20 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     LayerLogFormat.PlacedLabel(in context));
             }
 
-            return PlaceWithTile(origin, tiles, style, baseTileId, in context);
+            return PlaceWithTile(origin, tiles, style, baseTileId, placeType, usesFake, in context);
         }
 
-        private static LayerResult PlaceWithTile(in PasteTile origin, IReadOnlyList<PasteTile> tiles, int style, int? baseTileId, in PasteContext context)
+        private static LayerResult PlaceWithTile(
+            in PasteTile origin,
+            IReadOnlyList<PasteTile> tiles,
+            int style,
+            int? baseTileId,
+            ushort placeType,
+            bool usesFake,
+            in PasteContext context)
         {
             int x = origin.World.X, y = origin.World.Y;
-            ushort tileType = (ushort)origin.PayloadCell.Block.Type;
+            ushort payloadType = (ushort)origin.PayloadCell.Block.Type;
             string message = LayerLogFormat.FormatTile(origin.PayloadTile);
             string okLabel = LayerLogFormat.PlacedLabel(in context);
             Tile dest = Main.tile[x, y];
@@ -1282,30 +1323,30 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 {
                     if (context.EffectSession?.HasPendingOrInFlightPlacementAt(new Point(x, y), baseType) == true)
                     {
-                        PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, true, "PlaceBaseTile");
+                        PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, true, "PlaceBaseTile");
                         return LayerResult.OkWithRemaining(tiles, message, okLabel);
                     }
 
                     if (!TileLoaderSupport.IsCanPlaceAllowedAt(x, y, baseType, in context))
                     {
-                        PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                        PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, false, "PlaceTile");
                         return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
                     }
 
                     if (!TileExecutor.TryCheckTileItem(baseType, 0, in context, out LayerFailReason baseItemFailReason))
                     {
                         TileItemAvailability issue = TileExecutor.GetTileItemAvailability(baseType, 0, in context);
-                        PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceBaseTile", baseType, issue);
+                        PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, false, "PlaceBaseTile", baseType, issue);
                         return LayerResult.Fail(baseItemFailReason, message);
                     }
 
                     if (!TileExecutor.EnqueuePlaceTile(x, y, baseType, 0, in context, forced: context.IsSweepCheat, consumeItem: true))
                     {
-                        PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                        PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, false, "PlaceTile");
                         return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
                     }
 
-                    PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, true, "PlaceBaseTile");
+                    PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, true, "PlaceBaseTile");
                     // Base-first conversion tiles (e.g., dirt -> grass) require a second pass:
                     // this pass lays support, next pass applies the conversion tile itself.
                     return LayerResult.OkWithRemaining(tiles, message, okLabel);
@@ -1313,7 +1354,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             }
             else if (dest.HasTile && !context.IsSweepCheat && context.RequireItems && !context.UseReplacePlace)
             {
-                PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, false, "PlaceTile");
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
@@ -1323,36 +1364,36 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
             if (!conversionBaseReady)
             {
-                if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
+                if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, placeType, in context))
                 {
-                    PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                    PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, false, "PlaceTile");
                     return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
                 }
 
-                if (context.UseReplacePlace && dest.HasTile && dest.TileType != tileType)
+                if (context.UseReplacePlace && dest.HasTile && dest.TileType != placeType)
                     TileExecutor.EnqueueVoidKillTile(x, y, in context);
 
-                if (!context.IsSweepCheat && !TileLoader.CanPlace(x, y, tileType))
+                if (!context.IsSweepCheat && !TileLoader.CanPlace(x, y, placeType))
                 {
-                    PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                    PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, false, "PlaceTile");
                     return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
                 }
             }
 
-            if (!TileExecutor.TryCheckTileItem(tileType, style, in context, out LayerFailReason itemFailReason, baseTileId))
+            if (!TileExecutor.TryCheckTileItem(payloadType, style, in context, out LayerFailReason itemFailReason, baseTileId))
             {
-                TileItemAvailability issue = TileExecutor.GetTileItemAvailability(tileType, style, in context, baseTileId);
-                PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile", tileType, issue);
+                TileItemAvailability issue = TileExecutor.GetTileItemAvailability(payloadType, style, in context, baseTileId);
+                PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, false, "PlaceTile", placeType, issue);
                 return LayerResult.Fail(itemFailReason, message);
             }
 
             bool forcePlace = context.IsSweepCheat || baseTileId.HasValue || context.UseReplacePlace;
-            short frameX = origin.PayloadCell.Block.FrameX;
-            short frameY = origin.PayloadCell.Block.FrameY;
+            short frameX = usesFake ? TileMutation.NoPostPlaceFrame : origin.PayloadCell.Block.FrameX;
+            short frameY = usesFake ? TileMutation.NoPostPlaceFrame : origin.PayloadCell.Block.FrameY;
             if (!TileExecutor.EnqueuePlaceTile(
                     x,
                     y,
-                    tileType,
+                    placeType,
                     style,
                     in context,
                     forcePlace,
@@ -1360,11 +1401,11 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     postPlaceFrameX: frameX,
                     postPlaceFrameY: frameY))
             {
-                PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, false, "PlaceTile");
+                PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, false, "PlaceTile");
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            PastingDebug.LogPlacement(tileType, style, baseTileId, x, y, true, "PlaceTile");
+            PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, true, "PlaceTile");
             return LayerResult.Ok(message, okLabel);
         }
 
@@ -1376,6 +1417,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
     {
         public static bool HasTilePlacementItems(ushort tileType, int style, int x, int y, in PasteContext context)
         {
+            // --- Matched tiles need nothing; support underlays demand base+tool; else try live convert or direct place.
+
             Tile target = Main.tile[x, y];
             if (target.HasTile && target.TileType == tileType)
                 return true;
@@ -1394,19 +1437,34 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return TileExecutor.HasItemForTile(tileType, style, in context, baseType);
             }
 
+            // Biome convert when the destination already is a known conversion base.
+            if (target.HasTile
+                && InteractionMapProvider.HasConversionFromBase(tileType, style, target.TileType)
+                && TileExecutor.HasItemForTile(tileType, style, in context, target.TileType))
+            {
+                return true;
+            }
+
             return TileExecutor.HasItemForTile(tileType, style, in context);
         }
 
         public static IReadOnlyList<int>? GetToolItemIds(ushort tileType, int style, int x, int y)
         {
+            // --- Prefer support-base or live conversion filter, then direct no-base tool ids.
+
             Tile target = Main.tile[x, y];
-            int? requiredBase = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
             int? baseId = null;
+            int? requiredBase = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
             if (requiredBase.HasValue)
             {
                 ushort baseType = (ushort)requiredBase.Value;
                 if (target.HasTile && target.TileType == baseType)
                     baseId = requiredBase;
+            }
+            else if (target.HasTile
+                && InteractionMapProvider.HasConversionFromBase(tileType, style, target.TileType))
+            {
+                baseId = target.TileType;
             }
 
             foreach (InteractionEntry entry in InteractionMapProvider.EnumerateTileInteractions(tileType, style, baseId))

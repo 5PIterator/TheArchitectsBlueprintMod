@@ -15,8 +15,14 @@ UI: {
 		Empty: No placeable materials in this payload.
 		NoProjection: No projection selected.
 		NoPayload: Projection has no payload.
-		EntryCounts: "{0}/{1} (-{2})"
-		SourcesPrefix: " <-- "
+		ColItems: Items
+		ColQty: Qty
+		ColMissing: Missing
+		ColMain: Main
+		ColSources: Sources
+		EntryQty: "{0}/{1}"
+		EntryMissing: (-{0})
+		EntryMissingPaired: (-{0}) (-{1})
 		Unresolved: "{0} unresolved mapping(s):"
 		Satisfied: All remaining materials are available.
 	}
@@ -794,37 +800,47 @@ Configs: {
 
 		EnablePlacementDiscovery: {
 			Label: Placement
-			Tooltip: When enabled, Placement.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+			Tooltip: When enabled, Placement.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
 		EnableCustomInteractionMap: {
 			Label: Custom
-			Tooltip: When enabled, Custom.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+			Tooltip: When enabled, Custom.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
 		EnableWandDiscovery: {
 			Label: Wand
-			Tooltip: When enabled, Wands.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+			Tooltip: When enabled, Wands.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnableRubbleDiscovery: {
+			Label: Rubble
+			Tooltip: When enabled, Rubble.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
 		EnablePaintDiscovery: {
 			Label: Paint
-			Tooltip: When enabled, Paints.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+			Tooltip: When enabled, Paints.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
-		EnableVineDiscovery: {
-			Label: Vine
-			Tooltip: When enabled, Vines.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		EnablePlantDiscovery: {
+			Label: Plant
+			Tooltip: When enabled, Plants.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnableConversionDiscovery: {
+			Label: Conversion
+			Tooltip: When enabled, Conversion.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
 		EnableBiomeConversions: {
 			Label: Biome
-			Tooltip: When enabled, Biome.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+			Tooltip: When enabled, Biome.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
 		EnableShimmerTransforms: {
 			Label: Shimmer
-			Tooltip: When enabled, Shimmer.itr from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+			Tooltip: When enabled, Shimmer.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
 		RunPlacementDiscovery: {
@@ -837,14 +853,24 @@ Configs: {
 			Tooltip: One-shot action. Save config with this enabled to run wand discovery.
 		}
 
+		RunRubbleDiscovery: {
+			Label: Run rubble discovery
+			Tooltip: One-shot action. Save config with this enabled to run rubble discovery.
+		}
+
 		RunPaintDiscovery: {
 			Label: Run paint discovery
 			Tooltip: One-shot action. Save config with this enabled to run paint discovery.
 		}
 
-		RunVineDiscovery: {
-			Label: Run vine discovery
-			Tooltip: One-shot action. Save config with this enabled to run vine discovery.
+		RunPlantDiscovery: {
+			Label: Run plant discovery
+			Tooltip: One-shot action. Save config with this enabled to run plant discovery.
+		}
+
+		RunConversionDiscovery: {
+			Label: Run conversion discovery
+			Tooltip: One-shot action. Save config with this enabled to run conversion discovery.
 		}
 
 		RunBiomeDiscovery: {
@@ -864,7 +890,7 @@ Configs: {
 
 		RunFullDiscoveryAndCompile: {
 			Label: Run full discovery + compile
-			Tooltip: One-shot action. Save config with this enabled to run placement, wand, vine, biome, shimmer discovery, then compile.
+			Tooltip: One-shot action. Save config with this enabled to run placement, wand, plant, conversion, biome, shimmer discovery, then compile.
 		}
 	}
 

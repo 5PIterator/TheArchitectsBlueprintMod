@@ -14,7 +14,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         /// <summary>Format: "tile-first" | "item-first".</summary>
         [JsonPropertyName("format")]
         public string Format { get; set; } = "tile-first";
-        /// <summary>Map type: "placement" | "biome" | "custom" | "wand" | "vine" | "tilemap" | "shimmer".</summary>
+        /// <summary>Map type: "placement" | "biome" | "custom" | "wand" | "plant" | "conversion" | "tilemap" | "shimmer".</summary>
         [JsonPropertyName("mapType")]
         public string? MapType { get; set; }
         /// <summary>The Architect's Blueprint mod version when generated.</summary>

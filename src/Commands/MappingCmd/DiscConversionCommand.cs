@@ -6,17 +6,17 @@ using TheArchitectsBlueprintMod.Core.TileMapping;
 namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Chat/console command to run vine interaction discovery.
-    /// Scans TileID.Sets.IsVine / ReverseVineThreads and writes Vines.itr.
-    /// Usage: /tab.discVine
+    /// Chat/console command to run conversion family discovery.
+    /// Scans authored conversion families (e.g. unsafe walls) and writes Conversion.itr.
+    /// Usage: /tab.discConversion
     /// </summary>
-    public sealed class DiscVineCommand : ModCommand
+    public sealed class DiscConversionCommand : ModCommand
     {
-        public override string Command => "tab.discVine";
+        public override string Command => "tab.discConversion";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/tab.discVine";
-        public override string Description => "Runs vine discovery and writes Vines.itr.";
+        public override string Usage => "/tab.discConversion";
+        public override string Description => "Runs conversion discovery and writes Conversion.itr.json.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
@@ -26,7 +26,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            VineDiscovery.Run(Mod, msg => caller.Reply(msg));
+            ConversionDiscovery.Run(Mod, msg => caller.Reply(msg));
         }
     }
 }

@@ -16,6 +16,8 @@ namespace TheArchitectsBlueprintMod.UI.Preview
         public required float Scale { get; init; }
         public required Color Tint { get; init; }
         public IReadOnlyDictionary<Point, PayloadCell>? CellLookup { get; init; }
+        public int? WorldOriginX { get; init; }
+        public int? WorldOriginY { get; init; }
 
         /// <summary>Returns whether a relative neighbor cell carries the same wire color.</summary>
         public bool NeighborHasWire(int relX, int relY, int offsetX, int offsetY, Func<PayloadCell.WireData, bool> hasWire)

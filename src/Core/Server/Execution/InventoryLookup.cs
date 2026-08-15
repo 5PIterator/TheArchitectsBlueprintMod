@@ -195,7 +195,7 @@ namespace TheArchitectsBlueprintMod.Core{
                 return TileItemAvailability.UnresolvedInteraction;
 
             RebuildIfNeeded();
-            if (!TryFindFirstAvailableByItemIds([entry.ItemId.Value], out _, out _))
+            if (!TryFindFirstAvailableByItemIds(entry.GetToolItemIds(), out _, out _))
                 return TileItemAvailability.MissingFromInventory;
 
             // Distinct ammo must be present even when yield never debits it.
@@ -230,7 +230,7 @@ namespace TheArchitectsBlueprintMod.Core{
                 return false;
 
             RebuildIfNeeded();
-            if (!TryFindFirstAvailableByItemIds([entry.ItemId.Value], out Item? toolItem, out Inventory? toolInventory)
+            if (!TryFindFirstAvailableByItemIds(entry.GetToolItemIds(), out Item? toolItem, out Inventory? toolInventory)
                 || toolItem is null
                 || toolInventory is null
                 || !TryResolveInventoryOrigin(toolInventory, player, out Vector2 origin))

@@ -46,7 +46,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             ArgumentNullException.ThrowIfNull(msg);
 
             var debugPath = GetDebugPath("WandDiscovery_Debug.txt");
-            var outputPath = GetOutputPath("Wands.itr");
+            var outputPath = GetOutputPath("Wands");
             using var debugWriter = new StreamWriter(debugPath, append: false);
 
             void Log(string s)
@@ -246,12 +246,35 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
         private static void Save(Mod mod, Dictionary<string, WandItemOutput> output, Action<string> log)
         {
+            // --- Emit specialized wire tools before multipurpose ones so load order matches coverage sort.
+
+            var ordered = new Dictionary<string, WandItemOutput>(StringComparer.OrdinalIgnoreCase);
+            foreach (KeyValuePair<string, WandItemOutput> kvp in output)
+            {
+                if (!IsMulticolorWireTool(kvp.Key))
+                    ordered[kvp.Key] = kvp.Value;
+            }
+
+            foreach (KeyValuePair<string, WandItemOutput> kvp in output)
+            {
+                if (IsMulticolorWireTool(kvp.Key))
+                    ordered[kvp.Key] = kvp.Value;
+            }
+
             var doc = new InteractionMapDocument<Dictionary<string, WandItemOutput>>
             {
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "wand"),
-                Data = output,
+                Data = ordered,
             };
-            SaveJson(GetOutputPath("Wands.itr"), doc, log, "WandInteractionMap");
+            SaveJson(GetOutputPath("Wands"), doc, log, "WandInteractionMap");
+        }
+
+        /// <summary>Whether the tool name is a known multipurpose wire wrench.</summary>
+        private static bool IsMulticolorWireTool(string toolName)
+        {
+            // --- Match the curated MulticolorWireTools set after stripping content prefixes.
+
+            return MulticolorWireTools.Contains(StripContentPrefix(toolName));
         }
 
         private sealed class WandItemOutput

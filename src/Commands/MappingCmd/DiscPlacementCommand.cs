@@ -16,7 +16,7 @@ namespace TheArchitectsBlueprintMod.Core
         public override CommandType Type => CommandType.Chat;
 
         public override string Usage => "/tab.discPlace";
-        public override string Description => "Runs placement discovery and writes Placement.itr.";
+        public override string Description => "Runs placement discovery and writes Placement.itr.json.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {

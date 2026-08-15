@@ -17,15 +17,16 @@ namespace TheArchitectsBlueprintMod.UI.Preview
         private static readonly Color NeutralRim = new(200, 210, 220, 220);
         private static readonly Dictionary<int, (Color Body, Color Rim)> ColorCache = [];
 
-        /// <summary>Draws one liquid cell as a body fill with a thicker surface rim.</summary>
+        /// <summary>Draws one liquid cell as a body fill, optionally with a surface rim.</summary>
         public static void Draw(
             in PreviewDrawContext ctx,
             int liquidType,
             byte amount,
             int relX,
-            int relY)
+            int relY,
+            bool drawRim)
         {
-            // --- Convert amount to height, resolve body/rim colors from texture, then draw two tones.
+            // --- Convert amount to height, resolve colors, then draw body and rim only when exposed.
 
             int waterSize = (amount + 1) / 16;
             if (waterSize <= 0)
@@ -36,7 +37,7 @@ namespace TheArchitectsBlueprintMod.UI.Preview
                 relY * PreviewDrawContext.TilePixelSize + (PreviewDrawContext.TilePixelSize - waterSize));
 
             ResolveColors(liquidType, out Color body, out Color rim);
-            DrawTwoToneFill(in ctx, body, rim, waterSize, pos);
+            DrawTwoToneFill(in ctx, body, rim, waterSize, pos, drawRim);
         }
 
         /// <summary>Resolves body and rim colors from the liquid texture, with a cached fallback.</summary>
@@ -202,15 +203,16 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             return true;
         }
 
-        /// <summary>Draws a solid body rectangle with a multi-pixel surface rim.</summary>
+        /// <summary>Draws a solid body rectangle and, when exposed, a multi-pixel surface rim.</summary>
         private static void DrawTwoToneFill(
             in PreviewDrawContext ctx,
             Color bodyColor,
             Color rimColor,
             int waterSize,
-            Vector2 pos)
+            Vector2 pos,
+            bool drawRim)
         {
-            // --- Fill the liquid body, then overlay a thicker brighter top band.
+            // --- Fill the liquid body, then overlay a brighter top band only on free surfaces.
 
             const int RimHeight = 3;
 
@@ -231,7 +233,7 @@ namespace TheArchitectsBlueprintMod.UI.Preview
                 SpriteEffects.None,
                 0f);
 
-            if (waterSize <= 1)
+            if (!drawRim || waterSize <= 1)
                 return;
 
             int rimHeight = Math.Min(RimHeight, waterSize);

@@ -41,56 +41,83 @@ namespace TheArchitectsBlueprintMod.Core
                 CollectDemand(projection, lookup, pipeline, config, in identifyContext, skipMatched: false, totalAccounting);
                 CollectDemand(projection, lookup, pipeline, config, in identifyContext, skipMatched: true, remainingAccounting);
 
-                Dictionary<int, int> totalDemand = totalAccounting.BuildFinalDemand();
-                Dictionary<int, int> remainingDemand = remainingAccounting.BuildFinalDemand();
+                Dictionary<DemandPairKey, int> totalDemand = totalAccounting.BuildFinalPairs();
+                Dictionary<DemandPairKey, int> remainingDemand = remainingAccounting.BuildFinalPairs();
 
-                var itemIds = new SortedSet<int>();
-                foreach (int itemId in totalDemand.Keys)
-                    itemIds.Add(itemId);
-                foreach (int itemId in remainingDemand.Keys)
-                    itemIds.Add(itemId);
+                var pairKeys = new SortedSet<DemandPairKey>(DemandPairKeyComparer.Instance);
+                foreach (DemandPairKey key in totalDemand.Keys)
+                    pairKeys.Add(key);
+                foreach (DemandPairKey key in remainingDemand.Keys)
+                    pairKeys.Add(key);
 
-                var entries = new List<ManifestEntry>(itemIds.Count);
-                foreach (int itemId in itemIds)
+                // Emit one entry per main+tool+ammo pair: direct, then ammo, then missing (ammo last).
+                var satisfied = new List<ManifestEntry>(pairKeys.Count);
+                var satisfiedAmmo = new List<ManifestEntry>();
+                var missingEntries = new List<ManifestEntry>();
+                var missingAmmo = new List<ManifestEntry>();
+                foreach (DemandPairKey key in pairKeys)
                 {
-                    totalDemand.TryGetValue(itemId, out int total);
-                    remainingDemand.TryGetValue(itemId, out int remaining);
-                    int available = ledger.CountAvailable(itemId);
+                    totalDemand.TryGetValue(key, out int total);
+                    remainingDemand.TryGetValue(key, out int remaining);
+                    int available = ledger.CountAvailable(key.ConsumableItemId);
                     int missing = Math.Max(0, remaining - available);
-                    entries.Add(new ManifestEntry(
-                        itemId,
+
+                    bool isAmmo = key.ToolItemId != key.ConsumableItemId;
+                    int toolAvailable = 0;
+                    int toolMissing = 0;
+                    if (isAmmo)
+                    {
+                        toolAvailable = CountToolAvailable(ledger, key.ToolItemId);
+                        toolMissing = toolAvailable > 0 ? 0 : 1;
+                    }
+
+                    var entry = new ManifestEntry(
+                        key.MainName,
+                        key.ToolItemId,
+                        key.ConsumableItemId,
                         total,
                         available,
                         missing,
-                        ledger.GetContributingSources(itemId)));
+                        toolAvailable,
+                        toolMissing,
+                        ledger.GetContributingSources(key.ConsumableItemId));
+
+                    bool isMissing = missing > 0 || toolMissing > 0;
+                    if (isMissing && isAmmo)
+                        missingAmmo.Add(entry);
+                    else if (isMissing)
+                        missingEntries.Add(entry);
+                    else if (isAmmo)
+                        satisfiedAmmo.Add(entry);
+                    else
+                        satisfied.Add(entry);
                 }
+
+                satisfied.AddRange(satisfiedAmmo);
+                satisfied.AddRange(missingEntries);
+                satisfied.AddRange(missingAmmo);
+                var entries = satisfied;
 
                 var unresolved = new List<string>();
                 AppendUnique(unresolved, totalAccounting.Unresolved);
                 AppendUnique(unresolved, remainingAccounting.Unresolved);
+                unresolved.Sort(StringComparer.OrdinalIgnoreCase);
                 return new Manifest(entries, unresolved);
             }
             finally
             {
-                // Only release a map Manifest itself loaded; keep an in-progress paste cache intact.
-                if (ownedLoad)
+                // Release only when Manifest loaded the map and no paste still needs it.
+                if (ownedLoad && !HasActivePasteOperations())
                     ItrStorage.Release();
             }
         }
 
         /// <summary>
-        /// Ensures InteractionMapProvider.Current is set for planning; returns true when Manifest owns the load.
+        /// Ensures InteractionMapProvider.Current holds the full compiled map for planning.
         /// </summary>
         private static bool EnsureInteractionMapForPlanning()
         {
-            // --- Reuse a paste-loaded cache; otherwise load the full compiled map when filesystem access is allowed.
-
-            bool alreadyLoaded = InteractionMapProvider.Current is not null;
-            if (alreadyLoaded)
-            {
-                LogMapStatus(mapLoaded: true, ownedLoad: false, reusedExisting: true);
-                return false;
-            }
+            // --- Always reload unfiltered; a paste cache may omit walls/tiles this blueprint needs.
 
             if (!ItrStorage.CanLoadPasteInteractionMaps())
             {
@@ -106,6 +133,33 @@ namespace TheArchitectsBlueprintMod.Core
             bool mapLoaded = InteractionMapProvider.Current is not null;
             LogMapStatus(mapLoaded, ownedLoad: mapLoaded, reusedExisting: false);
             return mapLoaded;
+        }
+
+        /// <summary>Counts ledger stacks for a tool id including any interaction alias ids.</summary>
+        private static int CountToolAvailable(InventoryStackLedger ledger, int toolItemId)
+        {
+            // --- Prefer alias expansion from the first mapped interaction for this tool.
+
+            IReadOnlyList<InteractionEntry> byItem = InteractionMapProvider.Current?.GetByItem(toolItemId) ?? [];
+            if (byItem.Count > 0)
+            {
+                IReadOnlyList<int> toolIds = byItem[0].GetToolItemIds();
+                int total = 0;
+                for (int i = 0; i < toolIds.Count; i++)
+                    total += ledger.CountAvailable(toolIds[i]);
+                return total;
+            }
+
+            return ledger.CountAvailable(toolItemId);
+        }
+
+        /// <summary>True when PastingSystem still holds at least one in-flight paste operation.</summary>
+        private static bool HasActivePasteOperations()
+        {
+            // --- Avoid releasing a full map out from under an active paste after Manifest planning.
+
+            PastingSystem? pasting = ModContent.GetInstance<PastingSystem>();
+            return pasting is not null && pasting.GetActiveOperationCount() > 0;
         }
 
         /// <summary>Logs once whether Manifest planning has a compiled interaction map.</summary>
@@ -215,6 +269,12 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
+            if (layer.Id == "Tree")
+            {
+                RecordTreeDemand(cells, in lookup, skipMatched, accounting, visitedCells);
+                return;
+            }
+
             for (int i = 0; i < cells.Count; i++)
             {
                 Blueprint.BlueprintCell cell = cells[i];
@@ -229,6 +289,44 @@ namespace TheArchitectsBlueprintMod.Core
                     continue;
 
                 RecordCellDemand(layer, in pasteTile, skipMatched, accounting);
+            }
+        }
+
+        /// <summary>Records Living Wood Wand demand for each unmatched tree/cactus segment using family ammo.</summary>
+        private static void RecordTreeDemand(
+            IReadOnlyList<Blueprint.BlueprintCell> cells,
+            in PasteTileLookup lookup,
+            bool skipMatched,
+            PasteDemandAccounting accounting,
+            HashSet<LayerWorldKey> visitedCells)
+        {
+            // --- Resolve ammo per segment so shared Trees tiles use their wiki style / wood family.
+            for (int i = 0; i < cells.Count; i++)
+            {
+                Blueprint.BlueprintCell cell = cells[i];
+                if (!lookup.TryGetPasteTile(cell.Relative, out PasteTile pasteTile))
+                    continue;
+
+                var key = new LayerWorldKey("Tree", pasteTile.World.X, pasteTile.World.Y);
+                if (!visitedCells.Add(key))
+                    continue;
+
+                if (skipMatched && TreeLayer.Definition.Match(in pasteTile))
+                    continue;
+
+                if (!pasteTile.PayloadCell.HasTile())
+                    continue;
+
+                if (TreeLayer.TryResolveTreeInteraction(in pasteTile, lookup, out InteractionEntry? entry)
+                    && entry is not null)
+                {
+                    accounting.RecordInteraction(entry);
+                    continue;
+                }
+
+                ushort tileType = (ushort)pasteTile.PayloadCell.Block.Type;
+                int style = pasteTile.PayloadCell.ResolvePlacementStyle();
+                accounting.NoteUnresolvedTile(tileType, style);
             }
         }
 
@@ -362,6 +460,8 @@ namespace TheArchitectsBlueprintMod.Core
 
         private static void RecordPaintDemand(in PasteTile pasteTile, bool ignoreWorld, PasteDemandAccounting accounting)
         {
+            // --- Demand paint colors and coatings like colors: payload wants them and target facet is unmatched.
+
             PayloadCell.PaintData intent = pasteTile.PayloadCell.Paint;
             Tile target = ignoreWorld ? default : pasteTile.Target;
 
@@ -370,19 +470,13 @@ namespace TheArchitectsBlueprintMod.Core
             if (intent.WallColor != PaintID.None && (ignoreWorld || target.WallColor != intent.WallColor))
                 accounting.RecordPaintKind(intent.WallColor);
 
-            // Record coating tools when echo/illuminant flags still need applying.
-            bool needsEcho = ignoreWorld
-                ? (intent.TileInvisible || intent.WallInvisible)
-                : ((intent.TileInvisible && target.HasTile && !target.IsTileInvisible)
-                    || (intent.WallInvisible && target.WallType != WallID.None && !target.IsWallInvisible));
-            if (needsEcho)
+            // Do not require a live tile/wall here; empty destinations still need coating materials for paste.
+            if (intent.TileInvisible && (ignoreWorld || !target.IsTileInvisible)
+                || intent.WallInvisible && (ignoreWorld || !target.IsWallInvisible))
                 accounting.RecordPaintKind(ContentNameResolver.EchoCoatingId);
 
-            bool needsIlluminant = ignoreWorld
-                ? (intent.TileFullbright || intent.WallFullbright)
-                : ((intent.TileFullbright && target.HasTile && !target.IsTileFullbright)
-                    || (intent.WallFullbright && target.WallType != WallID.None && !target.IsWallFullbright));
-            if (needsIlluminant)
+            if (intent.TileFullbright && (ignoreWorld || !target.IsTileFullbright)
+                || intent.WallFullbright && (ignoreWorld || !target.IsWallFullbright))
                 accounting.RecordPaintKind(ContentNameResolver.IlluminantCoatingId);
         }
 

@@ -49,7 +49,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         private static IEnumerator CreateSteppedRun(Mod mod, Player player, int testX, int testY, Action<string> msg)
         {
             var debugPath = GetDebugPath("PlacementDiscovery_Debug.txt");
-            var outputPath = GetOutputPath("Placement.itr");
+            var outputPath = GetOutputPath("Placement");
             using var debugWriter = new System.IO.StreamWriter(debugPath, append: false);
             void Log(string s)
             {
@@ -97,7 +97,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 }
             }
 
-            int modDropFallbacksAdded = AddModTileDropFallbackEntries(map);
+            int modDropFallbacksAdded = AddModTileDropFallbackEntries(map, Log);
             if (modDropFallbacksAdded > 0)
                 Log($"Added {modDropFallbacksAdded} mod tile drop fallback mappings from TileLoader.GetItemDropFromTypeAndStyle.");
 
@@ -126,10 +126,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             string itemPrefix = $"[{itemName}] ";
 
             if (FrameLayer.IsFrameTileType((ushort)createTile))
-            {
-                map.AddTile(createTile, InteractionEntry.Create("Tile", item: itemName, itemId: itemId, style: item.placeStyle >= 0 ? item.placeStyle : null, yield: 1));
-                return 1;
-            }
+                return AddStyledTileAndAlternates(map, createTile, itemName, itemId, item.placeStyle >= 0 ? item.placeStyle : null, log);
 
             var saved = chamber.SaveCell(testX, testY);
 
@@ -141,8 +138,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             if (directSuccess)
             {
                 chamber.RestoreCell(testX, testY, saved);
-                map.AddTile(createTile, InteractionEntry.Create("Tile", item: itemName, itemId: itemId, style: item.placeStyle >= 0 ? item.placeStyle : null, yield: 1));
-                return 1;
+                return AddStyledTileAndAlternates(map, createTile, itemName, itemId, item.placeStyle >= 0 ? item.placeStyle : null, log);
             }
 
             int added = 0;
@@ -182,10 +178,56 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         }
 
         /// <summary>
+        /// Maps a placeable tile plus furniture and herb growth-stage counterparts for the same item and style.
+        /// </summary>
+        private static int AddStyledTileAndAlternates(
+            PlacementInteractionMap map,
+            int createTile,
+            string itemName,
+            int itemId,
+            int? style,
+            Action<string> log)
+        {
+            // --- Emit createTile, then open/closed furniture twins, then Mature/Blooming herb rows with Immature fake.
+
+            map.AddTile(createTile, InteractionEntry.Create("Tile", item: itemName, itemId: itemId, style: style, yield: 1));
+            int added = 1;
+
+            // Doors, trapdoors, and tall gates share one item across open/closed tile types.
+            if (InteractionMap.TryGetAlternateFurnitureTile(createTile, out int alternateTile) && alternateTile != createTile)
+            {
+                map.AddTile(alternateTile, InteractionEntry.Create("Tile", item: itemName, itemId: itemId, style: style, yield: 1));
+                log($"  {itemName}: {ContentNameResolver.GetTileName(createTile)} style={style ?? 0} also {ContentNameResolver.GetTileName(alternateTile)} ({alternateTile})");
+                added++;
+            }
+
+            // Seeds place ImmatureHerbs; captured Mature/Blooming stages place Immature via fake.
+            if (createTile == TileID.ImmatureHerbs)
+            {
+                string immatureName = ContentNameResolver.GetTileName(TileID.ImmatureHerbs);
+                foreach (int stageTile in new[] { TileID.MatureHerbs, TileID.BloomingHerbs })
+                {
+                    map.AddTile(stageTile, InteractionEntry.Create(
+                        "Tile",
+                        item: itemName,
+                        itemId: itemId,
+                        style: style,
+                        yield: 1,
+                        fake: immatureName,
+                        fakeId: TileID.ImmatureHerbs));
+                    log($"  {itemName}: {ContentNameResolver.GetTileName(stageTile)} style={style ?? 0} fake={immatureName}");
+                    added++;
+                }
+            }
+
+            return added;
+        }
+
+        /// <summary>
         /// Adds tile->item mappings for mod tiles that register drop mappings through TileLoader.
         /// This complements the item-driven probe when tiles are not reliably discoverable via createTile.
         /// </summary>
-        private static int AddModTileDropFallbackEntries(PlacementInteractionMap map)
+        private static int AddModTileDropFallbackEntries(PlacementInteractionMap map, Action<string> log)
         {
             int added = 0;
             for (int tileId = TileID.Count; tileId < TileLoader.TileCount; tileId++)
@@ -199,13 +241,13 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 if (item.IsAir || !item.consumable || item.createTile != tileId)
                     continue;
 
-                map.AddTile(tileId, InteractionEntry.Create(
-                    "Tile",
-                    item: ContentNameResolver.GetItemName(itemId),
-                    itemId: itemId,
-                    style: item.placeStyle >= 0 ? item.placeStyle : null,
-                    yield: 1));
-                added++;
+                added += AddStyledTileAndAlternates(
+                    map,
+                    tileId,
+                    ContentNameResolver.GetItemName(itemId),
+                    itemId,
+                    item.placeStyle >= 0 ? item.placeStyle : null,
+                    log);
             }
 
             return added;
@@ -258,7 +300,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 Metadata = InteractionMapMetadata.Create(mod, "tile-first", "placement"),
                 Data = output,
             };
-            SavePlacementJson(GetOutputPath("Placement.itr"), doc, log, "PlacementInteractionMap");
+            SavePlacementJson(GetOutputPath("Placement"), doc, log, "PlacementInteractionMap");
         }
 
         private static PlacementOutput ToNameBasedOutput(PlacementInteractionMap map)

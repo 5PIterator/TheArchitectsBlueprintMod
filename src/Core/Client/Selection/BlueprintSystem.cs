@@ -60,6 +60,23 @@ public sealed class BlueprintSystem : ModSystem
     public Selection GetTopmostSelection() => GetSelectionEntries().LastOrDefault()?.Blueprint as Selection;
     public Projection GetTopmostProjection() => GetProjectionEntries().LastOrDefault()?.Blueprint as Projection;
 
+    /// <summary>Returns the frontmost defined selection or projection, or null when none exist.</summary>
+    public Blueprint? GetTopmostDefinedSelectionOrProjection()
+    {
+        // --- Walk the stack from the top and skip additional or undefined blueprints.
+
+        for (LinkedListNode<BlueprintEntry>? node = BlueprintCollection.Last; node is not null; node = node.Previous)
+        {
+            Blueprint blueprint = node.Value.Blueprint;
+            if ((blueprint is Selection or Projection) && blueprint.IsDefined)
+                return blueprint;
+        }
+
+        // Nothing defined remains on the stack.
+
+        return null;
+    }
+
     public bool GetTopmostBlueprintAt(Point cursorTile, out Blueprint? blueprint)
     {
         var entry = GetBlueprintEntries().LastOrDefault(e => e.Hits(cursorTile));

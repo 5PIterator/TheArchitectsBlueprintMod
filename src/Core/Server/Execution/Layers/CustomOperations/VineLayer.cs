@@ -128,32 +128,19 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
         }
 
-        /// <summary>Clears one vine segment per pass to preserve deterministic ordering.</summary>
+        /// <summary>Clears a vine column as one task by killing its top-most tile.</summary>
         public override LayerResult Clear(TileBatch batch, in PasteContext context)
         {
-            // --- Clear in the opposite direction of placement to avoid unsupported leftovers during multi-pass processing.
+            // --- Kill the top-most segment once; WorldGen drops hanging remainder the same way framing drops a multitile footprint.
             IReadOnlyList<PasteTile> tiles = batch.Tiles;
             if (tiles.Count == 0)
                 return LayerResult.Ok();
 
-            bool clearLowestFirst = IsStandardVine(tiles[0].PayloadCell.Block.Type);
-            int index = SelectNextSegmentIndex(tiles, clearLowestFirst);
-            PasteTile segment = tiles[index];
-
-            LayerResult result = TileOperations.Clear(segment, in context);
-            if (!result.Success)
-                return result;
-
-            var remaining = new List<PasteTile>(tiles.Count - 1);
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                if (i != index)
-                    remaining.Add(tiles[i]);
-            }
-
-            return remaining.Count > 0
-                ? LayerResult.OkWithRemaining(batch.WithRemainingTiles(remaining), result.Message, result.OkLabel)
-                : result;
+            PasteTile origin = tiles[SelectNextSegmentIndex(tiles, selectSmallestY: true)];
+            string message = origin.PayloadCell.HasTile()
+                ? LayerLogFormat.FormatTile(origin.PayloadTile)
+                : LayerLogFormat.FormatTile(origin.Target);
+            return FrameOperations.ClearOrigin(in origin, in context, message);
         }
 
         /// <summary>Places one vine segment per pass, respecting vine direction.</summary>

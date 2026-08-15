@@ -88,6 +88,106 @@
         }
       ]
     },
+    "YellowWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Yellow",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "CombatWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Red",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Green",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Blue",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Yellow",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "MulticolorWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Red",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Green",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Blue",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Yellow",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "WireKite": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Red",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Green",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Blue",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Yellow",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Actuator",
+          "yield": 1,
+          "ammo": "Actuator"
+        }
+      ]
+    },
     "BoneWand": {
       "interactions": [
         {
@@ -197,106 +297,6 @@
           "main": "MahoganyLeaf",
           "yield": 1,
           "ammo": "RichMahogany"
-        }
-      ]
-    },
-    "WireKite": {
-      "interactions": [
-        {
-          "layer": "Wire",
-          "main": "Red",
-          "yield": 1,
-          "ammo": "Wire"
-        },
-        {
-          "layer": "Wire",
-          "main": "Green",
-          "yield": 1,
-          "ammo": "Wire"
-        },
-        {
-          "layer": "Wire",
-          "main": "Blue",
-          "yield": 1,
-          "ammo": "Wire"
-        },
-        {
-          "layer": "Wire",
-          "resultWireKind": 3,
-          "yield": 1,
-          "ammo": "Wire"
-        },
-        {
-          "layer": "Wire",
-          "main": "Actuator",
-          "yield": 1,
-          "ammo": "Actuator"
-        }
-      ]
-    },
-    "YellowWrench": {
-      "interactions": [
-        {
-          "layer": "Wire",
-          "resultWireKind": 3,
-          "yield": 1,
-          "ammo": "Wire"
-        }
-      ]
-    },
-    "MulticolorWrench": {
-      "interactions": [
-        {
-          "layer": "Wire",
-          "main": "Red",
-          "yield": 1,
-          "ammo": "Wire"
-        },
-        {
-          "layer": "Wire",
-          "main": "Green",
-          "yield": 1,
-          "ammo": "Wire"
-        },
-        {
-          "layer": "Wire",
-          "main": "Blue",
-          "yield": 1,
-          "ammo": "Wire"
-        },
-        {
-          "layer": "Wire",
-          "resultWireKind": 3,
-          "yield": 1,
-          "ammo": "Wire"
-        }
-      ]
-    },
-    "CombatWrench": {
-      "interactions": [
-        {
-          "layer": "Wire",
-          "main": "Red",
-          "yield": 1,
-          "ammo": "Wire"
-        },
-        {
-          "layer": "Wire",
-          "main": "Green",
-          "yield": 1,
-          "ammo": "Wire"
-        },
-        {
-          "layer": "Wire",
-          "main": "Blue",
-          "yield": 1,
-          "ammo": "Wire"
-        },
-        {
-          "layer": "Wire",
-          "resultWireKind": 3,
-          "yield": 1,
-          "ammo": "Wire"
         }
       ]
     },

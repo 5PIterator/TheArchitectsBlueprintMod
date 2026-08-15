@@ -27,6 +27,8 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         private const string KeyStyle = "s";
         private const string KeyYield = "y";
         private const string KeyAmmoId = "a";
+        private const string KeyFakeId = "f";
+        private const string KeyAliasIds = "alias";
 
         public static void WriteBinaryDocument(Stream stream, InteractionMap map, InteractionMapMetadata metadata)
         {
@@ -148,6 +150,10 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     entryTag[KeyYield] = entry.Yield.Value;
                 if (entry.AmmoId.HasValue)
                     entryTag[KeyAmmoId] = entry.AmmoId.Value;
+                if (entry.FakeId.HasValue)
+                    entryTag[KeyFakeId] = entry.FakeId.Value;
+                if (entry.AliasIds is { Count: > 0 })
+                    entryTag[KeyAliasIds] = entry.AliasIds;
 
                 entries.Add(entryTag);
             }
@@ -207,6 +213,8 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 int? style = TryGetInt32(tag, KeyStyle, out int s) ? s : null;
                 int? yield = TryGetInt32(tag, KeyYield, out int y) ? y : null;
                 int? ammoId = TryGetInt32(tag, KeyAmmoId, out int a) ? a : null;
+                int? fakeId = TryGetInt32(tag, KeyFakeId, out int f) ? f : null;
+                List<int>? aliasIds = TryGetIntList(tag, KeyAliasIds);
 
                 InteractionEntry entry = InteractionEntry.Create(
                     layer: layer,
@@ -219,7 +227,9 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     style: style,
                     yield: yield,
                     ammo: null,
-                    ammoId: ammoId);
+                    ammoId: ammoId,
+                    aliasIds: aliasIds,
+                    fakeId: fakeId);
                 map.Add(entry);
             }
 
@@ -283,6 +293,12 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                         : null;
                     int? ammoId = ammoName is not null ? ContentNameResolver.ResolveItem(ammoName) : null;
 
+                    string? fakeName = interactionEl.TryGetProperty("Fake", out JsonElement fakeEl) && fakeEl.ValueKind == JsonValueKind.String
+                        ? fakeEl.GetString()
+                        : null;
+                    int? fakeId = fakeName is not null ? ContentNameResolver.ResolveMain(layer, fakeName) : null;
+                    List<string>? aliasNames = ReadStringArrayProperty(interactionEl, "Alias");
+
                     InteractionEntry entry = InteractionEntry.Create(
                         layer: layer,
                         main: mainName,
@@ -294,10 +310,56 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                         style: style,
                         yield: yield,
                         ammo: ammoName,
-                        ammoId: ammoId);
+                        ammoId: ammoId,
+                        alias: aliasNames,
+                        fake: fakeName,
+                        fakeId: fakeId);
                     map.Add(entry);
                 }
             }
+        }
+
+        /// <summary>Reads a JSON string-array property into a list of non-empty names.</summary>
+        private static List<string>? ReadStringArrayProperty(JsonElement parent, string propertyName)
+        {
+            // --- Require an array of strings; skip empties.
+
+            if (!parent.TryGetProperty(propertyName, out JsonElement arr) || arr.ValueKind != JsonValueKind.Array)
+                return null;
+
+            var list = new List<string>();
+            foreach (JsonElement el in arr.EnumerateArray())
+            {
+                if (el.ValueKind != JsonValueKind.String)
+                    continue;
+                string? value = el.GetString();
+                if (!string.IsNullOrEmpty(value))
+                    list.Add(value);
+            }
+
+            return list.Count > 0 ? list : null;
+        }
+
+        /// <summary>Reads a TagCompound int list used for tool alias ids.</summary>
+        private static List<int>? TryGetIntList(TagCompound tag, string key)
+        {
+            // --- Accept List`int` from TagIO; return null when missing or empty.
+
+            if (!tag.ContainsKey(key))
+                return null;
+
+            IList<int> raw = tag.GetList<int>(key);
+            if (raw is null || raw.Count == 0)
+                return null;
+
+            var list = new List<int>(raw.Count);
+            for (int i = 0; i < raw.Count; i++)
+            {
+                if (raw[i] > 0)
+                    list.Add(raw[i]);
+            }
+
+            return list.Count > 0 ? list : null;
         }
 
         private static TagCompound MetadataToTag(InteractionMapMetadata metadata)

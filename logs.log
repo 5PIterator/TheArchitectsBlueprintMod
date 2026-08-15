@@ -1,142 +1,30 @@
-[13:39:14.184] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Manifest] Manifest map planning mapLoaded=True ownedLoad=True reusedExisting=False
-[InteractionMap] Manifest map planning mapLoaded=True ownedLoad=True reusedExisting=False
-[Manifest] Tile main=189 candidates=2 chosen=itemId=751 ammo=- met=False preferred=itemId=751
-[Manifest] Paint main=27 candidates=10 chosen=itemId=1543 ammo=1099 met=False preferred=itemId=1543
-[Manifest] Paint main=22 candidates=10 chosen=itemId=1543 ammo=1094 met=False preferred=itemId=1543
-[Manifest] Paint main=29 candidates=10 chosen=itemId=1543 ammo=1967 met=False preferred=itemId=1543
-[Manifest] Paint main=5 candidates=10 chosen=itemId=1543 ammo=1077 met=False preferred=itemId=1543
-[Manifest] Paint main=2 candidates=10 chosen=itemId=1543 ammo=1074 met=False preferred=itemId=1543
-[Manifest] Paint main=1 candidates=10 chosen=itemId=1543 ammo=1073 met=False preferred=itemId=1543
-[Manifest] Wall main=73 candidates=2 chosen=itemId=752 ammo=- met=False preferred=itemId=752
-[Manifest] Paint main=14 candidates=10 chosen=itemId=1543 ammo=1086 met=False preferred=itemId=1543
-[Manifest] Paint main=10 candidates=10 chosen=itemId=1543 ammo=1082 met=False preferred=itemId=1543
-[Manifest] Paint main=28 candidates=10 chosen=itemId=1543 ammo=1966 met=False preferred=itemId=1543
-[Manifest] Paint main=13 candidates=10 chosen=itemId=1543 ammo=1085 met=False preferred=itemId=1543
-[Manifest] Paint main=1001 candidates=5 chosen=itemId=1543 ammo=4668 met=False preferred=itemId=1543
-[Manifest] Paint main=3 candidates=10 chosen=itemId=1543 ammo=1075 met=False preferred=itemId=1543
-[Manifest] Paint main=15 candidates=10 chosen=itemId=1543 ammo=1087 met=False preferred=itemId=1543
-[Manifest] Paint main=12 candidates=10 chosen=itemId=1543 ammo=1084 met=False preferred=itemId=1543
-[Manifest] Paint main=16 candidates=10 chosen=itemId=1543 ammo=1088 met=False preferred=itemId=1543
-[Manifest] Paint main=21 candidates=10 chosen=itemId=1543 ammo=1093 met=False preferred=itemId=1543
-[Manifest] Paint main=1000 candidates=5 chosen=itemId=1543 ammo=5344 met=False preferred=itemId=1543
-[Manifest] Wire main=4 candidates=2 chosen=itemId=849 ammo=849 met=False preferred=itemId=849
-[Manifest] Paint main=24 candidates=10 chosen=itemId=1543 ammo=1096 met=False preferred=itemId=1543
-[Manifest] Paint main=23 candidates=10 chosen=itemId=1543 ammo=1095 met=False preferred=itemId=1543
-[Manifest] Paint main=9 candidates=10 chosen=itemId=1543 ammo=1081 met=False preferred=itemId=1543
-[Manifest] Paint main=19 candidates=10 chosen=itemId=1543 ammo=1091 met=False preferred=itemId=1543
-[Manifest] Paint main=7 candidates=10 chosen=itemId=1543 ammo=1079 met=False preferred=itemId=1543
-[Manifest] Paint main=20 candidates=10 chosen=itemId=1543 ammo=1092 met=False preferred=itemId=1543
-[Manifest] Paint main=17 candidates=10 chosen=itemId=1543 ammo=1089 met=False preferred=itemId=1543
-[Manifest] Paint main=25 candidates=10 chosen=itemId=1543 ammo=1097 met=False preferred=itemId=1543
-[Manifest] Paint main=30 candidates=10 chosen=itemId=1543 ammo=1968 met=False preferred=itemId=1543
-[Manifest] Paint main=18 candidates=10 chosen=itemId=1543 ammo=1090 met=False preferred=itemId=1543
-[Manifest] Paint main=6 candidates=10 chosen=itemId=1543 ammo=1078 met=False preferred=itemId=1543
-[Manifest] Paint main=26 candidates=10 chosen=itemId=1543 ammo=1098 met=False preferred=itemId=1543
-[Manifest] Paint main=11 candidates=10 chosen=itemId=1543 ammo=1083 met=False preferred=itemId=1543
-[Manifest] Tile main=189 candidates=2 chosen=itemId=751 ammo=- met=False preferred=itemId=751
-[Manifest] Paint main=27 candidates=10 chosen=itemId=1543 ammo=1099 met=False preferred=itemId=1543
-[Manifest] Paint main=22 candidates=10 chosen=itemId=1543 ammo=1094 met=False preferred=itemId=1543
-[Manifest] Paint main=29 candidates=10 chosen=itemId=1543 ammo=1967 met=False preferred=itemId=1543
-[Manifest] Paint main=5 candidates=10 chosen=itemId=1543 ammo=1077 met=False preferred=itemId=1543
-[Manifest] Paint main=2 candidates=10 chosen=itemId=1543 ammo=1074 met=False preferred=itemId=1543
-[Manifest] Paint main=1 candidates=10 chosen=itemId=1543 ammo=1073 met=False preferred=itemId=1543
-[Manifest] Wall main=73 candidates=2 chosen=itemId=752 ammo=- met=False preferred=itemId=752
-[Manifest] Paint main=14 candidates=10 chosen=itemId=1543 ammo=1086 met=False preferred=itemId=1543
-[Manifest] Paint main=10 candidates=10 chosen=itemId=1543 ammo=1082 met=False preferred=itemId=1543
-[Manifest] Paint main=28 candidates=10 chosen=itemId=1543 ammo=1966 met=False preferred=itemId=1543
-[Manifest] Paint main=13 candidates=10 chosen=itemId=1543 ammo=1085 met=False preferred=itemId=1543
-[Manifest] Paint main=3 candidates=10 chosen=itemId=1543 ammo=1075 met=False preferred=itemId=1543
-[Manifest] Paint main=15 candidates=10 chosen=itemId=1543 ammo=1087 met=False preferred=itemId=1543
-[Manifest] Paint main=12 candidates=10 chosen=itemId=1543 ammo=1084 met=False preferred=itemId=1543
-[Manifest] Paint main=16 candidates=10 chosen=itemId=1543 ammo=1088 met=False preferred=itemId=1543
-[Manifest] Paint main=21 candidates=10 chosen=itemId=1543 ammo=1093 met=False preferred=itemId=1543
-[Manifest] Wire main=4 candidates=2 chosen=itemId=849 ammo=849 met=False preferred=itemId=849
-[Manifest] Paint main=24 candidates=10 chosen=itemId=1543 ammo=1096 met=False preferred=itemId=1543
-[Manifest] Paint main=23 candidates=10 chosen=itemId=1543 ammo=1095 met=False preferred=itemId=1543
-[Manifest] Paint main=9 candidates=10 chosen=itemId=1543 ammo=1081 met=False preferred=itemId=1543
-[Manifest] Paint main=19 candidates=10 chosen=itemId=1543 ammo=1091 met=False preferred=itemId=1543
-[Manifest] Paint main=7 candidates=10 chosen=itemId=1543 ammo=1079 met=False preferred=itemId=1543
-[Manifest] Paint main=20 candidates=10 chosen=itemId=1543 ammo=1092 met=False preferred=itemId=1543
-[Manifest] Paint main=17 candidates=10 chosen=itemId=1543 ammo=1089 met=False preferred=itemId=1543
-[Manifest] Paint main=25 candidates=10 chosen=itemId=1543 ammo=1097 met=False preferred=itemId=1543
-[Manifest] Paint main=30 candidates=10 chosen=itemId=1543 ammo=1968 met=False preferred=itemId=1543
-[Manifest] Paint main=18 candidates=10 chosen=itemId=1543 ammo=1090 met=False preferred=itemId=1543
-[Manifest] Paint main=6 candidates=10 chosen=itemId=1543 ammo=1078 met=False preferred=itemId=1543
-[Manifest] Paint main=26 candidates=10 chosen=itemId=1543 ammo=1098 met=False preferred=itemId=1543
-[Manifest] Paint main=11 candidates=10 chosen=itemId=1543 ammo=1083 met=False preferred=itemId=1543
-TheArchitectsBlueprintMod: [13:39:14.184] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Manifest] Manifest map planning mapLoaded=True ownedLoad=True reusedExisting=False
-[InteractionMap] Manifest map planning mapLoaded=True ownedLoad=True reusedExisting=False
-[Manifest] Tile main=189 candidates=2 chosen=itemId=751 ammo=- met=False preferred=itemId=751
-[Manifest] Paint main=27 candidates=10 chosen=itemId=1543 ammo=1099 met=False preferred=itemId=1543
-[Manifest] Paint main=22 candidates=10 chosen=itemId=1543 ammo=1094 met=False preferred=itemId=1543
-[Manifest] Paint main=29 candidates=10 chosen=itemId=1543 ammo=1967 met=False preferred=itemId=1543
-[Manifest] Paint main=5 candidates=10 chosen=itemId=1543 ammo=1077 met=False preferred=itemId=1543
-[Manifest] Paint main=2 candidates=10 chosen=itemId=1543 ammo=1074 met=False preferred=itemId=1543
-[Manifest] Paint main=1 candidates=10 chosen=itemId=1543 ammo=1073 met=False preferred=itemId=1543
-[Manifest] Wall main=73 candidates=2 chosen=itemId=752 ammo=- met=False preferred=itemId=752
-[Manifest] Paint main=14 candidates=10 chosen=itemId=1543 ammo=1086 met=False preferred=itemId=1543
-[Manifest] Paint main=10 candidates=10 chosen=itemId=1543 ammo=1082 met=False preferred=itemId=1543
-[Manifest] Paint main=28 candidates=10 chosen=itemId=1543 ammo=1966 met=False preferred=itemId=1543
-[Manifest] Paint main=13 candidates=10 chosen=itemId=1543 ammo=1085 met=False preferred=itemId=1543
-[Manifest] Paint main=1001 candidates=5 chosen=itemId=1543 ammo=4668 met=False preferred=itemId=1543
-[Manifest] Paint main=3 candidates=10 chosen=itemId=1543 ammo=1075 met=False preferred=itemId=1543
-[Manifest] Paint main=15 candidates=10 chosen=itemId=1543 ammo=1087 met=False preferred=itemId=1543
-[Manifest] Paint main=12 candidates=10 chosen=itemId=1543 ammo=1084 met=False preferred=itemId=1543
-[Manifest] Paint main=16 candidates=10 chosen=itemId=1543 ammo=1088 met=False preferred=itemId=1543
-[Manifest] Paint main=21 candidates=10 chosen=itemId=1543 ammo=1093 met=False preferred=itemId=1543
-[Manifest] Paint main=1000 candidates=5 chosen=itemId=1543 ammo=5344 met=False preferred=itemId=1543
-[Manifest] Wire main=4 candidates=2 chosen=itemId=849 ammo=849 met=False preferred=itemId=849
-[Manifest] Paint main=24 candidates=10 chosen=itemId=1543 ammo=1096 met=False preferred=itemId=1543
-[Manifest] Paint main=23 candidates=10 chosen=itemId=1543 ammo=1095 met=False preferred=itemId=1543
-[Manifest] Paint main=9 candidates=10 chosen=itemId=1543 ammo=1081 met=False preferred=itemId=1543
-[Manifest] Paint main=19 candidates=10 chosen=itemId=1543 ammo=1091 met=False preferred=itemId=1543
-[Manifest] Paint main=7 candidates=10 chosen=itemId=1543 ammo=1079 met=False preferred=itemId=1543
-[Manifest] Paint main=20 candidates=10 chosen=itemId=1543 ammo=1092 met=False preferred=itemId=1543
-[Manifest] Paint main=17 candidates=10 chosen=itemId=1543 ammo=1089 met=False preferred=itemId=1543
-[Manifest] Paint main=25 candidates=10 chosen=itemId=1543 ammo=1097 met=False preferred=itemId=1543
-[Manifest] Paint main=30 candidates=10 chosen=itemId=1543 ammo=1968 met=False preferred=itemId=1543
-[Manifest] Paint main=18 candidates=10 chosen=itemId=1543 ammo=1090 met=False preferred=itemId=1543
-[Manifest] Paint main=6 candidates=10 chosen=itemId=1543 ammo=1078 met=False preferred=itemId=1543
-[Manifest] Paint main=26 candidates=10 chosen=itemId=1543 ammo=1098 met=False preferred=itemId=1543
-[Manifest] Paint main=11 candidates=10 chosen=itemId=1543 ammo=1083 met=False preferred=itemId=1543
-[Manifest] Tile main=189 candidates=2 chosen=itemId=751 ammo=- met=False preferred=itemId=751
-[Manifest] Paint main=27 candidates=10 chosen=itemId=1543 ammo=1099 met=False preferred=itemId=1543
-[Manifest] Paint main=22 candidates=10 chosen=itemId=1543 ammo=1094 met=False preferred=itemId=1543
-[Manifest] Paint main=29 candidates=10 chosen=itemId=1543 ammo=1967 met=False preferred=itemId=1543
-[Manifest] Paint main=5 candidates=10 chosen=itemId=1543 ammo=1077 met=False preferred=itemId=1543
-[Manifest] Paint main=2 candidates=10 chosen=itemId=1543 ammo=1074 met=False preferred=itemId=1543
-[Manifest] Paint main=1 candidates=10 chosen=itemId=1543 ammo=1073 met=False preferred=itemId=1543
-[Manifest] Wall main=73 candidates=2 chosen=itemId=752 ammo=- met=False preferred=itemId=752
-[Manifest] Paint main=14 candidates=10 chosen=itemId=1543 ammo=1086 met=False preferred=itemId=1543
-[Manifest] Paint main=10 candidates=10 chosen=itemId=1543 ammo=1082 met=False preferred=itemId=1543
-[Manifest] Paint main=28 candidates=10 chosen=itemId=1543 ammo=1966 met=False preferred=itemId=1543
-[Manifest] Paint main=13 candidates=10 chosen=itemId=1543 ammo=1085 met=False preferred=itemId=1543
-[Manifest] Paint main=3 candidates=10 chosen=itemId=1543 ammo=1075 met=False preferred=itemId=1543
-[Manifest] Paint main=15 candidates=10 chosen=itemId=1543 ammo=1087 met=False preferred=itemId=1543
-[Manifest] Paint main=12 candidates=10 chosen=itemId=1543 ammo=1084 met=False preferred=itemId=1543
-[Manifest] Paint main=16 candidates=10 chosen=itemId=1543 ammo=1088 met=False preferred=itemId=1543
-[Manifest] Paint main=21 candidates=10 chosen=itemId=1543 ammo=1093 met=False preferred=itemId=1543
-[Manifest] Wire main=4 candidates=2 chosen=itemId=849 ammo=849 met=False preferred=itemId=849
-[Manifest] Paint main=24 candidates=10 chosen=itemId=1543 ammo=1096 met=False preferred=itemId=1543
-[Manifest] Paint main=23 candidates=10 chosen=itemId=1543 ammo=1095 met=False preferred=itemId=1543
-[Manifest] Paint main=9 candidates=10 chosen=itemId=1543 ammo=1081 met=False preferred=itemId=1543
-[Manifest] Paint main=19 candidates=10 chosen=itemId=1543 ammo=1091 met=False preferred=itemId=1543
-[Manifest] Paint main=7 candidates=10 chosen=itemId=1543 ammo=1079 met=False preferred=itemId=1543
-[Manifest] Paint main=20 candidates=10 chosen=itemId=1543 ammo=1092 met=False preferred=itemId=1543
-[Manifest] Paint main=17 candidates=10 chosen=itemId=1543 ammo=1089 met=False preferred=itemId=1543
-[Manifest] Paint main=25 candidates=10 chosen=itemId=1543 ammo=1097 met=False preferred=itemId=1543
-[Manifest] Paint main=30 candidates=10 chosen=itemId=1543 ammo=1968 met=False preferred=itemId=1543
-[Manifest] Paint main=18 candidates=10 chosen=itemId=1543 ammo=1090 met=False preferred=itemId=1543
-[Manifest] Paint main=6 candidates=10 chosen=itemId=1543 ammo=1078 met=False preferred=itemId=1543
-[Manifest] Paint main=26 candidates=10 chosen=itemId=1543 ammo=1098 met=False preferred=itemId=1543
-[Manifest] Paint main=11 candidates=10 chosen=itemId=1543 ammo=1083 met=False preferred=itemId=1543
-[13:39:14.185] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Manifest] --- Payload Manifest ---
-[Manifest] [i/s28:751]: 0/28 (-28)
-[Manifest] [i/s21:752]: 0/21 (-21)
-[Manifest] [i/s3:849]: 0/3 (-3)
-[Manifest] [i:1543]: 0/1 (-1)
-TheArchitectsBlueprintMod: [13:39:14.185] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Manifest] --- Payload Manifest ---
-[Manifest] [i/s28:751]: 0/28 (-28)
-[Manifest] [i/s21:752]: 0/21 (-21)
-[Manifest] [i/s3:849]: 0/3 (-3)
-[Manifest] [i:1543]: 0/1 (-1)
+[20:58:31.779] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Manifest] --- Payload Manifest ---
+[Manifest] Items | Qty | Missing | Main | Sources
+[Manifest] [i:5324][i:3] | 0/1 | (-0) (-0) | Terraria:SmallPiles:0 |
+[Manifest] [i:5324][i/s16:133] | 0/16 | (-0) (-0) | Terraria:Pots:0 |
+[Manifest] [i/s18:169] | 0/18 | (-0) (-0) | Terraria:Sand:0 |
+[Manifest] [i/s176:206] | 0/176 | (-0) (-0) | Terraria:Water |
+[Manifest] [i/s5:3182] | 0/5 | (-0) (-0) | Terraria:WaterDrip:0 |
+[Manifest] [i/s39:3271] | 0/39 | (-0) (-0) | Terraria:Sandstone:0 |
+[Manifest] [i/s29:3272] | 0/29 | (-0) (-0) | Terraria:HardenedSand:0 |
+[Manifest] [i/s35:3347] | 0/35 | (-0) (-0) | Terraria:DesertFossil:0 |
+[Manifest] [i:3782] | 0/1 | (-0) (-0) | Terraria:SandDrip:0 |
+[Manifest] [i/s172:5374] | 0/172 | (-0) (-0) | Terraria:Sandstone |
+[Manifest] [i/s45:5375] | 0/45 | (-0) (-0) | Terraria:HardenedSand |
+[Manifest] 28 unresolved mapping(s): Terraria:ModLoader/UnloadedNonSolidTile, Terraria:ModLoader/UnloadedNonSolidTile (style 1), Terraria:ModLoader/UnloadedNonSolidTile (style 2), Terraria:ModLoader/UnloadedNonSolidTile (style 3), Terraria:ModLoader/UnloadedSemiSolidTile (style 3), Terraria:ModLoader/UnloadedSemiSolidTile (style 4), Terraria:ModLoader/UnloadedSemiSolidTile (style 5), Terraria:ModLoader/UnloadedSemiSolidTile (style 6), Terraria:ModLoader/UnloadedSolidTile, Terraria:ModLoader/UnloadedSupremeFurniture (style 1), Terraria:ModLoader/UnloadedSupremeFurniture (style 10), Terraria:ModLoader/UnloadedSupremeFurniture (style 11), Terraria:ModLoader/UnloadedSupremeFurniture (style 12), Terraria:ModLoader/UnloadedSupremeFurniture (style 13), Terraria:ModLoader/UnloadedSupremeFurniture (style 14), Terraria:ModLoader/UnloadedSupremeFurniture (style 15), Terraria:ModLoader/UnloadedSupremeFurniture (style 16), Terraria:ModLoader/UnloadedSupremeFurniture (style 18), Terraria:ModLoader/UnloadedSupremeFurniture (style 2), Terraria:ModLoader/UnloadedSupremeFurniture (style 3), Terraria:ModLoader/UnloadedSupremeFurniture (style 4), Terraria:ModLoader/UnloadedSupremeFurniture (style 5), Terraria:ModLoader/UnloadedSupremeFurniture (style 6), Terraria:ModLoader/UnloadedSupremeFurniture (style 7), Terraria:ModLoader/UnloadedSupremeFurniture (style 8), Terraria:ModLoader/UnloadedSupremeFurniture (style 9), Terraria:ModLoader/UnloadedWall, Terraria:Stalactite
+TheArchitectsBlueprintMod: [20:58:31.779] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Manifest] --- Payload Manifest ---
+[Manifest] Items | Qty | Missing | Main | Sources
+[Manifest] [i:5324][i:3] | 0/1 | (-0) (-0) | Terraria:SmallPiles:0 |
+[Manifest] [i:5324][i/s16:133] | 0/16 | (-0) (-0) | Terraria:Pots:0 |
+[Manifest] [i/s18:169] | 0/18 | (-0) (-0) | Terraria:Sand:0 |
+[Manifest] [i/s176:206] | 0/176 | (-0) (-0) | Terraria:Water |
+[Manifest] [i/s5:3182] | 0/5 | (-0) (-0) | Terraria:WaterDrip:0 |
+[Manifest] [i/s39:3271] | 0/39 | (-0) (-0) | Terraria:Sandstone:0 |
+[Manifest] [i/s29:3272] | 0/29 | (-0) (-0) | Terraria:HardenedSand:0 |
+[Manifest] [i/s35:3347] | 0/35 | (-0) (-0) | Terraria:DesertFossil:0 |
+[Manifest] [i:3782] | 0/1 | (-0) (-0) | Terraria:SandDrip:0 |
+[Manifest] [i/s172:5374] | 0/172 | (-0) (-0) | Terraria:Sandstone |
+[Manifest] [i/s45:5375] | 0/45 | (-0) (-0) | Terraria:HardenedSand |
+[Manifest] 28 unresolved mapping(s): Terraria:ModLoader/UnloadedNonSolidTile, Terraria:ModLoader/UnloadedNonSolidTile (style 1), Terraria:ModLoader/UnloadedNonSolidTile (style 2), Terraria:ModLoader/UnloadedNonSolidTile (style 3), Terraria:ModLoader/UnloadedSemiSolidTile (style 3), Terraria:ModLoader/UnloadedSemiSolidTile (style 4), Terraria:ModLoader/UnloadedSemiSolidTile (style 5), Terraria:ModLoader/UnloadedSemiSolidTile (style 6), Terraria:ModLoader/UnloadedSolidTile, Terraria:ModLoader/UnloadedSupremeFurniture (style 1), Terraria:ModLoader/UnloadedSupremeFurniture (style 10), Terraria:ModLoader/UnloadedSupremeFurniture (style 11), Terraria:ModLoader/UnloadedSupremeFurniture (style 12), Terraria:ModLoader/UnloadedSupremeFurniture (style 13), Terraria:ModLoader/UnloadedSupremeFurniture (style 14), Terraria:ModLoader/UnloadedSupremeFurniture (style 15), Terraria:ModLoader/UnloadedSupremeFurniture (style 16), Terraria:ModLoader/UnloadedSupremeFurniture (style 18), Terraria:ModLoader/UnloadedSupremeFurniture (style 2), Terraria:ModLoader/UnloadedSupremeFurniture (style 3), Terraria:ModLoader/UnloadedSupremeFurniture (style 4), Terraria:ModLoader/UnloadedSupremeFurniture (style 5), Terraria:ModLoader/UnloadedSupremeFurniture (style 6), Terraria:ModLoader/UnloadedSupremeFurniture (style 7), Terraria:ModLoader/UnloadedSupremeFurniture (style 8), Terraria:ModLoader/UnloadedSupremeFurniture (style 9), Terraria:ModLoader/UnloadedWall, Terraria:Stalactite
+[MonoMod.Core] Trace: Updating detour from System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to System.Int32 SyncProxy<System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)>(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) (recompiled System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to 00007ffcfb515670)
+[MonoMod.Core] Trace: Creating simple detour 0x00007ffcfb515670 => 0x00007ffcf5530b80

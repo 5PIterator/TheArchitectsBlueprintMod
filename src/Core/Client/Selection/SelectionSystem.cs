@@ -110,6 +110,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (selection is null || !selection.IsDefined)
             {
                 OverlaySystem.UnregisterFamily(family);
+                ModContent.GetInstance<ProjectionToolboxControl>().RegisterToolbox(player);
                 return;
             }
 
@@ -127,6 +128,8 @@ namespace TheArchitectsBlueprintMod.Core
                 OverlaySystem.RegPoints("a", [a], ArchitectVisualPalette.PinAColor, family);
                 OverlaySystem.RegPoints("b", [b], ArchitectVisualPalette.PinBColor, family);
             }
+
+            ModContent.GetInstance<ProjectionToolboxControl>().RegisterToolbox(player);
         }
 
         private static void UpdateSelection(PlayerSelectionState state)

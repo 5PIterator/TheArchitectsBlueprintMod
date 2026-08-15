@@ -16,7 +16,7 @@ namespace TheArchitectsBlueprintMod.Core
         public override CommandType Type => CommandType.Chat;
 
         public override string Usage => "/tab.discPaint";
-        public override string Description => "Runs paint discovery and writes Paints.itr.";
+        public override string Description => "Runs paint discovery and writes Paints.itr.json.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {

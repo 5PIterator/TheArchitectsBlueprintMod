@@ -23,7 +23,7 @@ namespace TheArchitectsBlueprintMod.UI.Preview.Layers
             if (!PreviewTileDraw.TryPrepare(cell, out PreviewTileDraw.PreparedTile prepared))
                 return;
 
-            if (!PreviewTileDraw.TryResolve(in prepared, out PreviewTileDraw.DrawSprite sprite))
+            if (!PreviewTileDraw.TryResolve(in prepared, in ctx, relX, relY, out PreviewTileDraw.DrawSprite sprite))
                 return;
 
             Vector2 pos = PreviewTileDraw.GetDrawPosition(in ctx, relX, relY, in sprite);

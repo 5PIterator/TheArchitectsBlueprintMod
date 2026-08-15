@@ -239,7 +239,7 @@ namespace TheArchitectsBlueprintMod.Core
                 }
             }
 
-            ModContent.GetInstance<ProjectionToolboxControl>().RegisterToolbox(family);
+            ModContent.GetInstance<ProjectionToolboxControl>().RegisterToolbox(player);
             ModContent.GetInstance<InclusionControl>().UpdateExcludedTileOverlays(player);
             UpdateInventoryOverlay(player);
         }

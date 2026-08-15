@@ -3,6 +3,7 @@ using System.Linq;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core.Server;
 using TheArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -99,6 +100,11 @@ namespace TheArchitectsBlueprintMod.Core
 
             try
             {
+                // Ignore world clicks that hit the on-blueprint toolbox so PIN cannot wipe the selection.
+                if (key is ToolActionKey.LeftClick
+                    && ModContent.GetInstance<ProjectionToolboxControl>().IsHovering)
+                    return;
+
                 // Switch on high-level action and delegate to focused handlers or subsystems.
                 switch (action)
                 {

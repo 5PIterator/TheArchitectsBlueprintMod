@@ -22,8 +22,10 @@ namespace TheArchitectsBlueprintMod.Core
         {
             DiscoverPlacement,
             DiscoverWand,
+            DiscoverRubble,
             DiscoverPaint,
-            DiscoverVine,
+            DiscoverPlant,
+            DiscoverConversion,
             DiscoverBiome,
             DiscoverShimmer,
             CompileOnly,
@@ -32,6 +34,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         private const string ModDirName = "TheArchitectsBlueprintMod";
         private const string SourceMapsDir = "SourceMaps";
+        internal const string SourceMapExtension = ".itr.json";
         private static readonly Queue<QueuedMappingAction> PendingActions = new();
 
         public override void Unload()
@@ -48,10 +51,14 @@ namespace TheArchitectsBlueprintMod.Core
                 PendingActions.Enqueue(QueuedMappingAction.DiscoverPlacement);
             if (cfg.RunWandDiscovery)
                 PendingActions.Enqueue(QueuedMappingAction.DiscoverWand);
+            if (cfg.RunRubbleDiscovery)
+                PendingActions.Enqueue(QueuedMappingAction.DiscoverRubble);
             if (cfg.RunPaintDiscovery)
                 PendingActions.Enqueue(QueuedMappingAction.DiscoverPaint);
-            if (cfg.RunVineDiscovery)
-                PendingActions.Enqueue(QueuedMappingAction.DiscoverVine);
+            if (cfg.RunPlantDiscovery)
+                PendingActions.Enqueue(QueuedMappingAction.DiscoverPlant);
+            if (cfg.RunConversionDiscovery)
+                PendingActions.Enqueue(QueuedMappingAction.DiscoverConversion);
             if (cfg.RunBiomeDiscovery)
                 PendingActions.Enqueue(QueuedMappingAction.DiscoverBiome);
             if (cfg.RunShimmerDiscovery)
@@ -76,6 +83,9 @@ namespace TheArchitectsBlueprintMod.Core
         /// Gets full path for a file in TheArchitectsBlueprintMod root (e.g. debug logs).
         /// </summary>
         public static string GetPath(string fileName) => Path.Combine(GetModDirectory(), fileName);
+
+        /// <summary>Builds a SourceMaps file name with the <c>.itr.json</c> extension.</summary>
+        public static string GetSourceMapFileName(string stem) => stem + SourceMapExtension;
 
         /// <summary>
         /// Gets the SourceMaps directory. Creates it if missing. Discovery output and editable config live here.
@@ -152,13 +162,13 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>
-        /// Finds the first .itr file in the directory matching the given metadata. Returns null if none found.
+        /// Finds the first <c>.itr.json</c> SourceMap matching the given metadata. Returns null if none found.
         /// Uses lightweight metadata-only parsing to avoid full document load.
         /// </summary>
         public static string? FindFileByMetadata(string directory, string? format, string? mapType)
         {
             if (!Directory.Exists(directory)) return null;
-            foreach (var path in Directory.EnumerateFiles(directory, "*.itr"))
+            foreach (var path in Directory.EnumerateFiles(directory, "*" + SourceMapExtension))
             {
                 var (fileFormat, fileMapType) = ReadMetadataOnly(path);
                 if (MatchesMetadata(fileFormat, fileMapType, format, mapType))
@@ -231,6 +241,13 @@ namespace TheArchitectsBlueprintMod.Core
                     return;
                 }
 
+                case QueuedMappingAction.DiscoverRubble:
+                {
+                    Log("Config action: rubble discovery.");
+                    RubbleDiscovery.Run(mod, Log);
+                    return;
+                }
+
                 case QueuedMappingAction.DiscoverPaint:
                 {
                     Log("Config action: paint discovery.");
@@ -238,10 +255,17 @@ namespace TheArchitectsBlueprintMod.Core
                     return;
                 }
 
-                case QueuedMappingAction.DiscoverVine:
+                case QueuedMappingAction.DiscoverPlant:
                 {
-                    Log("Config action: vine discovery.");
-                    VineDiscovery.Run(mod, Log);
+                    Log("Config action: plant discovery.");
+                    PlantDiscovery.Run(mod, Log);
+                    return;
+                }
+
+                case QueuedMappingAction.DiscoverConversion:
+                {
+                    Log("Config action: conversion discovery.");
+                    ConversionDiscovery.Run(mod, Log);
                     return;
                 }
 
@@ -287,8 +311,10 @@ namespace TheArchitectsBlueprintMod.Core
                     Log("Config action: full discovery + compile.");
                     PlacementDiscovery.Run(mod, player, Log, allowStepping: false);
                     WandDiscovery.Run(mod, Log);
+                    RubbleDiscovery.Run(mod, Log);
                     PaintDiscovery.Run(mod, Log);
-                    VineDiscovery.Run(mod, Log);
+                    PlantDiscovery.Run(mod, Log);
+                    ConversionDiscovery.Run(mod, Log);
                     BiomeDiscovery.Run(mod, player, Log, allowStepping: false);
                     ShimmerDiscovery.Run(mod, Log, player, allowStepping: false);
                     Compile(mod, Log);

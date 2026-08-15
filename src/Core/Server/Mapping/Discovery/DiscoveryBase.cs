@@ -18,7 +18,8 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         };
 
         protected static string GetDebugPath(string fileName) => TileMappingSystem.GetPath(fileName);
-        protected static string GetOutputPath(string fileName) => TileMappingSystem.GetSourceMapPath(fileName);
+        protected static string GetOutputPath(string stem) =>
+            TileMappingSystem.GetSourceMapPath(TileMappingSystem.GetSourceMapFileName(stem));
 
         protected static void SaveJson<T>(string path, T output, Action<string> log, string errorContext)
         {

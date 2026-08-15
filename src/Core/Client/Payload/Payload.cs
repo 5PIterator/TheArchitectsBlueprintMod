@@ -135,9 +135,12 @@ namespace TheArchitectsBlueprintMod.Core
             data.TWWStateData.WallFrameNumber = 0;
 
             // Resolve authoritative placeStyle (avoids treating stateful FrameX as style).
+            // Tree wood/palm styles are not stored on the trunk tile; TreeLayer derives them from
+            // payload support (or world APIs) at resolve time — never from neighboring world reads here.
             int style = 0, alternate = 0;
             if (tile.HasTile && data.TileType.Type > 0 && data.TileType.Type < TileLoader.TileCount)
                 TileBreakDropResolver.ResolvePlacementVariant(tile, x, y, out style, out alternate);
+
             data.TileStyle = style;
             data.TileAlternate = alternate;
             PayloadCell cell = new(data);

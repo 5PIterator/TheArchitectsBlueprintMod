@@ -70,6 +70,10 @@ namespace TheArchitectsBlueprintMod.Core
             if (family.StartsWith("inclusion:", StringComparison.Ordinal))
                 return ArchitectOverlayScope.Inclusion;
 
+            // Toolbox sits on the frontmost blueprint and must show for either overlay scope.
+            if (family.StartsWith("toolbox:", StringComparison.Ordinal))
+                return ArchitectOverlayScope.Selection | ArchitectOverlayScope.Projection;
+
             if (string.Equals(family, "projection:excluded-tiles", StringComparison.Ordinal))
                 return ArchitectOverlayScope.Projection | ArchitectOverlayScope.Inclusion;
 

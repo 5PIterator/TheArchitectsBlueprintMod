@@ -25,10 +25,16 @@ namespace TheArchitectsBlueprintMod.Config
         public bool EnableWandDiscovery;
 
         [DefaultValue(true)]
+        public bool EnableRubbleDiscovery;
+
+        [DefaultValue(true)]
         public bool EnablePaintDiscovery;
 
         [DefaultValue(true)]
-        public bool EnableVineDiscovery;
+        public bool EnablePlantDiscovery;
+
+        [DefaultValue(true)]
+        public bool EnableConversionDiscovery;
 
         [DefaultValue(true)]
         public bool EnableBiomeConversions;
@@ -45,10 +51,16 @@ namespace TheArchitectsBlueprintMod.Config
         public bool RunWandDiscovery;
 
         [DefaultValue(false)]
+        public bool RunRubbleDiscovery;
+
+        [DefaultValue(false)]
         public bool RunPaintDiscovery;
 
         [DefaultValue(false)]
-        public bool RunVineDiscovery;
+        public bool RunPlantDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunConversionDiscovery;
 
         [DefaultValue(false)]
         public bool RunBiomeDiscovery;
@@ -75,8 +87,10 @@ namespace TheArchitectsBlueprintMod.Config
             // One-shot action toggles: saving with true enqueues work, then they reset to false.
             RunPlacementDiscovery = false;
             RunWandDiscovery = false;
+            RunRubbleDiscovery = false;
             RunPaintDiscovery = false;
-            RunVineDiscovery = false;
+            RunPlantDiscovery = false;
+            RunConversionDiscovery = false;
             RunBiomeDiscovery = false;
             RunShimmerDiscovery = false;
             RunCompileNow = false;

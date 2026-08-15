@@ -51,10 +51,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return false;
 
             ushort tileType = tile.TileType;
-            if (IsGrassBlockType(tileType) || IsVineTileType(tileType) || IsTreeTileType(tileType) || tileType == TileID.Cactus)
+            if (IsGrassBlockType(tileType) || IsVineTileType(tileType) || IsTreeTileType(tileType)
+                || tileType == TileID.Cactus || tileType == TileID.Bamboo)
                 return false;
 
-            return IsRegrowthPlantTile(tileType) || RequiresGroundSupport(tileType) || IsSwayingPlantTile(tileType);
+            return IsThornTileType(tileType)
+                || IsRegrowthPlantTile(tileType)
+                || RequiresGroundSupport(tileType)
+                || IsSwayingPlantTile(tileType);
         }
 
         /// <summary>Checks whether this layer should claim the provided tile type.</summary>
@@ -67,11 +71,22 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (FrameLayer.IsFrameTileType(tileType))
                 return false;
 
-            if (IsGrassBlockType(tileType) || IsVineTileType(tileType) || IsTreeTileType(tileType) || tileType == TileID.Cactus)
+            if (IsGrassBlockType(tileType) || IsVineTileType(tileType) || IsTreeTileType(tileType)
+                || tileType == TileID.Cactus || tileType == TileID.Bamboo)
                 return false;
 
-            return IsRegrowthPlantTile(tileType) || RequiresGroundSupport(tileType) || IsSwayingPlantTile(tileType);
+            return IsThornTileType(tileType)
+                || IsRegrowthPlantTile(tileType)
+                || RequiresGroundSupport(tileType)
+                || IsSwayingPlantTile(tileType);
         }
+
+        /// <summary>Returns true for corruption, crimson, jungle, and Plantera thorn bushes.</summary>
+        public static bool IsThornTileType(ushort tileType) =>
+            tileType == TileID.CorruptThorns
+            || tileType == TileID.CrimsonThorns
+            || tileType == TileID.JungleThorns
+            || tileType == TileID.PlanteraThorns;
 
         /// <summary>Returns true when the tile is a vine or reverse vine family tile.</summary>
         private static bool IsVineTileType(ushort tileType) =>
@@ -113,7 +128,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!TileLoaderSupport.IsKnownTileType(tileType) || !TileID.Sets.TileCutIgnore.Regrowth[tileType])
                 return false;
 
-            if (IsGrassBlockType(tileType) || IsVineTileType(tileType) || IsTreeTileType(tileType) || tileType == TileID.Cactus)
+            if (IsGrassBlockType(tileType) || IsVineTileType(tileType) || IsTreeTileType(tileType)
+                || tileType == TileID.Cactus || tileType == TileID.Bamboo)
                 return false;
 
             return true;
@@ -136,7 +152,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (TileID.Sets.TreeSapling[tileType] || TileID.Sets.CommonSapling[tileType])
                 return false;
 
-            return !IsGrassBlockType(tileType) && !IsVineTileType(tileType) && !IsTreeTileType(tileType) && tileType != TileID.Cactus;
+            return !IsGrassBlockType(tileType) && !IsVineTileType(tileType) && !IsTreeTileType(tileType)
+                && tileType != TileID.Cactus && tileType != TileID.Bamboo;
         }
 
         /// <summary>Returns true when the tile places through TileOperations rather than FrameOperations.</summary>
