@@ -4,7 +4,7 @@ using Terraria.ID;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.Layers;
 
-namespace TheArchitectsBlueprintMod.UI.Preview
+namespace TheArchitectsBlueprintMod.Core.Layers
 {
     /// <summary>Resolves biome wood columns and TreeTop framing from payload soil, not live Main.tile.</summary>
     internal static class TreePreviewResolve

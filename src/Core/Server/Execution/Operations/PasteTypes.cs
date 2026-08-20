@@ -13,7 +13,6 @@ namespace TheArchitectsBlueprintMod.Core
         bool retryOnInvalidPlacement,
         ClearStyle clearStyle,
         ClearItemDropStyle clearItemDropStyle,
-        SweepStyle sweepStyle,
         int arrowSpeed,
         float arrowMinSpeed,
         float arrowMaxSpeed)
@@ -22,7 +21,6 @@ namespace TheArchitectsBlueprintMod.Core
         public bool RetryOnInvalidPlacement { get; } = retryOnInvalidPlacement;
         public ClearStyle ClearStyle { get; } = clearStyle;
         public ClearItemDropStyle ClearItemDropStyle { get; } = clearItemDropStyle;
-        public SweepStyle SweepStyle { get; } = sweepStyle;
         public int ArrowSpeed { get; } = arrowSpeed;
         public float ArrowMinSpeed { get; } = arrowMinSpeed;
         public float ArrowMaxSpeed { get; } = arrowMaxSpeed;
@@ -36,7 +34,6 @@ namespace TheArchitectsBlueprintMod.Core
                 client.Place.Strategy.RetryOnInvalidPlacement,
                 client.Plan.Strategy.Style,
                 client.Clear.Strategy.ItemDrop,
-                client.Sweep.Strategy.Style,
                 client.Arrow.Speed,
                 client.Arrow.MinSpeed,
                 client.Arrow.MaxSpeed);
@@ -54,6 +51,8 @@ namespace TheArchitectsBlueprintMod.Core
         public int ArrowSpeed { get; init; }
         public float ArrowMinSpeed { get; init; }
         public float ArrowMaxSpeed { get; init; }
+        /// <summary>When true, EntityLayer identification is enabled and Sweep may apply sidecar data.</summary>
+        public bool EntityLayerEnabled { get; init; }
 
         /// <summary>
         /// Merges server policy with optional client hints.
@@ -94,29 +93,23 @@ namespace TheArchitectsBlueprintMod.Core
                 Style = placeServer.Style,
             };
 
-            var sweepStrategy = new SweepPhaseStrategy
-            {
-                Style = server.Phases.Sweep.AllowClientPreferences
-                    ? hints.SweepStyle
-                    : server.Phases.Sweep.Strategy.Style,
-            };
-
             return new EffectivePastePolicy
             {
                 PlanPhase = server.Phases.Plan.ToPolicy(planStrategy),
                 ClearPhase = server.Phases.Clear.ToPolicy(clearStrategy),
                 CutPhase = server.Phases.Cut.ToPolicy(cutStrategy),
                 PlacePhase = server.Phases.Place.ToPolicy(placeStrategy),
-                SweepPhase = server.Phases.Sweep.ToPolicy(sweepStrategy),
+                SweepPhase = server.Phases.Sweep.ToPolicy(),
                 ArrowSpeed = hints.ArrowSpeed,
                 ArrowMinSpeed = hints.ArrowMinSpeed,
                 ArrowMaxSpeed = hints.ArrowMaxSpeed,
+                EntityLayerEnabled = server.LayerPolicy.MainLayers.Entity,
             };
         }
     }
 
     /// <summary>
-    /// Arguments for layer execution; <see cref="TheArchitectsBlueprintMod.Core.Layers.Layer.Place"/> performs placement and calls <see cref="TheArchitectsBlueprintMod.Core.Layers.Layer.Consume"/> when appropriate.
+    /// Arguments for layer execution. Placement consumes inventory via <see cref="TileExecutor"/> and <see cref="InventoryLookup"/>.
     /// </summary>
     internal readonly struct PasteContext(
         int playerIndex,
@@ -125,11 +118,12 @@ namespace TheArchitectsBlueprintMod.Core
         PasteTileLookup? lookup = null,
         TileEffectSession? effectSession = null,
         IReadOnlyList<FrameOperations.FrameCandidate>? pendingFramePlaceCandidates = null,
-        InteractionBudget? interactionBudget = null)
+        InteractionBudget? interactionBudget = null,
+        Payload? payload = null)
     {
         public readonly Player Player = Main.player[playerIndex];
-        public readonly SweepStyle SweepStrategy = policy.SweepPhase.Strategy.Style;
-        public readonly bool IsSweepCheat = policy.SweepPhase.Active && policy.SweepPhase.Strategy.Style == SweepStyle.Cheat;
+        public readonly bool IsSweep = policy.SweepPhase.Active;
+        public readonly bool EntityLayerEnabled = policy.EntityLayerEnabled;
         public readonly bool RetryOnMissingItems = policy.PlacePhase.Strategy.RetryOnMissingItems;
         public readonly bool RetryOnInvalidPlacement = policy.PlacePhase.Strategy.RetryOnInvalidPlacement;
         public readonly bool RequireItems = policy.PlacePhase.Strategy.RequireItems;
@@ -152,5 +146,6 @@ namespace TheArchitectsBlueprintMod.Core
         public readonly TileEffectSession? EffectSession = effectSession;
         public readonly IReadOnlyList<FrameOperations.FrameCandidate>? PendingFramePlaceCandidates = pendingFramePlaceCandidates;
         public readonly InteractionBudget? InteractionBudget = interactionBudget;
+        public readonly Payload? Payload = payload;
     }
 }

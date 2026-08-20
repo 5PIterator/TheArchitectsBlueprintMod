@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.UI.Preview;
 using Terraria;
-using Terraria.ModLoader;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
@@ -11,7 +12,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private UnknownLayer() : base("Unknown", LayerType.Block) { }
 
-        public static bool IsUnknownTileType(ushort tileType) => !TileLoaderSupport.IsKnownTileType(tileType);
+        public static bool IsUnknownTileType(ushort tileType) => TileLoaderSupport.IsUnknownTileType(tileType);
 
         public override bool Match(in PasteTile tile)
         {
@@ -21,7 +22,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return intent.HasTile == tile.Target.HasTile && (!intent.HasTile || intent.TileType == tile.Target.TileType);
         }
 
-        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup _, in PasteContext context, PasteSubject identifySubject)
         {
             Tile view = PasteTile.GetTileForIdentify(in tile, identifySubject);
             if (!view.HasTile || !IsUnknownTileType(view.TileType))
@@ -37,18 +38,72 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
 
-        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
+        public override LayerResult Clear(TileBatch batch, in PasteContext context)
+        {
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
+            if (tiles.Count == 0)
+                return LayerResult.Ok();
 
-        public override bool CanConsume(in PasteTile tile, in PasteContext context) => true;
+            var tile = tiles[0];
+            int x = tile.World.X, y = tile.World.Y;
+            bool hadTile = Main.tile[x, y].HasTile;
+            string? message = hadTile ? LayerLogFormat.FormatTile(Main.tile[x, y]) : null;
 
-        public override bool Consume(in PasteTile tile, in PasteContext context) => true;
+            LayerResult res = TileOperations.Clear(in tile, in context, message);
+            if (!res.Success)
+                return LayerResult.Fail(res.FailReason, message);
 
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
+            return hadTile ? LayerResult.Ok(message, LayerLogFormat.ClearedLabel) : LayerResult.Ok();
+        }
 
-        public override LayerResult Clear(TileBatch batch, in PasteContext context) =>
-            LayerResult.Ok();
+        public override LayerResult Place(TileBatch batch, in PasteContext context)
+        {
+            // --- Require a mapped interaction; otherwise fail so ignore-items cannot silently succeed.
 
-        public override LayerResult Place(TileBatch batch, in PasteContext context) =>
-            LayerResult.Ok();
+            IReadOnlyList<PasteTile> tiles = batch.Tiles;
+            if (tiles.Count == 0)
+                return LayerResult.Ok();
+
+            var origin = tiles[0];
+            if (!origin.PayloadCell.HasTile())
+                return LayerResult.Ok();
+
+            ushort tileType = (ushort)origin.PayloadCell.Block.Type;
+            int style = origin.PayloadCell.ResolvePlacementStyle();
+            string message = LayerLogFormat.FormatTile(origin.PayloadTile);
+
+            // Fail when no interaction exists, even if item requirements are disabled.
+            if (!InteractionMapProvider.HasResolvedTileInteraction(tileType, style))
+                return LayerResult.Fail(LayerFailReason.UnresolvedInteraction, message);
+
+            if (!TileExecutor.TryCheckTileItem(tileType, style, in context, out LayerFailReason itemFailReason))
+                return LayerResult.Fail(itemFailReason, message);
+
+            LayerResult res = TileOperations.Place(tiles, in context);
+            if (!res.Success)
+                return LayerResult.Fail(res.FailReason, message);
+
+            if (res.RemainingTiles.Count > 0)
+                return LayerResult.OkWithRemaining(batch.WithRemainingTiles(res.RemainingTiles), message, LayerLogFormat.PlacedLabel(in context));
+
+            return LayerResult.Ok(message, LayerLogFormat.PlacedLabel(in context));
+        }
+
+        public override bool DrawsCells => true;
+
+        public override void DrawCell(in PreviewDrawContext ctx, PayloadCell cell, int relX, int relY)
+        {
+            if (LayerPreviewSprites.HasDetailModifiedSprite(cell))
+                return;
+
+            Tile tile = cell.ToTile();
+            if (!tile.HasTile || !IsUnknownTileType(tile.TileType))
+                return;
+
+            if (!LayerPreviewSprites.TryResolveSprite(in ctx, cell, relX, relY, out PreviewTileDraw.DrawSprite sprite))
+                return;
+
+            LayerPreviewSprites.DrawSprite(in ctx, relX, relY, in sprite);
+        }
     }
 }

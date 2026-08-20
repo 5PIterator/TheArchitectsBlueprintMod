@@ -5,15 +5,9 @@ using TheArchitectsBlueprintMod.Debug;
 
 namespace TheArchitectsBlueprintMod.Core.Phases
 {
-    public enum SweepStyle
-    {
-        Detail = 0,
-        Cheat = 1,
-    }
-
+    /// <summary>Placeholder strategy for the server-only sweep phase.</summary>
     public readonly struct SweepPhaseStrategy
     {
-        public SweepStyle Style { get; init; }
     }
 
     /// <summary>Applies sweep for the full queue; delay 0 completes the phase in one tick.</summary>
@@ -21,6 +15,7 @@ namespace TheArchitectsBlueprintMod.Core.Phases
     {
         private readonly HashSet<Microsoft.Xna.Framework.Point> _queuedWorldTiles = [];
         private readonly Queue<PasteTile> _sweepTasks = [];
+        private bool _entitiesApplied;
 
         public SweepPhase(PastingOperation operation, PastePhasePolicy<SweepPhaseStrategy> policy) : base(operation, policy) { }
 
@@ -40,19 +35,35 @@ namespace TheArchitectsBlueprintMod.Core.Phases
         {
             _sweepTasks.Clear();
             _queuedWorldTiles.Clear();
+            _entitiesApplied = false;
         }
 
         public override void OnEnter()
         {
+            // --- Tile step only: queue blits. Entity purge/apply runs after the queue drains.
+
+            _entitiesApplied = false;
             BuildSweepQueue();
             Operation.BeginInfoPhase(PasteInfoPhase.Sweep);
         }
 
         public override void ExecuteTick()
         {
+            // --- Step 1: blit payload tiles. Step 2 (same tick when queue empties): purge then apply entities.
+
             ProcessSweepQueue();
-            if (_sweepTasks.Count == 0)
-                Operation.AdvancePhase();
+            if (_sweepTasks.Count > 0)
+                return;
+
+            if (!_entitiesApplied)
+            {
+                WorldEntityOps.PurgeHostsInSweepArea(Operation.Projection.TargetArea);
+                PasteContext ctx = Operation.Context;
+                WorldEntityOps.ApplyAllPayloadEntitiesForSweep(in ctx);
+                _entitiesApplied = true;
+            }
+
+            Operation.AdvancePhase();
         }
 
         private void BuildSweepQueue()
@@ -84,10 +95,7 @@ namespace TheArchitectsBlueprintMod.Core.Phases
             Operation._currentStepPlaceTiles.Clear();
             Operation._currentStepClearTiles.Clear();
             if (_sweepTasks.Count == 0)
-            {
-                TABLog.Warn("Sweep: queue empty — no tiles to apply", "Paste");
                 return;
-            }
 
             int batchTotal = System.Math.Min(TickSize, _sweepTasks.Count);
             int applied = 0;
@@ -117,9 +125,7 @@ namespace TheArchitectsBlueprintMod.Core.Phases
                 bool sweepOk = sweepApplied && PastingInfoLog.IsSweepSatisfied(in pt);
                 PasteProgressOutcome outcome = sweepOk ? PasteProgressOutcome.Ok : PasteProgressOutcome.Failed;
                 string? detail = sweepOk ? null : PastingInfoLog.ExplainSweepFailure(in pt);
-                string sweepOkLabel = sweepOk
-                    ? (Strategy.Style == SweepStyle.Cheat ? "Cheesed" : "Sweeped")
-                    : "Error";
+                string sweepOkLabel = sweepOk ? "Sweeped" : "Error";
                 PasteProgress progressEvent2 = progress.WithTaskResult(
                     pt.World,
                     outcome,

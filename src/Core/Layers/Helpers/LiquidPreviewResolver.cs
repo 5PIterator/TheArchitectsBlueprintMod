@@ -8,7 +8,7 @@ using Terraria.GameContent.Liquid;
 using Terraria.ID;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 
-namespace TheArchitectsBlueprintMod.UI.Preview
+namespace TheArchitectsBlueprintMod.Core.Layers
 {
     /// <summary>Resolves liquid preview colors from textures and draws a two-tone fill.</summary>
     internal static class LiquidPreviewResolver

@@ -107,7 +107,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 if (!config.IsLayerIdentificationEnabled(subLayer.Id))
                     continue;
 
-                LayerResult identifyResult = subLayer.Identify(in pasteTile, in identifyLookup, identifySubject);
+                LayerResult identifyResult = subLayer.Identify(in pasteTile, in identifyLookup, in context, identifySubject);
                 if (identifyResult.TileBatch is null || identifyResult.TileBatch.Cells.Count == 0)
                     continue;
 
@@ -157,7 +157,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool Match(in PasteTile tile) => false;
 
-        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject) =>
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context, PasteSubject identifySubject) =>
             LayerResult.IdentifyNone();
 
         public override LayerResult Clear(TileBatch batch, in PasteContext context) =>
@@ -166,16 +166,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public override LayerResult Place(TileBatch batch, in PasteContext context) =>
             LayerResult.Fail(LayerFailReason.Unknown);
 
-        public override bool Consume(in PasteTile tile, in PasteContext context) => true;
-
-        public override bool CanConsume(in PasteTile tile, in PasteContext context) => true;
+        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context) => false;
 
         public override bool CanClear(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context) => false;
 
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context) => false;
-
-        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context) => false;
-
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
     }
 }

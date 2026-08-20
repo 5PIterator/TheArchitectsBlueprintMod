@@ -99,31 +99,35 @@ namespace TheArchitectsBlueprintMod.Core
             state.FixedPoint = cursorTile; // point A
         }
 
-        /// <summary>Begins a SET gesture (left click).</summary>
-        public void BeginSet(Player player, Point cursorTile)
+        /// <summary>Begins a SET gesture on the current selection when the cursor hits it (handles or tiles).</summary>
+        public bool BeginSet(Player player, Point cursorTile)
         {
-            // --- Hit-test the selection, bring it to front, then start the matching drag.
+            // --- Hit-test handles first, then treat a tile overlap as a move so SET keeps the selection over a projection.
 
             var state = GetState(player);
 
             Selection selection = SelectionSystem.GetSelection();
+            if (selection is not { IsDefined: true })
+                return false;
 
-            if (selection is { IsDefined: true })
-            {
-                Rectangle screenBounds = selection.GetScreenPixelBounds(Main.screenPosition, TilePixelSize);
-                Point mouse = new(Main.mouseX, Main.mouseY);
+            Rectangle screenBounds = selection.GetScreenPixelBounds(Main.screenPosition, TilePixelSize);
+            Point mouse = new(Main.mouseX, Main.mouseY);
 
-                HitRegion region = HitTest(player, screenBounds, mouse);
-                DragKind dragKind = DragKindFromHit(region);
-                if (dragKind != DragKind.None)
-                {
-                    // Focus the selection so the toolbox follows it instead of a later projection.
-                    ModContent.GetInstance<BlueprintSystem>().BringBlueprintToFront(selection);
-                    SelectionSystem.UpdateSelectionOverlay(player);
-                    BeginDrag(state, dragKind, player, selection, cursorTile);
-                    return;
-                }
-            }
+            HitRegion region = HitTest(player, screenBounds, mouse);
+            DragKind dragKind = DragKindFromHit(region);
+
+            // Cursor tile sits inside the selection even when the pixel test missed the deflated interior.
+            if (dragKind == DragKind.None && selection.Area.Contains(cursorTile))
+                dragKind = DragKind.Move;
+
+            if (dragKind == DragKind.None)
+                return false;
+
+            // Focus the selection so the toolbox follows it instead of a later projection.
+            ModContent.GetInstance<BlueprintSystem>().BringBlueprintToFront(selection);
+            SelectionSystem.UpdateSelectionOverlay(player);
+            BeginDrag(state, dragKind, player, selection, cursorTile);
+            return true;
         }
 
         /// <summary>Updates an in-progress PIN or SET gesture while the left button is held.</summary>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
-using TheArchitectsBlueprintMod.Utils;
+using TheArchitectsBlueprintMod.UI.Preview;
 using Terraria;
 using Terraria.Enums;
 using Terraria.GameContent.Drawing;
@@ -13,18 +13,23 @@ using Terraria.ModLoader;
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
     [CustomPasteLayer]
-    /// <summary>Identifies and places trees, gem trees, and branched cactus clusters.</summary>
+    /// <summary>Identifies and places tree instances (one TileBatch per trunk-ground anchor).</summary>
     internal sealed class TreeLayer : Layer
     {
         public static readonly TreeLayer Definition = new();
 
-        /// <summary>Cardinal steps for 4-connected tree mass inside the paste lookup bounds.</summary>
-        private static readonly Point[] TreeNeighborOffsets = [new(0, -1), new(1, 0), new(-1, 0), new(0, 1)];
+        /// <summary>Trunk-ground identity used to split instances and assign segments.</summary>
+        private readonly struct TreeInstanceKey(Point trunkGroundRel, ushort trunkType, ushort supportType)
+        {
+            public Point TrunkGroundRel { get; } = trunkGroundRel;
+            public ushort TrunkType { get; } = trunkType;
+            public ushort SupportType { get; } = supportType;
+        }
 
         private TreeLayer() : base("Tree", LayerType.Custom) { }
 
-        /// <summary>Checks tile-type equality between payload/source intent and target world.</summary>
-        public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
+        /// <summary>Checks type and trunk/branch frames between payload/source intent and target world.</summary>
+        public override bool Match(in PasteTile tile) => TileComparison.MatchExact(in tile);
 
         /// <summary>Returns true when this tile type is handled by tree logic.</summary>
         public static bool IsTreeType(ushort tileType)
@@ -41,16 +46,19 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 || TileID.Sets.GetsCheckedForLeaves[tileType];
         }
 
-        /// <summary>Returns the connected tree/cactus footprint around this tile.</summary>
-        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
+        /// <summary>Returns one tree instance batch when <paramref name="tile"/> is a trunk-ground anchor.</summary>
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context, PasteSubject identifySubject)
         {
-            // --- BFS 4-connected tree tiles inside paste bounds, then emit blueprint cells for the cluster.
+            // --- Only trunk-ground anchors identify; each emits one instance batch for plan deduplication.
+            if (!IsTrunkGroundAnchor(tile.Relative, identifySubject, in lookup))
+                return LayerResult.IdentifyNone();
+
             Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             if (!subjectTile.HasTile || !IsTreeType(subjectTile.TileType))
                 return LayerResult.IdentifyNone();
 
             var relatives = new List<Point>();
-            CollectTreeRelatives(tile.Relative, identifySubject, in lookup, relatives);
+            CollectTreeInstanceRelatives(tile.Relative, identifySubject, in lookup, relatives);
             if (relatives.Count == 0)
                 return LayerResult.IdentifyNone();
 
@@ -82,80 +90,17 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].HasTile;
 
-        /// <summary>Validates the next ground-up cluster segment using TileLoader and support rules.</summary>
+        /// <summary>Validates live trunk support only at trunk-ground anchors.</summary>
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context)
         {
-            // --- Only the bottom-most trunk anchor requires live base support; upper segments defer to bottom-up placement.
+            // --- Only trunk-ground anchors require live base support; branches defer to bottom-up placement.
             if (!tile.PayloadCell.HasTile())
                 return true;
 
-            var relatives = new List<Point>();
-            CollectTreeRelatives(tile.Relative, PasteSubject.Payload, in lookup, relatives);
-            if (relatives.Count == 0)
-                return true;
-
-            Point trunkGround = SelectTrunkGroundRelative(relatives);
-            if (trunkGround != tile.Relative)
+            if (!IsTrunkGroundAnchor(tile.Relative, PasteSubject.Payload, in lookup))
                 return true;
 
             return HasValidTrunkBaseBelow(in tile, in context);
-        }
-
-        /// <summary>Checks Living Wood Wand + biome ammo for this tree/cactus segment when item checks are enabled.</summary>
-        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context)
-        {
-            // --- Resolve the family ammo, then require the matching Living Wood Wand interaction.
-            if (!context.RequireItems || context.Items is null || context.IsSweepCheat)
-                return true;
-            if (!tile.PayloadCell.HasTile())
-                return true;
-            if (!TryResolveTreeInteraction(in tile, lookup, out InteractionEntry? entry) || entry is null)
-                return false;
-            return TileExecutor.HasItemForInteraction(entry, in context);
-        }
-
-        /// <summary>Checks whether Living Wood Wand ammo for this segment can be reserved now.</summary>
-        public override bool CanConsume(in PasteTile tile, in PasteContext context)
-        {
-            // --- Same ammo-resolved interaction check as HasRequiredItems without a paste lookup.
-            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null || context.IsSweepCheat)
-                return true;
-            if (!TryResolveTreeInteraction(in tile, context.Lookup, out InteractionEntry? entry) || entry is null)
-                return false;
-            return TileExecutor.HasItemForInteraction(entry, in context);
-        }
-
-        /// <summary>Debits Living Wood Wand ammo for one successfully placed tree/cactus segment.</summary>
-        public override bool Consume(in PasteTile tile, in PasteContext context)
-        {
-            // --- Reserve the ammo-matched interaction; ApplyPayloadBlock itself does not consume.
-            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.InventoryLookup is null || context.IsSweepCheat)
-                return true;
-            if (!TryResolveTreeInteraction(in tile, context.Lookup, out InteractionEntry? entry) || entry is null)
-                return false;
-
-            return context.InventoryLookup.TryReserveForInteraction(
-                entry,
-                context.InteractionBudget,
-                context.Player,
-                out _);
-        }
-
-        /// <summary>Returns the Living Wood Wand tool id for this tree/cactus segment when mapped.</summary>
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile)
-        {
-            // --- Prefer the resolved tool; fall back to any mapped tile item ids.
-            if (!tile.PayloadCell.HasTile())
-                return null;
-            if (TryResolveTreeInteraction(in tile, lookup: null, out InteractionEntry? entry)
-                && entry?.ItemId is int toolId
-                && toolId > 0)
-            {
-                return [toolId];
-            }
-
-            int style = tile.PayloadCell.ResolvePlacementStyle();
-            return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
         }
 
         /// <summary>
@@ -444,7 +389,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!segment.PayloadCell.HasTile() || IsSegmentAlreadyPlaced(in segment))
                 return RemoveSegmentAt(batch, index, message, okLabel);
 
-            if (!HasSegmentPlacementSupport(in segment, in context))
+            if (!CanPlaceSegment(in segment, in context))
             {
                 if (context.RetryOnInvalidPlacement)
                     return LayerResult.OkWithRemaining(batch, message, okLabel);
@@ -459,55 +404,265 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return result;
             }
 
-            if (!context.IsSweepCheat && !Consume(in segment, in context))
-                return LayerResult.Fail(LayerFailReason.MissingItems, message);
-
             return RemoveSegmentAt(batch, index, result.Message ?? message, result.OkLabel ?? okLabel);
         }
 
         public override bool IsCustom(ushort tileType) => IsTreeType(tileType);
 
-        /// <summary>Collects all 4-connected tree relatives inside paste bounds via BFS.</summary>
-        private static void CollectTreeRelatives(
-            Point startRel,
-            PasteSubject classify,
+        /// <summary>Returns true for cactus and bamboo column plants.</summary>
+        private static bool IsColumnPlantType(ushort tileType) =>
+            tileType == TileID.Cactus || tileType == TileID.Bamboo;
+
+        /// <summary>Returns true when this relative is the trunk-ground anchor for its column.</summary>
+        private static bool IsTrunkGroundAnchor(Point rel, PasteSubject subject, in PasteTileLookup lookup)
+        {
+            // --- Column plants anchor at column bottom; branched trees anchor at the trunk foot column cell.
+
+            if (!lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
+                return false;
+
+            Tile view = PasteTile.GetTileForIdentify(in pasteTile, subject);
+            if (!view.HasTile || !IsTreeType(view.TileType))
+                return false;
+
+            if (!TryFindTrunkGroundInColumn(rel.X, subject, in lookup, out Point ground) || ground != rel)
+                return false;
+
+            if (IsColumnPlantType(view.TileType))
+                return true;
+
+            if (!HasNonTreeBelow(rel, subject, in lookup))
+                return false;
+
+            if (HasTreeAboveInColumn(rel, subject, in lookup))
+                return true;
+
+            return !HasHorizontalTreeNeighborAtSameY(rel, subject, in lookup);
+        }
+
+        /// <summary>Finds the deepest tree tile in a lookup column for the identify subject.</summary>
+        private static bool TryFindTrunkGroundInColumn(
+            int columnX,
+            PasteSubject subject,
+            in PasteTileLookup lookup,
+            out Point trunkGround)
+        {
+            // --- Scan the column and keep the relative with the largest Y that carries a tree tile.
+
+            trunkGround = default;
+            PasteTile[,] grid = lookup.PasteTiles;
+            int width = grid.GetLength(0);
+            int height = grid.GetLength(1);
+            if ((uint)columnX >= (uint)width)
+                return false;
+
+            int bestY = int.MinValue;
+            bool found = false;
+            for (int y = 0; y < height; y++)
+            {
+                if (!lookup.TryGetPasteTile(new Point(columnX, y), out PasteTile pasteTile))
+                    continue;
+
+                Tile view = PasteTile.GetTileForIdentify(in pasteTile, subject);
+                if (!view.HasTile || !IsTreeType(view.TileType))
+                    continue;
+
+                if (y >= bestY)
+                {
+                    bestY = y;
+                    trunkGround = new Point(columnX, y);
+                    found = true;
+                }
+            }
+
+            return found;
+        }
+
+        /// <summary>Returns true when the cell below is not a tree tile in the identify subject.</summary>
+        private static bool HasNonTreeBelow(Point rel, PasteSubject subject, in PasteTileLookup lookup)
+        {
+            // --- Treat paste edges and air as valid ground below the trunk foot.
+
+            Point belowRel = new(rel.X, rel.Y + 1);
+            if (!lookup.TryGetPasteTile(belowRel, out PasteTile below))
+                return true;
+
+            Tile view = PasteTile.GetTileForIdentify(in below, subject);
+            return !view.HasTile || !IsTreeType(view.TileType);
+        }
+
+        /// <summary>Returns true when the cell above in the same column is a tree tile.</summary>
+        private static bool HasTreeAboveInColumn(Point rel, PasteSubject subject, in PasteTileLookup lookup)
+        {
+            Point aboveRel = new(rel.X, rel.Y - 1);
+            if (!lookup.TryGetPasteTile(aboveRel, out PasteTile above))
+                return false;
+
+            Tile view = PasteTile.GetTileForIdentify(in above, subject);
+            return view.HasTile && IsTreeType(view.TileType);
+        }
+
+        /// <summary>Returns true when a tree tile sits on the left or right at the same Y.</summary>
+        private static bool HasHorizontalTreeNeighborAtSameY(Point rel, PasteSubject subject, in PasteTileLookup lookup)
+        {
+            for (int dx = -1; dx <= 1; dx += 2)
+            {
+                Point neighborRel = new(rel.X + dx, rel.Y);
+                if (!lookup.TryGetPasteTile(neighborRel, out PasteTile neighbor))
+                    continue;
+
+                Tile view = PasteTile.GetTileForIdentify(in neighbor, subject);
+                if (view.HasTile && IsTreeType(view.TileType))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Resolves support soil for identify: payload scan on paste, subject tile below foot on clear.</summary>
+        private static bool TryGetSupportTileTypeForIdentify(
+            Point trunkGroundRel,
+            PasteSubject subject,
+            in PasteTileLookup lookup,
+            out ushort supportType)
+        {
+            // --- Payload uses blueprint soil; Target/Source use the identify subject tile below the trunk foot.
+
+            supportType = 0;
+            if (!lookup.TryGetPasteTile(trunkGroundRel, out PasteTile anchor))
+                return false;
+
+            if (subject == PasteSubject.Payload)
+                return TryGetPayloadSupportTileType(in anchor, lookup, out supportType, out _);
+
+            Point belowRel = new(trunkGroundRel.X, trunkGroundRel.Y + 1);
+            if (!lookup.TryGetPasteTile(belowRel, out PasteTile belowTile))
+            {
+                if (subject != PasteSubject.Target)
+                    return false;
+
+                int wx = anchor.World.X;
+                int wy = anchor.World.Y + 1;
+                if (!WorldGen.InWorld(wx, wy, 0))
+                    return false;
+
+                Tile live = Main.tile[wx, wy];
+                if (!live.HasTile || IsTreeType(live.TileType))
+                    return false;
+
+                supportType = live.TileType;
+                return true;
+            }
+
+            Tile view = PasteTile.GetTileForIdentify(in belowTile, subject);
+            if (!view.HasTile || IsTreeType(view.TileType))
+                return false;
+
+            supportType = view.TileType;
+            return true;
+        }
+
+        /// <summary>Builds the instance key for a trunk-ground anchor.</summary>
+        private static bool TryBuildInstanceKey(
+            Point anchorRel,
+            PasteSubject subject,
+            in PasteTileLookup lookup,
+            out TreeInstanceKey key)
+        {
+            key = default;
+            if (!lookup.TryGetPasteTile(anchorRel, out PasteTile anchor))
+                return false;
+
+            Tile view = PasteTile.GetTileForIdentify(in anchor, subject);
+            if (!view.HasTile || !IsTreeType(view.TileType))
+                return false;
+
+            TryGetSupportTileTypeForIdentify(anchorRel, subject, in lookup, out ushort supportType);
+            key = new TreeInstanceKey(anchorRel, view.TileType, supportType);
+            return true;
+        }
+
+        /// <summary>Enumerates every trunk-ground anchor in the paste lookup.</summary>
+        private static void EnumerateTrunkGroundAnchors(
+            PasteSubject subject,
+            in PasteTileLookup lookup,
+            List<Point> outAnchors)
+        {
+            // --- Scan the full lookup grid so touching trees get distinct instance roots.
+
+            outAnchors.Clear();
+            PasteTile[,] grid = lookup.PasteTiles;
+            int width = grid.GetLength(0);
+            int height = grid.GetLength(1);
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    Point rel = new(x, y);
+                    if (IsTrunkGroundAnchor(rel, subject, in lookup))
+                        outAnchors.Add(rel);
+                }
+            }
+        }
+
+        /// <summary>Assigns tree segments to the nearest compatible trunk-ground anchor.</summary>
+        private static void CollectTreeInstanceRelatives(
+            Point anchorRel,
+            PasteSubject subject,
             in PasteTileLookup lookup,
             List<Point> outPoints)
         {
-            // --- Flood-fill cardinal neighbors while tile type remains a tree trunk/cactus member.
+            // --- Map each tree cell to the closest anchor with matching trunk type, then take this anchor's set.
+
             outPoints.Clear();
-            if (!lookup.TryGetPasteTile(startRel, out PasteTile seed))
+            if (!TryBuildInstanceKey(anchorRel, subject, in lookup, out TreeInstanceKey anchorKey))
                 return;
 
-            Tile seedView = PasteTile.GetTileForIdentify(in seed, classify);
-            if (!seedView.HasTile || !IsTreeType(seedView.TileType))
+            var anchors = new List<Point>();
+            EnumerateTrunkGroundAnchors(subject, in lookup, anchors);
+            if (anchors.Count == 0)
                 return;
 
-            var visited = new HashSet<Point>();
-            var queue = new Queue<Point>();
-            queue.Enqueue(startRel);
-            visited.Add(startRel);
-
-            while (queue.Count > 0)
+            var anchorKeys = new TreeInstanceKey[anchors.Count];
+            for (int i = 0; i < anchors.Count; i++)
             {
-                Point cur = queue.Dequeue();
-                outPoints.Add(cur);
+                if (!TryBuildInstanceKey(anchors[i], subject, in lookup, out anchorKeys[i]))
+                    anchorKeys[i] = default;
+            }
 
-                for (int i = 0; i < TreeNeighborOffsets.Length; i++)
+            PasteTile[,] grid = lookup.PasteTiles;
+            int width = grid.GetLength(0);
+            int height = grid.GetLength(1);
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
                 {
-                    Point offset = TreeNeighborOffsets[i];
-                    Point neighborRel = new(cur.X + offset.X, cur.Y + offset.Y);
-                    if (visited.Contains(neighborRel))
-                        continue;
-                    if (!lookup.TryGetPasteTile(neighborRel, out PasteTile neighbor))
+                    Point rel = new(x, y);
+                    if (!lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
                         continue;
 
-                    Tile view = PasteTile.GetTileForIdentify(in neighbor, classify);
-                    if (!view.HasTile || !IsTreeType(view.TileType))
+                    Tile view = PasteTile.GetTileForIdentify(in pasteTile, subject);
+                    if (!view.HasTile || !IsTreeType(view.TileType) || view.TileType != anchorKey.TrunkType)
                         continue;
 
-                    visited.Add(neighborRel);
-                    queue.Enqueue(neighborRel);
+                    int bestIndex = -1;
+                    int bestDistance = int.MaxValue;
+                    for (int i = 0; i < anchors.Count; i++)
+                    {
+                        if (anchorKeys[i].TrunkType != view.TileType)
+                            continue;
+
+                        Point aRel = anchors[i];
+                        int distance = Math.Abs(rel.X - aRel.X) + Math.Abs(rel.Y - aRel.Y);
+                        if (distance < bestDistance)
+                        {
+                            bestDistance = distance;
+                            bestIndex = i;
+                        }
+                    }
+
+                    if (bestIndex >= 0 && anchors[bestIndex] == anchorRel)
+                        outPoints.Add(rel);
                 }
             }
         }
@@ -533,8 +688,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return relatives[best];
         }
 
-        /// <summary>Returns true when ground or connected trunk support allows placing this segment.</summary>
-        private static bool HasSegmentPlacementSupport(in PasteTile segment, in PasteContext context) =>
+        /// <summary>Returns true when live world support allows placing this tree segment.</summary>
+        internal static bool CanPlaceSegment(in PasteTile segment, in PasteContext context) =>
             HasValidTrunkBaseBelow(in segment, in context) || HasConnectedTrunkSupport(in segment);
 
         /// <summary>Returns true when a live tree trunk sits below or horizontally adjacent to this segment.</summary>
@@ -659,7 +814,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>Places one tree trunk tile by writing payload framing directly.</summary>
         private static LayerResult PlaceTreeSegment(in PasteTile segment, in PasteContext context)
         {
-            // --- Support is validated before this call; commit payload type and frames without CanPlace.
+            // --- Support is validated before this call; blit exact frames (no TileFrame hooks — they would reframe branches).
             int x = segment.World.X;
             int y = segment.World.Y;
             if (!segment.PayloadCell.HasTile())
@@ -679,7 +834,25 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!TileExecutor.EnqueueApplyPayloadBlock(x, y, in segment.PayloadCell, in context))
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
 
+            if (!TryReserveTreeSegmentItems(in segment, in context))
+                return LayerResult.Fail(LayerFailReason.MissingItems, message);
+
             return LayerResult.Ok(message, okLabel);
+        }
+
+        /// <summary>Reserves Living Wood Wand ammo; ApplyPayloadBlock does not consume on its own.</summary>
+        private static bool TryReserveTreeSegmentItems(in PasteTile segment, in PasteContext context)
+        {
+            if (!segment.PayloadCell.HasTile() || !context.RequireItems || context.InventoryLookup is null || context.IsSweep)
+                return true;
+            if (!TryResolveTreeInteraction(in segment, context.Lookup, out InteractionEntry? entry) || entry is null)
+                return false;
+
+            return context.InventoryLookup.TryReserveForInteraction(
+                entry,
+                context.InteractionBudget,
+                context.Player,
+                out _);
         }
 
         /// <summary>Returns the next clear index: branch columns top-down, then trunk column top-down.</summary>
@@ -786,11 +959,11 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>Returns true when the tile below provides valid support for the bottom-most trunk.</summary>
         private static bool HasValidTrunkBaseBelow(in PasteTile tile, in PasteContext context)
         {
-            // --- Accept mapped base tiles, solid ground below, surface blocks at the trunk foot, or sweep placement.
+            // --- Mapped base tiles when required; generic solid only when no base row exists; cheat sweep may force.
             int x = tile.World.X;
             int y = tile.World.Y;
             ushort tileType = (ushort)tile.PayloadCell.Block.Type;
-            int style = tile.PayloadCell.ResolvePlacementStyle();
+            int style = ResolveTreeStyle(in tile, context.Lookup);
 
             if (IsValidSupportTile(Main.tile[x, y], tileType, style))
                 return true;
@@ -802,10 +975,11 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (IsValidSupportTile(Main.tile[x, belowY], tileType, style))
                 return true;
 
-            if (WorldGen.SolidOrSlopedTile(x, belowY))
+            int? baseTileId = InteractionMapProvider.GetRequiredBaseTile(tileType, style);
+            if (!baseTileId.HasValue && WorldGen.SolidOrSlopedTile(x, belowY))
                 return true;
 
-            return context.IsSweepCheat && TileLoader.CanPlace(x, y, tileType);
+            return context.IsSweep && TileLoader.CanPlace(x, y, tileType);
         }
 
         /// <summary>Returns true when a live tile satisfies tree ground support for the payload type.</summary>
@@ -832,6 +1006,23 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             int bx = Math.Abs(bRel.X - medX);
             int tie = ax.CompareTo(bx);
             return tie != 0 ? tie : aRel.X.CompareTo(bRel.X);
+        }
+
+        public override bool DrawsCells => true;
+
+        public override void DrawCell(in PreviewDrawContext ctx, PayloadCell cell, int relX, int relY)
+        {
+            if (!cell.Detail.HasTile)
+                return;
+
+            ushort tileType = cell.Block.Type;
+            if (IsTreeType(tileType) && !LayerPreviewSprites.HasDetailModifiedSprite(cell))
+            {
+                if (LayerPreviewSprites.TryResolveSprite(in ctx, cell, relX, relY, out PreviewTileDraw.DrawSprite sprite))
+                    LayerPreviewSprites.DrawSprite(in ctx, relX, relY, in sprite);
+            }
+
+            TreeFoliagePreviewDraw.Draw(in ctx, cell, relX, relY);
         }
     }
 }

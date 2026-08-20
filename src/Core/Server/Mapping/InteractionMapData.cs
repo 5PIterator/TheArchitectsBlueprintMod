@@ -412,7 +412,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             if (!ContentSamples.ItemsByType.TryGetValue(itemId, out Item? sample) || sample is null)
                 return false;
 
-            return sample.createTile >= 0;
+            return sample.createTile >= TileID.Dirt;
         }
 
         /// <summary>
@@ -631,6 +631,24 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         /// </summary>
         internal static InteractionEntry? GetFirstTileInteraction(ushort tileType, int? style = null)
             => ResolvePreferred("Tile", tileType, style);
+
+        /// <summary>True when the interaction map has a tile entry or placeable item ids (ignores inventory).</summary>
+        internal static bool HasResolvedTileInteraction(ushort tileType, int? style = null)
+        {
+            // --- Prefer a mapped interaction row; fall back to any known place item ids.
+            if (GetFirstTileInteraction(tileType, style) is not null)
+                return true;
+            return GetTileItemIds(tileType, style) is { Count: > 0 };
+        }
+
+        /// <summary>True when the interaction map has a wall entry or placeable item ids (ignores inventory).</summary>
+        internal static bool HasResolvedWallInteraction(ushort wallType)
+        {
+            // --- Prefer a mapped Wall-layer row; fall back to any known place item ids.
+            if (ResolvePreferred("Wall", wallType) is not null)
+                return true;
+            return GetWallItemIds(wallType) is { Count: > 0 };
+        }
 
         /// <summary>
         /// Gets the preferred interaction for a layer/main, optionally filtered by base tile.

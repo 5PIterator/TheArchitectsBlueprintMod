@@ -4,6 +4,7 @@
     "Block",
     "Falling",
     "Frame",
+    "Entity",
     "Custom",
     "Fluid",
     "Unknown",
@@ -18,6 +19,7 @@
     "Paint",
     "Unknown",
     "Custom",
+    "Entity",
     "Frame",
     "Falling",
     "Block",
@@ -30,9 +32,24 @@
     "Frame",
     "Falling",
     "Block",
+    "Entity",
     "Fluid",
     "Paint",
     "Wiring",
     "Detail"
+  ],
+  "drawOrder": [
+    "Wall",
+    "Fluid",
+    "Falling",
+    "Block",
+    "Frame",
+    "Unknown",
+    "Plant",
+    "Vine",
+    "Tree",
+    "Wiring",
+    "Detail",
+    "Entity"
   ]
 }

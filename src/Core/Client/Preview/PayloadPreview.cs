@@ -3,12 +3,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.Layers;
 
-namespace TheArchitectsBlueprintMod.UI.Preview
+namespace TheArchitectsBlueprintMod.Core.Preview
 {
     /// <summary>
     /// Entry point for payload previews (in-world projection overlay and UI thumbnails).
-    /// Rendering is delegated to <see cref="PreviewLayerSystem"/>.
+    /// Rendering is delegated to <see cref="LayerSystem.DrawRegion"/>.
     /// </summary>
     internal static class PayloadPreview
     {
@@ -33,7 +34,7 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             Vector2 origin = new Vector2(proj.Area.X * TilePixelSize, proj.Area.Y * TilePixelSize) - Main.screenPosition;
             bool IncludeCell(Point p) => TryGetIncludedCell(proj, payload, p, out _);
 
-            PreviewLayerSystem.DrawRegion(
+            LayerSystem.DrawRegion(
                 Main.spriteBatch,
                 payload.Entries,
                 minX,
@@ -45,7 +46,8 @@ namespace TheArchitectsBlueprintMod.UI.Preview
                 PreviewTint,
                 IncludeCell,
                 proj.Area.X,
-                proj.Area.Y);
+                proj.Area.Y,
+                payload.Entities);
         }
 
         /// <summary>Bakes a square preview texture for UI thumbnails. Caller must Dispose the result.</summary>
@@ -66,7 +68,7 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             Main.instance.GraphicsDevice.Clear(Color.Transparent);
             Main.spriteBatch.Begin();
 
-            PreviewLayerSystem.DrawRegion(
+            LayerSystem.DrawRegion(
                 Main.spriteBatch,
                 payload.Entries,
                 0,
@@ -75,7 +77,8 @@ namespace TheArchitectsBlueprintMod.UI.Preview
                 h,
                 offset,
                 scale,
-                PreviewTint);
+                PreviewTint,
+                entities: payload.Entities);
 
             Main.spriteBatch.End();
             Main.instance.GraphicsDevice.SetRenderTarget(null);
@@ -88,8 +91,11 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             return mergedTexture;
         }
 
+        /// <summary>Fits a payload pixel size into a square thumbnail, centering the unused axis.</summary>
         private static void ComputeThumbnailFit(int actualPixelWidth, int actualPixelHeight, int desiredSize, out float scale, out Vector2 offset)
         {
+            // --- Leave 1:1 when it fits; otherwise scale by the longer side and center the remainder.
+
             scale = 1f;
             offset = Vector2.Zero;
 
@@ -110,8 +116,11 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             offset /= scale;
         }
 
+        /// <summary>Returns the payload cell when the projection includes that relative coordinate.</summary>
         private static bool TryGetIncludedCell(Projection proj, Payload payload, Point relative, out PayloadCell cell)
         {
+            // --- Require an included blueprint cell and a non-empty payload cell at the same relative.
+
             if (!proj.TryGetTileByRelative(relative, out Blueprint.BlueprintCell tile) || !tile.Included
                 || !payload.TryGetCell(relative, out cell) || cell.IsEmpty)
             {
@@ -122,8 +131,11 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             return true;
         }
 
+        /// <summary>Clips payload-relative draw bounds to the on-screen world tiles plus a small margin.</summary>
         private static void GetVisibleRelativeRange(Rectangle area, int width, int height, out int minX, out int maxX, out int minY, out int maxY)
         {
+            // --- Convert screen pixels to world tiles, intersect with the projection area, then shift to relative.
+
             const int margin = 2;
             int leftTile = (int)(Main.screenPosition.X / TilePixelSize) - margin;
             int rightTile = (int)((Main.screenPosition.X + Main.screenWidth) / TilePixelSize) + margin;

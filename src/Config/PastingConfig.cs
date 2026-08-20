@@ -70,13 +70,6 @@ namespace TheArchitectsBlueprintMod.Config
         public PlaceStyle Style = PlaceStyle.Place;
     }
 
-    /// <summary>Sweep-phase behavioral strategies that modify how sweeping runs.</summary>
-    public sealed class SweepPhaseStrategies
-    {
-        [DefaultValue(SweepStyle.Detail)]
-        public SweepStyle Style = SweepStyle.Detail;
-    }
-
     /// <summary>Plan-phase strategies that control how clear/place task queues are built.</summary>
     public sealed class PlanPhaseStrategies
     {
@@ -211,11 +204,11 @@ namespace TheArchitectsBlueprintMod.Config
         };
     }
 
-    /// <summary>Sweep-phase execution, strategies, and client preference policy.</summary>
+    /// <summary>Sweep-phase execution policy. Host-only footprint blit that skips Place when active.</summary>
     public sealed class SweepPhaseConfig
     {
-        [DefaultValue(true)]
-        public bool Active = true;
+        [DefaultValue(false)]
+        public bool Active;
 
         [DefaultValue(512)]
         [Range(1, 512)]
@@ -225,18 +218,12 @@ namespace TheArchitectsBlueprintMod.Config
         [Range(0, 5000)]
         public int TickSpeed;
 
-        [Expand(true)]
-        public SweepPhaseStrategies Strategy = new();
-
-        [DefaultValue(true)]
-        public bool AllowClientPreferences = true;
-
-        public PastePhasePolicy<SweepPhaseStrategy> ToPolicy(in SweepPhaseStrategy strategy) => new()
+        public PastePhasePolicy<SweepPhaseStrategy> ToPolicy() => new()
         {
             Active = Active,
             TickSize = TickSize,
             TickSpeed = TickSpeed,
-            Strategy = strategy,
+            Strategy = default,
         };
     }
 
@@ -266,6 +253,7 @@ namespace TheArchitectsBlueprintMod.Config
         [DefaultValue(true)] public bool Block = true;
         [DefaultValue(true)] public bool Falling = true;
         [DefaultValue(true)] public bool Frame = true;
+        [DefaultValue(false)] public bool Entity = false;
         [DefaultValue(true)] public bool Custom = true;
         [DefaultValue(true)] public bool Paint = true;
         [DefaultValue(true)] public bool Wiring = true;
@@ -317,6 +305,7 @@ namespace TheArchitectsBlueprintMod.Config
                 "Block" => mainLayers.Block,
                 "Falling" => mainLayers.Falling,
                 "Frame" => mainLayers.Frame,
+                "Entity" => mainLayers.Entity,
                 "Custom" => mainLayers.Custom,
                 "Plant" => customLayers.Plant,
                 "Vine" => customLayers.Vine,

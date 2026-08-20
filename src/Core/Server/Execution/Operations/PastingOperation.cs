@@ -2,13 +2,9 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
-using Terraria.ID;
-using Terraria.ModLoader;
-using Terraria.ObjectData;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core.Layers;
 using TheArchitectsBlueprintMod.Core.Phases;
-using TheArchitectsBlueprintMod.Core.TileMapping;
 using TheArchitectsBlueprintMod.Debug;
 
 namespace TheArchitectsBlueprintMod.Core
@@ -119,7 +115,7 @@ namespace TheArchitectsBlueprintMod.Core
             // Compose the layer pipeline.
             Pipeline = LayerSystem.ComposePipeline();
             // Build the tile lookup.
-            Lookup = BuildLookup();
+            Lookup = PastePlanningLookup.Build(Projection);
             _planPhase = new PlanPhase(this, _policy.PlanPhase);
             _clearPhase = new ClearPhase(this, _policy.ClearPhase);
             _cutPhase = new CutPhase(this, _policy.CutPhase);
@@ -131,14 +127,13 @@ namespace TheArchitectsBlueprintMod.Core
                 CorrelationId = Projection.Id,
                 OverlayId = OverlayId,
                 PlacementStyle = _placePhase.Strategy.Style,
-                SweepStrategy = _sweepPhase.Strategy.Style,
             };
             UpdateContext();
             TABLog.Debug(
                 $"Paste started: sourceClear={ApplySourceClear} (projection={Projection.CutSource}, debug={_cutPhase.Strategy.EnableCutPasteProcess}), targetArea=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height}",
                 "Paste");
             TABLog.Debug(
-                $"START | area=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height} | sourceClear={ApplySourceClear} | srcTiles={Projection.SourceTiles.Length} tgtTiles={Projection.TargetTiles.Length} | sweep={_sweepPhase.Strategy.Style} planClear={_planPhase.Strategy.Style} clearItemDrop={_clearPhase.Strategy.ItemDrop} retryOnMissingItems={_placePhase.Strategy.RetryOnMissingItems} retryOnInvalidPlacement={_placePhase.Strategy.RetryOnInvalidPlacement} requireItems={_placePhase.Strategy.RequireItems}",
+                $"START | area=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height} | sourceClear={ApplySourceClear} | srcTiles={Projection.SourceTiles.Length} tgtTiles={Projection.TargetTiles.Length} | sweep={_sweepPhase.Active} planClear={_planPhase.Strategy.Style} clearItemDrop={_clearPhase.Strategy.ItemDrop} retryOnMissingItems={_placePhase.Strategy.RetryOnMissingItems} retryOnInvalidPlacement={_placePhase.Strategy.RetryOnInvalidPlacement} requireItems={_placePhase.Strategy.RequireItems}",
                 "Paste");
 
             _prepWork = PrepWorkStage.PlanPlace;
@@ -195,7 +190,6 @@ namespace TheArchitectsBlueprintMod.Core
             _progress.CorrelationId = Projection.Id;
             _progress.OverlayId = OverlayId;
             _progress.PlacementStyle = _placePhase.Strategy.Style;
-            _progress.SweepStrategy = _sweepPhase.Strategy.Style;
         }
 
         internal bool TryGetLookupPasteTile(Point relative, out PasteTile pasteTile) =>
@@ -236,7 +230,8 @@ namespace TheArchitectsBlueprintMod.Core
                 policy: _policy,
                 lookup: Lookup,
                 effectSession: EffectSession,
-                interactionBudget: _interactionBudget);
+                interactionBudget: _interactionBudget,
+                payload: Projection.Payload);
         }
 
         /// <summary>Builds place context with every pending frame candidate from the frame layer queue.</summary>
@@ -250,7 +245,8 @@ namespace TheArchitectsBlueprintMod.Core
                 lookup: Lookup,
                 effectSession: EffectSession,
                 pendingFramePlaceCandidates: CollectPendingFramePlaceCandidates(frameLayerIndex),
-                interactionBudget: _interactionBudget);
+                interactionBudget: _interactionBudget,
+                payload: Projection.Payload);
         }
 
         /// <summary>Collects logical frame objects still waiting in the frame place queue.</summary>
@@ -330,7 +326,7 @@ namespace TheArchitectsBlueprintMod.Core
                 InitializePlanningState();
 
             // Clear identification ignores inventory; place planning uses <see cref="Context"/>.
-            var identifyContext = new PasteContext(Projection.Owner, null, _policy, Lookup, null);
+            var identifyContext = new PasteContext(Projection.Owner, null, _policy, Lookup, null, payload: Projection.Payload);
             PasteContext planningContext = Context;
 
             // Consume the prep budget by advancing the active plan stage one tile at a time.
@@ -516,17 +512,20 @@ namespace TheArchitectsBlueprintMod.Core
                 return true;
             }
 
-            // Clear-all clears every lookup tile; still skip cells the projection has excluded.
+            // Clear-all walks the lookup grid; skip unpopulated (excluded) slots.
             if (_prepIndex.X >= Lookup.PasteTiles.GetLength(0) || _prepIndex.Y >= Lookup.PasteTiles.GetLength(1))
                 return false;
 
-            PasteTile opaqueTile = Lookup.PasteTiles[_prepIndex.X, _prepIndex.Y];
+            Point opaqueRel = new(_prepIndex.X, _prepIndex.Y);
             _prepIndex.X++;
             if (_prepIndex.X >= Lookup.PasteTiles.GetLength(0))
             {
                 _prepIndex.X = 0;
                 _prepIndex.Y++;
             }
+
+            if (!Lookup.TryGetPasteTile(opaqueRel, out PasteTile opaqueTile))
+                return true;
 
             if (Projection.TryGetTileByRelative(opaqueTile.Relative, out var projCell) && !projCell.Included)
                 return true;
@@ -787,79 +786,6 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>
-        /// Creates a lookup that pairs each source-relative tile with its source and target world state.
-        /// </summary>
-        private PasteTileLookup BuildLookup()
-        {
-            /// Full WxH grid: opaque clears walk every relative index. Sparse payload only fills some cells;
-            /// each populated slot must set <see cref="PasteTile.Relative"/> to its grid index (see <see cref="PasteTileLookup"/>).
-
-            Point size = Projection.PayloadSize;
-            int w = size.X;
-            int h = size.Y;
-            var list = new PasteTile[w, h];
-
-            for (int x = 0; x < w; x++)
-            {
-                for (int y = 0; y < h; y++)
-                {
-                    Point rel = new(x, y);
-                    if (!Projection.TryGetTargetTile(rel, out Tile targetTile))
-                        continue;
-
-                    Projection.TryGetSourceTile(rel, out Tile sourceTile);
-                    Point world = Projection.RelativeToWorld(rel);
-
-                    PayloadCell cell = default;
-                    InteractionEntry interaction;
-                    if (Projection.Payload.TryGetCell(rel, out PayloadCell payloadCell) && !payloadCell.IsEmpty)
-                    {
-                        cell = payloadCell;
-                        interaction = ResolveInteraction(cell.ToTile());
-                    }
-                    else
-                    {
-                        interaction = InteractionEntry.Create("Tile", mainId: -1);
-                    }
-
-                    list[x, y] = new PasteTile(
-                        payloadCell: cell,
-                        interaction: interaction,
-                        source: sourceTile,
-                        target: targetTile,
-                        relative: rel,
-                        world: world);
-                }
-            }
-
-            return new PasteTileLookup(list);
-        }
-
-        /// <summary>
-        /// Resolves the interaction category and main ID for a source tile payload.
-        /// </summary>
-        private static InteractionEntry ResolveInteraction(in Tile sourceTile)
-        {
-            // --- Prefer tile interaction metadata, then fall back to wall/liquid/default markers.
-
-            if (sourceTile.HasTile)
-            {
-                int style = 0, alternate = 0;
-                TileObjectData.GetTileInfo(sourceTile, ref style, ref alternate);
-                return InteractionMapProvider.GetFirstTileInteraction(sourceTile.TileType, style)
-                    ?? InteractionEntry.Create("Tile", mainId: sourceTile.TileType);
-            }
-
-            if (sourceTile.WallType != WallID.None)
-                return InteractionEntry.Create("Wall", mainId: sourceTile.WallType);
-
-            if (sourceTile.LiquidAmount > 0)
-                return InteractionEntry.Create("Liquid", mainId: sourceTile.LiquidType);
-
-            return InteractionEntry.Create("Tile", mainId: -1);
-        }
-
-        /// <summary>
         /// Resolves a paste tile against source-area world coordinates for source-clear passes.
         /// </summary>
         private bool TryGetSourceAreaPasteTile(Point rel, out PasteTile tile)
@@ -939,8 +865,10 @@ namespace TheArchitectsBlueprintMod.Core
         {
             // --- Identify payload layers and enqueue place work; Place owns item/validity failures.
 
-            // Vacant payload intent is handled by clear (and sweep when enabled), not place layers.
-            if (tile.PayloadCell.IsEmpty)
+            // Vacant payload intent is handled by clear (and sweep when enabled), not tile place layers.
+            // Entity sidecar can still identify at an origin whose payload cell is empty.
+            if (tile.PayloadCell.IsEmpty
+                && (planningContext.Payload is null || !planningContext.Payload.TryGetEntity(rel, out _)))
                 return;
 
             // Sweep phase applies payload directly; layer place identification is unnecessary when sweep runs.

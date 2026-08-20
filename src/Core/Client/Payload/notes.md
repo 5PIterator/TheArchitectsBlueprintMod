@@ -1,34 +1,67 @@
-I am in need of consistent utilization of this data structure throughout the codebase. I believe that there are some obsolete uses of a dense 2D array of tiles, instead of a sparse list of cells each with coordinates.
+# Payload entities (TE-01)
 
-Current structure:
-- Metadata: This is a struct that contains the metadata for the payload. It is used for some general information about the payload, such as the project name, player name, creation date, mod version and other.
-- Payload: This is a struct that contains the cells of the payload. It is used for storing the tile data and the wall data.
-- Example Payload:
-```
+Capture tiles and entities separately. Referencing matches Terraria: entities are keyed by
+**payload-relative coordinates** (`ByPosition` / `Chest.FindChest` style). Cells stay
+tile-only — no entity id on the cell. World runtime ids are not part of the blueprint contract.
+
+Unified envelope: `(x, y, n, d)` where `n` is FullName and `d` is an opaque TagCompound.
+
+Synthetic names: `Terraria:Chest`, `Terraria:Sign`. TileEntities use their FullName
+(`Terraria:TEDisplayDoll`, mod `Mod:Name`, etc.).
+
+In memory after load: `Dictionary<(x,y), PayloadEntity>` via `Payload.TryGetEntity`.
+
+Security is enforced in three layers:
+- At capture (client building the payload) — e.g. large chest stacks
+- At import (external payload load) — maliciously edited documents
+- On the server when receiving a paste packet
+
+Paste applies entity `d` through the Entity layer (disabled by default). Place/Clear run after/before Frame
+and currently override live contents without consuming inventory (Needs Items = false / Sweep-equivalent).
+Sweep (TE-03) always runs a post-blit entity step: purge hosts in the footprint, then blind-create and
+apply every payload sidecar at exact Relative (ghosts allowed; no TopLeft placement hooks).
+
+Proper item consumption is planned separately:
+- Clear + Store: paste arrows that pull items out of the entity into player/storage.
+- Place + RequireItems: paste arrows that consume inventory and insert into the entity.
+Until then, EntityLayer wipes then LoadData/chest-slot writes (replace, not merge).
+
+Capture and apply share a generic TileEntity path (`TileObjectData.TopLeft`, `SaveData`/`LoadData`)
+with a FullName table of custom handlers: `Terraria:Chest`, `Terraria:Sign`, and `TEDisplayDoll`
+(full `ItemIO` capture). Hosts are created by Frame PlaceObject via `TileObject.Place` plus
+`TileObjectData.CallPostPlacementPlayerHook` (`HookPostPlaceMyPlayer`), the same sequence as
+player `PlaceThing`. `WorldGen.PlaceObject` writes tiles only and never runs that hook.
+EntityLayer finds that live host and wipes/writes sidecar `d`. A missing or mismatched host is
+`InvalidPlacement`; this layer does not create chests, signs, or TileEntities.
+
+`TEItemFrame` stores the displayed item in public `item`; `SaveData` writes `d.item` via `ItemIO`.
+`TEDisplayDoll` stores private `_items` / `_dyes` (8+8); vanilla `SaveData` uses `PlayerIO.SaveInventory`
+(mod items only), so capture rewrites those lists with full `ItemIO`.
+
+Example:
+
+```json
 {
-    "metadata": {
-        "projectName": "My Project",
-        "playerName": "My Player",
-        "createdUtc": "2026-05-24T00:00:00.0000000Z",
-        "modVersion": "1.0.0"
-    },
-    "payload": [
-        { // Missing cell coordinates are interpreted as empty cells.
-            "x": 22,
-            "y": 0,
-            "c": { // Empty cells are interpreted as air.
-                "tile": "Platforms",
-                "wall": "MushroomWall",
-                "tFX": 54,
-                "tFY": 324,
-                "wFX": 180,
-                "wFY": 72,
-                "wFN": 2,
-                "style": 18,
-                "alt": 3,
-                "flags": 1
-            }
-        }
-    ]
+  "metadata": { "...": "..." },
+  "payload": [
+    { "x": 22, "y": 0, "c": { "tile": "Containers", "style": 0, "tFX": 0, "tFY": 0 } },
+    { "x": 23, "y": 0, "c": { "tile": "Containers", "tFX": 18, "tFY": 0 } },
+    { "x": 22, "y": 1, "c": { "tile": "Containers", "tFX": 0, "tFY": 18 } },
+    { "x": 23, "y": 1, "c": { "tile": "Containers", "tFX": 18, "tFY": 18 } }
+  ],
+  "entities": [
+    {
+      "x": 22,
+      "y": 0,
+      "n": "Terraria:Chest",
+      "d": {
+        "name": "Loot",
+        "items": [
+          { "slot": 0, "item": "GoldCoin", "stack": 100 },
+          { "slot": 5, "item": "Torch", "stack": 99, "prefix": 0 }
+        ]
+      }
+    }
+  ]
 }
 ```

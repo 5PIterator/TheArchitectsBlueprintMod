@@ -186,7 +186,8 @@ namespace TheArchitectsBlueprintMod.Core
                 policy: policy,
                 lookup: lookup,
                 effectSession: null,
-                interactionBudget: null);
+                interactionBudget: null,
+                payload: projection.Payload);
         }
 
         private static void CollectDemand(
@@ -423,6 +424,8 @@ namespace TheArchitectsBlueprintMod.Core
                     RecordPaintDemand(in pasteTile, ignoreWorld, accounting);
                     break;
                 case LayerType.Detail:
+                    break;
+                case LayerType.Entity:
                     break;
                 default:
                     RecordTileCellDemand(in pasteTile, ignoreWorld, accounting);

@@ -53,6 +53,12 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public static string PaintedLabel => "Painted";
 
+        public static string EntityLabel => "Entity";
+
+        /// <summary>Formats a payload or live entity FullName for progress and debug logs.</summary>
+        public static string FormatEntity(string fullName) =>
+            string.IsNullOrEmpty(fullName) ? "Entity:none" : $"Entity:{fullName}";
+
         /// <summary>Formats wire colors and actuator state for progress and debug logs.</summary>
         public static string FormatWireState(in PayloadCell.WireData wire)
         {

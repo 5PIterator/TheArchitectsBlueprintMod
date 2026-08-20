@@ -12,7 +12,7 @@ using Terraria.ModLoader.UI;
 using Terraria.ModLoader.UI.Elements;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Core;
-using TheArchitectsBlueprintMod.UI.Preview;
+using TheArchitectsBlueprintMod.Core.Preview;
 using TheArchitectsBlueprintMod.UI.TmodGUI.Elements;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets

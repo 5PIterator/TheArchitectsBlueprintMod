@@ -98,6 +98,18 @@ namespace TheArchitectsBlueprintMod.Core
             return searchArea;
         }
 
+        /// <summary>True when a chest footprint sits in the outer reach ring and does not overlap the projection.</summary>
+        public static bool IsChestInInventoryReachRing(Rectangle footprint, Rectangle targetArea)
+        {
+            // --- Keep the inflated window, then drop any chest that intersects the inner paste area.
+
+            Rectangle searchArea = GetInventorySearchArea(targetArea);
+            if (!searchArea.Contains(footprint))
+                return false;
+
+            return !targetArea.Intersects(footprint);
+        }
+
         /// <summary>Returns true when the player's tile center lies inside the inventory search area.</summary>
         public static bool IsPlayerInInventoryRange(Player player, Rectangle targetArea)
         {

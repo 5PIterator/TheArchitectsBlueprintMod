@@ -4,7 +4,7 @@ using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 using Terraria;
 using Terraria.ID;
-using Terraria.ModLoader;
+using TheArchitectsBlueprintMod.UI.Preview;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
@@ -16,11 +16,12 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchForPaste(in tile);
 
-        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context, PasteSubject identifySubject)
         {
             Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             if (!subjectTile.HasTile ||
                 !TileLoaderSupport.IsKnownTileType(subjectTile.TileType) ||
+                TileLoaderSupport.IsUnknownTileType(subjectTile.TileType) ||
                 !TileID.Sets.Falling[subjectTile.TileType])
                 return LayerResult.IdentifyNone();
 
@@ -70,31 +71,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
 
-        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
-        {
-            if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
-            if (!tile.PayloadCell.HasTile()) return true;
-            int style = tile.PayloadCell.ResolvePlacementStyle();
-            return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
-        }
-
-        public override bool CanConsume(in PasteTile tile, in PasteContext context)
-        {
-            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
-            int style = tile.PayloadCell.ResolvePlacementStyle();
-            return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
-        }
-
-        public override bool Consume(in PasteTile tile, in PasteContext context) =>
-            TileOperations.Consume(in tile, in context);
-
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile)
-        {
-            if (!tile.PayloadCell.HasTile()) return null;
-            int style = tile.PayloadCell.ResolvePlacementStyle();
-            return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
-        }
-
         public override LayerResult Clear(TileBatch batch, in PasteContext context)
         {
             IReadOnlyList<PasteTile> tiles = batch.Tiles;
@@ -123,14 +99,29 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             var tile = tiles[lowestIdx];
             var res = TileOperations.Place([tile], in context);
             if (!res.Success) return res;
-            if (!context.IsSweepCheat && !Consume(in tile, in context))
-                return LayerResult.Fail(LayerFailReason.MissingItems, LayerLogFormat.FormatTile(tile.PayloadTile));
             var remaining = new List<PasteTile>(tiles.Count - 1);
             for (int i = 0; i < tiles.Count; i++)
                 if (i != lowestIdx) remaining.Add(tiles[i]);
             return remaining.Count > 0
                 ? LayerResult.OkWithRemaining(batch.WithRemainingTiles(remaining), res.Message, res.OkLabel)
                 : res;
+        }
+
+        public override bool DrawsCells => true;
+
+        public override void DrawCell(in PreviewDrawContext ctx, PayloadCell cell, int relX, int relY)
+        {
+            if (LayerPreviewSprites.HasDetailModifiedSprite(cell))
+                return;
+
+            Tile tile = cell.ToTile();
+            if (!tile.HasTile || !TileLoaderSupport.IsKnownTileType(tile.TileType) || !TileID.Sets.Falling[tile.TileType])
+                return;
+
+            if (!LayerPreviewSprites.TryResolveSprite(in ctx, cell, relX, relY, out PreviewTileDraw.DrawSprite sprite))
+                return;
+
+            LayerPreviewSprites.DrawSprite(in ctx, relX, relY, in sprite);
         }
     }
 }

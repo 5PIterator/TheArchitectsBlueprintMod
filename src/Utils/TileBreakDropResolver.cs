@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
+using TheArchitectsBlueprintMod.Core.Layers;
 using TheArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Debug;
 
 namespace TheArchitectsBlueprintMod.Utils
 {
@@ -16,11 +17,13 @@ namespace TheArchitectsBlueprintMod.Utils
         private static MethodInfo? _killTileGetItemDrops;
         private static MethodInfo? _killWallGetItemDrops;
         private static bool _reflectionInitialized;
+        private static bool _warnedMissingKillTile;
+        private static bool _warnedMissingKillWall;
 
         /// <summary>Returns the primary break drop for the tile at world coordinates, if any.</summary>
         public static bool TryResolveTileStoreDrop(int x, int y, out int itemType, out int stack)
         {
-            // --- Query only KillTile / mod break drops; never fall back to placement items.
+            // --- Prefer public drop APIs; fall back to KillTile reflection only as last resort.
 
             itemType = 0;
             stack = 1;
@@ -52,64 +55,107 @@ namespace TheArchitectsBlueprintMod.Utils
         /// <summary>Resolves placement style and alternate from a tile, using coordinates when valid for world-aware drops.</summary>
         public static void ResolvePlacementVariant(Tile tile, int x, int y, out int style, out int alternate)
         {
-            // --- Prefer drop-item placeStyle; fall back to GetTileStyle, then GetTileInfo.
+            // --- Prefer frame-matched placeStyle/alternate so Signs-style orientations are not stored as styles.
 
             style = 0;
             alternate = 0;
             if (!tile.HasTile || tile.TileType >= TileLoader.TileCount)
                 return;
 
-            // Capture alternate from frame layout even when style comes from the placement item.
+            // Seed with GetTileInfo, then override style from drop placeStyle when available.
             int infoStyle = 0;
             TileObjectData.GetTileInfo(tile, ref infoStyle, ref alternate);
+            int cachedStyle = Math.Max(0, infoStyle);
+            int cachedAlternate = Math.Max(0, alternate);
 
-            // Prefer world-aware drop → item.placeStyle when the drop is this tile's placement item.
             if (WorldGen.InWorld(x, y)
                 && TryResolveWorldAwareTileDrop(x, y, tile, out int itemType, out _)
                 && TryGetPlacementItemPlaceStyle(itemType, tile.TileType, out int placeStyle))
             {
-                style = placeStyle;
-                return;
+                cachedStyle = placeStyle;
             }
-
-            // Fall back to TileObjectData style when frames encode placement style correctly.
-            int tileStyle = TileObjectData.GetTileStyle(tile);
-            if (tileStyle >= 0)
+            else
             {
-                style = tileStyle;
-                return;
+                int tileStyle = TileObjectData.GetTileStyle(tile);
+                if (tileStyle >= 0)
+                    cachedStyle = tileStyle;
             }
 
-            // Last resort: raw GetTileInfo style (can misread stateful FrameX on some tiles).
-            style = Math.Max(0, infoStyle);
+            // Recover orientation alternates when vanilla StyleMultiplier is missing (Signs / TatteredWoodSign).
+            FrameOperations.FramePlacementVariant variant = FrameOperations.ResolveFramePlacementVariant(
+                tile.TileType,
+                tile.TileFrameX,
+                tile.TileFrameY,
+                cachedStyle,
+                cachedAlternate);
+            style = variant.Style;
+            alternate = variant.Alternate;
         }
 
-        /// <summary>Resolves a break drop using KillTile hooks or mod tile drop APIs at world coordinates.</summary>
+        /// <summary>Resolves a break drop using public APIs first, then KillTile reflection as last resort.</summary>
         private static bool TryResolveWorldAwareTileDrop(int x, int y, Tile tile, out int itemType, out int stack)
         {
-            // --- Query vanilla KillTile drops, then mod tile GetItemDrops.
+            // --- Public/mod path first; reflected KillTile only when those yield nothing.
 
             itemType = 0;
             stack = 1;
 
-            if (TryInvokeKillTileGetItemDrops(x, y, tile, out int primaryItem, out int primaryStack, out int secondaryItem, out int secondaryStack))
-            {
-                if (primaryItem > 0)
-                {
-                    itemType = primaryItem;
-                    stack = Math.Max(1, primaryStack);
-                    return true;
-                }
+            if (TryResolvePublicTileDrop(x, y, tile, out itemType, out stack))
+                return true;
 
-                if (secondaryItem > 0)
-                {
-                    itemType = secondaryItem;
-                    stack = Math.Max(1, secondaryStack);
-                    return true;
-                }
+            if (!TryInvokeKillTileGetItemDrops(
+                    x,
+                    y,
+                    tile,
+                    out int primaryItem,
+                    out int primaryStack,
+                    out int secondaryItem,
+                    out int secondaryStack))
+                return false;
+
+            if (primaryItem > 0)
+            {
+                itemType = primaryItem;
+                stack = Math.Max(1, primaryStack);
+                return true;
             }
 
-            return TryResolveModTileDrop(x, y, tile.TileType, out itemType, out stack);
+            if (secondaryItem > 0)
+            {
+                itemType = secondaryItem;
+                stack = Math.Max(1, secondaryStack);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Resolves mod tile drops via GetItemDrops, then GetItemDropFromTypeAndStyle for mod types only.</summary>
+        private static bool TryResolvePublicTileDrop(int x, int y, Tile tile, out int itemType, out int stack)
+        {
+            // --- Mod tiles only: never reverse-scan vanilla createTile (Leaf Wand false positives).
+
+            itemType = 0;
+            stack = 1;
+            ushort tileType = tile.TileType;
+            if (tileType < TileID.Count || tileType >= TileLoader.TileCount)
+                return false;
+
+            if (TryResolveModTileDrop(x, y, tileType, out itemType, out stack))
+                return true;
+
+            // Fall back to the registered type+style drop table for mod tiles without custom GetItemDrops.
+            int style = TileObjectData.GetTileStyle(tile);
+            if (style < 0)
+                style = 0;
+
+            int drop = TileLoader.GetItemDropFromTypeAndStyle(tileType, style);
+            if (drop <= ItemID.None)
+                return false;
+
+            itemType = drop;
+            stack = 1;
+            return true;
         }
 
         /// <summary>Reads placeStyle when the item places the given tile type.</summary>
@@ -145,7 +191,8 @@ namespace TheArchitectsBlueprintMod.Utils
         /// <summary>Returns the break drop for the wall at world coordinates, if any.</summary>
         public static bool TryResolveWallStoreDrop(int x, int y, out int itemType, out int stack)
         {
-            // --- Query vanilla wall break drops, then apply mod wall drop hooks.
+            // --- Prefer createWall + WallLoader.Drop; reflect KillWall only as last resort.
+
             itemType = 0;
             stack = 1;
 
@@ -154,16 +201,54 @@ namespace TheArchitectsBlueprintMod.Utils
             if (wallType <= 0)
                 return false;
 
-            if (TryInvokeKillWallGetItemDrops(tile, out int dropItem) && dropItem > 0)
+            if (TryResolvePublicWallDrop(x, y, wallType, out itemType))
+                return true;
+
+            if (!TryInvokeKillWallGetItemDrops(tile, out int dropItem) || dropItem <= 0)
+                return false;
+
+            itemType = dropItem;
+            WallLoader.Drop(x, y, wallType, ref itemType);
+            return itemType > 0;
+        }
+
+        /// <summary>Resolves a wall drop from createWall samples, then applies WallLoader.Drop hooks.</summary>
+        private static bool TryResolvePublicWallDrop(int x, int y, int wallType, out int itemType)
+        {
+            // --- Find the placement item for this wall, then let WallLoader adjust or cancel it.
+
+            itemType = 0;
+            if (!TryFindWallPlacementItem(wallType, out int drop) || drop <= 0)
+                return false;
+
+            WallLoader.Drop(x, y, wallType, ref drop);
+            if (drop <= 0)
+                return false;
+
+            itemType = drop;
+            return true;
+        }
+
+        /// <summary>Finds the first ContentSamples item whose createWall matches the wall type.</summary>
+        private static bool TryFindWallPlacementItem(int wallType, out int itemType)
+        {
+            // --- Prefer ContentSamples over SetDefaults scans for every item id.
+
+            itemType = 0;
+            foreach (KeyValuePair<int, Item> pair in ContentSamples.ItemsByType)
             {
-                itemType = dropItem;
-                WallLoader.Drop(x, y, wallType, ref itemType);
+                Item sample = pair.Value;
+                if (sample is null || sample.createWall != wallType)
+                    continue;
+
+                itemType = sample.type;
                 return itemType > 0;
             }
 
-            return TryResolveModWallDrop(x, y, wallType, out itemType);
+            return false;
         }
 
+        /// <summary>Invokes internal WorldGen.KillTile_GetItemDrops when public APIs miss.</summary>
         private static bool TryInvokeKillTileGetItemDrops(
             int x,
             int y,
@@ -173,6 +258,8 @@ namespace TheArchitectsBlueprintMod.Utils
             out int secondaryItem,
             out int secondaryItemStack)
         {
+            // --- Last-resort vanilla break loot via reflected internal helper.
+
             dropItem = 0;
             dropItemStack = 1;
             secondaryItem = 0;
@@ -200,8 +287,11 @@ namespace TheArchitectsBlueprintMod.Utils
             return true;
         }
 
+        /// <summary>Invokes private WorldGen.KillWall_GetItemDrops when public APIs miss.</summary>
         private static bool TryInvokeKillWallGetItemDrops(Tile tile, out int dropItem)
         {
+            // --- Last-resort vanilla wall break loot via reflected private helper.
+
             dropItem = 0;
 
             MethodInfo? method = GetKillWallGetItemDropsMethod();
@@ -220,8 +310,11 @@ namespace TheArchitectsBlueprintMod.Utils
             return true;
         }
 
+        /// <summary>Reads the first non-empty ModTile.GetItemDrops entry at world coordinates.</summary>
         private static bool TryResolveModTileDrop(int x, int y, int tileType, out int itemType, out int stack)
         {
+            // --- Use the mod tile's custom drop enumeration when present.
+
             itemType = 0;
             stack = 1;
 
@@ -246,36 +339,6 @@ namespace TheArchitectsBlueprintMod.Utils
             return false;
         }
 
-        private static bool TryResolveModWallDrop(int x, int y, int wallType, out int itemType)
-        {
-            itemType = 0;
-
-            ModWall? modWall = WallLoader.GetWall(wallType);
-            if (modWall is null)
-                return false;
-
-            int drop = 0;
-            for (int i = 1; i < ItemLoader.ItemCount; i++)
-            {
-                Item item = new();
-                item.SetDefaults(i);
-                if (item.createWall == wallType)
-                {
-                    drop = i;
-                    break;
-                }
-            }
-
-            if (drop <= 0)
-                return false;
-
-            if (!modWall.Drop(x, y, ref drop) || drop <= 0)
-                return false;
-
-            itemType = drop;
-            return true;
-        }
-
         private static MethodInfo? GetKillTileGetItemDropsMethod()
         {
             EnsureReflectionInitialized();
@@ -288,28 +351,51 @@ namespace TheArchitectsBlueprintMod.Utils
             return _killWallGetItemDrops;
         }
 
+        /// <summary>Lazily binds Kill*GetItemDrops methods and warns once when either is missing.</summary>
         private static void EnsureReflectionInitialized()
         {
+            // --- Bind by name+signature; warn once per missing method after a tML update.
             if (_reflectionInitialized)
                 return;
 
             _reflectionInitialized = true;
             const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
             Type worldGen = typeof(WorldGen);
+            MethodInfo[] methods = worldGen.GetMethods(flags);
 
-            _killTileGetItemDrops = worldGen
-                .GetMethods(flags)
-                .FirstOrDefault(method =>
-                    method.Name == "KillTile_GetItemDrops"
-                    && method.GetParameters().Length >= 6
-                    && method.GetParameters()[2].ParameterType == typeof(Tile));
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo method = methods[i];
+                ParameterInfo[] parameters = method.GetParameters();
+                if (method.Name == "KillTile_GetItemDrops"
+                    && parameters.Length >= 6
+                    && parameters[2].ParameterType == typeof(Tile))
+                {
+                    _killTileGetItemDrops = method;
+                }
+                else if (method.Name == "KillWall_GetItemDrops"
+                    && parameters.Length == 1
+                    && parameters[0].ParameterType == typeof(Tile))
+                {
+                    _killWallGetItemDrops = method;
+                }
+            }
 
-            _killWallGetItemDrops = worldGen
-                .GetMethods(flags)
-                .FirstOrDefault(method =>
-                    method.Name == "KillWall_GetItemDrops"
-                    && method.GetParameters().Length == 1
-                    && method.GetParameters()[0].ParameterType == typeof(Tile));
+            if (_killTileGetItemDrops is null && !_warnedMissingKillTile)
+            {
+                _warnedMissingKillTile = true;
+                TABLog.Warn(
+                    "WorldGen.KillTile_GetItemDrops was not found; Store tile clears use public drop APIs only.",
+                    "Drops");
+            }
+
+            if (_killWallGetItemDrops is null && !_warnedMissingKillWall)
+            {
+                _warnedMissingKillWall = true;
+                TABLog.Warn(
+                    "WorldGen.KillWall_GetItemDrops was not found; Store wall clears use public drop APIs only.",
+                    "Drops");
+            }
         }
     }
 }

@@ -142,7 +142,6 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 request.RetryOnInvalidPlacement,
                 request.ClearStrategy,
                 request.ClearItemDropStrategy,
-                request.SweepStrategy,
                 request.ArrowSpeed,
                 request.ArrowMinSpeed,
                 request.ArrowMaxSpeed);

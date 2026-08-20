@@ -1,8 +1,14 @@
+using System;
 using System.Collections.Generic;
-using TheArchitectsBlueprintMod.Core;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.Enums;
+using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.ModLoader;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.UI.Preview;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
@@ -12,7 +18,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private DetailLayer() : base("Detail", LayerType.Detail) { }
 
-        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup _, in PasteContext context, PasteSubject identifySubject)
         {
             Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             bool hasDetail = subjectTile.IsActuated || subjectTile.BlockType != BlockType.Solid;
@@ -32,12 +38,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
 
-        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
-
-        public override bool CanConsume(in PasteTile tile, in PasteContext context) => true;
-
-        public override bool Consume(in PasteTile tile, in PasteContext context) => true;
-
         public override bool Match(in PasteTile tile)
         {
             if (TileComparison.IsSourceCutIntent(in tile))
@@ -45,8 +45,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             Tile intent = tile.PayloadTile;
             return intent.IsActuated == tile.Target.IsActuated && intent.BlockType == tile.Target.BlockType;
         }
-
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile) => null;
 
         public override LayerResult Clear(TileBatch batch, in PasteContext context)
         {
@@ -116,6 +114,26 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             }
 
             return LayerResult.Ok(message, LayerLogFormat.DetailedLabel);
+        }
+
+        public override bool DrawsCells => true;
+
+        public override void DrawCell(in PreviewDrawContext ctx, PayloadCell cell, int relX, int relY)
+        {
+            PayloadCell.DetailData detail = cell.Detail;
+            if (!detail.IsActuated && !detail.IsHalfBlock && detail.Slope == SlopeType.Solid && detail.BlockType == BlockType.Solid)
+                return;
+
+            if (!LayerPreviewSprites.TryResolveSprite(in ctx, cell, relX, relY, out PreviewTileDraw.DrawSprite sprite))
+                return;
+
+            Vector2 pos = PreviewTileDraw.GetDrawPosition(ctx.Position, relX, relY, in sprite);
+            Color drawTint = detail.IsActuated ? ctx.Tint * 0.4f : ctx.Tint;
+            SlopeType slope = detail.Slope;
+            if (slope != SlopeType.Solid)
+                PreviewTileDraw.DrawSlope(ctx.SpriteBatch, sprite.Texture, sprite.Source, pos, ctx.Scale, sprite.Effects, slope, drawTint);
+            else
+                ctx.SpriteBatch.Draw(sprite.Texture, pos * ctx.Scale, sprite.Source, drawTint, 0f, Vector2.Zero, ctx.Scale, sprite.Effects, 0f);
         }
     }
 }

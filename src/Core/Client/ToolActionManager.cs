@@ -26,7 +26,7 @@ namespace TheArchitectsBlueprintMod.Core
         {
             /// <summary>Starts a fresh selection bounds (pin gesture).</summary>
             PIN = 0,
-            /// <summary>Edits an existing selection's bounds, or falls back to PIN if undefined.</summary>
+            /// <summary>Edits an existing selection, or moves a projection when the selection is not under the cursor.</summary>
             SET = 1,
             /// <summary>Includes tiles in the current selection or projection via rectangle edit.</summary>
             INCLUDE = 2,
@@ -173,31 +173,44 @@ namespace TheArchitectsBlueprintMod.Core
             }
         }
 
-        /// <summary>Runs SET when a selection exists, otherwise falls back to PIN behavior.</summary>
+        /// <summary>Runs SET on a hit selection, else moves a projection, else falls back to PIN when nothing is defined.</summary>
         private static void HandleSet(ToolActionKey key, Player player, Point cursorTile)
         {
             switch (key)
             {
                 case ToolActionKey.LeftClick:
-                    // If there are no selections, fall back to PIN behavior.
-                    if (BlueprintSystem.GetSelection() is null)
-                    {
-                        SelectionControl.BeginPin(player, cursorTile);
+                    // Prefer the selection whenever the cursor hits it, even if a projection overlaps the same tile.
+                    if (SelectionControl.BeginSet(player, cursorTile))
                         return;
-                    }
-                    SelectionControl.BeginSet(player, cursorTile);
+
+                    // Selection was not hit; move an existing projection under the cursor.
+                    if (ProjectionControl.BeginMove(player, cursorTile))
+                        return;
+
+                    // No selection or projection target; start a new PIN when nothing is defined to edit.
+                    if (BlueprintSystem.GetSelection() is not { IsDefined: true })
+                        SelectionControl.BeginPin(player, cursorTile);
                     return;
 
                 case ToolActionKey.LeftHold:
-                    SelectionControl.UpdateGesture(player, cursorTile);
+                    if (ProjectionControl.IsActivelyDragging(player))
+                        ProjectionControl.UpdateGesture(player, cursorTile);
+                    else
+                        SelectionControl.UpdateGesture(player, cursorTile);
                     return;
 
                 case ToolActionKey.LeftRelease:
-                    SelectionControl.EndGesture(player);
+                    if (ProjectionControl.IsActivelyDragging(player))
+                        ProjectionControl.EndGesture(player);
+                    else
+                        SelectionControl.EndGesture(player);
                     return;
 
                 case ToolActionKey.RightClick:
-                    SelectionControl.CancelGesture(player);
+                    if (ProjectionControl.IsActivelyDragging(player))
+                        ProjectionControl.CancelGesture(player);
+                    else
+                        SelectionControl.CancelGesture(player);
                     return;
 
                 default:

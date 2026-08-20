@@ -62,7 +62,6 @@ namespace TheArchitectsBlueprintMod.Core.Server
         public bool RetryOnInvalidPlacement { get; private set; }
         public ClearStyle ClearStrategy { get; private set; }
         public ClearItemDropStyle ClearItemDropStrategy { get; private set; }
-        public SweepStyle SweepStrategy { get; private set; }
         public int ArrowSpeed { get; private set; }
         public float ArrowMinSpeed { get; private set; }
         public float ArrowMaxSpeed { get; private set; }
@@ -104,7 +103,6 @@ namespace TheArchitectsBlueprintMod.Core.Server
             request.RetryOnInvalidPlacement = hints.RetryOnInvalidPlacement;
             request.ClearStrategy = hints.ClearStyle;
             request.ClearItemDropStrategy = hints.ClearItemDropStyle;
-            request.SweepStrategy = hints.SweepStyle;
             request.ArrowSpeed = hints.ArrowSpeed;
             request.ArrowMinSpeed = hints.ArrowMinSpeed;
             request.ArrowMaxSpeed = hints.ArrowMaxSpeed;
@@ -127,7 +125,6 @@ namespace TheArchitectsBlueprintMod.Core.Server
             writer.Write(RetryOnInvalidPlacement);
             writer.Write((byte)ClearStrategy);
             writer.Write((byte)ClearItemDropStrategy);
-            writer.Write((byte)SweepStrategy);
             writer.Write(ArrowSpeed);
             writer.Write(ArrowMinSpeed);
             writer.Write(ArrowMaxSpeed);
@@ -164,11 +161,6 @@ namespace TheArchitectsBlueprintMod.Core.Server
             if (!TryParseClearItemDropStrategy(clearItemDropByte, out ClearItemDropStyle clearItemDropStrategy))
                 throw new InvalidDataException($"Paste request has invalid clear item-drop strategy byte: {clearItemDropByte}.");
             request.ClearItemDropStrategy = clearItemDropStrategy;
-
-            byte sweepByte = reader.ReadByte();
-            if (!TryParseSweepStrategy(sweepByte, out SweepStyle sweepStrategy))
-                throw new InvalidDataException($"Paste request has invalid sweep strategy byte: {sweepByte}.");
-            request.SweepStrategy = sweepStrategy;
 
             request.ArrowSpeed = reader.ReadInt32();
             request.ArrowMinSpeed = reader.ReadSingle();
@@ -278,18 +270,6 @@ namespace TheArchitectsBlueprintMod.Core.Server
             if (value <= (byte)ClearItemDropStyle.Store)
             {
                 strategy = (ClearItemDropStyle)value;
-                return true;
-            }
-
-            strategy = default;
-            return false;
-        }
-
-        private static bool TryParseSweepStrategy(byte value, out SweepStyle strategy)
-        {
-            if (value <= (byte)SweepStyle.Cheat)
-            {
-                strategy = (SweepStyle)value;
                 return true;
             }
 

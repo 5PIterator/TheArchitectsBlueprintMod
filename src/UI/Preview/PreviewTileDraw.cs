@@ -2,6 +2,7 @@ using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.Enums;
 using Terraria.GameContent;
 using Terraria.GameContent.Drawing;
 using Terraria.ID;
@@ -9,15 +10,18 @@ using TheArchitectsBlueprintMod.Core;
 
 namespace TheArchitectsBlueprintMod.UI.Preview
 {
-    /// <summary>Shared payload-tile materialization and source-rect resolution for preview layers.</summary>
+    /// <summary>Vanilla tile/wall renderer bridge for payload preview layers.</summary>
     internal static class PreviewTileDraw
     {
+        private const int TilePixelSize = 16;
         private const int TreeWoodColumnWidth = 176;
         private const int PalmBiomeRowHeight = 22;
         private const int TreeTileSize = 20;
 
         private static FieldInfo? _paintSystemField;
         private static TilePaintSystemV2? _paintSystem;
+        private static FieldInfo? _wallPaintSystemField;
+        private static TilePaintSystemV2? _wallPaintSystem;
 
         /// <summary>Sanitized tile plus draw metadata prepared from a payload cell.</summary>
         internal readonly struct PreparedTile
@@ -74,6 +78,17 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             return true;
         }
 
+        /// <summary>Chooses track or generic source rectangle for a prepared payload tile.</summary>
+        public static bool TryResolve(in PreparedTile prepared, out DrawSprite sprite)
+        {
+            // --- Prefer minecart tracks, otherwise generic draw data. Tree wood is resolved by Block.
+
+            if (TryResolveMinecartTrack(in prepared, out sprite))
+                return true;
+
+            return TryResolveGeneric(in prepared, out sprite);
+        }
+
         /// <summary>Resolves the minecart-track source rectangle without generic tile animation offsets.</summary>
         public static bool TryResolveMinecartTrack(in PreparedTile prepared, out DrawSprite sprite)
         {
@@ -99,8 +114,8 @@ namespace TheArchitectsBlueprintMod.UI.Preview
                 Texture = texture,
                 Source = source,
                 Effects = SpriteEffects.None,
-                TileWidth = PreviewDrawContext.TilePixelSize,
-                TileHeight = PreviewDrawContext.TilePixelSize,
+                TileWidth = TilePixelSize,
+                TileHeight = TilePixelSize,
                 TileTop = 0,
                 HalfBrickHeight = 0,
             };
@@ -170,87 +185,19 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             }
         }
 
-        /// <summary>Builds a basic 16x16 sprite from the payload tile frame without vanilla neighbor probes.</summary>
-        private static bool TryResolveRawFrame(in PreparedTile prepared, out DrawSprite sprite)
-        {
-            // --- Use stored FrameX/FrameY and the tile atlas when GetTileDrawData cannot run safely.
-
-            sprite = default;
-            Main.instance.LoadTiles(prepared.TileType);
-            Texture2D texture = TextureAssets.Tile[prepared.TileType].Value;
-            if (texture is null)
-                return false;
-
-            sprite = new DrawSprite
-            {
-                Texture = texture,
-                Source = new Rectangle(
-                    prepared.Tile.TileFrameX,
-                    prepared.Tile.TileFrameY,
-                    PreviewDrawContext.TilePixelSize,
-                    PreviewDrawContext.TilePixelSize),
-                Effects = SpriteEffects.None,
-                TileWidth = PreviewDrawContext.TilePixelSize,
-                TileHeight = PreviewDrawContext.TilePixelSize,
-                TileTop = 0,
-                HalfBrickHeight = 0,
-            };
-            return true;
-        }
-
-        /// <summary>Picks in-world coordinates with neighbor margin for vanilla tile draw APIs.</summary>
-        private static void GetSafePreviewCoords(out int x, out int y)
-        {
-            // --- Stay away from world edges so SolidTile neighbor checks stay in-range.
-
-            const int margin = 2;
-            int maxX = System.Math.Max(margin, Main.maxTilesX - 1 - margin);
-            int maxY = System.Math.Max(margin, Main.maxTilesY - 1 - margin);
-            x = System.Math.Clamp(Main.maxTilesX / 2, margin, maxX);
-            y = System.Math.Clamp(Main.maxTilesY / 2, margin, maxY);
-        }
-
-        /// <summary>Chooses tree-wood, track, or generic source rectangle for a prepared payload tile.</summary>
-        public static bool TryResolve(
+        /// <summary>Builds a Tiles_5 or palm wood sprite from already-resolved biome indices.</summary>
+        public static bool TryResolveTreeWoodSprite(
             in PreparedTile prepared,
-            in PreviewDrawContext ctx,
-            int relX,
-            int relY,
+            int woodVariant,
+            int palmBiome,
             out DrawSprite sprite)
         {
-            // --- Prefer payload-soil tree columns, then minecart tracks, otherwise generic draw data.
-
-            if (TryResolveTreeWood(in prepared, in ctx, relX, relY, out sprite))
-                return true;
-
-            if (TryResolveMinecartTrack(in prepared, out sprite))
-                return true;
-
-            return TryResolveGeneric(in prepared, out sprite);
-        }
-
-        /// <summary>Resolves Tiles_5 / palm wood from payload soil instead of GetTreeBiome world walks.</summary>
-        private static bool TryResolveTreeWood(
-            in PreparedTile prepared,
-            in PreviewDrawContext ctx,
-            int relX,
-            int relY,
-            out DrawSprite sprite)
-        {
-            // --- Apply vanilla 176px biome columns / 22px palm rows using payload support soil.
+            // --- Apply vanilla 176px biome columns / 22px palm rows, then pick a painted atlas.
 
             sprite = default;
             ushort tileType = prepared.TileType;
             if (tileType != TileID.Trees && tileType != TileID.PalmTree)
                 return false;
-
-            TreePreviewResolve.Style style = TreePreviewResolve.Resolve(
-                in ctx,
-                tileType,
-                prepared.Tile.TileFrameX,
-                prepared.Tile.TileFrameY,
-                relX,
-                relY);
 
             int frameX = prepared.Tile.TileFrameX;
             int frameY = prepared.Tile.TileFrameY;
@@ -258,15 +205,15 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             if (tileType == TileID.Trees)
             {
                 // Forest is variant -1, which adds a 0px column offset like vanilla GetTileDrawData.
-                if (style.WoodVariant < 7)
-                    frameX += TreeWoodColumnWidth * (style.WoodVariant + 1);
-                paintStyle = style.WoodVariant;
+                if (woodVariant < 7)
+                    frameX += TreeWoodColumnWidth * (woodVariant + 1);
+                paintStyle = woodVariant;
             }
             else
             {
                 // Palm biome is stored as a row in the palm sheet, not in the payload FrameY sway.
-                frameY = PalmBiomeRowHeight * style.PalmBiome;
-                paintStyle = style.PalmBiome;
+                frameY = PalmBiomeRowHeight * palmBiome;
+                paintStyle = palmBiome;
             }
 
             Main.instance.LoadTiles(tileType);
@@ -291,10 +238,71 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             return true;
         }
 
+        /// <summary>Resolves the wall atlas, preferring a painted sheet when the paint system has one.</summary>
+        public static bool TryGetWallTexture(ushort wallType, byte wallColor, out Texture2D texture)
+        {
+            // --- Load the wall, then swap in a painted variant when the wall paint system is ready.
+
+            texture = null!;
+            if (wallType == WallID.None)
+                return false;
+
+            Main.instance.LoadWall(wallType);
+            texture = TextureAssets.Wall[wallType].Value;
+            if (texture is null)
+                return false;
+
+            TilePaintSystemV2? paintSystem = TryGetWallPaintSystem();
+            Texture2D? painted = paintSystem?.TryGetWallAndRequestIfNotReady(wallType, wallColor);
+            if (painted is not null)
+                texture = painted;
+            return true;
+        }
+
+        /// <summary>Builds a basic 16x16 sprite from the payload tile frame without vanilla neighbor probes.</summary>
+        private static bool TryResolveRawFrame(in PreparedTile prepared, out DrawSprite sprite)
+        {
+            // --- Use stored FrameX/FrameY and the tile atlas when GetTileDrawData cannot run safely.
+
+            sprite = default;
+            Main.instance.LoadTiles(prepared.TileType);
+            Texture2D texture = TextureAssets.Tile[prepared.TileType].Value;
+            if (texture is null)
+                return false;
+
+            sprite = new DrawSprite
+            {
+                Texture = texture,
+                Source = new Rectangle(
+                    prepared.Tile.TileFrameX,
+                    prepared.Tile.TileFrameY,
+                    TilePixelSize,
+                    TilePixelSize),
+                Effects = SpriteEffects.None,
+                TileWidth = TilePixelSize,
+                TileHeight = TilePixelSize,
+                TileTop = 0,
+                HalfBrickHeight = 0,
+            };
+            return true;
+        }
+
+        /// <summary>Picks in-world coordinates with neighbor margin for vanilla tile draw APIs.</summary>
+        internal static void GetSafePreviewCoords(out int x, out int y)
+        {
+            // --- Stay away from world edges so SolidTile neighbor checks stay in-range.
+
+            const int margin = 2;
+            int maxX = System.Math.Max(margin, Main.maxTilesX - 1 - margin);
+            int maxY = System.Math.Max(margin, Main.maxTilesY - 1 - margin);
+            x = System.Math.Clamp(Main.maxTilesX / 2, margin, maxX);
+            y = System.Math.Clamp(Main.maxTilesY / 2, margin, maxY);
+        }
+
         /// <summary>Gets the tile paint system used for painted tiles, tree tops, and branches.</summary>
         internal static TilePaintSystemV2? TryGetPaintSystem()
         {
-            // --- Read TileDrawing's private paint system once, matching WallPreviewLayer's wall path.
+            // --- Read TileDrawing's private paint system once.
 
             if (_paintSystem is not null)
                 return _paintSystem;
@@ -308,14 +316,99 @@ namespace TheArchitectsBlueprintMod.UI.Preview
             return _paintSystem;
         }
 
+        /// <summary>Gets the wall paint system used for painted wall previews.</summary>
+        private static TilePaintSystemV2? TryGetWallPaintSystem()
+        {
+            // --- Read WallDrawing's private paint system once.
+
+            if (_wallPaintSystem is not null)
+                return _wallPaintSystem;
+
+            _wallPaintSystemField ??= typeof(WallDrawing).GetField("_paintSystem", BindingFlags.Instance | BindingFlags.NonPublic);
+            if (_wallPaintSystemField is null)
+                return null;
+
+            _wallPaintSystem = _wallPaintSystemField.GetValue(Main.instance.WallsRenderer) as TilePaintSystemV2;
+            return _wallPaintSystem;
+        }
+
         /// <summary>Computes the unscaled draw origin for a resolved tile sprite within the preview grid.</summary>
-        public static Vector2 GetDrawPosition(in PreviewDrawContext ctx, int relX, int relY, in DrawSprite sprite)
+        public static Vector2 GetDrawPosition(Vector2 position, int relX, int relY, in DrawSprite sprite)
         {
             // --- Offset by grid cell, centering wider sprites and applying tileTop / half-brick shifts.
 
-            return ctx.Position + new Vector2(
-                relX * PreviewDrawContext.TilePixelSize - (sprite.TileWidth - PreviewDrawContext.TilePixelSize) / 2f,
-                relY * PreviewDrawContext.TilePixelSize + sprite.TileTop + sprite.HalfBrickHeight);
+            return position + new Vector2(
+                relX * TilePixelSize - (sprite.TileWidth - TilePixelSize) / 2f,
+                relY * TilePixelSize + sprite.TileTop + sprite.HalfBrickHeight);
+        }
+
+        /// <summary>Draws a sloped tile by clipping each vertical column to the slope silhouette.</summary>
+        public static void DrawSlope(
+            SpriteBatch sb,
+            Texture2D texture,
+            Rectangle source,
+            Vector2 pos,
+            float scale,
+            SpriteEffects effects,
+            SlopeType slope,
+            Color tint)
+        {
+            // --- Slice the source into one-pixel columns and keep only the slope-visible span of each.
+
+            static void DrawColumn(
+                SpriteBatch batch,
+                Texture2D tex,
+                Rectangle srcBase,
+                Vector2 basePos,
+                float drawScale,
+                SpriteEffects spriteEffects,
+                Color columnTint,
+                int col,
+                int startY,
+                int height)
+            {
+                if (col < 0 || col >= srcBase.Width || startY < 0 || startY >= srcBase.Height || height <= 0)
+                    return;
+
+                if (startY + height > srcBase.Height)
+                    height = srcBase.Height - startY;
+                if (height <= 0)
+                    return;
+
+                var src = new Rectangle(srcBase.X + col, srcBase.Y + startY, 1, height);
+                Vector2 dst = basePos + new Vector2(col, startY);
+                batch.Draw(tex, dst * drawScale, src, columnTint, 0f, Vector2.Zero, drawScale, spriteEffects, 0f);
+            }
+
+            for (int col = 0; col < source.Width; col++)
+            {
+                int startY;
+                int height;
+                switch (slope)
+                {
+                    case SlopeType.SlopeDownLeft:
+                        startY = col;
+                        height = source.Height - startY;
+                        break;
+                    case SlopeType.SlopeDownRight:
+                        startY = source.Width - 1 - col;
+                        height = source.Height - startY;
+                        break;
+                    case SlopeType.SlopeUpLeft:
+                        startY = 0;
+                        height = source.Width - col;
+                        break;
+                    case SlopeType.SlopeUpRight:
+                        startY = 0;
+                        height = col + 1;
+                        break;
+                    default:
+                        sb.Draw(texture, pos * scale, source, tint, 0f, Vector2.Zero, scale, effects, 0f);
+                        return;
+                }
+
+                DrawColumn(sb, texture, source, pos, scale, effects, tint, col, startY, height);
+            }
         }
     }
 }

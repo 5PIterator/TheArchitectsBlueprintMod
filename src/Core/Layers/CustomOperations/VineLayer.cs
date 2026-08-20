@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.UI.Preview;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -20,7 +21,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
 
         /// <summary>Returns the contiguous vine column around this tile in paste bounds.</summary>
-        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context, PasteSubject identifySubject)
         {
             // --- Identify only vine-family tiles, then gather vertical neighbors with source-cut support.
             Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
@@ -96,39 +97,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>Validates world-side placement constraints for this layer.</summary>
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
 
-        /// <summary>Checks whether inventory has the required item for this tile when item checks are enabled.</summary>
-        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
-        {
-            // --- Skip checks when requirements are disabled; otherwise query interaction-map item ids for payload tile + style.
-            if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
-            if (!tile.PayloadCell.HasTile()) return true;
-            int style = tile.PayloadCell.ResolvePlacementStyle();
-            return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
-        }
-
-        /// <summary>Checks whether this tile can consume an inventory item now.</summary>
-        public override bool CanConsume(in PasteTile tile, in PasteContext context)
-        {
-            // --- Use the same tile+style item lookup as planning checks to keep queue behavior deterministic.
-            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
-            int style = tile.PayloadCell.ResolvePlacementStyle();
-            return TileExecutor.HasItemForTile((ushort)tile.PayloadCell.Block.Type, style, in context);
-        }
-
-        /// <summary>Consumes one item for a successful vine placement.</summary>
-        public override bool Consume(in PasteTile tile, in PasteContext context) =>
-            TileOperations.Consume(in tile, in context);
-
-        /// <summary>Returns candidate inventory items that can place this payload tile.</summary>
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile)
-        {
-            // --- Resolve tile-item mappings from the interaction map using payload tile type + style.
-            if (!tile.PayloadCell.HasTile()) return null;
-            int style = tile.PayloadCell.ResolvePlacementStyle();
-            return InteractionMapProvider.GetTileItemIds((ushort)tile.PayloadCell.Block.Type, style);
-        }
-
-        /// <summary>Clears a vine column as one task by killing its top-most tile.</summary>
         public override LayerResult Clear(TileBatch batch, in PasteContext context)
         {
             // --- Kill the top-most segment once; WorldGen drops hanging remainder the same way framing drops a multitile footprint.
@@ -165,9 +133,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return result;
             }
 
-            if (!context.IsSweepCheat && !Consume(in segment, in context))
-                return LayerResult.Fail(LayerFailReason.MissingItems, message);
-
             var remaining = new List<PasteTile>(tiles.Count - 1);
             for (int i = 0; i < tiles.Count; i++)
             {
@@ -198,5 +163,22 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         /// <summary>Returns true when this custom layer owns the given tile type.</summary>
         public override bool IsCustom(ushort tileType) => IsVineTileType(tileType);
+
+        public override bool DrawsCells => true;
+
+        public override void DrawCell(in PreviewDrawContext ctx, PayloadCell cell, int relX, int relY)
+        {
+            if (LayerPreviewSprites.HasDetailModifiedSprite(cell))
+                return;
+
+            Tile tile = cell.ToTile();
+            if (!tile.HasTile || !IsCustom(tile.TileType))
+                return;
+
+            if (!LayerPreviewSprites.TryResolveSprite(in ctx, cell, relX, relY, out PreviewTileDraw.DrawSprite sprite))
+                return;
+
+            LayerPreviewSprites.DrawSprite(in ctx, relX, relY, in sprite);
+        }
     }
 }

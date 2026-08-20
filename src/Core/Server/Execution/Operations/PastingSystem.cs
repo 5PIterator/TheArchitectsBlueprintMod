@@ -107,8 +107,6 @@ namespace TheArchitectsBlueprintMod.Core
                 disabledPhases.Add("Clear");
             if (!config.Phases.Place.AllowClientPreferences)
                 disabledPhases.Add("Place");
-            if (!config.Phases.Sweep.AllowClientPreferences)
-                disabledPhases.Add("Sweep");
 
             if (disabledPhases.Count == 0)
                 return;
@@ -209,7 +207,7 @@ namespace TheArchitectsBlueprintMod.Core
 
                 if (op.IsCompleted)
                 {
-                    TABLog.Debug($"Complete (sweepStrategy={op.Context.SweepStrategy})", "Paste");
+                    TABLog.Debug($"Complete (sweep={op.Context.IsSweep})", "Paste");
                     TABLog.Debug("Paste ended: operation completed during update", "Paste");
                     RemoveOperationAt(i);
                     continue;
@@ -460,7 +458,7 @@ namespace TheArchitectsBlueprintMod.Core
 
                 if (op.IsCompleted)
                 {
-                    TABLog.Debug($"Complete (sweepStrategy={op.Context.SweepStrategy})", "Paste");
+                    TABLog.Debug($"Complete (sweep={op.Context.IsSweep})", "Paste");
                     TABLog.Debug("Paste ended: operation completed during manual step", "Paste");
                     RemoveOperationAt(i);
                     return false;

@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Xna.Framework;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 using TheArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.UI.Preview;
 using Terraria;
 using Terraria.ID;
 using Terraria.ObjectData;
@@ -23,15 +25,17 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool Match(in PasteTile tile) => TileComparison.MatchTileType(in tile);
 
-        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
+        /// <summary>Claims the full lookup-scoped footprint, or none when any cell is missing.</summary>
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context, PasteSubject identifySubject)
         {
+            // --- Claim only when the full footprint is in lookup scope; incomplete objects are not 1x1-fallback'd.
             Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             if (!IsFrameTile(subjectTile))
                 return LayerResult.IdentifyNone();
 
             string message = LayerLogFormat.FormatTile(subjectTile);
             IReadOnlyList<Blueprint.BlueprintCell>? tiles = FrameOperations.GetFrameTilesAsBounded(tile.Relative, subjectTile, lookup);
-            int footprint = tiles is { Count: > 0 } ? tiles.Count : 1;
+            int footprint = tiles?.Count ?? 0;
             TABLog.Debug(
                 $"Identify subject={identifySubject} rel=({tile.Relative.X},{tile.Relative.Y}) "
                 + $"world=({tile.World.X},{tile.World.Y}) type={subjectTile.TileType} "
@@ -41,9 +45,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (tiles is { Count: > 0 })
                 return LayerResult.Identified(TileBatch.FromCells(tiles), message);
 
-            return LayerResult.Identified(
-                TileBatch.FromCells([new Blueprint.BlueprintCell(tile.Relative, tile.World, true)]),
-                message);
+            return LayerResult.IdentifyNone();
         }
 
         /// <summary>Returns true for dependency-anchored, multi-cell, or multi-style tiles that need Frame placement.</summary>
@@ -54,16 +56,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         internal static bool IsFrameTileType(ushort tileType) =>
             FrameOperations.IsFrameClassification(tileType);
 
-        private static bool UsesBaseTilePlacement(ushort tileType, int style) =>
-            InteractionMapProvider.GetRequiredBaseTile(tileType, style).HasValue;
-
         public override bool CanClear(in PasteTile tile, in PasteTileLookup _, in PasteContext context) =>
             Main.tile[tile.World.X, tile.World.Y].HasTile;
 
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
         {
             // --- Planning-time gate: only queue work when the origin can be placed with current world support.
-            if (!tile.PayloadCell.HasTile() || context.IsSweepCheat)
+            if (!tile.PayloadCell.HasTile() || context.IsSweep)
                 return true;
 
             var candidate = new FrameOperations.FrameCandidate(
@@ -72,56 +71,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 [tile]);
 
             bool valid = FrameOperations.CanPlaceFrameCandidate(candidate, in context);
+            FrameOperations.FramePlacementVariant variant = FrameOperations.ResolveFramePlacementVariant(tile.PayloadCell);
             TABLog.Debug(
                 $"PlacementValid origin=({candidate.OriginWorld.X},{candidate.OriginWorld.Y}) "
-                + $"type={tile.PayloadCell.Block.Type} style={tile.PayloadCell.ResolvePlacementStyle()} "
+                + $"type={tile.PayloadCell.Block.Type} style={variant.Style} alt={variant.Alternate} "
                 + $"anchors={FormatAnchorKinds(tile.PayloadCell.ToTile())} valid={valid}",
                 LogCategory);
             return valid;
-        }
-
-        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
-        {
-            if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
-            if (!tile.PayloadCell.HasTile()) return true;
-            int style = tile.PayloadCell.ResolvePlacementStyle();
-            return TileInteractionChecks.HasTilePlacementItems(
-                (ushort)tile.PayloadCell.Block.Type,
-                style,
-                tile.World.X,
-                tile.World.Y,
-                in context);
-        }
-
-        public override bool CanConsume(in PasteTile tile, in PasteContext context)
-        {
-            if (!tile.PayloadCell.HasTile() || !context.RequireItems || context.Items is null) return true;
-            int style = tile.PayloadCell.ResolvePlacementStyle();
-            return TileInteractionChecks.HasTilePlacementItems(
-                (ushort)tile.PayloadCell.Block.Type,
-                style,
-                tile.World.X,
-                tile.World.Y,
-                in context);
-        }
-
-        public override bool Consume(in PasteTile tile, in PasteContext context)
-        {
-            if (!tile.PayloadCell.HasTile())
-                return true;
-
-            ushort tileType = tile.PayloadCell.Block.Type;
-            int style = tile.PayloadCell.ResolvePlacementStyle();
-            return UsesBaseTilePlacement(tileType, style) || TileID.Sets.Grass[tileType]
-                ? TileOperations.Consume(in tile, in context)
-                : FrameOperations.Consume(in tile, in context);
-        }
-
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile)
-        {
-            if (!tile.PayloadCell.HasTile()) return null;
-            int style = tile.PayloadCell.ResolvePlacementStyle();
-            return TileInteractionChecks.GetToolItemIds((ushort)tile.PayloadCell.Block.Type, style, tile.World.X, tile.World.Y);
         }
 
         public override LayerResult Clear(TileBatch batch, in PasteContext context)
@@ -197,7 +153,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (index < 0)
             {
                 TABLog.Debug(
-                    $"Place deferred allBlocked=true {DescribePlaceBlockers(candidates, allPending, in context)}",
+                    $"Place deferred allBlocked=true {FrameOperations.FormatPendingPlaceBlockers(allPending, in context)}",
                     LogCategory);
                 if (!context.RetryOnInvalidPlacement)
                     return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
@@ -215,10 +171,11 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             }
 
             PasteTile origin = candidate.OriginTile;
-            if (!context.IsSweepCheat && origin.PayloadCell.HasTile())
+            if (!context.IsSweep && origin.PayloadCell.HasTile())
             {
                 ushort tileType = (ushort)origin.PayloadCell.Block.Type;
-                int style = origin.PayloadCell.ResolvePlacementStyle();
+                FrameOperations.FramePlacementVariant variant = FrameOperations.ResolveFramePlacementVariant(origin.PayloadCell);
+                int style = variant.Style;
                 TileItemAvailability availability = TileExecutor.GetTileItemAvailability(tileType, style, in context);
                 if (availability != TileItemAvailability.Available)
                 {
@@ -231,14 +188,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     {
                         TABLog.Debug(
                             $"Place deferred {issueLabel} origin=({origin.World.X},{origin.World.Y}) "
-                            + $"type={tileType} style={style}",
+                            + $"type={tileType} style={style} alt={variant.Alternate}",
                             LogCategory);
                         return LayerResult.OkWithRemaining(batch, message, okLabel);
                     }
 
                     TABLog.Debug(
                         $"Place failed {issueLabel} origin=({origin.World.X},{origin.World.Y}) "
-                        + $"type={tileType} style={style}",
+                        + $"type={tileType} style={style} alt={variant.Alternate}",
                         LogCategory);
                     return LayerResult.Fail(failReason, message);
                 }
@@ -269,12 +226,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     + $"remainingFootprint={res.RemainingTiles.Count}",
                     LogCategory);
                 return FrameOperations.MergePlaceRemaining(batch, candidate, res);
-            }
-
-            if (!context.IsSweepCheat && !Consume(in origin, in context))
-            {
-                TABLog.Debug($"Place failed consume origin=({origin.World.X},{origin.World.Y})", LogCategory);
-                return LayerResult.Fail(LayerFailReason.MissingItems, message);
             }
 
             TABLog.Debug($"Place queued origin=({origin.World.X},{origin.World.Y}) remainingCandidates={candidates.Count - 1}", LogCategory);
@@ -320,65 +271,11 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     + $"footprint={candidate.Tiles.Count} targetType={origin.Target.TileType}";
             }
 
+            FrameOperations.FramePlacementVariant variant = FrameOperations.ResolveFramePlacementVariant(origin.PayloadCell);
             return $"origin=({candidate.OriginWorld.X},{candidate.OriginWorld.Y}) "
                 + $"footprint={candidate.Tiles.Count} type={origin.PayloadCell.Block.Type} "
-                + $"style={origin.PayloadCell.ResolvePlacementStyle()} anchors={FormatAnchorKinds(origin.PayloadCell.ToTile())}";
-        }
-
-        private static string DescribePlaceBlockers(
-            IReadOnlyList<FrameOperations.FrameCandidate> localCandidates,
-            IReadOnlyList<FrameOperations.FrameCandidate> allPending,
-            in PasteContext context)
-        {
-            var details = new StringBuilder();
-            for (int i = 0; i < localCandidates.Count; i++)
-            {
-                FrameOperations.FrameCandidate candidate = localCandidates[i];
-                string? blocker = DescribePlaceBlocker(candidate, allPending, in context);
-                if (blocker is null)
-                    continue;
-
-                if (details.Length > 0)
-                    details.Append("; ");
-
-                details.Append($"[{i}] origin=({candidate.OriginWorld.X},{candidate.OriginWorld.Y}): {blocker}");
-            }
-
-            return details.Length > 0 ? details.ToString() : "no local candidates";
-        }
-
-        private static string? DescribePlaceBlocker(
-            FrameOperations.FrameCandidate candidate,
-            IReadOnlyList<FrameOperations.FrameCandidate> pending,
-            in PasteContext context)
-        {
-            for (int i = 0; i < pending.Count; i++)
-            {
-                FrameOperations.FrameCandidate other = pending[i];
-                if (other.OriginWorld == candidate.OriginWorld)
-                    continue;
-
-                if (FrameOperations.IsSupportedByPlacement(candidate, other)
-                    && !FrameOperations.IsCandidatePresentInWorld(other, in context))
-                {
-                    return $"waitingOnPending origin=({other.OriginWorld.X},{other.OriginWorld.Y}) "
-                        + $"footprint={other.Tiles.Count} presentInWorld=false";
-                }
-            }
-
-            if (!FrameOperations.CanPlaceFrameCandidate(candidate, in context, pending))
-                return "CanPlaceFrameCandidate=false";
-
-            if (context.RetryOnMissingItems
-                && context.RequireItems
-                && !context.IsSweepCheat
-                && !FrameOperations.HasRequiredItemsForFrameCandidate(candidate, in context))
-            {
-                PasteTile origin = candidate.OriginTile;
-                return $"missingItems type={origin.PayloadCell.Block.Type} style={origin.PayloadCell.ResolvePlacementStyle()}";
-            }
-
-            return null;
+                + $"style={variant.Style} alt={variant.Alternate} "
+                + $"anchors={FormatAnchorKinds(origin.PayloadCell.ToTile())}";
         }
 
         private static string DescribeClearBlockers(IReadOnlyList<FrameOperations.FrameCandidate> candidates)
@@ -418,6 +315,23 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             }
 
             return null;
+        }
+
+        public override bool DrawsCells => true;
+
+        public override void DrawCell(in PreviewDrawContext ctx, PayloadCell cell, int relX, int relY)
+        {
+            if (LayerPreviewSprites.HasDetailModifiedSprite(cell))
+                return;
+
+            Tile tile = cell.ToTile();
+            if (!IsFrameTile(tile))
+                return;
+
+            if (!LayerPreviewSprites.TryResolveSprite(in ctx, cell, relX, relY, out PreviewTileDraw.DrawSprite sprite))
+                return;
+
+            LayerPreviewSprites.DrawSprite(in ctx, relX, relY, in sprite);
         }
     }
 }

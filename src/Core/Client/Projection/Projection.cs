@@ -412,22 +412,21 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>
-        /// Scans <see cref="Main.chest"/> for entries whose full tile footprint lies within
-        /// <see cref="TargetArea"/> plus <see cref="Inventory.ReachTiles"/> outward.
+        /// Scans <see cref="Main.chest"/> for entries whose full tile footprint lies in the
+        /// <see cref="Inventory.ReachTiles"/> ring around <see cref="TargetArea"/>, not inside it.
         /// </summary>
         public void RefreshInventories()
         {
             // --- Rebuild nearby chest footprints from authoritative world chest state.
+
             Inventories.Clear();
-            Rectangle searchArea = InventoryManager.GetInventorySearchArea(TargetArea);
+            Rectangle targetArea = TargetArea;
 
             for (int ci = 0; ci < Main.maxChests; ci++)
             {
                 Chest chest = Main.chest[ci];
                 if (chest is null || chest.x < 0)
-                {
                     continue;
-                }
 
                 Tile tile = Main.tile[chest.x, chest.y];
                 TileObjectData tileData = TileObjectData.GetTileData(tile);
@@ -435,10 +434,8 @@ namespace TheArchitectsBlueprintMod.Core
                 int h = tileData?.Height ?? 2;
                 Rectangle footprint = new(chest.x, chest.y, w, h);
 
-                if (searchArea.Contains(footprint))
-                {
+                if (InventoryManager.IsChestInInventoryReachRing(footprint, targetArea))
                     Inventories.Add(footprint);
-                }
             }
         }
 

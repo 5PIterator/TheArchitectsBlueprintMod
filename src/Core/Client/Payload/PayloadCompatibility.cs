@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using TheArchitectsBlueprintMod.Core.Layers;
 
 namespace TheArchitectsBlueprintMod.Core
 {
@@ -99,13 +100,14 @@ namespace TheArchitectsBlueprintMod.Core
                     continue;
                 }
 
+                // Count as incompatible for the orange warning, but keep Unloaded placeholders.
                 incompatibleCells++;
                 if (TrySanitizeCell(cell, out PayloadCell sanitized) && !sanitized.IsEmpty)
                     entries.Add(new Payload.Entry(rel, sanitized));
             }
 
             report = new PayloadCompatibilityReport(totalCells, incompatibleCells, missingMods);
-            return Payload.FromSparse(entries, source.Width, source.Height);
+            return Payload.FromSparse(entries, source.Width, source.Height, source.Entities);
         }
 
         internal static IReadOnlyList<string> ComputeMissingMods(IReadOnlyList<string>? metadataModsLoaded)
@@ -147,25 +149,36 @@ namespace TheArchitectsBlueprintMod.Core
             return count;
         }
 
+        /// <summary>Remaps unresolvable tile/wall ids to tML Unloaded placeholders instead of clearing them.</summary>
         private static bool TrySanitizeCell(PayloadCell cell, out PayloadCell sanitized)
         {
+            // --- Clone and replace missing mod content with UnloadedSolidTile / UnloadedWall.
             sanitized = default;
-            if (cell.IsEmpty)
+            if (cell.IsEmpty || cell.Data is null)
                 return false;
 
-            var data = cell.Data!;
+            PayloadCell.TileData source = cell.Data;
+            var data = new PayloadCell.TileData
+            {
+                TileType = source.TileType,
+                WallType = source.WallType,
+                LiquidData = source.LiquidData,
+                TWBIData = source.TWBIData,
+                TWWStateData = source.TWWStateData,
+                TileStyle = source.TileStyle,
+                TileAlternate = source.TileAlternate,
+            };
             bool changed = false;
 
             if (data.TWWStateData.HasTile && data.TileType.Type > 0 && !IsTileResolvable(data.TileType.Type))
             {
-                data.TileType.Type = 0;
-                data.TWWStateData.HasTile = false;
+                data.TileType.Type = TileLoaderSupport.ResolveUnloadableTileType(data.TileType.Type);
                 changed = true;
             }
 
             if (data.WallType.Type > 0 && !IsWallResolvable(data.WallType.Type))
             {
-                data.WallType.Type = 0;
+                data.WallType.Type = TileLoaderSupport.ResolveUnloadableWallType(data.WallType.Type);
                 changed = true;
             }
 

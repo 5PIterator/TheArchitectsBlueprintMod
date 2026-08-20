@@ -1,30 +1,540 @@
-[20:58:31.779] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Manifest] --- Payload Manifest ---
-[Manifest] Items | Qty | Missing | Main | Sources
-[Manifest] [i:5324][i:3] | 0/1 | (-0) (-0) | Terraria:SmallPiles:0 |
-[Manifest] [i:5324][i/s16:133] | 0/16 | (-0) (-0) | Terraria:Pots:0 |
-[Manifest] [i/s18:169] | 0/18 | (-0) (-0) | Terraria:Sand:0 |
-[Manifest] [i/s176:206] | 0/176 | (-0) (-0) | Terraria:Water |
-[Manifest] [i/s5:3182] | 0/5 | (-0) (-0) | Terraria:WaterDrip:0 |
-[Manifest] [i/s39:3271] | 0/39 | (-0) (-0) | Terraria:Sandstone:0 |
-[Manifest] [i/s29:3272] | 0/29 | (-0) (-0) | Terraria:HardenedSand:0 |
-[Manifest] [i/s35:3347] | 0/35 | (-0) (-0) | Terraria:DesertFossil:0 |
-[Manifest] [i:3782] | 0/1 | (-0) (-0) | Terraria:SandDrip:0 |
-[Manifest] [i/s172:5374] | 0/172 | (-0) (-0) | Terraria:Sandstone |
-[Manifest] [i/s45:5375] | 0/45 | (-0) (-0) | Terraria:HardenedSand |
-[Manifest] 28 unresolved mapping(s): Terraria:ModLoader/UnloadedNonSolidTile, Terraria:ModLoader/UnloadedNonSolidTile (style 1), Terraria:ModLoader/UnloadedNonSolidTile (style 2), Terraria:ModLoader/UnloadedNonSolidTile (style 3), Terraria:ModLoader/UnloadedSemiSolidTile (style 3), Terraria:ModLoader/UnloadedSemiSolidTile (style 4), Terraria:ModLoader/UnloadedSemiSolidTile (style 5), Terraria:ModLoader/UnloadedSemiSolidTile (style 6), Terraria:ModLoader/UnloadedSolidTile, Terraria:ModLoader/UnloadedSupremeFurniture (style 1), Terraria:ModLoader/UnloadedSupremeFurniture (style 10), Terraria:ModLoader/UnloadedSupremeFurniture (style 11), Terraria:ModLoader/UnloadedSupremeFurniture (style 12), Terraria:ModLoader/UnloadedSupremeFurniture (style 13), Terraria:ModLoader/UnloadedSupremeFurniture (style 14), Terraria:ModLoader/UnloadedSupremeFurniture (style 15), Terraria:ModLoader/UnloadedSupremeFurniture (style 16), Terraria:ModLoader/UnloadedSupremeFurniture (style 18), Terraria:ModLoader/UnloadedSupremeFurniture (style 2), Terraria:ModLoader/UnloadedSupremeFurniture (style 3), Terraria:ModLoader/UnloadedSupremeFurniture (style 4), Terraria:ModLoader/UnloadedSupremeFurniture (style 5), Terraria:ModLoader/UnloadedSupremeFurniture (style 6), Terraria:ModLoader/UnloadedSupremeFurniture (style 7), Terraria:ModLoader/UnloadedSupremeFurniture (style 8), Terraria:ModLoader/UnloadedSupremeFurniture (style 9), Terraria:ModLoader/UnloadedWall, Terraria:Stalactite
-TheArchitectsBlueprintMod: [20:58:31.779] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Manifest] --- Payload Manifest ---
-[Manifest] Items | Qty | Missing | Main | Sources
-[Manifest] [i:5324][i:3] | 0/1 | (-0) (-0) | Terraria:SmallPiles:0 |
-[Manifest] [i:5324][i/s16:133] | 0/16 | (-0) (-0) | Terraria:Pots:0 |
-[Manifest] [i/s18:169] | 0/18 | (-0) (-0) | Terraria:Sand:0 |
-[Manifest] [i/s176:206] | 0/176 | (-0) (-0) | Terraria:Water |
-[Manifest] [i/s5:3182] | 0/5 | (-0) (-0) | Terraria:WaterDrip:0 |
-[Manifest] [i/s39:3271] | 0/39 | (-0) (-0) | Terraria:Sandstone:0 |
-[Manifest] [i/s29:3272] | 0/29 | (-0) (-0) | Terraria:HardenedSand:0 |
-[Manifest] [i/s35:3347] | 0/35 | (-0) (-0) | Terraria:DesertFossil:0 |
-[Manifest] [i:3782] | 0/1 | (-0) (-0) | Terraria:SandDrip:0 |
-[Manifest] [i/s172:5374] | 0/172 | (-0) (-0) | Terraria:Sandstone |
-[Manifest] [i/s45:5375] | 0/45 | (-0) (-0) | Terraria:HardenedSand |
-[Manifest] 28 unresolved mapping(s): Terraria:ModLoader/UnloadedNonSolidTile, Terraria:ModLoader/UnloadedNonSolidTile (style 1), Terraria:ModLoader/UnloadedNonSolidTile (style 2), Terraria:ModLoader/UnloadedNonSolidTile (style 3), Terraria:ModLoader/UnloadedSemiSolidTile (style 3), Terraria:ModLoader/UnloadedSemiSolidTile (style 4), Terraria:ModLoader/UnloadedSemiSolidTile (style 5), Terraria:ModLoader/UnloadedSemiSolidTile (style 6), Terraria:ModLoader/UnloadedSolidTile, Terraria:ModLoader/UnloadedSupremeFurniture (style 1), Terraria:ModLoader/UnloadedSupremeFurniture (style 10), Terraria:ModLoader/UnloadedSupremeFurniture (style 11), Terraria:ModLoader/UnloadedSupremeFurniture (style 12), Terraria:ModLoader/UnloadedSupremeFurniture (style 13), Terraria:ModLoader/UnloadedSupremeFurniture (style 14), Terraria:ModLoader/UnloadedSupremeFurniture (style 15), Terraria:ModLoader/UnloadedSupremeFurniture (style 16), Terraria:ModLoader/UnloadedSupremeFurniture (style 18), Terraria:ModLoader/UnloadedSupremeFurniture (style 2), Terraria:ModLoader/UnloadedSupremeFurniture (style 3), Terraria:ModLoader/UnloadedSupremeFurniture (style 4), Terraria:ModLoader/UnloadedSupremeFurniture (style 5), Terraria:ModLoader/UnloadedSupremeFurniture (style 6), Terraria:ModLoader/UnloadedSupremeFurniture (style 7), Terraria:ModLoader/UnloadedSupremeFurniture (style 8), Terraria:ModLoader/UnloadedSupremeFurniture (style 9), Terraria:ModLoader/UnloadedWall, Terraria:Stalactite
-[MonoMod.Core] Trace: Updating detour from System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to System.Int32 SyncProxy<System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)>(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) (recompiled System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to 00007ffcfb515670)
-[MonoMod.Core] Trace: Creating simple detour 0x00007ffcfb515670 => 0x00007ffcf5530b80
+[15:51:26.951] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture TE SaveData ok n=Terraria:TEDisplayDoll world=(3134,364) rel=(3,3) keys=1
+[EntityCapture] EntityCapture TE SaveData ok n=Terraria:TEItemFrame world=(3134,362) rel=(3,1) keys=1
+TheArchitectsBlueprintMod: [15:51:26.951] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture TE SaveData ok n=Terraria:TEDisplayDoll world=(3134,364) rel=(3,3) keys=1
+[EntityCapture] EntityCapture TE SaveData ok n=Terraria:TEItemFrame world=(3134,362) rel=(3,1) keys=1
+[15:51:26.951] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture done bounds=(3131,361,7x7) entities=6 teWithData=2 teEmptyData=0 teSkippedUnnamed=0 teSkippedSeen=0
+TheArchitectsBlueprintMod: [15:51:26.951] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture done bounds=(3131,361,7x7) entities=6 teWithData=2 teEmptyData=0 teSkippedUnnamed=0 teSkippedSeen=0
+[15:51:29.664] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3166,329) 7x7
+[Paste] START | area=(3166,329) 7x7 | sourceClear=False | srcTiles=49 tgtTiles=49 | sweep=True planClear=All clearItemDrop=Store retryOnMissingItems=False retryOnInvalidPlacement=True requireItems=False
+[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
+[Paste] Prep: PlaceSource — queuing place tasks from source tiles
+[Paste] Prep: begin prepTileBudget=50 sourceTiles=49 lookupTiles=49 targetTiles=49 clearStrategy=All sourceAreaClear=False
+[Paste] Prep: ClearTarget — queuing clears at destination
+[Paste] Prep: stage PlaceSource -> ClearTarget
+[Paste] Prep: batch stage=PlanClear progress=4x0 unitsThisFrame=50 remainingBudget=0
+TheArchitectsBlueprintMod: [15:51:29.664] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3166,329) 7x7
+[Paste] START | area=(3166,329) 7x7 | sourceClear=False | srcTiles=49 tgtTiles=49 | sweep=True planClear=All clearItemDrop=Store retryOnMissingItems=False retryOnInvalidPlacement=True requireItems=False
+[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
+[Paste] Prep: PlaceSource — queuing place tasks from source tiles
+[Paste] Prep: begin prepTileBudget=50 sourceTiles=49 lookupTiles=49 targetTiles=49 clearStrategy=All sourceAreaClear=False
+[Paste] Prep: ClearTarget — queuing clears at destination
+[Paste] Prep: stage PlaceSource -> ClearTarget
+[Paste] Prep: batch stage=PlanClear progress=4x0 unitsThisFrame=50 remainingBudget=0
+[15:51:29.665] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+TheArchitectsBlueprintMod: [15:51:29.665] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[15:51:29.671] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: no source cut — finalizing queues
+[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
+[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+[Paste] Prep: queues ready | placeBatches=0 clearBatches=0
+[Paste] Prep: complete placeBatches=0 clearBatches=0
+TheArchitectsBlueprintMod: [15:51:29.671] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: no source cut — finalizing queues
+[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
+[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+[Paste] Prep: queues ready | placeBatches=0 clearBatches=0
+[Paste] Prep: complete placeBatches=0 clearBatches=0
+[15:51:29.671] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] END (placeBatches=0, clearBatches=0) ---
+TheArchitectsBlueprintMod: [15:51:29.671] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] END (placeBatches=0, clearBatches=0) ---
+[15:51:29.672] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] Prep: no place tasks queued (retryOnMissingItems=False requireItems=False); layer place phases will be no-ops
+TheArchitectsBlueprintMod: [15:51:29.672] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] Prep: no place tasks queued (retryOnMissingItems=False requireItems=False); layer place phases will be no-ops
+[15:51:29.673] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC PLACE
+TheArchitectsBlueprintMod: [15:51:29.673] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC PLACE
+[15:51:29.673] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] START ---
+TheArchitectsBlueprintMod: [15:51:29.673] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] START ---
+[15:51:29.770] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Sweep: queued 49 tiles (full footprint)
+[Paste] Stage: EXEC SWEEP
+TheArchitectsBlueprintMod: [15:51:29.770] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Sweep: queued 49 tiles (full footprint)
+[Paste] Stage: EXEC SWEEP
+[15:51:29.771] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Paste] EntityRemove preSweep bounds=(3166,329,7x7) chests=0 signs=0 tes=0 teGenericFallback=0
+[Generic] --- [Sweep] START (tasks=49) ---
+TheArchitectsBlueprintMod: [15:51:29.771] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Paste] EntityRemove preSweep bounds=(3166,329,7x7) chests=0 signs=0 tes=0 teGenericFallback=0
+[Generic] --- [Sweep] START (tasks=49) ---
+[15:51:29.787] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [TileExecutor] Sweep id=1 (3166,329) ok
+[TileExecutor] Sweep id=2 (3167,329) ok
+[TileExecutor] Sweep id=3 (3168,329) ok
+[TileExecutor] Sweep id=4 (3169,329) ok
+[TileExecutor] Sweep id=5 (3170,329) ok
+[TileExecutor] Sweep id=6 (3171,329) ok
+[TileExecutor] Sweep id=7 (3172,329) ok
+[TileExecutor] Sweep id=8 (3166,330) ok
+[TileExecutor] Sweep id=9 (3167,330) ok
+[TileExecutor] Sweep id=10 (3168,330) ok
+[TileExecutor] Sweep id=11 (3169,330) ok
+[TileExecutor] Sweep id=12 (3170,330) ok
+[TileExecutor] Sweep id=13 (3171,330) ok
+[TileExecutor] Sweep id=14 (3172,330) ok
+[TileExecutor] Sweep id=15 (3166,331) ok
+[TileExecutor] Sweep id=16 (3167,331) ok
+[TileExecutor] Sweep id=17 (3168,331) ok
+[TileExecutor] Sweep id=18 (3169,331) ok
+[TileExecutor] Sweep id=19 (3170,331) ok
+[TileExecutor] Sweep id=20 (3171,331) ok
+[TileExecutor] Sweep id=21 (3172,331) ok
+[TileExecutor] Sweep id=22 (3166,332) ok
+[TileExecutor] Sweep id=23 (3167,332) ok
+[TileExecutor] Sweep id=24 (3168,332) ok
+[TileExecutor] Sweep id=25 (3169,332) ok
+[TileExecutor] Sweep id=26 (3170,332) ok
+[TileExecutor] Sweep id=27 (3171,332) ok
+[TileExecutor] Sweep id=28 (3172,332) ok
+[TileExecutor] Sweep id=29 (3166,333) ok
+[TileExecutor] Sweep id=30 (3167,333) ok
+[TileExecutor] Sweep id=31 (3168,333) ok
+[TileExecutor] Sweep id=32 (3169,333) ok
+[TileExecutor] Sweep id=33 (3170,333) ok
+[TileExecutor] Sweep id=34 (3171,333) ok
+[TileExecutor] Sweep id=35 (3172,333) ok
+[TileExecutor] Sweep id=36 (3166,334) ok
+[TileExecutor] Sweep id=37 (3167,334) ok
+[TileExecutor] Sweep id=38 (3168,334) ok
+[TileExecutor] Sweep id=39 (3169,334) ok
+[TileExecutor] Sweep id=40 (3170,334) ok
+[TileExecutor] Sweep id=41 (3171,334) ok
+[TileExecutor] Sweep id=42 (3172,334) ok
+[TileExecutor] Sweep id=43 (3166,335) ok
+[TileExecutor] Sweep id=44 (3167,335) ok
+[TileExecutor] Sweep id=45 (3168,335) ok
+[TileExecutor] Sweep id=46 (3169,335) ok
+[TileExecutor] Sweep id=47 (3170,335) ok
+[TileExecutor] Sweep id=48 (3171,335) ok
+[TileExecutor] Sweep id=49 (3172,335) ok
+[Paste] Sweep: applied 49 tiles, remaining=0
+TheArchitectsBlueprintMod: [15:51:29.787] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [TileExecutor] Sweep id=1 (3166,329) ok
+[TileExecutor] Sweep id=2 (3167,329) ok
+[TileExecutor] Sweep id=3 (3168,329) ok
+[TileExecutor] Sweep id=4 (3169,329) ok
+[TileExecutor] Sweep id=5 (3170,329) ok
+[TileExecutor] Sweep id=6 (3171,329) ok
+[TileExecutor] Sweep id=7 (3172,329) ok
+[TileExecutor] Sweep id=8 (3166,330) ok
+[TileExecutor] Sweep id=9 (3167,330) ok
+[TileExecutor] Sweep id=10 (3168,330) ok
+[TileExecutor] Sweep id=11 (3169,330) ok
+[TileExecutor] Sweep id=12 (3170,330) ok
+[TileExecutor] Sweep id=13 (3171,330) ok
+[TileExecutor] Sweep id=14 (3172,330) ok
+[TileExecutor] Sweep id=15 (3166,331) ok
+[TileExecutor] Sweep id=16 (3167,331) ok
+[TileExecutor] Sweep id=17 (3168,331) ok
+[TileExecutor] Sweep id=18 (3169,331) ok
+[TileExecutor] Sweep id=19 (3170,331) ok
+[TileExecutor] Sweep id=20 (3171,331) ok
+[TileExecutor] Sweep id=21 (3172,331) ok
+[TileExecutor] Sweep id=22 (3166,332) ok
+[TileExecutor] Sweep id=23 (3167,332) ok
+[TileExecutor] Sweep id=24 (3168,332) ok
+[TileExecutor] Sweep id=25 (3169,332) ok
+[TileExecutor] Sweep id=26 (3170,332) ok
+[TileExecutor] Sweep id=27 (3171,332) ok
+[TileExecutor] Sweep id=28 (3172,332) ok
+[TileExecutor] Sweep id=29 (3166,333) ok
+[TileExecutor] Sweep id=30 (3167,333) ok
+[TileExecutor] Sweep id=31 (3168,333) ok
+[TileExecutor] Sweep id=32 (3169,333) ok
+[TileExecutor] Sweep id=33 (3170,333) ok
+[TileExecutor] Sweep id=34 (3171,333) ok
+[TileExecutor] Sweep id=35 (3172,333) ok
+[TileExecutor] Sweep id=36 (3166,334) ok
+[TileExecutor] Sweep id=37 (3167,334) ok
+[TileExecutor] Sweep id=38 (3168,334) ok
+[TileExecutor] Sweep id=39 (3169,334) ok
+[TileExecutor] Sweep id=40 (3170,334) ok
+[TileExecutor] Sweep id=41 (3171,334) ok
+[TileExecutor] Sweep id=42 (3172,334) ok
+[TileExecutor] Sweep id=43 (3166,335) ok
+[TileExecutor] Sweep id=44 (3167,335) ok
+[TileExecutor] Sweep id=45 (3168,335) ok
+[TileExecutor] Sweep id=46 (3169,335) ok
+[TileExecutor] Sweep id=47 (3170,335) ok
+[TileExecutor] Sweep id=48 (3171,335) ok
+[TileExecutor] Sweep id=49 (3172,335) ok
+[Paste] Sweep: applied 49 tiles, remaining=0
+[15:51:29.788] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Sweep] [-] [1/49] [1/49] [3166, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [2/49] [2/49] [3167, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [3/49] [3/49] [3168, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [4/49] [4/49] [3169, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [5/49] [5/49] [3170, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [6/49] [6/49] [3171, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [7/49] [7/49] [3172, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [8/49] [8/49] [3166, 330] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [9/49] [9/49] [3167, 330] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [10/49] [10/49] [3168, 330] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [11/49] [11/49] [3169, 330] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [12/49] [12/49] [3170, 330] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [13/49] [13/49] [3171, 330] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [14/49] [14/49] [3172, 330] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [15/49] [15/49] [3166, 331] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [16/49] [16/49] [3167, 331] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [17/49] [17/49] [3168, 331] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [18/49] [18/49] [3169, 331] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [19/49] [19/49] [3170, 331] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [20/49] [20/49] [3171, 331] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [21/49] [21/49] [3172, 331] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [22/49] [22/49] [3166, 332] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [23/49] [23/49] [3167, 332] Terraria:Switches - Sweeped
+[Generic] [Sweep] [-] [24/49] [24/49] [3168, 332] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [25/49] [25/49] [3169, 332] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [26/49] [26/49] [3170, 332] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [27/49] [27/49] [3171, 332] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [28/49] [28/49] [3172, 332] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [29/49] [29/49] [3166, 333] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [30/49] [30/49] [3167, 333] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [31/49] [31/49] [3168, 333] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [32/49] [32/49] [3169, 333] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [33/49] [33/49] [3170, 333] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [34/49] [34/49] [3171, 333] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [35/49] [35/49] [3172, 333] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [36/49] [36/49] [3166, 334] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [37/49] [37/49] [3167, 334] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [38/49] [38/49] [3168, 334] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [39/49] [39/49] [3169, 334] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [40/49] [40/49] [3170, 334] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [41/49] [41/49] [3171, 334] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [42/49] [42/49] [3172, 334] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [43/49] [43/49] [3166, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [44/49] [44/49] [3167, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [45/49] [45/49] [3168, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [46/49] [46/49] [3169, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [47/49] [47/49] [3170, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [48/49] [48/49] [3171, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [49/49] [49/49] [3172, 335] Terraria:Sunplate - Sweeped
+[Paste] SweepEntity (3171,333) rel=(5,4) n=Terraria:Chest result=ok
+TheArchitectsBlueprintMod: [15:51:29.788] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Sweep] [-] [1/49] [1/49] [3166, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [2/49] [2/49] [3167, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [3/49] [3/49] [3168, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [4/49] [4/49] [3169, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [5/49] [5/49] [3170, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [6/49] [6/49] [3171, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [7/49] [7/49] [3172, 329] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [8/49] [8/49] [3166, 330] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [9/49] [9/49] [3167, 330] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [10/49] [10/49] [3168, 330] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [11/49] [11/49] [3169, 330] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [12/49] [12/49] [3170, 330] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [13/49] [13/49] [3171, 330] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [14/49] [14/49] [3172, 330] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [15/49] [15/49] [3166, 331] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [16/49] [16/49] [3167, 331] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [17/49] [17/49] [3168, 331] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [18/49] [18/49] [3169, 331] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [19/49] [19/49] [3170, 331] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [20/49] [20/49] [3171, 331] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [21/49] [21/49] [3172, 331] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [22/49] [22/49] [3166, 332] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [23/49] [23/49] [3167, 332] Terraria:Switches - Sweeped
+[Generic] [Sweep] [-] [24/49] [24/49] [3168, 332] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [25/49] [25/49] [3169, 332] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [26/49] [26/49] [3170, 332] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [27/49] [27/49] [3171, 332] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [28/49] [28/49] [3172, 332] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [29/49] [29/49] [3166, 333] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [30/49] [30/49] [3167, 333] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [31/49] [31/49] [3168, 333] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [32/49] [32/49] [3169, 333] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [33/49] [33/49] [3170, 333] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [34/49] [34/49] [3171, 333] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [35/49] [35/49] [3172, 333] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [36/49] [36/49] [3166, 334] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [37/49] [37/49] [3167, 334] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [38/49] [38/49] [3168, 334] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [39/49] [39/49] [3169, 334] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [40/49] [40/49] [3170, 334] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [41/49] [41/49] [3171, 334] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [42/49] [42/49] [3172, 334] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [43/49] [43/49] [3166, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [44/49] [44/49] [3167, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [45/49] [45/49] [3168, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [46/49] [46/49] [3169, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [47/49] [47/49] [3170, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [48/49] [48/49] [3171, 335] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [49/49] [49/49] [3172, 335] Terraria:Sunplate - Sweeped
+[Paste] SweepEntity (3171,333) rel=(5,4) n=Terraria:Chest result=ok
+[15:51:29.789] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3171,331) rel=(5,2) n=Terraria:Sign result=createFail
+TheArchitectsBlueprintMod: [15:51:29.789] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3171,331) rel=(5,2) n=Terraria:Sign result=createFail
+[15:51:29.789] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3167,333) rel=(1,4) n=Terraria:Sign result=createFail
+TheArchitectsBlueprintMod: [15:51:29.789] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3167,333) rel=(1,4) n=Terraria:Sign result=createFail
+[15:51:29.790] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3167,330) rel=(1,1) n=Terraria:Sign result=createFail
+TheArchitectsBlueprintMod: [15:51:29.790] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3167,330) rel=(1,1) n=Terraria:Sign result=createFail
+[15:51:29.791] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC DONE
+[Paste] Paste ended: step returned no more work
+TheArchitectsBlueprintMod: [15:51:29.791] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC DONE
+[Paste] Paste ended: step returned no more work
+[15:51:29.791] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3169,332) rel=(3,3) n=Terraria:TEDisplayDoll result=ok
+[Paste] SweepEntity (3169,330) rel=(3,1) n=Terraria:TEItemFrame result=ok
+[Paste] SweepEntity done total=6 applied=3 failed=3
+[Generic] --- [Sweep] END (processed=49, remaining=0, ok=49, errors=0) ---
+TheArchitectsBlueprintMod: [15:51:29.791] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3169,332) rel=(3,3) n=Terraria:TEDisplayDoll result=ok
+[Paste] SweepEntity (3169,330) rel=(3,1) n=Terraria:TEItemFrame result=ok
+[Paste] SweepEntity done total=6 applied=3 failed=3
+[Generic] --- [Sweep] END (processed=49, remaining=0, ok=49, errors=0) ---
+[15:51:38.544] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture TE SaveData ok n=Terraria:TEItemFrame world=(3169,329) rel=(3,0) keys=1
+TheArchitectsBlueprintMod: [15:51:38.544] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture TE SaveData ok n=Terraria:TEItemFrame world=(3169,329) rel=(3,0) keys=1
+[15:51:38.545] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture TE skipped duplicateOrigin world=(3169,332) rel=(3,3) type=TEDisplayDoll
+TheArchitectsBlueprintMod: [15:51:38.545] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture TE skipped duplicateOrigin world=(3169,332) rel=(3,3) type=TEDisplayDoll
+[15:51:38.545] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture TE SaveData ok n=Terraria:TEItemFrame world=(3169,330) rel=(3,1) keys=1
+TheArchitectsBlueprintMod: [15:51:38.545] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture TE SaveData ok n=Terraria:TEItemFrame world=(3169,330) rel=(3,1) keys=1
+[15:51:38.546] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture done bounds=(3166,329,7x7) entities=5 teWithData=2 teEmptyData=0 teSkippedUnnamed=0 teSkippedSeen=1
+TheArchitectsBlueprintMod: [15:51:38.546] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [EntityCapture] EntityCapture done bounds=(3166,329,7x7) entities=5 teWithData=2 teEmptyData=0 teSkippedUnnamed=0 teSkippedSeen=1
+[15:51:44.072] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3179,319) 7x7
+[Paste] START | area=(3179,319) 7x7 | sourceClear=False | srcTiles=49 tgtTiles=49 | sweep=True planClear=All clearItemDrop=Store retryOnMissingItems=False retryOnInvalidPlacement=True requireItems=False
+[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
+[Paste] Prep: PlaceSource — queuing place tasks from source tiles
+[Paste] Prep: begin prepTileBudget=50 sourceTiles=49 lookupTiles=49 targetTiles=49 clearStrategy=All sourceAreaClear=False
+[Paste] Prep: ClearTarget — queuing clears at destination
+[Paste] Prep: stage PlaceSource -> ClearTarget
+[Paste] Prep: batch stage=PlanClear progress=4x0 unitsThisFrame=50 remainingBudget=0
+TheArchitectsBlueprintMod: [15:51:44.072] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Paste started: sourceClear=False (projection=False, debug=False), targetArea=(3179,319) 7x7
+[Paste] START | area=(3179,319) 7x7 | sourceClear=False | srcTiles=49 tgtTiles=49 | sweep=True planClear=All clearItemDrop=Store retryOnMissingItems=False retryOnInvalidPlacement=True requireItems=False
+[Paste] Stage: PLAN (building queues: PlaceSource, ClearTarget, SourceAreaClear)
+[Paste] Prep: PlaceSource — queuing place tasks from source tiles
+[Paste] Prep: begin prepTileBudget=50 sourceTiles=49 lookupTiles=49 targetTiles=49 clearStrategy=All sourceAreaClear=False
+[Paste] Prep: ClearTarget — queuing clears at destination
+[Paste] Prep: stage PlaceSource -> ClearTarget
+[Paste] Prep: batch stage=PlanClear progress=4x0 unitsThisFrame=50 remainingBudget=0
+[15:51:44.073] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+TheArchitectsBlueprintMod: [15:51:44.073] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[15:51:44.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: no source cut — finalizing queues
+[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
+[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+[Paste] Prep: queues ready | placeBatches=0 clearBatches=0
+[Paste] Prep: complete placeBatches=0 clearBatches=0
+TheArchitectsBlueprintMod: [15:51:44.083] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Prep: no source cut — finalizing queues
+[Paste] Prep: stage ClearTarget -> SourceAreaClear (All)
+[Paste] Prep: stage SourceAreaClear skipped (no source clear) -> Done
+[Paste] Prep: queues ready | placeBatches=0 clearBatches=0
+[Paste] Prep: complete placeBatches=0 clearBatches=0
+[15:51:44.083] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] END (placeBatches=0, clearBatches=0) ---
+TheArchitectsBlueprintMod: [15:51:44.083] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] END (placeBatches=0, clearBatches=0) ---
+[15:51:44.084] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] Prep: no place tasks queued (retryOnMissingItems=False requireItems=False); layer place phases will be no-ops
+TheArchitectsBlueprintMod: [15:51:44.084] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] Prep: no place tasks queued (retryOnMissingItems=False requireItems=False); layer place phases will be no-ops
+[15:51:44.085] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC PLACE
+TheArchitectsBlueprintMod: [15:51:44.085] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC PLACE
+[15:51:44.086] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] START ---
+TheArchitectsBlueprintMod: [15:51:44.086] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] START ---
+[15:51:44.199] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Sweep: queued 49 tiles (full footprint)
+[Paste] Stage: EXEC SWEEP
+TheArchitectsBlueprintMod: [15:51:44.199] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Sweep: queued 49 tiles (full footprint)
+[Paste] Stage: EXEC SWEEP
+[15:51:44.200] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Paste] EntityRemove preSweep bounds=(3179,319,7x7) chests=0 signs=0 tes=0 teGenericFallback=0
+[Generic] --- [Sweep] START (tasks=49) ---
+TheArchitectsBlueprintMod: [15:51:44.200] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Paste] EntityRemove preSweep bounds=(3179,319,7x7) chests=0 signs=0 tes=0 teGenericFallback=0
+[Generic] --- [Sweep] START (tasks=49) ---
+[15:51:44.216] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [TileExecutor] Sweep id=1 (3179,319) ok
+[TileExecutor] Sweep id=2 (3180,319) ok
+[TileExecutor] Sweep id=3 (3181,319) ok
+[TileExecutor] Sweep id=4 (3182,319) ok
+[TileExecutor] Sweep id=5 (3183,319) ok
+[TileExecutor] Sweep id=6 (3184,319) ok
+[TileExecutor] Sweep id=7 (3185,319) ok
+[TileExecutor] Sweep id=8 (3179,320) ok
+[TileExecutor] Sweep id=9 (3180,320) ok
+[TileExecutor] Sweep id=10 (3181,320) ok
+[TileExecutor] Sweep id=11 (3182,320) ok
+[TileExecutor] Sweep id=12 (3183,320) ok
+[TileExecutor] Sweep id=13 (3184,320) ok
+[TileExecutor] Sweep id=14 (3185,320) ok
+[TileExecutor] Sweep id=15 (3179,321) ok
+[TileExecutor] Sweep id=16 (3180,321) ok
+[TileExecutor] Sweep id=17 (3181,321) ok
+[TileExecutor] Sweep id=18 (3182,321) ok
+[TileExecutor] Sweep id=19 (3183,321) ok
+[TileExecutor] Sweep id=20 (3184,321) ok
+[TileExecutor] Sweep id=21 (3185,321) ok
+[TileExecutor] Sweep id=22 (3179,322) ok
+[TileExecutor] Sweep id=23 (3180,322) ok
+[TileExecutor] Sweep id=24 (3181,322) ok
+[TileExecutor] Sweep id=25 (3182,322) ok
+[TileExecutor] Sweep id=26 (3183,322) ok
+[TileExecutor] Sweep id=27 (3184,322) ok
+[TileExecutor] Sweep id=28 (3185,322) ok
+[TileExecutor] Sweep id=29 (3179,323) ok
+[TileExecutor] Sweep id=30 (3180,323) ok
+[TileExecutor] Sweep id=31 (3181,323) ok
+[TileExecutor] Sweep id=32 (3182,323) ok
+[TileExecutor] Sweep id=33 (3183,323) ok
+[TileExecutor] Sweep id=34 (3184,323) ok
+[TileExecutor] Sweep id=35 (3185,323) ok
+[TileExecutor] Sweep id=36 (3179,324) ok
+[TileExecutor] Sweep id=37 (3180,324) ok
+[TileExecutor] Sweep id=38 (3181,324) ok
+[TileExecutor] Sweep id=39 (3182,324) ok
+[TileExecutor] Sweep id=40 (3183,324) ok
+[TileExecutor] Sweep id=41 (3184,324) ok
+[TileExecutor] Sweep id=42 (3185,324) ok
+[TileExecutor] Sweep id=43 (3179,325) ok
+[TileExecutor] Sweep id=44 (3180,325) ok
+[TileExecutor] Sweep id=45 (3181,325) ok
+[TileExecutor] Sweep id=46 (3182,325) ok
+[TileExecutor] Sweep id=47 (3183,325) ok
+[TileExecutor] Sweep id=48 (3184,325) ok
+[TileExecutor] Sweep id=49 (3185,325) ok
+[Paste] Sweep: applied 49 tiles, remaining=0
+TheArchitectsBlueprintMod: [15:51:44.216] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [TileExecutor] Sweep id=1 (3179,319) ok
+[TileExecutor] Sweep id=2 (3180,319) ok
+[TileExecutor] Sweep id=3 (3181,319) ok
+[TileExecutor] Sweep id=4 (3182,319) ok
+[TileExecutor] Sweep id=5 (3183,319) ok
+[TileExecutor] Sweep id=6 (3184,319) ok
+[TileExecutor] Sweep id=7 (3185,319) ok
+[TileExecutor] Sweep id=8 (3179,320) ok
+[TileExecutor] Sweep id=9 (3180,320) ok
+[TileExecutor] Sweep id=10 (3181,320) ok
+[TileExecutor] Sweep id=11 (3182,320) ok
+[TileExecutor] Sweep id=12 (3183,320) ok
+[TileExecutor] Sweep id=13 (3184,320) ok
+[TileExecutor] Sweep id=14 (3185,320) ok
+[TileExecutor] Sweep id=15 (3179,321) ok
+[TileExecutor] Sweep id=16 (3180,321) ok
+[TileExecutor] Sweep id=17 (3181,321) ok
+[TileExecutor] Sweep id=18 (3182,321) ok
+[TileExecutor] Sweep id=19 (3183,321) ok
+[TileExecutor] Sweep id=20 (3184,321) ok
+[TileExecutor] Sweep id=21 (3185,321) ok
+[TileExecutor] Sweep id=22 (3179,322) ok
+[TileExecutor] Sweep id=23 (3180,322) ok
+[TileExecutor] Sweep id=24 (3181,322) ok
+[TileExecutor] Sweep id=25 (3182,322) ok
+[TileExecutor] Sweep id=26 (3183,322) ok
+[TileExecutor] Sweep id=27 (3184,322) ok
+[TileExecutor] Sweep id=28 (3185,322) ok
+[TileExecutor] Sweep id=29 (3179,323) ok
+[TileExecutor] Sweep id=30 (3180,323) ok
+[TileExecutor] Sweep id=31 (3181,323) ok
+[TileExecutor] Sweep id=32 (3182,323) ok
+[TileExecutor] Sweep id=33 (3183,323) ok
+[TileExecutor] Sweep id=34 (3184,323) ok
+[TileExecutor] Sweep id=35 (3185,323) ok
+[TileExecutor] Sweep id=36 (3179,324) ok
+[TileExecutor] Sweep id=37 (3180,324) ok
+[TileExecutor] Sweep id=38 (3181,324) ok
+[TileExecutor] Sweep id=39 (3182,324) ok
+[TileExecutor] Sweep id=40 (3183,324) ok
+[TileExecutor] Sweep id=41 (3184,324) ok
+[TileExecutor] Sweep id=42 (3185,324) ok
+[TileExecutor] Sweep id=43 (3179,325) ok
+[TileExecutor] Sweep id=44 (3180,325) ok
+[TileExecutor] Sweep id=45 (3181,325) ok
+[TileExecutor] Sweep id=46 (3182,325) ok
+[TileExecutor] Sweep id=47 (3183,325) ok
+[TileExecutor] Sweep id=48 (3184,325) ok
+[TileExecutor] Sweep id=49 (3185,325) ok
+[Paste] Sweep: applied 49 tiles, remaining=0
+[15:51:44.217] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Sweep] [-] [1/49] [1/49] [3179, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [2/49] [2/49] [3180, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [3/49] [3/49] [3181, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [4/49] [4/49] [3182, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [5/49] [5/49] [3183, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [6/49] [6/49] [3184, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [7/49] [7/49] [3185, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [8/49] [8/49] [3179, 320] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [9/49] [9/49] [3180, 320] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [10/49] [10/49] [3181, 320] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [11/49] [11/49] [3182, 320] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [12/49] [12/49] [3183, 320] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [13/49] [13/49] [3184, 320] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [14/49] [14/49] [3185, 320] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [15/49] [15/49] [3179, 321] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [16/49] [16/49] [3180, 321] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [17/49] [17/49] [3181, 321] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [18/49] [18/49] [3182, 321] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [19/49] [19/49] [3183, 321] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [20/49] [20/49] [3184, 321] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [21/49] [21/49] [3185, 321] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [22/49] [22/49] [3179, 322] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [23/49] [23/49] [3180, 322] Terraria:Switches - Sweeped
+[Generic] [Sweep] [-] [24/49] [24/49] [3181, 322] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [25/49] [25/49] [3182, 322] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [26/49] [26/49] [3183, 322] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [27/49] [27/49] [3184, 322] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [28/49] [28/49] [3185, 322] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [29/49] [29/49] [3179, 323] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [30/49] [30/49] [3180, 323] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [31/49] [31/49] [3181, 323] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [32/49] [32/49] [3182, 323] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [33/49] [33/49] [3183, 323] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [34/49] [34/49] [3184, 323] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [35/49] [35/49] [3185, 323] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [36/49] [36/49] [3179, 324] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [37/49] [37/49] [3180, 324] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [38/49] [38/49] [3181, 324] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [39/49] [39/49] [3182, 324] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [40/49] [40/49] [3183, 324] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [41/49] [41/49] [3184, 324] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [42/49] [42/49] [3185, 324] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [43/49] [43/49] [3179, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [44/49] [44/49] [3180, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [45/49] [45/49] [3181, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [46/49] [46/49] [3182, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [47/49] [47/49] [3183, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [48/49] [48/49] [3184, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [49/49] [49/49] [3185, 325] Terraria:Sunplate - Sweeped
+TheArchitectsBlueprintMod: [15:51:44.217] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Sweep] [-] [1/49] [1/49] [3179, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [2/49] [2/49] [3180, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [3/49] [3/49] [3181, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [4/49] [4/49] [3182, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [5/49] [5/49] [3183, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [6/49] [6/49] [3184, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [7/49] [7/49] [3185, 319] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [8/49] [8/49] [3179, 320] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [9/49] [9/49] [3180, 320] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [10/49] [10/49] [3181, 320] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [11/49] [11/49] [3182, 320] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [12/49] [12/49] [3183, 320] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [13/49] [13/49] [3184, 320] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [14/49] [14/49] [3185, 320] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [15/49] [15/49] [3179, 321] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [16/49] [16/49] [3180, 321] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [17/49] [17/49] [3181, 321] Terraria:Signs - Sweeped
+[Generic] [Sweep] [-] [18/49] [18/49] [3182, 321] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [19/49] [19/49] [3183, 321] Terraria:ItemFrame - Sweeped
+[Generic] [Sweep] [-] [20/49] [20/49] [3184, 321] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [21/49] [21/49] [3185, 321] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [22/49] [22/49] [3179, 322] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [23/49] [23/49] [3180, 322] Terraria:Switches - Sweeped
+[Generic] [Sweep] [-] [24/49] [24/49] [3181, 322] Terraria:Air - Sweeped
+[Generic] [Sweep] [-] [25/49] [25/49] [3182, 322] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [26/49] [26/49] [3183, 322] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [27/49] [27/49] [3184, 322] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [28/49] [28/49] [3185, 322] Terraria:TatteredWoodSign - Sweeped
+[Generic] [Sweep] [-] [29/49] [29/49] [3179, 323] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [30/49] [30/49] [3180, 323] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [31/49] [31/49] [3181, 323] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [32/49] [32/49] [3182, 323] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [33/49] [33/49] [3183, 323] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [34/49] [34/49] [3184, 323] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [35/49] [35/49] [3185, 323] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [36/49] [36/49] [3179, 324] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [37/49] [37/49] [3180, 324] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [38/49] [38/49] [3181, 324] Terraria:AnnouncementBox - Sweeped
+[Generic] [Sweep] [-] [39/49] [39/49] [3182, 324] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [40/49] [40/49] [3183, 324] Terraria:DisplayDoll - Sweeped
+[Generic] [Sweep] [-] [41/49] [41/49] [3184, 324] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [42/49] [42/49] [3185, 324] Terraria:Containers - Sweeped
+[Generic] [Sweep] [-] [43/49] [43/49] [3179, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [44/49] [44/49] [3180, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [45/49] [45/49] [3181, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [46/49] [46/49] [3182, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [47/49] [47/49] [3183, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [48/49] [48/49] [3184, 325] Terraria:Sunplate - Sweeped
+[Generic] [Sweep] [-] [49/49] [49/49] [3185, 325] Terraria:Sunplate - Sweeped
+[15:51:44.217] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3184,322) rel=(5,3) n=Terraria:Chest result=createFail
+TheArchitectsBlueprintMod: [15:51:44.217] [Main Thread/WARN] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3184,322) rel=(5,3) n=Terraria:Chest result=createFail
+[15:51:44.218] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC DONE
+[Paste] Paste ended: step returned no more work
+TheArchitectsBlueprintMod: [15:51:44.218] [Main Thread/DEBUG] [TheArchitectsBlueprintMod]: [Paste] Stage: EXEC DONE
+[Paste] Paste ended: step returned no more work
+[15:51:44.219] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3184,323) rel=(5,4) n=Terraria:Chest result=ok
+[Paste] SweepEntity (3182,322) rel=(3,3) n=Terraria:Chest result=ok detail=empty
+[Paste] SweepEntity (3182,319) rel=(3,0) n=Terraria:TEItemFrame result=ok
+[Paste] SweepEntity (3182,320) rel=(3,1) n=Terraria:TEItemFrame result=ok
+[Paste] SweepEntity done total=5 applied=4 failed=1
+[Generic] --- [Sweep] END (processed=49, remaining=0, ok=49, errors=0) ---
+TheArchitectsBlueprintMod: [15:51:44.219] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Paste] SweepEntity (3184,323) rel=(5,4) n=Terraria:Chest result=ok
+[Paste] SweepEntity (3182,322) rel=(3,3) n=Terraria:Chest result=ok detail=empty
+[Paste] SweepEntity (3182,319) rel=(3,0) n=Terraria:TEItemFrame result=ok
+[Paste] SweepEntity (3182,320) rel=(3,1) n=Terraria:TEItemFrame result=ok
+[Paste] SweepEntity done total=5 applied=4 failed=1
+[Generic] --- [Sweep] END (processed=49, remaining=0, ok=49, errors=0) ---

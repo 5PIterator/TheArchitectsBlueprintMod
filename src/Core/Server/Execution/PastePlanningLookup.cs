@@ -9,12 +9,15 @@ namespace TheArchitectsBlueprintMod.Core
     /// <summary>Builds paste-tile lookups for planning, execution, and manifest demand passes.</summary>
     internal static class PastePlanningLookup
     {
+        /// <summary>Dummy interaction for unindexed holes; those slots are never consumed.</summary>
+        private static readonly InteractionEntry UnindexedInteraction = InteractionEntry.Create("Tile", mainId: -1);
+
         /// <summary>
-        /// Creates a lookup that pairs each payload-relative cell with source and target world state.
+        /// Creates a lookup that pairs each included payload-relative cell with source and target world state.
         /// </summary>
         public static PasteTileLookup Build(Projection projection)
         {
-            // --- Fill a dense WxH grid so every relative index resolves, including vacant payload cells.
+            // --- Fill a WxH grid, leaving excluded and unresolved cells unindexed so cluster Identify stops at those holes.
 
             Point size = projection.PayloadSize;
             int w = size.X;
@@ -26,8 +29,14 @@ namespace TheArchitectsBlueprintMod.Core
                 for (int y = 0; y < h; y++)
                 {
                     Point rel = new(x, y);
-                    if (!projection.TryGetTargetTile(rel, out Tile targetTile))
+
+                    // Leave excluded and missing target cells unindexed so TryGetPasteTile fails at those holes.
+                    if (!projection.TryGetTileByRelative(rel, out Blueprint.BlueprintCell projCell) || !projCell.Included
+                        || !projection.TryGetTargetTile(rel, out Tile targetTile))
+                    {
+                        list[x, y] = UnindexedPasteTile();
                         continue;
+                    }
 
                     projection.TryGetSourceTile(rel, out Tile sourceTile);
                     Point world = projection.RelativeToWorld(rel);
@@ -55,6 +64,19 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             return new PasteTileLookup(list);
+        }
+
+        /// <summary>Returns a grid slot that <see cref="PasteTileLookup"/> will not index.</summary>
+        private static PasteTile UnindexedPasteTile()
+        {
+            // --- Stamp a Relative that cannot match any array index so holes stay out of TryGetPasteTile.
+            return new PasteTile(
+                payloadCell: default,
+                interaction: UnindexedInteraction,
+                source: default,
+                target: default,
+                relative: new Point(-1, -1),
+                world: default);
         }
 
         /// <summary>Resolves the interaction category and main ID for a payload tile.</summary>

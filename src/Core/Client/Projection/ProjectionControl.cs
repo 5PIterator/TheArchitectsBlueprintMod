@@ -7,6 +7,7 @@ namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// COPY-tool gestures for projections: create from selection, pick up and move, cancel restores start-of-drag position.
+    /// SET reuses the same move path via <see cref="BeginMove"/> when the cursor is not on a selection.
     /// Hit-testing uses <see cref="BlueprintSystem"/> (same topmost order as INCLUDE/EXCLUDE).
     /// Mirrors <see cref="SelectionControl"/> (client-only gesture state here; list data in <see cref="ProjectionSystem"/>).
     /// Future: handles, resize, and on-projection buttons follow the same Control vs System split.
@@ -65,13 +66,8 @@ namespace TheArchitectsBlueprintMod.Core
                         return;
                     }
 
-                    BlueprintSystem.BringBlueprintToFront(topmost);
-                    state.Mode = Mode.Drag;
-                    state.DragKind = DragKind.Move;
-                    state.DraggingProjection = topmost;
-                    state.DragStartBounds = topmost.Area;
-                    state.DragOffsetFromCursor = new Point(cursorTile.X - topmost.Area.X, cursorTile.Y - topmost.Area.Y);
-                    break;
+                    StartMoveDrag(state, topmost, cursorTile);
+                    return;
 
                 case Selection topmost:
                 {
@@ -81,24 +77,50 @@ namespace TheArchitectsBlueprintMod.Core
                         return;
                     }
 
-                    state.Mode = Mode.Drag;
-                    state.DragKind = DragKind.Move;
-                    state.DraggingProjection = projection;
-                    state.DragStartBounds = projection.Area;
-                    state.DragOffsetFromCursor = new Point(cursorTile.X - projection.Area.X, cursorTile.Y - projection.Area.Y);
-                    break;
+                    StartMoveDrag(state, projection, cursorTile);
+                    return;
                 }
 
                 default:
                     // COPY only interacts with live projections and the world selection, not other registered blueprints.
                     return;
             }
+        }
 
-            if (state.DraggingProjection is not null && state.DraggingProjection.IsDefined)
+        /// <summary>Begins a SET-style move of the topmost unlocked projection under the cursor.</summary>
+        public bool BeginMove(Player player, Point cursorTile)
+        {
+            // --- Reject busy/locked cases, then start the same drag COPY uses for an existing ghost.
+
+            GestureState state = GetGesture(player);
+            if (state.Mode != Mode.None)
+                return false;
+
+            if (!BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection projection)
+                || projection is not { IsDefined: true }
+                || projection.IsLocked)
             {
-                Point origin = new(cursorTile.X - state.DragOffsetFromCursor.X, cursorTile.Y - state.DragOffsetFromCursor.Y);
-                state.DraggingProjection.MoveTo(origin);
+                return false;
             }
+
+            StartMoveDrag(state, projection, cursorTile);
+            return true;
+        }
+
+        /// <summary>Records drag anchors, raises the projection, and snaps it to the cursor offset.</summary>
+        private static void StartMoveDrag(GestureState state, Projection projection, Point cursorTile)
+        {
+            // --- Store start bounds and keep the ghost glued to the grab point.
+
+            BlueprintSystem.BringBlueprintToFront(projection);
+            state.Mode = Mode.Drag;
+            state.DragKind = DragKind.Move;
+            state.DraggingProjection = projection;
+            state.DragStartBounds = projection.Area;
+            state.DragOffsetFromCursor = new Point(cursorTile.X - projection.Area.X, cursorTile.Y - projection.Area.Y);
+
+            Point origin = new(cursorTile.X - state.DragOffsetFromCursor.X, cursorTile.Y - state.DragOffsetFromCursor.Y);
+            projection.MoveTo(origin);
         }
 
         /// <summary>Updates an in-progress COPY drag while the left button is held.</summary>

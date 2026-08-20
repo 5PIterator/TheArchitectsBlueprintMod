@@ -11,7 +11,7 @@ using TheArchitectsBlueprintMod.Utils;
 namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
-	/// SELECTION WAND: PIN / SET / RESET via action wheel. SET uses ToolActionManager fallback (PIN when no blueprint).
+	/// SELECTION WAND: PIN / SET / RESET via action wheel. SET edits the selection, moves a projection when the selection is not overlapping, and falls back to PIN when nothing is defined.
 	/// </summary>
 	public class SelectionWand : ModItem
 	{

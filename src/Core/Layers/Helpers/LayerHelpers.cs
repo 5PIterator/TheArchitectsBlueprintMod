@@ -9,6 +9,7 @@ using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.Default;
 using Terraria.ObjectData;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
@@ -78,13 +79,57 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public static bool IsKnownTileType(ushort tileType) =>
             tileType < TileLoader.TileCount;
 
+        /// <summary>True when the tile id is out of range or a tModLoader Unloaded placeholder.</summary>
+        public static bool IsUnknownTileType(ushort tileType)
+        {
+            // --- Out-of-range ids, or mod slots with no ModTile / UnloadedTile subclass.
+            if (tileType >= TileLoader.TileCount)
+                return true;
+            if (tileType < TileID.Count)
+                return false;
+            return TileLoader.GetTile(tileType) is UnloadedTile or null;
+        }
+
+        /// <summary>True when the wall id is out of range or a tModLoader Unloaded placeholder.</summary>
+        public static bool IsUnknownWallType(ushort wallType)
+        {
+            // --- Non-empty walls that are out of range or UnloadedWall / missing ModWall.
+            if (wallType == WallID.None)
+                return false;
+            if (wallType >= WallLoader.WallCount)
+                return true;
+            if (wallType < WallID.Count)
+                return false;
+            return WallLoader.GetWall(wallType) is UnloadedWall or null;
+        }
+
+        /// <summary>Returns a safe tML unloaded tile type for sweep/sanitize writes.</summary>
+        public static ushort ResolveUnloadableTileType(ushort tileType)
+        {
+            // --- Preserve existing Unloaded* tiles; map everything else unknown to UnloadedSolidTile.
+            if (IsKnownTileType(tileType) && TileLoader.GetTile(tileType) is UnloadedTile)
+                return tileType;
+            return (ushort)ModContent.TileType<UnloadedSolidTile>();
+        }
+
+        /// <summary>Returns a safe tML unloaded wall type for sweep/sanitize writes.</summary>
+        public static ushort ResolveUnloadableWallType(ushort wallType)
+        {
+            // --- Preserve existing UnloadedWall; map everything else unknown to UnloadedWall.
+            if (wallType != WallID.None
+                && wallType < WallLoader.WallCount
+                && WallLoader.GetWall(wallType) is UnloadedWall)
+                return wallType;
+            return (ushort)ModContent.WallType<UnloadedWall>();
+        }
+
         public static bool IsReplaceAllowedAt(int x, int y, ushort newTileType, in PasteContext context)
         {
             Tile target = Main.tile[x, y];
             if (!target.HasTile || target.TileType == newTileType)
                 return true;
 
-            if (context.IsSweepCheat)
+            if (context.IsSweep)
                 return true;
 
             if (!context.UseReplacePlace)
@@ -104,7 +149,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!IsReplaceAllowedAt(x, y, tileType, in context))
                 return false;
 
-            if (context.IsSweepCheat)
+            if (context.IsSweep)
                 return true;
 
             return TileLoader.CanPlace(x, y, tileType);
@@ -180,6 +225,81 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 list.Add(new Blueprint.BlueprintCell(rel, pt.World, true));
             }
             return list;
+        }
+
+        /// <summary>
+        /// Lists every world cell of a PlaceObject footprint when <paramref name="originWorld"/> is the TileObjectData.Origin cell.
+        /// </summary>
+        public static IReadOnlyList<Point> EnumerateFootprintWorldCellsFromPlaceOrigin(
+            Point originWorld,
+            int tileType,
+            int style,
+            int alternate)
+        {
+            // --- Origin is known from PlaceObject; subtract data.Origin to get top-left, then emit width×height.
+
+            if (!WorldGen.InWorld(originWorld.X, originWorld.Y))
+                return [];
+
+            TileObjectData? data = TileObjectData.GetTileData(tileType, style, alternate)
+                ?? TileObjectData.GetTileData(tileType, style);
+            if (data is null)
+                return [originWorld];
+
+            int w = Math.Max(1, data.Width);
+            int h = Math.Max(1, data.Height);
+            int ox = Math.Clamp(data.Origin.X, 0, w - 1);
+            int oy = Math.Clamp(data.Origin.Y, 0, h - 1);
+            int topLeftX = originWorld.X - ox;
+            int topLeftY = originWorld.Y - oy;
+            return BuildFootprintCells(topLeftX, topLeftY, w, h, fallback: originWorld);
+        }
+
+        /// <summary>Lists every world cell in the multitile footprint containing <paramref name="worldX"/>,<paramref name="worldY"/>.</summary>
+        public static IReadOnlyList<Point> EnumerateFootprintWorldCells(int worldX, int worldY)
+        {
+            // --- Derive top-left from TileObjectData frames, then emit width×height world points.
+
+            // Fall back to the single sample cell when out of world or not a framed object.
+            if (!WorldGen.InWorld(worldX, worldY))
+                return [];
+
+            Tile tile = Framing.GetTileSafely(worldX, worldY);
+            if (!tile.HasTile || !TileLoaderSupport.IsKnownTileType(tile.TileType))
+                return [new Point(worldX, worldY)];
+
+            TileObjectData? data = TileObjectData.GetTileData(tile);
+            if (data is null)
+                return [new Point(worldX, worldY)];
+
+            // Resolve this cell's offset within the frame, then expand to the full footprint.
+            int w = Math.Max(1, data.Width);
+            int h = Math.Max(1, data.Height);
+            int subX = ResolveSubX(tile.TileFrameX, data, w);
+            int subY = ResolveSubY(tile.TileFrameY, data, h);
+            int topLeftX = worldX - subX;
+            int topLeftY = worldY - subY;
+            return BuildFootprintCells(topLeftX, topLeftY, w, h, fallback: new Point(worldX, worldY));
+        }
+
+        private static IReadOnlyList<Point> BuildFootprintCells(int topLeftX, int topLeftY, int w, int h, Point fallback)
+        {
+            // --- Emit in-world unique cells covering the rectangle; fall back if none survive.
+
+            var cells = new List<Point>(w * h);
+            var seen = new HashSet<Point>();
+            for (int dy = 0; dy < h; dy++)
+            {
+                for (int dx = 0; dx < w; dx++)
+                {
+                    var cell = new Point(topLeftX + dx, topLeftY + dy);
+                    if (!WorldGen.InWorld(cell.X, cell.Y) || !seen.Add(cell))
+                        continue;
+                    cells.Add(cell);
+                }
+            }
+
+            return cells.Count > 0 ? cells : [fallback];
         }
 
         /// <param name="anchorWorld">World position of the tile at <paramref name="originRel"/> (target paste coordinates).</param>
@@ -404,18 +524,29 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         }
 
         private static bool IsFrameEligibleTileType(int tileType) =>
-            TileLoaderSupport.IsKnownTileType(tileType) && !TileID.Sets.Falling[tileType];
+            TileLoaderSupport.IsKnownTileType(tileType)
+            && !TileLoaderSupport.IsUnknownTileType((ushort)tileType)
+            && !TileID.Sets.Falling[tileType];
 
         public static PasteTile GetPlacementOriginTile(IReadOnlyList<PasteTile> tiles) =>
-            GetOriginTile(tiles, static tile => tile.PayloadCell.HasTile(), static tile => tile.PayloadCell.ToTile());
+            GetOriginTile(
+                tiles,
+                static tile => tile.PayloadCell.HasTile(),
+                static tile => tile.PayloadCell.ToTile(),
+                forClear: false);
 
         public static PasteTile GetClearingOriginTile(IReadOnlyList<PasteTile> tiles) =>
-            GetOriginTile(tiles, static tile => tile.Target.HasTile, static tile => tile.Target);
+            GetOriginTile(
+                tiles,
+                static tile => tile.Target.HasTile,
+                static tile => tile.Target,
+                forClear: true);
 
         private static PasteTile GetOriginTile(
             IReadOnlyList<PasteTile> tiles,
             Func<PasteTile, bool> hasTile,
-            Func<PasteTile, Tile> getFramingTile)
+            Func<PasteTile, Tile> getFramingTile,
+            bool forClear)
         {
             if (tiles.Count <= 1)
                 return tiles[0];
@@ -435,8 +566,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
             var samplePasteTile = tiles[sampleIndex];
             Tile sampleTile = getFramingTile(samplePasteTile);
-
-            var data = TileObjectData.GetTileData(sampleTile);
+            FramePlacementVariant variant = ResolveFramePlacementVariant(in samplePasteTile, forClear);
+            TileObjectData? data = variant.Data ?? TileObjectData.GetTileData(sampleTile);
             if (data is null)
                 return tiles[0];
 
@@ -460,6 +591,25 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return tiles[sampleIndex];
         }
 
+        /// <summary>Resolved placeStyle, alternate, origin, and CanPlace direction for a framed object.</summary>
+        internal readonly struct FramePlacementVariant
+        {
+            public int Style { get; }
+            public int Alternate { get; }
+            public Point16 Origin { get; }
+            public int Direction { get; }
+            public TileObjectData? Data { get; }
+
+            public FramePlacementVariant(int style, int alternate, Point16 origin, int direction, TileObjectData? data)
+            {
+                Style = style;
+                Alternate = alternate;
+                Origin = origin;
+                Direction = direction;
+                Data = data;
+            }
+        }
+
         /// <summary>One logical frame object: origin world point and every footprint cell in the batch.</summary>
         internal readonly struct FrameCandidate
         {
@@ -475,16 +625,183 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             }
         }
 
+        /// <summary>Resolves placeStyle, alternate, origin, and direction from frames and TileObjectData alternates.</summary>
+        public static FramePlacementVariant ResolveFramePlacementVariant(in PasteTile tile, bool forClear)
+        {
+            // --- Prefer payload style/alt; for clears fall back to live GetTileInfo, then recover from frames.
+            if (forClear)
+            {
+                Tile framing = tile.Target;
+                if (!framing.HasTile || !TileLoaderSupport.IsKnownTileType(framing.TileType))
+                    return default;
+
+                int infoStyle = 0, infoAlternate = 0;
+                TileObjectData.GetTileInfo(framing, ref infoStyle, ref infoAlternate);
+                return ResolveFramePlacementVariant(
+                    framing.TileType,
+                    framing.TileFrameX,
+                    framing.TileFrameY,
+                    Math.Max(0, infoStyle),
+                    Math.Max(0, infoAlternate));
+            }
+
+            if (!tile.PayloadCell.HasTile())
+                return default;
+
+            return ResolveFramePlacementVariant(tile.PayloadCell);
+        }
+
+        /// <summary>Resolves placeStyle, alternate, origin, and direction from a payload cell snapshot.</summary>
+        public static FramePlacementVariant ResolveFramePlacementVariant(in PayloadCell cell)
+        {
+            // --- Use cached style/alt plus frames so mis-captured orientation-as-style still recovers.
+            if (!cell.HasTile())
+                return default;
+
+            return ResolveFramePlacementVariant(
+                cell.Block.Type,
+                cell.Block.FrameX,
+                cell.Block.FrameY,
+                cell.ResolvePlacementStyle(),
+                cell.Detail.Alternate);
+        }
+
+        /// <summary>Resolves placeStyle, alternate, origin, and direction for a tile type and frame layout.</summary>
+        public static FramePlacementVariant ResolveFramePlacementVariant(
+            int tileType,
+            short frameX,
+            short frameY,
+            int cachedStyle,
+            int cachedAlternate)
+        {
+            // --- Prefer a frame-matching alternate; fix vanilla Signs-style orientation-as-style captures.
+            if (!TileLoaderSupport.IsKnownTileType(tileType))
+                return default;
+
+            int placeStyle = ResolveAuthoritativePlaceStyle(tileType, cachedStyle, cachedAlternate);
+            if (TryMatchFramePlacementVariant(tileType, placeStyle, frameX, frameY, out FramePlacementVariant matched))
+                return matched;
+
+            // Cached orientation-as-style may only match under placeStyle 0 (vanilla Signs / TatteredWoodSign).
+            if (placeStyle != 0
+                && TryMatchFramePlacementVariant(tileType, placeStyle: 0, frameX, frameY, out matched))
+            {
+                return matched;
+            }
+
+            TileObjectData? data = TileObjectData.GetTileData(tileType, placeStyle, cachedAlternate)
+                ?? TileObjectData.GetTileData(tileType, cachedStyle, cachedAlternate)
+                ?? TileObjectData.GetTileData(tileType, placeStyle);
+            if (data is null)
+                return new FramePlacementVariant(placeStyle, cachedAlternate, Point16.Zero, -1, null);
+
+            return new FramePlacementVariant(
+                placeStyle,
+                cachedAlternate,
+                data.Origin,
+                ResolvePlacementDirection(data),
+                data);
+        }
+
+        /// <summary>Returns the item placeStyle when orientation was mis-captured as style for multi-alternate tiles.</summary>
+        private static int ResolveAuthoritativePlaceStyle(int tileType, int cachedStyle, int cachedAlternate)
+        {
+            // --- Drop-item placeStyle wins; otherwise keep cached style unless it indexes an alternate of style 0.
+            InteractionEntry? interaction = InteractionMapProvider.GetFirstTileInteraction((ushort)tileType, cachedStyle);
+            if (interaction?.ItemId is int itemId && itemId > 0
+                && ContentSamples.ItemsByType.TryGetValue(itemId, out Item? sample)
+                && sample is not null
+                && sample.createTile == tileType
+                && sample.placeStyle >= 0)
+            {
+                return sample.placeStyle;
+            }
+
+            TileObjectData? atCached = TileObjectData.GetTileData(tileType, cachedStyle, cachedAlternate);
+            TileObjectData? baseAtZero = TileObjectData.GetTileData(tileType, 0);
+            if (baseAtZero is { AlternatesCount: > 0 }
+                && cachedAlternate == 0
+                && cachedStyle > 0
+                && cachedStyle <= baseAtZero.AlternatesCount
+                && (atCached is null || atCached.AlternatesCount == 0))
+            {
+                return 0;
+            }
+
+            return Math.Max(0, cachedStyle);
+        }
+
+        /// <summary>Walks style alternates and returns the first whose sprite column matches the captured frames.</summary>
+        private static bool TryMatchFramePlacementVariant(
+            int tileType,
+            int placeStyle,
+            short frameX,
+            short frameY,
+            out FramePlacementVariant variant)
+        {
+            // --- Compare each alternate's Style column to the frame's style index.
+            variant = default;
+            TileObjectData? baseData = TileObjectData.GetTileData(tileType, placeStyle);
+            if (baseData is null)
+                return false;
+
+            int alternateCount = baseData.AlternatesCount;
+            for (int alternate = 0; alternate <= alternateCount; alternate++)
+            {
+                TileObjectData? data = TileObjectData.GetTileData(tileType, placeStyle, alternate);
+                if (data is null || !FramesMatchAlternateStyle(data, placeStyle, frameX, frameY))
+                    continue;
+
+                variant = new FramePlacementVariant(
+                    placeStyle,
+                    alternate,
+                    data.Origin,
+                    ResolvePlacementDirection(data),
+                    data);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Returns true when frame X/Y fall in this alternate's style sprite column or row.</summary>
+        private static bool FramesMatchAlternateStyle(TileObjectData data, int placeStyle, short frameX, short frameY)
+        {
+            // --- Derive the spritesheet style index from frames and compare to placeStyle * multiplier + Style.
+            int multiplier = data.StyleMultiplier > 0 ? data.StyleMultiplier : 1;
+            int expectedStyleIndex = placeStyle * multiplier + data.Style;
+            if (data.StyleHorizontal)
+            {
+                int fullWidth = Math.Max(1, data.CoordinateFullWidth);
+                int frameStyleIndex = Math.Abs((int)frameX) / fullWidth;
+                return frameStyleIndex == expectedStyleIndex;
+            }
+
+            int fullHeight = Math.Max(1, data.CoordinateFullHeight);
+            int frameStyleRow = Math.Abs((int)frameY) / fullHeight;
+            return frameStyleRow == expectedStyleIndex;
+        }
+
+        /// <summary>Maps TileObjectData.Direction to Player.direction for TileObject.CanPlace.</summary>
+        private static int ResolvePlacementDirection(TileObjectData data) =>
+            data.Direction switch
+            {
+                TileObjectDirection.PlaceLeft => -1,
+                TileObjectDirection.PlaceRight => 1,
+                _ => -1,
+            };
+
         /// <summary>Resolves the placement or clearing origin world position for a single footprint cell.</summary>
         public static Point ResolveOriginWorld(in PasteTile tile, bool forClear)
         {
-            // --- Derive TileObjectData origin offset from framing tile and map it to world coordinates.
+            // --- Derive alternate-aware TileObjectData origin offset and map it to world coordinates.
             bool hasTile = forClear ? tile.Target.HasTile : tile.PayloadCell.HasTile();
             Tile framing = forClear ? tile.Target : tile.PayloadCell.ToTile();
             if (!hasTile || !TileLoaderSupport.IsKnownTileType(framing.TileType))
                 return tile.World;
 
-            var data = TileObjectData.GetTileData(framing);
+            FramePlacementVariant variant = ResolveFramePlacementVariant(in tile, forClear);
+            TileObjectData? data = variant.Data ?? TileObjectData.GetTileData(framing);
             if (data is null)
                 return tile.World;
 
@@ -557,7 +874,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!TileLoaderSupport.IsKnownTileType(tileType))
                 return false;
 
-            int style = origin.PayloadCell.ResolvePlacementStyle();
+            FramePlacementVariant variant = ResolveFramePlacementVariant(origin.PayloadCell);
+            int style = variant.Style;
             if (InteractionMapProvider.GetRequiredBaseTile(tileType, style).HasValue || TileID.Sets.Grass[tileType])
                 return true;
 
@@ -571,7 +889,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (tiles.Count != 1)
                 return false;
 
-            var data = TileObjectData.GetTileData(tileType, style);
+            var data = variant.Data ?? TileObjectData.GetTileData(tileType, style);
             return data is null || (data.Width <= 1 && data.Height <= 1);
         }
 
@@ -594,7 +912,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             in PasteContext context,
             IReadOnlyList<FrameCandidate>? allPending = null)
         {
-            // --- Validate replace rules, then use TileObject.CanPlace for full anchor-aware placement checks.
+            // --- Validate replace rules, then use TileObject.CanPlace with recovered style and direction.
             PasteTile origin = candidate.OriginTile;
             if (!origin.PayloadCell.HasTile())
                 return true;
@@ -603,9 +921,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!TileLoaderSupport.IsKnownTileType(tileType))
                 return false;
 
+            FramePlacementVariant variant = ResolveFramePlacementVariant(origin.PayloadCell);
             int x = origin.World.X;
             int y = origin.World.Y;
-            int style = origin.PayloadCell.ResolvePlacementStyle();
+            int style = variant.Style;
             Tile dest = Main.tile[x, y];
             if (dest.HasTile && dest.TileType == tileType)
                 return true;
@@ -613,7 +932,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             // --- Defer selection until inventory can supply the item when retry-on-missing is enabled.
             if (context.RequireItems
                 && context.RetryOnMissingItems
-                && !context.IsSweepCheat
+                && !context.IsSweep
                 && !HasRequiredItemsForFrameCandidate(candidate, in context))
                 return false;
 
@@ -623,10 +942,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
                 return false;
 
-            if (context.IsSweepCheat)
+            if (context.IsSweep)
                 return true;
 
-            if (TileObject.CanPlace(x, y, tileType, style, origin.PayloadCell.Detail.Alternate, out _, onlyCheck: true))
+            if (TileObject.CanPlace(x, y, tileType, style, variant.Direction, out _, onlyCheck: true))
                 return true;
 
             if (allPending is null)
@@ -638,17 +957,18 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>Returns true when tracked inventories can supply the candidate's placement item.</summary>
         public static bool HasRequiredItemsForFrameCandidate(FrameCandidate candidate, in PasteContext context)
         {
-            // --- Empty payload and sweep cheat never require a consumable item.
-            if (!context.RequireItems || context.IsSweepCheat)
+            // --- Empty payload and sweep never require a consumable item.
+            if (!context.RequireItems || context.IsSweep)
                 return true;
 
             PasteTile origin = candidate.OriginTile;
             if (!origin.PayloadCell.HasTile())
                 return true;
 
+            FramePlacementVariant variant = ResolveFramePlacementVariant(origin.PayloadCell);
             return TileInteractionChecks.HasTilePlacementItems(
                 (ushort)origin.PayloadCell.Block.Type,
-                origin.PayloadCell.ResolvePlacementStyle(),
+                variant.Style,
                 origin.World.X,
                 origin.World.Y,
                 in context);
@@ -659,6 +979,85 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             IReadOnlyList<FrameCandidate> allPending,
             in PasteContext context) =>
             SelectNextPlaceCandidateIndex(allPending, allPending, in context);
+
+        /// <summary>Returns true when any pending candidate is only blocked by another unplaced frame object.</summary>
+        public static bool HasPendingPlaceSupportWait(
+            IReadOnlyList<FrameCandidate> pending,
+            in PasteContext context)
+        {
+            // --- Retry is useful only while a lower frame supporter has not yet been placed.
+            for (int i = 0; i < pending.Count; i++)
+            {
+                if (IsBlockedFromPlace(pending[i], pending, in context))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Builds a debug summary of why each pending frame candidate is not ready to place.</summary>
+        public static string FormatPendingPlaceBlockers(
+            IReadOnlyList<FrameCandidate> pending,
+            in PasteContext context)
+        {
+            // --- Describe waiting-on-support and CanPlace failures with recovered style/alternate.
+            var details = new System.Text.StringBuilder();
+            for (int i = 0; i < pending.Count; i++)
+            {
+                FrameCandidate candidate = pending[i];
+                string? blocker = DescribePendingPlaceBlocker(candidate, pending, in context);
+                if (blocker is null)
+                    continue;
+
+                if (details.Length > 0)
+                    details.Append("; ");
+
+                FramePlacementVariant variant = candidate.OriginTile.PayloadCell.HasTile()
+                    ? ResolveFramePlacementVariant(candidate.OriginTile.PayloadCell)
+                    : default;
+                details.Append(
+                    $"[{i}] origin=({candidate.OriginWorld.X},{candidate.OriginWorld.Y}) "
+                    + $"type={candidate.OriginTile.PayloadCell.Block.Type} "
+                    + $"style={variant.Style} alt={variant.Alternate}: {blocker}");
+            }
+
+            return details.Length > 0 ? details.ToString() : "no pending candidates";
+        }
+
+        /// <summary>Returns a short reason string when a pending candidate cannot place yet, or null when ready.</summary>
+        private static string? DescribePendingPlaceBlocker(
+            FrameCandidate candidate,
+            IReadOnlyList<FrameCandidate> pending,
+            in PasteContext context)
+        {
+            // --- Prefer support waits, then inventory, then CanPlace failure.
+            for (int i = 0; i < pending.Count; i++)
+            {
+                FrameCandidate other = pending[i];
+                if (other.OriginWorld == candidate.OriginWorld)
+                    continue;
+
+                if (IsSupportedByPlacement(candidate, other) && !IsCandidatePresentInWorld(other, in context))
+                {
+                    return $"waitingOnPending origin=({other.OriginWorld.X},{other.OriginWorld.Y}) "
+                        + $"footprint={other.Tiles.Count}";
+                }
+            }
+
+            if (context.RetryOnMissingItems
+                && context.RequireItems
+                && !context.IsSweep
+                && !HasRequiredItemsForFrameCandidate(candidate, in context))
+            {
+                FramePlacementVariant variant = ResolveFramePlacementVariant(candidate.OriginTile.PayloadCell);
+                return $"missingItems type={candidate.OriginTile.PayloadCell.Block.Type} style={variant.Style}";
+            }
+
+            if (!CanPlaceFrameCandidate(candidate, in context, pending))
+                return "CanPlaceFrameCandidate=false";
+
+            return null;
+        }
 
         /// <summary>Returns true when a place batch still owns the given placement origin.</summary>
         public static bool BatchContainsPlaceOrigin(IReadOnlyList<PasteTile> tiles, Point originWorld)
@@ -726,7 +1125,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return false;
 
             Tile framing = supported.OriginTile.Target;
-            return IsSupportedByAnchorFootprint(framing, supported.OriginWorld, supporter);
+            PasteTile originTile = supported.OriginTile;
+            FramePlacementVariant variant = ResolveFramePlacementVariant(in originTile, forClear: true);
+            return IsSupportedByAnchorFootprint(framing, variant.Data, supported.OriginWorld, supporter);
         }
 
         /// <summary>Returns true when a payload object depends on another pending object for placement support.</summary>
@@ -739,13 +1140,15 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!supported.OriginTile.PayloadCell.HasTile())
                 return false;
 
+            FramePlacementVariant variant = ResolveFramePlacementVariant(supported.OriginTile.PayloadCell);
             Tile framing = supported.OriginTile.PayloadCell.ToTile();
-            return IsSupportedByAnchorFootprint(framing, supported.OriginWorld, supporter);
+            return IsSupportedByAnchorFootprint(framing, variant.Data, supported.OriginWorld, supporter);
         }
 
         /// <summary>Returns true when supporter footprint cells satisfy supported object's anchor requirements.</summary>
         private static bool IsSupportedByAnchorFootprint(
             Tile framingTile,
+            TileObjectData? objectData,
             Point supportedOriginWorld,
             FrameCandidate supporter)
         {
@@ -753,7 +1156,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!framingTile.HasTile || !TileLoaderSupport.IsKnownTileType(framingTile.TileType))
                 return false;
 
-            var data = TileObjectData.GetTileData(framingTile);
+            var data = objectData ?? TileObjectData.GetTileData(framingTile);
             if (data is null)
                 return false;
 
@@ -1161,8 +1564,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            int style = origin.PayloadCell.ResolvePlacementStyle();
-            int alternate = origin.PayloadCell.Detail.Alternate;
+            FramePlacementVariant variant = ResolveFramePlacementVariant(origin.PayloadCell);
+            int style = variant.Style;
+            int alternate = variant.Alternate;
+            int direction = variant.Direction;
             short frameX = origin.PayloadCell.Block.FrameX;
             short frameY = origin.PayloadCell.Block.FrameY;
             InteractionEntry? interaction = InteractionMapProvider.GetFirstTileInteraction(payloadType, style);
@@ -1197,8 +1602,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (context.UseReplacePlace && dest.HasTile)
                 TileExecutor.EnqueueVoidKillTile(x, y, in context);
 
-            if (!context.IsSweepCheat
-                && !TileObject.CanPlace(x, y, placeType, style, alternate, out _, onlyCheck: true))
+            if (!context.IsSweep
+                && !TileObject.CanPlace(x, y, placeType, style, direction, out _, onlyCheck: true))
             {
                 PastingDebug.LogPlacement(placeType, style, null, x, y, false, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
@@ -1221,7 +1626,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     in context,
                     consumeItem: true,
                     postPlaceFrameX: usesFake ? TileMutation.NoPostPlaceFrame : frameX,
-                    postPlaceFrameY: usesFake ? TileMutation.NoPostPlaceFrame : frameY))
+                    postPlaceFrameY: usesFake ? TileMutation.NoPostPlaceFrame : frameY,
+                    direction: direction))
             {
                 PastingDebug.LogPlacement(placeType, style, null, x, y, false, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
@@ -1230,8 +1636,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             PastingDebug.LogPlacement(placeType, style, null, x, y, true, "PlaceObject", alternate: alternate, frameX: frameX, frameY: frameY);
             return LayerResult.Ok(message, okLabel);
         }
-
-        public static bool Consume(in PasteTile tile, in PasteContext context) => true;
     }
 
     internal static class TileOperations
@@ -1340,7 +1744,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                         return LayerResult.Fail(baseItemFailReason, message);
                     }
 
-                    if (!TileExecutor.EnqueuePlaceTile(x, y, baseType, 0, in context, forced: context.IsSweepCheat, consumeItem: true))
+                    if (!TileExecutor.EnqueuePlaceTile(x, y, baseType, 0, in context, forced: context.IsSweep, consumeItem: true))
                     {
                         PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, false, "PlaceTile");
                         return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
@@ -1352,7 +1756,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     return LayerResult.OkWithRemaining(tiles, message, okLabel);
                 }
             }
-            else if (dest.HasTile && !context.IsSweepCheat && context.RequireItems && !context.UseReplacePlace)
+            else if (dest.HasTile && !context.IsSweep && context.RequireItems && !context.UseReplacePlace)
             {
                 PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, false, "PlaceTile");
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
@@ -1373,7 +1777,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 if (context.UseReplacePlace && dest.HasTile && dest.TileType != placeType)
                     TileExecutor.EnqueueVoidKillTile(x, y, in context);
 
-                if (!context.IsSweepCheat && !TileLoader.CanPlace(x, y, placeType))
+                if (!context.IsSweep && !TileLoader.CanPlace(x, y, placeType))
                 {
                     PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, false, "PlaceTile");
                     return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
@@ -1387,7 +1791,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return LayerResult.Fail(itemFailReason, message);
             }
 
-            bool forcePlace = context.IsSweepCheat || baseTileId.HasValue || context.UseReplacePlace;
+            bool forcePlace = context.IsSweep || baseTileId.HasValue || context.UseReplacePlace;
             short frameX = usesFake ? TileMutation.NoPostPlaceFrame : origin.PayloadCell.Block.FrameX;
             short frameY = usesFake ? TileMutation.NoPostPlaceFrame : origin.PayloadCell.Block.FrameY;
             if (!TileExecutor.EnqueuePlaceTile(
@@ -1408,8 +1812,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             PastingDebug.LogPlacement(placeType, style, baseTileId, x, y, true, "PlaceTile");
             return LayerResult.Ok(message, okLabel);
         }
-
-        public static bool Consume(in PasteTile tile, in PasteContext context) => true;
     }
 
     /// <summary>Shared interaction-aware tile item checks for placement layers.</summary>

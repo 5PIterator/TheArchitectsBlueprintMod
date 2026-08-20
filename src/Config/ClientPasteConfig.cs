@@ -28,13 +28,6 @@ namespace TheArchitectsBlueprintMod.Config
         public bool RetryOnInvalidPlacement;
     }
 
-    /// <summary>Client sweep-phase strategy preferences sent with paste requests when the server allows them.</summary>
-    public sealed class SweepPasteStrategies
-    {
-        [DefaultValue(SweepStyle.Detail)]
-        public SweepStyle Style = SweepStyle.Detail;
-    }
-
     /// <summary>Client clear-phase preference sent with paste requests when the server allows it.</summary>
     public sealed class ClearPastePreference
     {
@@ -54,13 +47,6 @@ namespace TheArchitectsBlueprintMod.Config
     {
         [Expand(true)]
         public PlacePasteStrategies Strategy = new();
-    }
-
-    /// <summary>Client sweep-phase preference sent with paste requests when the server allows it.</summary>
-    public sealed class SweepPastePreference
-    {
-        [Expand(true)]
-        public SweepPasteStrategies Strategy = new();
     }
 
     /// <summary>Client arrow flight preferences for paste projectiles.</summary>
@@ -95,7 +81,6 @@ namespace TheArchitectsBlueprintMod.Config
         public PlanPastePreference Plan = new();
         public ClearPastePreference Clear = new();
         public PlacePastePreference Place = new();
-        public SweepPastePreference Sweep = new();
 
         [Header("Arrow")]
         public ArrowPastePreference Arrow = new();

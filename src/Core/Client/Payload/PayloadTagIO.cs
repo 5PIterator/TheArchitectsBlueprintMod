@@ -10,24 +10,28 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using TheArchitectsBlueprintMod.Core.Layers;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 
 namespace TheArchitectsBlueprintMod.Core
 {
-    /// <summary>Sparse payload documents via <see cref="TagIO"/> (schema 3–4).</summary>
+    /// <summary>Sparse payload documents via <see cref="TagIO"/> (schema 3–5).</summary>
     internal static class PayloadTagIO
     {
         public const string FormatId = "TheArchitectsBlueprintMod.Payload";
-        public const int SchemaVersion = 4;
+        public const int SchemaVersion = 5;
         public const int MinSchemaVersion = 3;
 
         private const string KeyFormat = "format";
         private const string KeySchemaVersion = "schemaVersion";
         private const string KeyMetadata = "metadata";
         private const string KeyPayload = "payload";
+        private const string KeyEntities = "entities";
         private const string KeyLegacyCells = "cells";
         private const string KeyCellBody = "c";
         private const string KeyThumbnailPng = "thumbnailPng";
+        private const string KeyEntityName = "n";
+        private const string KeyEntityData = "d";
 
         [Flags]
         private enum CellFlags : int
@@ -109,6 +113,8 @@ namespace TheArchitectsBlueprintMod.Core
 
         public static TagCompound BuildDocument(Payload payload, PayloadExportMetadata meta)
         {
+            // --- Emit cells plus optional entities list for schema 5.
+
             ArgumentNullException.ThrowIfNull(payload);
             var cellEntries = new List<TagCompound>();
             if (payload.IsDefined)
@@ -127,13 +133,36 @@ namespace TheArchitectsBlueprintMod.Core
                 }
             }
 
-            return new TagCompound
+            var document = new TagCompound
             {
                 [KeyFormat] = FormatId,
                 [KeySchemaVersion] = SchemaVersion,
                 [KeyMetadata] = MetadataToTag(meta, payload.Width, payload.Height),
                 [KeyPayload] = cellEntries,
             };
+
+            IReadOnlyList<PayloadEntity> entities = payload.Entities;
+            if (entities.Count > 0)
+            {
+                var entityTags = new List<TagCompound>(entities.Count);
+                for (int i = 0; i < entities.Count; i++)
+                {
+                    PayloadEntity entity = entities[i];
+                    var tag = new TagCompound
+                    {
+                        ["x"] = entity.Relative.X,
+                        ["y"] = entity.Relative.Y,
+                        [KeyEntityName] = entity.FullName,
+                    };
+                    if (entity.HasData)
+                        tag[KeyEntityData] = entity.Data!;
+                    entityTags.Add(tag);
+                }
+
+                document[KeyEntities] = entityTags;
+            }
+
+            return document;
         }
 
         public static void WriteDocument(Stream stream, Payload payload, PayloadExportMetadata meta)
@@ -288,8 +317,51 @@ namespace TheArchitectsBlueprintMod.Core
                 entries.Add(new Payload.Entry(new Point(x, y), cell));
             }
 
-            payload = Payload.FromSparse(entries, info.Width, info.Height);
+            payload = Payload.FromSparse(entries, info.Width, info.Height, ReadEntities(root, info.Width, info.Height));
             return payload.IsDefined;
+        }
+
+        /// <summary>Reads the optional schema-5 entities list; missing/empty yields no entities.</summary>
+        private static PayloadEntity[] ReadEntities(TagCompound root, int width, int height)
+        {
+            // --- Parse (x,y,n,d) tags and sanitize against document bounds.
+
+            if (!root.ContainsKey(KeyEntities))
+                return [];
+
+            IList<TagCompound> list;
+            try
+            {
+                list = root.GetList<TagCompound>(KeyEntities);
+            }
+            catch
+            {
+                return [];
+            }
+
+            if (list is null || list.Count == 0)
+                return [];
+
+            var entities = new List<PayloadEntity>(list.Count);
+            for (int i = 0; i < list.Count; i++)
+            {
+                TagCompound tag = list[i];
+                int x = tag.GetInt("x");
+                int y = tag.GetInt("y");
+                if (!tag.ContainsKey(KeyEntityName))
+                    continue;
+                string name = tag.GetString(KeyEntityName);
+                if (string.IsNullOrWhiteSpace(name))
+                    continue;
+
+                TagCompound? data = null;
+                if (tag.ContainsKey(KeyEntityData) && tag[KeyEntityData] is TagCompound dataTag)
+                    data = dataTag;
+
+                entities.Add(new PayloadEntity(new Point(x, y), name, data));
+            }
+
+            return PayloadEntityCapture.Sanitize(entities, width, height);
         }
 
         public static bool TryReadDocumentInfo(Stream stream, out PayloadDocumentInfo info, out string? error)
@@ -531,9 +603,10 @@ namespace TheArchitectsBlueprintMod.Core
                 {
                     string? tileName = tag.GetString("tile");
                     int? resolved = ContentNameResolver.ResolveTileFullName(tileName);
-                    if (!resolved.HasValue)
-                        return false;
-                    data.TileType.Type = (ushort)resolved.Value;
+                    // Unresolved FullNames become UnloadedSolidTile so UnknownLayer can still own them.
+                    data.TileType.Type = resolved.HasValue
+                        ? (ushort)resolved.Value
+                        : TileLoaderSupport.ResolveUnloadableTileType(0);
                     data.TWWStateData.HasTile = true;
                 }
 
@@ -541,9 +614,10 @@ namespace TheArchitectsBlueprintMod.Core
                 {
                     string? wallName = tag.GetString("wall");
                     int? resolved = ContentNameResolver.ResolveWallFullName(wallName);
-                    if (!resolved.HasValue)
-                        return false;
-                    data.WallType.Type = (ushort)resolved.Value;
+                    // Unresolved wall FullNames become UnloadedWall rather than dropping the cell.
+                    data.WallType.Type = resolved.HasValue
+                        ? (ushort)resolved.Value
+                        : TileLoaderSupport.ResolveUnloadableWallType(1);
                 }
 
                 if (tag.ContainsKey("liquid"))

@@ -7,8 +7,9 @@ using Terraria.GameContent;
 using Terraria.GameContent.Drawing;
 using Terraria.ID;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.UI.Preview;
 
-namespace TheArchitectsBlueprintMod.UI.Preview
+namespace TheArchitectsBlueprintMod.Core.Layers
 {
     /// <summary>Draws vanilla tree-top and branch overlays for payload preview cells.</summary>
     internal static class TreeFoliagePreviewDraw

@@ -6,6 +6,7 @@ using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
@@ -106,11 +107,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public IReadOnlyList<Layer> PlaceOrder { get; }
         public IReadOnlyList<Layer> ClearOrder { get; }
         public IReadOnlyList<Layer> IdentifyOrder { get; }
+        public IReadOnlyList<Layer> DrawOrder { get; }
 
         internal LayerPipeline(
             IReadOnlyList<Layer> placeOrder,
             IReadOnlyList<Layer> clearOrder,
             IReadOnlyList<Layer> identifyOrder,
+            IReadOnlyList<Layer> drawOrder,
             Dictionary<Layer, int> placeIndexByLayer,
             Dictionary<Layer, int> clearIndexByLayer,
             Dictionary<string, Layer> layerById)
@@ -118,6 +121,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             PlaceOrder = placeOrder;
             ClearOrder = clearOrder;
             IdentifyOrder = identifyOrder;
+            DrawOrder = drawOrder;
             _placeIndexByLayer = placeIndexByLayer;
             _clearIndexByLayer = clearIndexByLayer;
             _layerById = layerById;
@@ -157,6 +161,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public static Layer Block => BlockLayer.Definition;
         public static Layer Falling => FallingLayer.Definition;
         public static Layer Frame => FrameLayer.Definition;
+        public static Layer Entity => EntityLayer.Definition;
         public static Layer Paint => PaintLayer.Definition;
         public static Layer Wiring => WiringLayer.Definition;
         public static Layer Detail => DetailLayer.Definition;
@@ -170,6 +175,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             Block,
             Falling,
             Frame,
+            Entity,
             Custom,
             Paint,
             Wiring,
@@ -207,13 +213,96 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             var clearOrder = ResolveOrder(definition.ClearOrder, layerById, registry);
             var identifyOrder = ResolveOrder(definition.IdentifyOrder, layerById, registry);
 
+            var drawRegistry = new List<Layer>(registry);
+            drawRegistry.AddRange(customSubLayers);
+            var drawOrder = ResolveOrder(definition.DrawOrder, layerById, drawRegistry);
+
             return new LayerPipeline(
                 placeOrder,
                 clearOrder,
                 identifyOrder,
+                drawOrder,
                 CreateIndex(placeOrder),
                 CreateIndex(clearOrder),
                 layerById);
+        }
+
+        /// <summary>Draws every preview layer over the visible payload cells and entity sidecars.</summary>
+        public static void DrawRegion(
+            SpriteBatch sb,
+            IReadOnlyList<Payload.Entry> entries,
+            int minX,
+            int maxX,
+            int minY,
+            int maxY,
+            Vector2 position,
+            float scale,
+            Color tint,
+            Func<Point, bool>? includeCell = null,
+            int? worldOriginX = null,
+            int? worldOriginY = null,
+            IReadOnlyList<PayloadEntity>? entities = null)
+        {
+            // --- Build a sparse cell map and shared context, then run BeginPass / cells / DrawPass per layer.
+
+            var cellLookup = new Dictionary<Point, PayloadCell>(entries.Count);
+            foreach (Payload.Entry entry in entries)
+            {
+                if (!entry.Cell.IsEmpty)
+                    cellLookup[entry.Relative] = entry.Cell;
+            }
+
+            var ctx = new PreviewDrawContext
+            {
+                SpriteBatch = sb,
+                Position = position,
+                Scale = scale,
+                Tint = tint,
+                CellLookup = cellLookup,
+                Entities = entities,
+                MinX = minX,
+                MaxX = maxX,
+                MinY = minY,
+                MaxY = maxY,
+                IncludeCell = includeCell,
+                WorldOriginX = worldOriginX,
+                WorldOriginY = worldOriginY,
+            };
+
+            LayerPipeline pipeline = ComposePipeline();
+            IReadOnlyList<Layer> drawOrder = pipeline.DrawOrder;
+            for (int i = 0; i < drawOrder.Count; i++)
+            {
+                Layer layer = drawOrder[i];
+                layer.BeginPass(in ctx);
+                if (layer.DrawsCells)
+                {
+                    ForEachVisibleCell(entries, in ctx, (cell, relX, relY) =>
+                        layer.DrawCell(in ctx, cell, relX, relY));
+                }
+
+                layer.DrawPass(in ctx);
+            }
+        }
+
+        /// <summary>Invokes <paramref name="draw"/> for each non-empty payload cell inside the visible clip.</summary>
+        private static void ForEachVisibleCell(
+            IReadOnlyList<Payload.Entry> entries,
+            in PreviewDrawContext ctx,
+            Action<PayloadCell, int, int> draw)
+        {
+            foreach (Payload.Entry entry in entries)
+            {
+                Point rel = entry.Relative;
+                if (!ctx.IsCellVisible(rel.X, rel.Y))
+                    continue;
+
+                PayloadCell cell = entry.Cell;
+                if (cell.IsEmpty)
+                    continue;
+
+                draw(cell, rel.X, rel.Y);
+            }
         }
 
         public static List<LayerIdentifyResult> Identify(
@@ -257,12 +346,15 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 if (claimedTypes.Contains(layer.LayerType))
                     continue;
 
-                LayerResult identifyResult = layer.Identify(in pasteTile, in identifyLookup, identifySubject);
+                LayerResult identifyResult = layer.Identify(in pasteTile, in identifyLookup, in context, identifySubject);
                 if (identifyResult.TileBatch is null || identifyResult.TileBatch.Cells.Count == 0)
                     continue;
 
-                // Vacant payload: clear/sweep apply air intent; place layers must not queue.
-                if (pasteTile.PayloadCell.IsEmpty && identifySubject == PasteSubject.Payload)
+                // Vacant payload: clear/sweep apply air intent; tile place layers must not queue.
+                // Entity sidecar can still identify at an origin whose payload cell is empty.
+                if (pasteTile.PayloadCell.IsEmpty
+                    && identifySubject == PasteSubject.Payload
+                    && layer.LayerType != LayerType.Entity)
                     continue;
 
                 bool placementValid = layer.PlacementValid(in pasteTile, in identifyLookup, in context);
@@ -338,6 +430,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             public List<string> PlaceOrder { get; init; } = [];
             public List<string> ClearOrder { get; init; } = [];
             public List<string> IdentifyOrder { get; init; } = [];
+            public List<string> DrawOrder { get; init; } = [];
 
             public static LayerOrderDefinition Load()
             {
@@ -378,6 +471,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Block",
                     "Falling",
                     "Frame",
+                    "Entity",
                     "Custom",
                     "Fluid",
                     "Unknown",
@@ -393,6 +487,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Paint",
                     "Unknown",
                     "Custom",
+                    "Entity",
                     "Frame",
                     "Falling",
                     "Block",
@@ -406,10 +501,26 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     "Frame",
                     "Falling",
                     "Block",
+                    "Entity",
                     "Fluid",
                     "Paint",
                     "Wiring",
                     "Detail",
+                ],
+                DrawOrder =
+                [
+                    "Wall",
+                    "Fluid",
+                    "Falling",
+                    "Block",
+                    "Frame",
+                    "Unknown",
+                    "Plant",
+                    "Vine",
+                    "Tree",
+                    "Wiring",
+                    "Detail",
+                    "Entity",
                 ],
             };
         }

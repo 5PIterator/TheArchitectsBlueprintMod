@@ -82,14 +82,17 @@ internal static class PastingInfoLog
 
         if (tile.PayloadCell.HasTile())
         {
-            if (!world.HasTile || world.TileType != tile.PayloadCell.Block.Type)
+            if (!world.HasTile || !SweepTileTypeMatches(tile.PayloadCell.Block.Type, world.TileType))
+                return false;
+            if (TreeLayer.IsTreeType((ushort)tile.PayloadCell.Block.Type)
+                && !TreeFramesMatch(tile.PayloadCell, world))
                 return false;
             return PaintLayer.PaintStateMatches(tile.PayloadCell.Paint, world);
         }
 
         if (tile.PayloadCell.Wall.Type != WallID.None)
         {
-            if (world.WallType != tile.PayloadCell.Wall.Type)
+            if (!SweepWallTypeMatches(tile.PayloadCell.Wall.Type, world.WallType))
                 return false;
             return PaintLayer.PaintStateMatches(tile.PayloadCell.Paint, world);
         }
@@ -122,10 +125,17 @@ internal static class PastingInfoLog
             return "vacant intent not applied";
         }
 
-        if (tile.PayloadCell.HasTile() && (!world.HasTile || world.TileType != tile.PayloadCell.Block.Type))
+        if (tile.PayloadCell.HasTile() && (!world.HasTile || !SweepTileTypeMatches(tile.PayloadCell.Block.Type, world.TileType)))
             return "tile not placed";
 
-        if (tile.PayloadCell.Wall.Type != WallID.None && world.WallType != tile.PayloadCell.Wall.Type)
+        if (tile.PayloadCell.HasTile()
+            && world.HasTile
+            && SweepTileTypeMatches(tile.PayloadCell.Block.Type, world.TileType)
+            && TreeLayer.IsTreeType((ushort)tile.PayloadCell.Block.Type)
+            && !TreeFramesMatch(tile.PayloadCell, world))
+            return "tree frame mismatch";
+
+        if (tile.PayloadCell.Wall.Type != WallID.None && !SweepWallTypeMatches(tile.PayloadCell.Wall.Type, world.WallType))
             return "wall not placed";
 
         if (tile.PayloadCell.Liquid.Amount > 0)
@@ -142,6 +152,9 @@ internal static class PastingInfoLog
 
         return "intent not applied";
     }
+
+    private static bool TreeFramesMatch(in PayloadCell payload, in Tile world) =>
+        world.TileFrameX == payload.Block.FrameX && world.TileFrameY == payload.Block.FrameY;
 
     private static bool HasPaintOrCoating(in PayloadCell.PaintData paint) =>
         paint.TileColor != PaintID.None
@@ -236,4 +249,24 @@ internal static class PastingInfoLog
             LayerFailReason.Unknown => "unknown block",
             _ => "unknown issue",
         };
+
+    /// <summary>True when the world tile matches the payload type or its Unloaded remap.</summary>
+    private static bool SweepTileTypeMatches(ushort payloadType, ushort worldType)
+    {
+        // --- Exact match first; otherwise accept sweep remapping of unknown ids.
+        if (worldType == payloadType)
+            return true;
+        return TileLoaderSupport.IsUnknownTileType(payloadType)
+            && TileLoaderSupport.ResolveUnloadableTileType(payloadType) == worldType;
+    }
+
+    /// <summary>True when the world wall matches the payload type or its Unloaded remap.</summary>
+    private static bool SweepWallTypeMatches(ushort payloadType, ushort worldType)
+    {
+        // --- Exact match first; otherwise accept sweep remapping of unknown walls.
+        if (worldType == payloadType)
+            return true;
+        return TileLoaderSupport.IsUnknownWallType(payloadType)
+            && TileLoaderSupport.ResolveUnloadableWallType(payloadType) == worldType;
+    }
 }

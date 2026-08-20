@@ -96,9 +96,19 @@ namespace TheArchitectsBlueprintMod.Core.Phases
                 int globalIndex = FrameOperations.SelectNextGlobalPlaceCandidateIndex(pending, in context);
                 if (globalIndex < 0)
                 {
+                    string blockers = FrameOperations.FormatPendingPlaceBlockers(pending, in context);
                     TABLog.Debug(
-                        $"Frame place tick: no ready candidate queue={queue.Count} pending={pending.Count}",
+                        $"Frame place tick: no ready candidate queue={queue.Count} pending={pending.Count} {blockers}",
                         "Paste");
+
+                    // Retry only while a pending frame supporter may still appear; otherwise drop stuck tasks.
+                    if (FrameOperations.HasPendingPlaceSupportWait(pending, in context)
+                        || (context.RetryOnMissingItems && HasPendingMissingItems(pending, in context)))
+                    {
+                        break;
+                    }
+
+                    DropPermanentlyBlockedFrameTasks(queue, pending, overlayDoneThisLayer);
                     break;
                 }
 
@@ -160,6 +170,51 @@ namespace TheArchitectsBlueprintMod.Core.Phases
                 queue.Enqueue(retained[i]);
 
             return readyTask is not null;
+        }
+
+        /// <summary>Returns true when any pending frame candidate is waiting on inventory for its place item.</summary>
+        private static bool HasPendingMissingItems(
+            IReadOnlyList<FrameOperations.FrameCandidate> pending,
+            in PasteContext context)
+        {
+            // --- Missing-item retries are only meaningful when require+retry flags are both on.
+            if (!context.RequireItems || context.IsSweep)
+                return false;
+
+            for (int i = 0; i < pending.Count; i++)
+            {
+                if (!FrameOperations.HasRequiredItemsForFrameCandidate(pending[i], in context))
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Dequeues every frame place task and records invalid-placement failures so later layers can run.</summary>
+        private void DropPermanentlyBlockedFrameTasks(
+            Queue<PlacingTask> queue,
+            IReadOnlyList<FrameOperations.FrameCandidate> pending,
+            HashSet<Point>? overlayDoneThisLayer)
+        {
+            // --- Permanently invalid candidates must leave the queue; retryOnInvalidPlacement does not apply here.
+            while (queue.Count > 0)
+            {
+                PlacingTask task = queue.Dequeue();
+                string detail = FrameOperations.FormatPendingPlaceBlockers(pending, Operation.Context);
+                Operation.RecordTaskCompletion(
+                    PasteProgressOutcome.Failed,
+                    LayerFailReason.InvalidPlacement,
+                    detail);
+                if (overlayDoneThisLayer is not null)
+                {
+                    for (int ti = 0; ti < task.Tiles.Count; ti++)
+                        overlayDoneThisLayer.Add(task.Tiles[ti].World);
+                }
+
+                TABLog.Debug(
+                    $"Frame place tick: drop permanentlyBlocked remainingTiles={task.Tiles.Count} {detail}",
+                    "Paste");
+            }
         }
     }
 }

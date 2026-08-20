@@ -53,7 +53,6 @@ internal readonly struct PasteProgress
     public PasteInfoPhase Phase { get; init; }
     public string? LayerId { get; init; }
     public PlaceStyle PlacementStyle { get; init; }
-    public SweepStyle SweepStrategy { get; init; }
     public int BatchIndex { get; init; }
     public int BatchTotal { get; init; }
     public int PhaseIndex { get; init; }
@@ -99,7 +98,6 @@ internal readonly struct PasteProgress
             Phase = Phase,
             LayerId = layerId ?? LayerId,
             PlacementStyle = PlacementStyle,
-            SweepStrategy = SweepStrategy,
             BatchIndex = BatchIndex,
             BatchTotal = BatchTotal,
             PhaseIndex = PhaseIndex,
@@ -202,7 +200,7 @@ internal readonly struct PasteProgress
             PasteInfoPhase.Clear => "Cleared",
             PasteInfoPhase.Cut => "Cleared",
             PasteInfoPhase.Place => PlacementStyle == PlaceStyle.Replace ? "Replaced" : "Placed",
-            PasteInfoPhase.Sweep => SweepStrategy == SweepStyle.Cheat ? "Cheesed" : "Sweeped",
+            PasteInfoPhase.Sweep => "Sweeped",
             _ => "OK",
         };
 }
@@ -221,7 +219,6 @@ internal sealed class PasteProgressTracker
     public int FailedCount { get; private set; }
     public PasteInfoPhase Phase { get; private set; }
     public PlaceStyle PlacementStyle { get; set; } = PlaceStyle.Place;
-    public SweepStyle SweepStrategy { get; set; } = SweepStyle.Detail;
     public int CorrelationId { get; set; }
     public int OverlayId { get; set; }
 
@@ -252,7 +249,6 @@ internal sealed class PasteProgressTracker
             Kind = PasteProgressKind.PhaseStart,
             Phase = phase,
             PlacementStyle = PlacementStyle,
-            SweepStrategy = SweepStrategy,
             PhaseTotal = phaseTotal,
         };
     }
@@ -268,7 +264,6 @@ internal sealed class PasteProgressTracker
         Kind = PasteProgressKind.TaskResult,
         Phase = Phase,
         PlacementStyle = PlacementStyle,
-        SweepStrategy = SweepStrategy,
         BatchIndex = batchIndex,
         BatchTotal = batchTotal,
         PhaseIndex = PhaseProcessed + 1,
@@ -287,7 +282,6 @@ internal sealed class PasteProgressTracker
         Kind = PasteProgressKind.TaskResult,
         Phase = PasteInfoPhase.Plan,
         PlacementStyle = PlacementStyle,
-        SweepStrategy = SweepStrategy,
         BatchIndex = 0,
         BatchTotal = 0,
         PhaseIndex = 0,
@@ -343,7 +337,6 @@ internal sealed class PasteProgressTracker
         Kind = PasteProgressKind.PhaseEnd,
         Phase = Phase,
         PlacementStyle = PlacementStyle,
-        SweepStrategy = SweepStrategy,
         PhaseTotal = PhaseTotal,
         PhaseProcessed = PhaseProcessed,
         PhaseRemaining = remaining,

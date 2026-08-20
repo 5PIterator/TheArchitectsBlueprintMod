@@ -252,7 +252,8 @@ namespace TheArchitectsBlueprintMod.Core
     }
 
     /// <summary>
-    /// Immutable sparse list of detached tile snapshots (<see cref="PayloadCell"/>) with document bounds.
+    /// Immutable sparse list of detached tile snapshots (<see cref="PayloadCell"/>) with document bounds
+    /// and an optional position-keyed <see cref="PayloadEntity"/> sidecar.
     /// New state is always produced via <see cref="Empty"/>, <see cref="FromWorld"/>, <see cref="FromSparse"/>, or <see cref="TryFromTagDocument"/>.
     /// </summary>
     public sealed class Payload
@@ -265,22 +266,28 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>Zero-sized payload (no grid).</summary>
-        public static Payload Empty { get; } = new(0, 0, Array.Empty<Entry>());
+        public static Payload Empty { get; } = new(0, 0, Array.Empty<Entry>(), Array.Empty<PayloadEntity>());
 
         private readonly int _width;
         private readonly int _height;
         private readonly Entry[] _entries;
+        private readonly PayloadEntity[] _entities;
         private Dictionary<Point, PayloadCell>? _cellIndex;
+        private Dictionary<Point, PayloadEntity>? _entityIndex;
 
-        private Payload(int width, int height, Entry[] entries)
+        private Payload(int width, int height, Entry[] entries, PayloadEntity[] entities)
         {
             _width = width;
             _height = height;
             _entries = entries;
+            _entities = entities;
         }
 
         /// <summary>Non-empty cells with relative coordinates.</summary>
         public IReadOnlyList<Entry> Entries => _entries;
+
+        /// <summary>Position-keyed entity sidecar (chest / sign / TileEntity data).</summary>
+        public IReadOnlyList<PayloadEntity> Entities => _entities;
 
         /// <summary>Non-empty cell bodies only (no coordinates).</summary>
         public IEnumerable<PayloadCell> Cells
@@ -298,9 +305,11 @@ namespace TheArchitectsBlueprintMod.Core
         public int Width => _width;
         public int Height => _height;
 
-        /// <summary>Captures live world tiles under <paramref name="worldBounds"/>.</summary>
+        /// <summary>Captures live world tiles and entity sidecars under <paramref name="worldBounds"/>.</summary>
         public static Payload FromWorld(Rectangle worldBounds)
         {
+            // --- Snapshot sparse cells, then capture position-keyed chest/sign/TE entities.
+
             if (worldBounds.IsEmpty)
                 return Empty;
 
@@ -322,31 +331,53 @@ namespace TheArchitectsBlueprintMod.Core
                 }
             }
 
-            return new Payload(w, h, entries.ToArray());
+            PayloadEntity[] entities = PayloadEntityCapture.CaptureFromWorld(worldBounds);
+            return new Payload(w, h, entries.ToArray(), entities);
         }
 
         /// <summary>Builds a sparse payload from relative placements within <paramref name="width"/>×<paramref name="height"/> bounds.</summary>
-        public static Payload FromSparse(IReadOnlyList<Entry> entries, int width, int height)
+        public static Payload FromSparse(IReadOnlyList<Entry> entries, int width, int height) =>
+            FromSparse(entries, width, height, entities: null);
+
+        /// <summary>Builds a sparse payload with an optional entity sidecar.</summary>
+        public static Payload FromSparse(
+            IReadOnlyList<Entry> entries,
+            int width,
+            int height,
+            IReadOnlyList<PayloadEntity>? entities)
         {
+            // --- Filter in-bounds non-empty cells and sanitize entities to the same grid.
+
             if (width <= 0 || height <= 0)
                 return Empty;
 
+            Entry[] filteredEntries;
             if (entries is null || entries.Count == 0)
-                return new Payload(width, height, Array.Empty<Entry>());
-
-            var filtered = new List<Entry>(entries.Count);
-            for (int i = 0; i < entries.Count; i++)
             {
-                Entry e = entries[i];
-                Point rel = e.Relative;
-                if ((uint)rel.X >= (uint)width || (uint)rel.Y >= (uint)height)
-                    continue;
-                if (!e.Cell.HasSparseContent)
-                    continue;
-                filtered.Add(e);
+                filteredEntries = Array.Empty<Entry>();
+            }
+            else
+            {
+                var filtered = new List<Entry>(entries.Count);
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    Entry e = entries[i];
+                    Point rel = e.Relative;
+                    if ((uint)rel.X >= (uint)width || (uint)rel.Y >= (uint)height)
+                        continue;
+                    if (!e.Cell.HasSparseContent)
+                        continue;
+                    filtered.Add(e);
+                }
+
+                filteredEntries = filtered.ToArray();
             }
 
-            return new Payload(width, height, filtered.ToArray());
+            PayloadEntity[] sanitizedEntities = entities is null || entities.Count == 0
+                ? Array.Empty<PayloadEntity>()
+                : PayloadEntityCapture.Sanitize(entities, width, height);
+
+            return new Payload(width, height, filteredEntries, sanitizedEntities);
         }
 
         /// <summary>
@@ -389,13 +420,17 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Independent copy of <paramref name="other"/>.</summary>
         public static Payload FromClone(Payload other)
         {
+            // --- Shallow-copy entry and entity arrays (TagCompounds are treated as immutable snapshots).
+
             ArgumentNullException.ThrowIfNull(other);
             if (!other.IsDefined)
                 return Empty;
 
             var copy = new Entry[other._entries.Length];
             Array.Copy(other._entries, copy, other._entries.Length);
-            return new Payload(other._width, other._height, copy);
+            var entityCopy = new PayloadEntity[other._entities.Length];
+            Array.Copy(other._entities, entityCopy, other._entities.Length);
+            return new Payload(other._width, other._height, copy, entityCopy);
         }
 
         /// <summary>Snapshot for one world <see cref="Tile"/> (air omitted).</summary>
@@ -450,6 +485,21 @@ namespace TheArchitectsBlueprintMod.Core
             return true;
         }
 
+        /// <summary>Looks up a payload entity at the given relative coordinates.</summary>
+        public bool TryGetEntity(Point relative, out PayloadEntity entity)
+        {
+            // --- ByPosition-style index over the entity sidecar.
+
+            if (!IsDefined || (uint)relative.X >= (uint)_width || (uint)relative.Y >= (uint)_height)
+            {
+                entity = default;
+                return false;
+            }
+
+            EnsureEntityIndex();
+            return _entityIndex!.TryGetValue(relative, out entity);
+        }
+
         private void EnsureCellIndex()
         {
             if (_cellIndex is not null)
@@ -460,6 +510,19 @@ namespace TheArchitectsBlueprintMod.Core
             {
                 Entry entry = _entries[i];
                 _cellIndex[entry.Relative] = entry.Cell;
+            }
+        }
+
+        private void EnsureEntityIndex()
+        {
+            if (_entityIndex is not null)
+                return;
+
+            _entityIndex = new Dictionary<Point, PayloadEntity>(_entities.Length);
+            for (int i = 0; i < _entities.Length; i++)
+            {
+                PayloadEntity entity = _entities[i];
+                _entityIndex[entity.Relative] = entity;
             }
         }
     }

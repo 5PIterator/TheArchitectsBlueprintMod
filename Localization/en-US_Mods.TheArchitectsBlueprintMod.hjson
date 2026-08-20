@@ -108,7 +108,7 @@ Items: {
 			'''
 			Selection bounds editing.
 			Right: action wheel — PIN, SET, RESET
-			Left: PIN (new pins) or SET (edit handles) depending on wheel; RESET clears only when the cursor is on the selection area
+			Left: PIN (new pins) or SET (edit selection, or move a projection when the selection is not overlapping) depending on wheel; RESET clears only when the cursor is on the selection area
 			'''
 	}
 
@@ -405,20 +405,6 @@ Configs: {
 			}
 		}
 
-		Sweep: {
-			Label: Sweep
-			Tooltip: Sweep-phase strategy preference.
-
-			Strategy: {
-				Label: Strategy
-				Tooltip:
-					'''
-					Detail — normal sweep behavior.
-					Cheat — use forced placement where supported.
-					'''
-			}
-		}
-
 		Arrow: {
 			Label: Arrow
 			Tooltip: Flight timing and velocity for paste arrows.
@@ -649,21 +635,19 @@ Configs: {
 
 			Sweep: {
 				Label: Sweep
-				Tooltip: Final footprint sweep. Tick delay 0 runs the full queue in one tick.
-
-				Strategy: {
-					Label: Sweep strategy default
-					Tooltip: Server default used when client preferences are disabled.
-				}
-
-				AllowClientPreferences: {
-					Label: Allow client preferences
-					Tooltip: Allow clients to override sweep strategy. When disabled, server default is used.
-				}
+				Tooltip:
+					'''
+					Host-only footprint blit that copies payload tiles directly and skips Place.
+					Off by default. When active, tick delay 0 runs the full queue in one tick.
+					'''
 
 				Active: {
 					Label: Active
-					Tooltip: ""
+					Tooltip:
+						'''
+						When enabled, paste ends with a sweep blit over the included footprint instead of layer Place.
+						Server / host only in multiplayer.
+						'''
 				}
 
 				TickSize: {
@@ -704,6 +688,15 @@ Configs: {
 				Frame: {
 					Label: Frame
 					Tooltip: Tiles that require nearby support such as anchors, walls, or mapped base tiles.
+				}
+
+				Entity: {
+					Label: Entity
+					Tooltip:
+						'''
+						Off by default. After Frame places host tiles, overwrite matching chest, sign, and TileEntity contents from the blueprint entity sidecar without consuming inventory for those contents.
+						Replaces the old entity data cheat. Inventory-backed insert/extract via paste arrows is planned separately.
+						'''
 				}
 
 				Custom: {
@@ -917,6 +910,11 @@ Configs: {
 			Tooltip: ""
 		}
 
+		Entity: {
+			Label: Entity
+			Tooltip: Off by default. Overwrite chest, sign, and TileEntity contents from the blueprint without consuming contained items.
+		}
+
 		Custom: {
 			Label: Custom
 			Tooltip: Master switch for attributed custom handlers. Individual handler toggles are in Custom Layers.
@@ -1059,15 +1057,6 @@ Configs: {
 			Label: Placement Style
 			Tooltip: ""
 		}
-
-		Style: {
-			Label: Style
-			Tooltip: ""
-		}
-	}
-
-	SweepPhaseStrategies: {
-		Tooltip: ""
 
 		Style: {
 			Label: Style
@@ -1290,16 +1279,6 @@ Configs: {
 	SweepPhaseConfig: {
 		Tooltip: ""
 
-		Strategies: {
-			Label: Strategies
-			Tooltip: ""
-		}
-
-		AllowClientPreferences: {
-			Label: Client Control Enabled
-			Tooltip: ""
-		}
-
 		Active: {
 			Label: Active
 			Tooltip: ""
@@ -1317,25 +1296,6 @@ Configs: {
 
 		TickSpeed: {
 			Label: Tick Speed
-			Tooltip: ""
-		}
-
-		Strategy: {
-			Label: Strategy
-			Tooltip: ""
-		}
-	}
-
-	SweepPhaseStrategy: {
-		Tooltip: ""
-
-		Detail: {
-			Label: Detail
-			Tooltip: ""
-		}
-
-		Cheat: {
-			Label: Cheat
 			Tooltip: ""
 		}
 	}
@@ -1372,15 +1332,6 @@ Configs: {
 		}
 	}
 
-	SweepPasteStrategies: {
-		Tooltip: ""
-
-		Style: {
-			Label: Style
-			Tooltip: ""
-		}
-	}
-
 	PlanPastePreference: {
 		Tooltip: ""
 
@@ -1410,20 +1361,6 @@ Configs: {
 	}
 
 	PlacePastePreference: {
-		Tooltip: ""
-
-		Strategies: {
-			Label: Strategies
-			Tooltip: ""
-		}
-
-		Strategy: {
-			Label: Strategy
-			Tooltip: ""
-		}
-	}
-
-	SweepPastePreference: {
 		Tooltip: ""
 
 		Strategies: {
@@ -1480,20 +1417,6 @@ Configs: {
 
 		Store: {
 			Label: Store
-			Tooltip: ""
-		}
-	}
-
-	SweepStyle: {
-		Tooltip: ""
-
-		Detail: {
-			Label: Detail
-			Tooltip: ""
-		}
-
-		Cheat: {
-			Label: Cheat
 			Tooltip: ""
 		}
 	}

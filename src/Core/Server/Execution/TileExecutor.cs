@@ -6,6 +6,7 @@ using Terraria.DataStructures;
 using Terraria.Enums;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ObjectData;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Content.Projectiles;
 using TheArchitectsBlueprintMod.Core.Layers;
@@ -74,7 +75,8 @@ namespace TheArchitectsBlueprintMod.Core
             in PasteContext ctx,
             bool consumeItem,
             short postPlaceFrameX = TileMutation.NoPostPlaceFrame,
-            short postPlaceFrameY = TileMutation.NoPostPlaceFrame)
+            short postPlaceFrameY = TileMutation.NoPostPlaceFrame,
+            int direction = -1)
         {
             if (!TryGetSession(in ctx, out TileEffectSession session))
                 return false;
@@ -88,6 +90,7 @@ namespace TheArchitectsBlueprintMod.Core
                 type: tileType,
                 style: style,
                 alternate: alternate,
+                direction: direction,
                 consumeItem: consumeItem,
                 projectileMode: mode,
                 postPlaceFrameX: postPlaceFrameX,
@@ -332,7 +335,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         public static bool HasItemForTile(ushort tileType, int style, in PasteContext ctx, int? baseId = null)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweepCheat)
+            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
                 return true;
             return GetTileItemAvailability(tileType, style, in ctx, baseId) == TileItemAvailability.Available;
         }
@@ -340,7 +343,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Whether required inventory contains an item for the given wall type.</summary>
         public static bool HasItemForWall(ushort wallType, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweepCheat)
+            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
                 return true;
             return GetWallItemAvailability(wallType, in ctx) == TileItemAvailability.Available;
         }
@@ -348,7 +351,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Whether inventory can supply any mapped tool for the paint or coating main.</summary>
         public static bool HasItemForPaint(int paintMainId, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweepCheat)
+            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
                 return true;
             return ctx.InventoryLookup.GetPaintItemAvailability(paintMainId, ctx.InteractionBudget)
                 == TileItemAvailability.Available;
@@ -356,7 +359,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         public static bool HasItemForInteraction(InteractionEntry entry, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweepCheat)
+            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
                 return true;
             return ctx.InventoryLookup.GetInteractionAvailability(entry, ctx.InteractionBudget) == TileItemAvailability.Available;
         }
@@ -364,21 +367,21 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Returns true when inventory can supply any mapped tool for the liquid type.</summary>
         public static bool HasItemForLiquid(int liquidType, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweepCheat)
+            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
                 return true;
             return ctx.InventoryLookup.GetLiquidItemAvailability(liquidType, ctx.InteractionBudget) == TileItemAvailability.Available;
         }
 
         public static TileItemAvailability GetTileItemAvailability(ushort tileType, int style, in PasteContext ctx, int? baseId = null)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweepCheat)
+            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
                 return TileItemAvailability.Available;
             return ctx.InventoryLookup.GetTileItemAvailability(tileType, style, ctx.InteractionBudget, baseId);
         }
 
         public static TileItemAvailability GetWallItemAvailability(ushort wallType, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweepCheat)
+            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
                 return TileItemAvailability.Available;
             return ctx.InventoryLookup.GetWallItemAvailability(wallType, ctx.InteractionBudget);
         }
@@ -390,7 +393,7 @@ namespace TheArchitectsBlueprintMod.Core
             out LayerFailReason failReason)
         {
             failReason = LayerFailReason.None;
-            TileItemAvailability availability = ctx.RequireItems && ctx.InventoryLookup is not null && !ctx.IsSweepCheat
+            TileItemAvailability availability = ctx.RequireItems && ctx.InventoryLookup is not null && !ctx.IsSweep
                 ? ctx.InventoryLookup.GetInteractionAvailability(entry, ctx.InteractionBudget)
                 : TileItemAvailability.Available;
             if (availability == TileItemAvailability.Available)
@@ -520,9 +523,9 @@ namespace TheArchitectsBlueprintMod.Core
                         applied = TryApplyBundledPostPlaceFrame(x, y, in mutation) && applied;
                     break;
                 case TileMutationKind.PlaceObject:
-                    applied = WorldGen.PlaceObject(x, y, mutation.Type, mute: true, Math.Max(0, mutation.Style), mutation.Alternate, random: -1, direction: -1);
+                    applied = TryPlaceObject(x, y, in mutation);
                     if (applied)
-                        applied = TryApplyBundledPostPlaceFrame(x, y, in mutation) && applied;
+                        applied = TryApplyBundledPostPlaceFrame(x, y, in mutation, runPlacementHooks: false) && applied;
                     break;
                 case TileMutationKind.PlaceWall:
                     WorldGen.PlaceWall(x, y, mutation.Type, mute: false);
@@ -589,7 +592,7 @@ namespace TheArchitectsBlueprintMod.Core
                     applied = true;
                     break;
                 case TileMutationKind.Sweep:
-                    applied = ApplySweepMutation(mutation, x, y);
+                    applied = ApplySweepMutation(mutation, x, y, in ctx);
                     break;
                 default:
                     applied = false;
@@ -616,6 +619,7 @@ namespace TheArchitectsBlueprintMod.Core
                     if (mutation.Kind == TileMutationKind.SetLiquid)
                         SyncLiquid(x, y);
                 }
+
             }
 
             TileExecutorLog.Applied(in mutation, applied);
@@ -1458,33 +1462,86 @@ namespace TheArchitectsBlueprintMod.Core
             return TryWriteLiquid(x, y, liquidType, amount);
         }
 
-        private static bool TryApplyBundledPostPlaceFrame(int x, int y, in TileMutation mutation)
+        /// <summary>Places a multitile and runs HookPostPlaceMyPlayer so chests and TileEntities are created.</summary>
+        private static bool TryPlaceObject(int x, int y, in TileMutation mutation)
         {
+            // --- Player PlaceThing sequence: CanPlace, Place tiles, then CallPostPlacementPlayerHook.
+
+            int type = mutation.Type;
+            int style = Math.Max(0, mutation.Style);
+            int direction = mutation.Direction;
+
+            // CanPlace keeps PlaceRight when dir=1 and PlaceLeft when dir=-1; it does not take Alternate.
+            if (!TileObject.CanPlace(x, y, type, style, direction, out TileObject objectData))
+                return false;
+
+            objectData.random = -1;
+            objectData.alternate = mutation.Alternate;
+            if (!TileObject.Place(objectData))
+                return false;
+
+            // TileObject.Place writes tiles only. This hook is what creates Chest / Sign / TE.
+            TileObjectData.CallPostPlacementPlayerHook(
+                x,
+                y,
+                type,
+                style,
+                direction,
+                mutation.Alternate,
+                objectData);
+
+            WorldGen.SquareTileFrame(x, y);
+            Tile tile = Main.tile[x, y];
+            return tile.HasTile && tile.TileType == type;
+        }
+
+        /// <summary>Writes captured origin frames after PlaceTile/PlaceObject, optionally replaying TileFrame hooks.</summary>
+        private static bool TryApplyBundledPostPlaceFrame(
+            int x,
+            int y,
+            in TileMutation mutation,
+            bool runPlacementHooks = true)
+        {
+            // --- Skip when the mutation has no bundled frames; otherwise write X/Y and optionally TileFrame.
+
             if (!mutation.HasPostPlaceFrame)
                 return true;
 
-            return ApplyTileFrame(x, y, mutation.PostPlaceFrameX, mutation.PostPlaceFrameY);
+            return ApplyTileFrame(x, y, mutation.PostPlaceFrameX, mutation.PostPlaceFrameY, runPlacementHooks);
         }
 
         private static bool ApplyFrameMutation(int x, int y, TileMutation mutation) =>
-            ApplyTileFrame(x, y, (short)Math.Clamp(mutation.Style, short.MinValue, short.MaxValue), (short)Math.Clamp(mutation.Alternate, short.MinValue, short.MaxValue));
+            ApplyTileFrame(
+                x,
+                y,
+                (short)Math.Clamp(mutation.Style, short.MinValue, short.MaxValue),
+                (short)Math.Clamp(mutation.Alternate, short.MinValue, short.MaxValue));
 
-        private static bool ApplyTileFrame(int x, int y, short frameX, short frameY)
+        /// <summary>Writes TileFrameX/Y. Optionally runs TileLoader.TileFrame, which can recreate PlaceObject hosts.</summary>
+        private static bool ApplyTileFrame(int x, int y, short frameX, short frameY, bool runPlacementHooks = true)
         {
+            // --- Assign captured frames, then TileFrame only when PlaceTile still needs the post-place hook.
+
             Tile tile = Main.tile[x, y];
             if (!tile.HasTile)
                 return false;
 
+            // Overwrite the origin cell frames with the payload snapshot.
             TileWallWireStateData state = tile.Get<TileWallWireStateData>();
             state.TileFrameX = frameX;
             state.TileFrameY = frameY;
             tile.Get<TileWallWireStateData>() = state;
-            TileLoaderSupport.RunPostPlacementHooks(x, y);
+
+            // PlaceObject writes tiles only; TileFrame would not create the missing Chest/TE host.
+            if (runPlacementHooks)
+                TileLoaderSupport.RunPostPlacementHooks(x, y);
+
             return tile.HasTile
                 && tile.TileFrameX == frameX
                 && tile.TileFrameY == frameY;
         }
 
+        /// <summary>Writes payload tile type and frames only; skips TileFrame hooks so tree branch geometry stays exact.</summary>
         private static bool ApplyPayloadBlockMutation(int x, int y, TileMutation mutation)
         {
             PayloadCell payload = mutation.Payload;
@@ -1507,17 +1564,70 @@ namespace TheArchitectsBlueprintMod.Core
                 && dest.TileFrameY == state.TileFrameY;
         }
 
-        private static bool ApplySweepMutation(TileMutation mutation, int x, int y)
+        private static bool ApplySweepMutation(TileMutation mutation, int x, int y, in PasteContext ctx)
         {
-            mutation.Payload.CopyToWorldTile(x, y);
+            PayloadCell payload = mutation.Payload;
+            if (!payload.IsEmpty
+                && payload.Detail.HasTile
+                && TreeLayer.IsTreeType((ushort)payload.Block.Type))
+            {
+                if (!ctx.IsSweep
+                    && ctx.Lookup is PasteTileLookup lookup
+                    && lookup.TryGetPasteTileByWorld(mutation.World, out PasteTile pasteTile)
+                    && !TreeLayer.CanPlaceSegment(in pasteTile, in ctx))
+                {
+                    return false;
+                }
+
+                return ApplyPayloadBlockMutation(x, y, mutation) && WorldGen.InWorld(x, y);
+            }
+
+            // Remap unknown tile/wall ids to tML Unloaded placeholders before the world write.
+            RemapUnknownTypesForSweep(payload).CopyToWorldTile(x, y);
             return WorldGen.InWorld(x, y);
+        }
+
+        /// <summary>Clones the payload cell when unknown tile/wall ids must become Unloaded placeholders.</summary>
+        private static PayloadCell RemapUnknownTypesForSweep(PayloadCell payload)
+        {
+            // --- Leave known and already-unloaded content alone; clone only when a remap is required.
+            if (payload.IsEmpty || payload.Data is null)
+                return payload;
+
+            ushort tileType = payload.Block.Type;
+            ushort wallType = payload.Wall.Type;
+            bool remapTile = payload.Detail.HasTile
+                && TileLoaderSupport.IsUnknownTileType(tileType)
+                && TileLoaderSupport.ResolveUnloadableTileType(tileType) != tileType;
+            bool remapWall = TileLoaderSupport.IsUnknownWallType(wallType)
+                && TileLoaderSupport.ResolveUnloadableWallType(wallType) != wallType;
+            if (!remapTile && !remapWall)
+                return payload;
+
+            // Clone TileData so the projection payload snapshot stays unchanged.
+            PayloadCell.TileData source = payload.Data;
+            var data = new PayloadCell.TileData
+            {
+                TileType = source.TileType,
+                WallType = source.WallType,
+                LiquidData = source.LiquidData,
+                TWBIData = source.TWBIData,
+                TWWStateData = source.TWWStateData,
+                TileStyle = source.TileStyle,
+                TileAlternate = source.TileAlternate,
+            };
+            if (remapTile)
+                data.TileType.Type = TileLoaderSupport.ResolveUnloadableTileType(tileType);
+            if (remapWall)
+                data.WallType.Type = TileLoaderSupport.ResolveUnloadableWallType(wallType);
+            return PayloadCell.FromData(data);
         }
 
         private static bool ShouldUsePlaceProjectile(in PasteContext ctx, bool consumeItem) =>
             ShouldConsumeOnPlace(in ctx, consumeItem);
 
         private static bool ShouldConsumeOnPlace(in PasteContext ctx, bool consumeItem) =>
-            consumeItem && ctx.RequireItems && ctx.InventoryLookup is not null && !ctx.IsSweepCheat;
+            consumeItem && ctx.RequireItems && ctx.InventoryLookup is not null && !ctx.IsSweep;
 
         private static PasteProjectileMode? ResolveClearProjectileMode(int itemType, ClearItemDropStyle style, in PasteContext ctx)
         {

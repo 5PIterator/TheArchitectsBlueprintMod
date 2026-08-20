@@ -14,7 +14,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private FluidLayer() : base("Fluid", LayerType.Liquid) { }
 
-        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup lookup, in PasteContext context, PasteSubject identifySubject)
         {
             var relatives = new List<Point>();
             CollectFluidPool(tile.Relative, identifySubject, in lookup, relatives);
@@ -38,38 +38,12 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
 
-        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
-        {
-            if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
-            PayloadCell.LiquidData intent = tile.PayloadCell.Liquid;
-            return HasRequiredLiquidItems(in intent, tile.Target, in context);
-        }
-
-        public override bool CanConsume(in PasteTile tile, in PasteContext context)
-        {
-            if (!context.RequireItems || context.Items is null) return true;
-            PayloadCell.LiquidData intent = tile.PayloadCell.Liquid;
-            return HasRequiredLiquidItems(in intent, tile.Target, in context);
-        }
-
-        public override bool Consume(in PasteTile tile, in PasteContext context) => true;
-
         public override bool Match(in PasteTile tile)
         {
             if (TileComparison.IsSourceCutIntent(in tile))
                 return tile.Source.LiquidAmount == tile.Target.LiquidAmount && tile.Source.LiquidType == tile.Target.LiquidType;
             Tile intent = tile.PayloadTile;
             return intent.LiquidAmount == tile.Target.LiquidAmount && intent.LiquidType == tile.Target.LiquidType;
-        }
-
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile)
-        {
-            var src = tile.PayloadCell.Liquid;
-            if (src.Amount <= 0)
-                return null;
-
-            IReadOnlyList<int> itemIds = InteractionMapProvider.GetLiquidItemIds(src.Type);
-            return itemIds.Count > 0 ? itemIds : null;
         }
 
         public override LayerResult Clear(TileBatch batch, in PasteContext context)
@@ -103,7 +77,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return LayerResult.Ok();
 
             string okLabel = LayerLogFormat.PlacedLabel(in context);
-            bool consumeItem = context.RequireItems && !context.IsSweepCheat;
+            bool consumeItem = context.RequireItems && !context.IsSweep;
             var changedCells = new List<LiquidPoolCell>(tiles.Count);
 
             for (int i = 0; i < tiles.Count; i++)
@@ -126,17 +100,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
 
             return LayerResult.Ok(message, okLabel);
-        }
-
-        private static bool HasRequiredLiquidItems(in PayloadCell.LiquidData intent, in Tile target, in PasteContext context)
-        {
-            if (intent.Amount <= 0)
-                return true;
-
-            if (target.LiquidAmount == intent.Amount && target.LiquidType == intent.Type)
-                return true;
-
-            return TileExecutor.HasItemForLiquid(intent.Type, in context);
         }
 
         /// <summary>
@@ -187,6 +150,28 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                     queue.Enqueue(neighborRel);
                 }
             }
+        }
+
+        public override bool DrawsCells => true;
+
+        public override void DrawCell(in PreviewDrawContext ctx, PayloadCell cell, int relX, int relY)
+        {
+            if (cell.Liquid.Amount <= 14)
+                return;
+
+            bool drawRim = !NeighborHasDrawableLiquid(in ctx, relX, relY - 1);
+            LiquidPreviewResolver.Draw(in ctx, cell.Liquid.Type, cell.Liquid.Amount, relX, relY, drawRim);
+        }
+
+        private static bool NeighborHasDrawableLiquid(in PreviewDrawContext ctx, int relX, int relY)
+        {
+            if (ctx.CellLookup is null)
+                return false;
+
+            if (!ctx.CellLookup.TryGetValue(new Point(relX, relY), out PayloadCell neighbor))
+                return false;
+
+            return neighbor.Liquid.Amount > 14;
         }
     }
 }

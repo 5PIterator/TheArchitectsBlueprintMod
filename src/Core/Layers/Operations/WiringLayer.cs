@@ -1,8 +1,13 @@
+using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Terraria;
+using Terraria.GameContent;
+using Terraria.ID;
+using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
-using Terraria;
-using Terraria.ID;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
@@ -16,7 +21,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private WiringLayer() : base("Wiring", LayerType.Wiring) { }
 
-        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup _, PasteSubject identifySubject)
+        public override LayerResult Identify(in PasteTile tile, in PasteTileLookup _, in PasteContext context, PasteSubject identifySubject)
         {
             Tile subjectTile = PasteTile.GetTileForIdentify(in tile, identifySubject);
             bool hasWiring = subjectTile.RedWire || subjectTile.BlueWire || subjectTile.GreenWire || subjectTile.YellowWire || subjectTile.HasActuator;
@@ -36,22 +41,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         public override bool PlacementValid(in PasteTile tile, in PasteTileLookup _, in PasteContext context) => true;
 
-        public override bool HasRequiredItems(in PasteTile tile, in PasteTileLookup _, in PasteContext context)
-        {
-            if (!context.RequireItems || context.Items is null || context.IsSweepCheat) return true;
-            PayloadCell.WireData intent = tile.PayloadCell.Wire;
-            return HasRequiredWireItems(in intent, tile.Target, in context);
-        }
-
-        public override bool CanConsume(in PasteTile tile, in PasteContext context)
-        {
-            if (!context.RequireItems || context.Items is null) return true;
-            PayloadCell.WireData intent = tile.PayloadCell.Wire;
-            return HasRequiredWireItems(in intent, tile.Target, in context);
-        }
-
-        public override bool Consume(in PasteTile tile, in PasteContext context) => true;
-
         public override bool Match(in PasteTile tile)
         {
             if (TileComparison.IsSourceCutIntent(in tile))
@@ -66,14 +55,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 && intent.GreenWire == tile.Target.GreenWire
                 && intent.YellowWire == tile.Target.YellowWire
                 && intent.HasActuator == tile.Target.HasActuator;
-        }
-
-        public override IReadOnlyList<int>? GetItem(in PasteTile tile)
-        {
-            List<int> ids = [];
-            PayloadCell.WireData intent = tile.PayloadCell.Wire;
-            CollectToolItemIds(in intent, tile.Target, ids);
-            return ids.Count > 0 ? ids : null;
         }
 
         public override LayerResult Clear(TileBatch batch, in PasteContext context)
@@ -121,72 +102,6 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 : LayerResult.Ok();
         }
 
-        private static bool HasRequiredWireItems(in PayloadCell.WireData intent, in Tile target, in PasteContext context)
-        {
-            if (intent.RedWire && !target.RedWire && !HasWireKindItems(0, in context)) return false;
-            if (intent.BlueWire && !target.BlueWire && !HasWireKindItems(2, in context)) return false;
-            if (intent.GreenWire && !target.GreenWire && !HasWireKindItems(1, in context)) return false;
-            if (intent.YellowWire && !target.YellowWire && !HasWireKindItems(3, in context)) return false;
-            if (intent.HasActuator && !target.HasActuator && !HasWireKindItems(4, in context)) return false;
-            return true;
-        }
-
-        private static void CollectToolItemIds(in PayloadCell.WireData intent, in Tile target, List<int> ids)
-        {
-            TryAddToolId(0, intent.RedWire && !target.RedWire, ids);
-            TryAddToolId(2, intent.BlueWire && !target.BlueWire, ids);
-            TryAddToolId(1, intent.GreenWire && !target.GreenWire, ids);
-            TryAddToolId(3, intent.YellowWire && !target.YellowWire, ids);
-            TryAddToolId(4, intent.HasActuator && !target.HasActuator, ids);
-        }
-
-        private static void TryAddToolId(int wireKind, bool needed, List<int> ids)
-        {
-            if (!needed)
-                return;
-
-            // Collect every mapped tool that can place this wire kind.
-            IReadOnlyList<int> toolIds = InteractionMapProvider.GetWireItemIds(wireKind);
-            for (int i = 0; i < toolIds.Count; i++)
-            {
-                int toolId = toolIds[i];
-                if (toolId > 0 && !ids.Contains(toolId))
-                    ids.Add(toolId);
-            }
-        }
-
-        private static bool HasWireKindItems(int wireKind, in PasteContext context)
-        {
-            // --- Any mapped tool for this color counts (Grand Design, Wire Kite, single wrench, etc.).
-            if (!context.RequireItems || context.IsSweepCheat)
-                return true;
-
-            if (context.InventoryLookup is not null)
-            {
-                TileItemAvailability availability = context.InventoryLookup.GetWireItemAvailability(
-                    wireKind,
-                    context.InteractionBudget);
-                if (availability == TileItemAvailability.Available)
-                    return true;
-                if (availability != TileItemAvailability.UnresolvedInteraction)
-                    return false;
-            }
-
-            Item[]? items = context.Items;
-            if (items is null)
-                return false;
-
-            int fallbackItem = wireKind == 4 ? ItemID.Actuator : ItemID.Wire;
-            for (int i = 0; i < items.Length; i++)
-            {
-                Item item = items[i];
-                if (item.type == fallbackItem && item.stack > 0)
-                    return true;
-            }
-
-            return false;
-        }
-
         /// <summary>Queues removal of every wire color and actuator at the world cell.</summary>
         private static bool ClearWiringAt(int x, int y, in PasteContext context, ref bool changed)
         {
@@ -231,7 +146,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>Queues wire/actuator reconciliation to payload intent through TileExecutor.</summary>
         private static bool ApplyWireIntent(int x, int y, in PayloadCell.WireData intent, in PasteContext context, ref bool changed)
         {
-            bool consumeItem = context.RequireItems && !context.IsSweepCheat;
+            bool consumeItem = context.RequireItems && !context.IsSweep;
 
             if (Main.tile[x, y].RedWire != intent.RedWire)
             {
@@ -295,5 +210,87 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private static bool IsWireClear(in Tile live) =>
             !live.RedWire && !live.BlueWire && !live.GreenWire && !live.YellowWire && !live.HasActuator;
+
+        public override bool DrawsCells => true;
+
+        public override void DrawCell(in PreviewDrawContext ctx, PayloadCell cell, int relX, int relY)
+        {
+            PayloadCell.WireData wire = cell.Wire;
+            if (!wire.RedWire && !wire.BlueWire && !wire.GreenWire && !wire.YellowWire && !wire.HasActuator)
+                return;
+
+            if (BuilderToggle.HideAllWires.CurrentState != 0)
+                return;
+
+            Vector2 pos = ctx.Position + new Vector2(
+                relX * PreviewDrawContext.TilePixelSize,
+                relY * PreviewDrawContext.TilePixelSize);
+
+            if (wire.RedWire && BuilderToggle.RedWireVisibility.CurrentState != 0)
+                DrawWireColor(in ctx, relX, relY, pos, TextureAssets.Wire.Value, w => w.RedWire);
+
+            if (wire.BlueWire && BuilderToggle.BlueWireVisibility.CurrentState != 0)
+                DrawWireColor(in ctx, relX, relY, pos, TextureAssets.Wire2.Value, w => w.BlueWire);
+
+            if (wire.GreenWire && BuilderToggle.GreenWireVisibility.CurrentState != 0)
+                DrawWireColor(in ctx, relX, relY, pos, TextureAssets.Wire3.Value, w => w.GreenWire);
+
+            if (wire.YellowWire && BuilderToggle.YellowWireVisibility.CurrentState != 0)
+                DrawWireColor(in ctx, relX, relY, pos, TextureAssets.Wire4.Value, w => w.YellowWire);
+
+            if (wire.HasActuator && BuilderToggle.ActuatorsVisibility.CurrentState != 0)
+                DrawActuatorPreview(ctx.SpriteBatch, pos, ctx.Scale, ctx.Tint);
+        }
+
+        private static void DrawWireColor(
+            in PreviewDrawContext ctx,
+            int relX,
+            int relY,
+            Vector2 pos,
+            Texture2D texture,
+            Func<PayloadCell.WireData, bool> hasWire)
+        {
+            bool up = ctx.NeighborHasWire(relX, relY, 0, -1, hasWire);
+            bool down = ctx.NeighborHasWire(relX, relY, 0, 1, hasWire);
+            bool left = ctx.NeighborHasWire(relX, relY, -1, 0, hasWire);
+            bool right = ctx.NeighborHasWire(relX, relY, 1, 0, hasWire);
+            Rectangle source = GetWireSourceRect(up, down, left, right);
+            ctx.SpriteBatch.Draw(texture, pos * ctx.Scale, source, ctx.Tint, 0f, Vector2.Zero, ctx.Scale, SpriteEffects.None, 0f);
+        }
+
+        private static void DrawActuatorPreview(SpriteBatch sb, Vector2 pos, float scale, Color tint)
+        {
+            Texture2D texture = TextureAssets.Actuator.Value;
+            var source = new Rectangle(0, 0, texture.Width, texture.Height);
+            sb.Draw(texture, pos * scale, source, tint, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+        }
+
+        private static Rectangle GetWireSourceRect(bool up, bool down, bool left, bool right)
+        {
+            if (up)
+            {
+                if (down)
+                {
+                    if (left)
+                        return right ? new Rectangle(18, 18, 16, 16) : new Rectangle(54, 0, 16, 16);
+                    return right ? new Rectangle(36, 0, 16, 16) : new Rectangle(0, 0, 16, 16);
+                }
+
+                if (left)
+                    return right ? new Rectangle(0, 18, 16, 16) : new Rectangle(54, 18, 16, 16);
+                return right ? new Rectangle(36, 18, 16, 16) : new Rectangle(36, 36, 16, 16);
+            }
+
+            if (down)
+            {
+                if (left)
+                    return right ? new Rectangle(72, 0, 16, 16) : new Rectangle(72, 18, 16, 16);
+                return right ? new Rectangle(0, 36, 16, 16) : new Rectangle(18, 36, 16, 16);
+            }
+
+            if (left)
+                return right ? new Rectangle(18, 0, 16, 16) : new Rectangle(54, 36, 16, 16);
+            return right ? new Rectangle(72, 36, 16, 16) : new Rectangle(0, 54, 16, 16);
+        }
     }
 }
