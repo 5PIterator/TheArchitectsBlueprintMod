@@ -15,11 +15,11 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>
         /// Creates a lookup that pairs each included payload-relative cell with source and target world state.
         /// </summary>
-        public static PasteTileLookup Build(Projection projection)
+        public static PasteTileLookup Build(PasteExecutionContext execution)
         {
             // --- Fill a WxH grid, leaving excluded and unresolved cells unindexed so cluster Identify stops at those holes.
 
-            Point size = projection.PayloadSize;
+            Point size = execution.PayloadSize;
             int w = size.X;
             int h = size.Y;
             var list = new PasteTile[w, h];
@@ -31,19 +31,18 @@ namespace TheArchitectsBlueprintMod.Core
                     Point rel = new(x, y);
 
                     // Leave excluded and missing target cells unindexed so TryGetPasteTile fails at those holes.
-                    if (!projection.TryGetTileByRelative(rel, out Blueprint.BlueprintCell projCell) || !projCell.Included
-                        || !projection.TryGetTargetTile(rel, out Tile targetTile))
+                    if (!execution.IsIncluded(rel) || !execution.TryGetTargetTile(rel, out Tile targetTile))
                     {
                         list[x, y] = UnindexedPasteTile();
                         continue;
                     }
 
-                    projection.TryGetSourceTile(rel, out Tile sourceTile);
-                    Point world = projection.RelativeToWorld(rel);
+                    execution.TryGetSourceTile(rel, out Tile sourceTile);
+                    Point world = execution.RelativeToWorld(rel);
 
                     PayloadCell cell = default;
                     InteractionEntry interaction;
-                    if (projection.Payload.TryGetCell(rel, out PayloadCell payloadCell) && !payloadCell.IsEmpty)
+                    if (execution.Payload.TryGetCell(rel, out PayloadCell payloadCell) && !payloadCell.IsEmpty)
                     {
                         cell = payloadCell;
                         interaction = ResolveInteraction(cell.ToTile());
@@ -65,6 +64,12 @@ namespace TheArchitectsBlueprintMod.Core
 
             return new PasteTileLookup(list);
         }
+
+        /// <summary>
+        /// Creates a lookup from a live projection (manifest / client planning helpers).
+        /// </summary>
+        public static PasteTileLookup Build(Projection projection) =>
+            Build(PasteExecutionContext.FromProjection(projection));
 
         /// <summary>Returns a grid slot that <see cref="PasteTileLookup"/> will not index.</summary>
         private static PasteTile UnindexedPasteTile()

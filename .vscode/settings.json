@@ -1,4 +1,6 @@
 {
+    "tml.steamPath": "G:\\SteamLibrary\\steamapps\\common\\tModLoader",
+    "tml.worldPath": "R:\\Documents\\My Games\\Terraria\\tModLoader\\Worlds\\BE_CREATIVE.wld",
     "cSpell.words": [
         "Acks",
         "asmpayload",

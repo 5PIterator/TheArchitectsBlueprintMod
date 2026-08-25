@@ -44,6 +44,7 @@ namespace TheArchitectsBlueprintMod.Core
         private readonly Dictionary<int, LiquidPoolCell[]> _liquidPools = new();
         private readonly Dictionary<int, PlacementReservationLedger> _placementLedgers = new();
         private readonly List<int> _resolveScratch = [];
+        private Rectangle _activeSyncSquare;
 
         public TileEffectSession(int operationId, Func<PasteContext> contextFactory)
         {
@@ -89,6 +90,31 @@ namespace TheArchitectsBlueprintMod.Core
             return false;
         }
 
+        /// <summary>Returns true when a wall placement at the cell is queued or still in flight.</summary>
+        public bool HasPendingOrInFlightWallAt(Point world)
+        {
+            // --- Match PlaceWall mutations so wall-anchored frames can wait on Wall-layer arrows.
+
+            foreach (TileMutation mutation in Pending)
+            {
+                if (mutation.Kind == TileMutationKind.PlaceWall && mutation.World == world)
+                    return true;
+            }
+
+            for (int i = 0; i < _mutations.Count; i++)
+            {
+                TileMutation mutation = _mutations[i];
+                if (mutation.Kind != TileMutationKind.PlaceWall
+                    || mutation.World != world
+                    || !IsMutationInFlight(i))
+                    continue;
+
+                return true;
+            }
+
+            return false;
+        }
+
         public bool CanLaunchArrow() => _activeArrows.Count < TileExecutor.GetMaxConcurrentArrows();
 
         internal List<int> ResolveScratch => _resolveScratch;
@@ -104,10 +130,47 @@ namespace TheArchitectsBlueprintMod.Core
 
         public int NextMutationId() => _nextMutationId++;
 
+        /// <summary>
+        /// Starts stamping enqueued mutations with the sync AABB for <paramref name="batch"/>.
+        /// </summary>
+        public void BeginSyncBatch(TileBatch batch, PasteTile head)
+        {
+            // --- Capture the batch world square so later ApplyMutation can SendTileSquare once per write.
+
+            _ = head;
+            if (batch is not null && batch.TryGetSyncSquare(out Rectangle square))
+                _activeSyncSquare = square;
+            else
+                _activeSyncSquare = Rectangle.Empty;
+        }
+
+        /// <summary>Clears the active enqueue sync stamp without sending network traffic.</summary>
+        public void EndSyncBatchPass()
+        {
+            // --- Stamp was copied onto mutations at Enqueue; drop the active context only.
+            _activeSyncSquare = Rectangle.Empty;
+        }
+
         public void Enqueue(TileMutation mutation)
         {
+            // Stamp the active batch AABB onto the mutation when a sync batch is open.
+            mutation = ApplyActiveSyncStamp(mutation);
             Pending.Enqueue(mutation);
             TileExecutorLog.Registered(in mutation);
+        }
+
+        /// <summary>Copies the active batch sync AABB onto <paramref name="mutation"/> when one is open.</summary>
+        public TileMutation ApplyActiveSyncStamp(TileMutation mutation)
+        {
+            // --- Mutations created outside Enqueue (e.g. sweep) still need the PasteTask stamp.
+
+            if (_activeSyncSquare.Width > 0 && _activeSyncSquare.Height > 0
+                && (mutation.SyncSquare.Width <= 0 || mutation.SyncSquare.Height <= 0))
+            {
+                return mutation with { SyncSquare = _activeSyncSquare };
+            }
+
+            return mutation;
         }
 
         /// <summary>Attaches the pool cells written when a liquid placement mutation arrives.</summary>

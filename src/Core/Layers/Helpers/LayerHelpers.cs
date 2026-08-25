@@ -523,10 +523,19 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return IsMultiCellObject(tileType, style);
         }
 
-        private static bool IsFrameEligibleTileType(int tileType) =>
-            TileLoaderSupport.IsKnownTileType(tileType)
-            && !TileLoaderSupport.IsUnknownTileType((ushort)tileType)
-            && !TileID.Sets.Falling[tileType];
+        /// <summary>
+        /// True when this type may enter Frame classification (known, non-falling, not Tree-owned).
+        /// </summary>
+        private static bool IsFrameEligibleTileType(int tileType)
+        {
+            // --- Skip unknown/falling tiles and TreeLayer types (Living Wood Wand multi-style must not Frame-claim trees).
+            // Do not call CustomLayer.TileTypeIsClaimedByAttributedLayer here: PlantLayer.IsCustom → Frame → cycle.
+
+            return TileLoaderSupport.IsKnownTileType(tileType)
+                && !TileLoaderSupport.IsUnknownTileType((ushort)tileType)
+                && !TileID.Sets.Falling[tileType]
+                && !TreeLayer.IsTreeType((ushort)tileType);
+        }
 
         public static PasteTile GetPlacementOriginTile(IReadOnlyList<PasteTile> tiles) =>
             GetOriginTile(
@@ -912,7 +921,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             in PasteContext context,
             IReadOnlyList<FrameCandidate>? allPending = null)
         {
-            // --- Validate replace rules, then use TileObject.CanPlace with recovered style and direction.
+            // --- Validate replace rules, wall anchors, then TileObject/TileLoader CanPlace.
+
             PasteTile origin = candidate.OriginTile;
             if (!origin.PayloadCell.HasTile())
                 return true;
@@ -929,20 +939,40 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (dest.HasTile && dest.TileType == tileType)
                 return true;
 
-            // --- Defer selection until inventory can supply the item when retry-on-missing is enabled.
+            // Defer selection until inventory can supply the item when retry-on-missing is enabled.
             if (context.RequireItems
                 && context.RetryOnMissingItems
                 && !context.IsSweep
                 && !HasRequiredItemsForFrameCandidate(candidate, in context))
                 return false;
 
+            // Wall-anchored objects are not ready until a live wall exists (or Wall-layer work is still in flight).
+            if (HasWallAnchor(tileType, style) && dest.WallType == WallID.None)
+                return false;
+
             if (UsesTilePlacement(candidate.Tiles, in origin))
-                return TileLoaderSupport.IsCanPlaceAllowedAt(x, y, tileType, in context);
+            {
+                if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
+                    return false;
+
+                if (context.IsSweep)
+                    return true;
+
+                // Place will void-kill under replace; treat occupied replaceable cells as schedulable.
+                if (context.UseReplacePlace && dest.HasTile && dest.TileType != tileType)
+                    return true;
+
+                return TileLoader.CanPlace(x, y, tileType);
+            }
 
             if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
                 return false;
 
             if (context.IsSweep)
+                return true;
+
+            // Match FrameOperations.Place: replace void-kill happens before the real place mutation.
+            if (context.UseReplacePlace && dest.HasTile && dest.TileType != tileType)
                 return true;
 
             if (TileObject.CanPlace(x, y, tileType, style, variant.Direction, out _, onlyCheck: true))
@@ -952,6 +982,30 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return false;
 
             return HasReadyFramePlacementSupport(candidate, allPending, in context);
+        }
+
+        /// <summary>Returns true when a wall-anchored candidate is waiting on a wall that should still arrive.</summary>
+        public static bool IsWaitingOnWallSupport(FrameCandidate candidate, in PasteContext context)
+        {
+            // --- Payload wall or in-flight PlaceWall means Frame should defer instead of dropping.
+
+            PasteTile origin = candidate.OriginTile;
+            if (!origin.PayloadCell.HasTile())
+                return false;
+
+            FramePlacementVariant variant = ResolveFramePlacementVariant(origin.PayloadCell);
+            ushort tileType = origin.PayloadCell.Block.Type;
+            if (!HasWallAnchor(tileType, variant.Style))
+                return false;
+
+            Point world = origin.World;
+            if (Main.tile[world.X, world.Y].WallType != WallID.None)
+                return false;
+
+            if (origin.PayloadCell.Wall.Type > 0)
+                return true;
+
+            return context.EffectSession?.HasPendingOrInFlightWallAt(world) == true;
         }
 
         /// <summary>Returns true when tracked inventories can supply the candidate's placement item.</summary>
@@ -980,15 +1034,19 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             in PasteContext context) =>
             SelectNextPlaceCandidateIndex(allPending, allPending, in context);
 
-        /// <summary>Returns true when any pending candidate is only blocked by another unplaced frame object.</summary>
+        /// <summary>Returns true when any pending candidate is only blocked by another unplaced frame object or a pending wall.</summary>
         public static bool HasPendingPlaceSupportWait(
             IReadOnlyList<FrameCandidate> pending,
             in PasteContext context)
         {
-            // --- Retry is useful only while a lower frame supporter has not yet been placed.
+            // --- Retry while a lower frame supporter or required wall may still appear.
+
             for (int i = 0; i < pending.Count; i++)
             {
                 if (IsBlockedFromPlace(pending[i], pending, in context))
+                    return true;
+
+                if (IsWaitingOnWallSupport(pending[i], in context))
                     return true;
             }
 
@@ -1030,7 +1088,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             IReadOnlyList<FrameCandidate> pending,
             in PasteContext context)
         {
-            // --- Prefer support waits, then inventory, then CanPlace failure.
+            // --- Prefer support waits, then wall, inventory, replace, then CanPlace failure.
+
             for (int i = 0; i < pending.Count; i++)
             {
                 FrameCandidate other = pending[i];
@@ -1044,19 +1103,52 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 }
             }
 
+            if (IsWaitingOnWallSupport(candidate, in context))
+            {
+                Point world = candidate.OriginWorld;
+                bool inFlight = context.EffectSession?.HasPendingOrInFlightWallAt(world) == true;
+                return $"wallMissing inFlight={inFlight} payloadWall={candidate.OriginTile.PayloadCell.Wall.Type}";
+            }
+
             if (context.RetryOnMissingItems
                 && context.RequireItems
                 && !context.IsSweep
                 && !HasRequiredItemsForFrameCandidate(candidate, in context))
             {
-                FramePlacementVariant variant = ResolveFramePlacementVariant(candidate.OriginTile.PayloadCell);
-                return $"missingItems type={candidate.OriginTile.PayloadCell.Block.Type} style={variant.Style}";
+                FramePlacementVariant missingVariant = ResolveFramePlacementVariant(candidate.OriginTile.PayloadCell);
+                return $"missingItems type={candidate.OriginTile.PayloadCell.Block.Type} style={missingVariant.Style}";
             }
 
-            if (!CanPlaceFrameCandidate(candidate, in context, pending))
-                return "CanPlaceFrameCandidate=false";
+            if (!candidate.OriginTile.PayloadCell.HasTile())
+                return null;
 
-            return null;
+            ushort tileType = candidate.OriginTile.PayloadCell.Block.Type;
+            FramePlacementVariant variant = ResolveFramePlacementVariant(candidate.OriginTile.PayloadCell);
+            int x = candidate.OriginWorld.X;
+            int y = candidate.OriginWorld.Y;
+            Tile dest = Main.tile[x, y];
+
+            if (dest.HasTile && dest.TileType == tileType)
+                return null;
+
+            if (HasWallAnchor(tileType, variant.Style) && dest.WallType == WallID.None)
+                return "wallMissing";
+
+            if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
+            {
+                return dest.HasTile
+                    ? $"replaceBlocked liveType={dest.TileType}"
+                    : "replaceBlocked";
+            }
+
+            if (CanPlaceFrameCandidate(candidate, in context, pending))
+                return null;
+
+            PasteTile originTile = candidate.OriginTile;
+            if (UsesTilePlacement(candidate.Tiles, in originTile))
+                return $"TileLoader.CanPlace=false type={tileType}";
+
+            return $"TileObject.CanPlace=false type={tileType} style={variant.Style} alt={variant.Alternate} dir={variant.Direction}";
         }
 
         /// <summary>Returns true when a place batch still owns the given placement origin.</summary>

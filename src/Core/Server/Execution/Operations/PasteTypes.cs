@@ -119,7 +119,8 @@ namespace TheArchitectsBlueprintMod.Core
         TileEffectSession? effectSession = null,
         IReadOnlyList<FrameOperations.FrameCandidate>? pendingFramePlaceCandidates = null,
         InteractionBudget? interactionBudget = null,
-        Payload? payload = null)
+        Payload? payload = null,
+        Microsoft.Xna.Framework.Point targetOrigin = default)
     {
         public readonly Player Player = Main.player[playerIndex];
         public readonly bool IsSweep = policy.SweepPhase.Active;
@@ -147,5 +148,7 @@ namespace TheArchitectsBlueprintMod.Core
         public readonly IReadOnlyList<FrameOperations.FrameCandidate>? PendingFramePlaceCandidates = pendingFramePlaceCandidates;
         public readonly InteractionBudget? InteractionBudget = interactionBudget;
         public readonly Payload? Payload = payload;
+        /// <summary>Paste footprint top-left tile (relative 0,0); cosmetic place arrows spawn from here.</summary>
+        public readonly Microsoft.Xna.Framework.Point TargetOrigin = targetOrigin;
     }
 }

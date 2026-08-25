@@ -15,9 +15,11 @@ namespace TheArchitectsBlueprintMod.Utils
     internal static class TileBreakDropResolver
     {
         private static MethodInfo? _killTileGetItemDrops;
+        private static MethodInfo? _killTileDropItems;
         private static MethodInfo? _killWallGetItemDrops;
         private static bool _reflectionInitialized;
         private static bool _warnedMissingKillTile;
+        private static bool _warnedMissingKillTileDropItems;
         private static bool _warnedMissingKillWall;
 
         /// <summary>Returns the primary break drop for the tile at world coordinates, if any.</summary>
@@ -92,38 +94,245 @@ namespace TheArchitectsBlueprintMod.Utils
             alternate = variant.Alternate;
         }
 
-        /// <summary>Resolves a break drop using public APIs first, then KillTile reflection as last resort.</summary>
+        /// <summary>
+        /// Resolves a break drop using vanilla <c>KillTile_DropItems</c>, then GetItemDrops, then furniture placement fallbacks.
+        /// </summary>
         private static bool TryResolveWorldAwareTileDrop(int x, int y, Tile tile, out int itemType, out int stack)
         {
-            // --- Public/mod path first; reflected KillTile only when those yield nothing.
+            // --- Query multitile top-left, run vanilla DropItems capture, then cheaper predictors.
 
             itemType = 0;
             stack = 1;
 
-            if (TryResolvePublicTileDrop(x, y, tile, out itemType, out stack))
+            // Furniture framing drops from the object's top-left, not necessarily TileObjectData origin.
+            TryGetMultitileTopLeft(x, y, tile, out int queryX, out int queryY);
+            Tile queryTile = Main.tile[queryX, queryY];
+            if (!queryTile.HasTile)
+            {
+                queryX = x;
+                queryY = y;
+                queryTile = tile;
+            }
+
+            // Vanilla multitile/1x1 drop path (spawns then we reclaim): includes large-object furniture.
+            if (TryPredictViaKillTileDropItems(queryX, queryY, queryTile, out itemType, out stack))
                 return true;
 
-            if (!TryInvokeKillTileGetItemDrops(
-                    x,
-                    y,
-                    tile,
+            // Direct GetItemDrops outs without spawning (1x1 and large-object switch).
+            if (TryInvokeKillTileGetItemDrops(
+                    queryX,
+                    queryY,
+                    queryTile,
                     out int primaryItem,
                     out int primaryStack,
                     out int secondaryItem,
                     out int secondaryStack))
-                return false;
-
-            if (primaryItem > 0)
             {
-                itemType = primaryItem;
-                stack = Math.Max(1, primaryStack);
-                return true;
+                if (primaryItem > 0)
+                {
+                    itemType = primaryItem;
+                    stack = Math.Max(1, primaryStack);
+                    return true;
+                }
+
+                if (secondaryItem > 0)
+                {
+                    itemType = secondaryItem;
+                    stack = Math.Max(1, secondaryStack);
+                    return true;
+                }
             }
 
-            if (secondaryItem > 0)
+            // Mod tile GetItemDrops / RegisterItemDrop tables.
+            if (TryResolvePublicTileDrop(queryX, queryY, queryTile, out itemType, out stack))
+                return true;
+
+            // Frame-important furniture: interaction map / createTile+placeStyle (not terrain reverse-scan).
+            if (TryResolveFrameImportantPlacementDrop(queryTile, out itemType, out stack))
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Runs <c>WorldGen.KillTile_DropItems</c> (vanilla drop path), captures spawned items, and despawns them.
+        /// </summary>
+        private static bool TryPredictViaKillTileDropItems(int x, int y, Tile tile, out int itemType, out int stack)
+        {
+            // --- Snapshot active item slots, invoke DropItems with large-object flags, reclaim new spawns.
+
+            itemType = 0;
+            stack = 1;
+
+            MethodInfo? method = GetKillTileDropItemsMethod();
+            if (method is null)
+                return false;
+
+            // Must not run under SuppressTileDrop: TileLoader.Drop would CanDrop=false and abort.
+            if (SuppressTileDrop.IsActive)
+                return false;
+
+            bool[] wasActive = new bool[Main.maxItems];
+            for (int i = 0; i < Main.maxItems; i++)
+                wasActive[i] = Main.item[i].active;
+
+            try
             {
-                itemType = secondaryItem;
-                stack = Math.Max(1, secondaryStack);
+                // includeLargeObjectDrops + includeAllModdedLargeObjectDrops — same flags framing uses.
+                method.Invoke(null, [x, y, tile, true, true]);
+            }
+            catch (Exception ex)
+            {
+                TABLog.Debug($"KillTile_DropItems predict failed at ({x},{y}): {ex.GetBaseException().Message}", "Drops");
+                return false;
+            }
+
+            int bestType = 0;
+            int bestStack = 0;
+            for (int i = 0; i < Main.maxItems; i++)
+            {
+                Item spawned = Main.item[i];
+                if (!spawned.active || wasActive[i])
+                    continue;
+
+                if (spawned.type <= ItemID.None || spawned.stack <= 0)
+                {
+                    DespawnPredictedItem(i);
+                    continue;
+                }
+
+                // Accumulate stacks of the first distinct type; despawn every captured spawn.
+                if (bestType == 0)
+                {
+                    bestType = spawned.type;
+                    bestStack = spawned.stack;
+                }
+                else if (spawned.type == bestType)
+                {
+                    bestStack += spawned.stack;
+                }
+
+                DespawnPredictedItem(i);
+            }
+
+            if (bestType <= ItemID.None)
+                return false;
+
+            itemType = bestType;
+            stack = Math.Max(1, bestStack);
+            return true;
+        }
+
+        /// <summary>Removes a predicted drop spawn so Store clears do not leave world loot.</summary>
+        private static void DespawnPredictedItem(int index)
+        {
+            // --- Clear the slot and sync so MP clients never keep a flashed drop.
+
+            Item item = Main.item[index];
+            item.TurnToAir();
+            item.active = false;
+            if (Main.netMode == NetmodeID.Server)
+                NetMessage.SendData(MessageID.SyncItem, -1, -1, null, index);
+        }
+
+        /// <summary>Maps a multitile cell to its top-left world coordinates used by framing drop calls.</summary>
+        private static void TryGetMultitileTopLeft(int x, int y, Tile tile, out int topLeftX, out int topLeftY)
+        {
+            // --- Derive part offsets from TileObjectData frame geometry; fall back to the input cell.
+
+            topLeftX = x;
+            topLeftY = y;
+            if (!tile.HasTile)
+                return;
+
+            TileObjectData? data = TileObjectData.GetTileData(tile);
+            if (data is null || (data.Width <= 1 && data.Height <= 1))
+                return;
+
+            int partFrameX = tile.TileFrameX % data.CoordinateFullWidth;
+            int partFrameY = tile.TileFrameY % data.CoordinateFullHeight;
+            int partX = partFrameX / (data.CoordinateWidth + data.CoordinatePadding);
+
+            int partY = 0;
+            int remainingY = partFrameY;
+            for (int row = 0; row < data.Height; row++)
+            {
+                int rowHeight = data.CoordinateHeights[row] + data.CoordinatePadding;
+                if (remainingY < rowHeight)
+                {
+                    partY = row;
+                    break;
+                }
+
+                remainingY -= rowHeight;
+                partY = row;
+            }
+
+            topLeftX = x - partX;
+            topLeftY = y - partY;
+        }
+
+        /// <summary>
+        /// Resolves a placement item for frame-important tiles via InteractionMap or createTile+placeStyle samples.
+        /// </summary>
+        private static bool TryResolveFrameImportantPlacementDrop(Tile tile, out int itemType, out int stack)
+        {
+            // --- Furniture only: avoid terrain reverse-scans that invent LeafWand-style false positives.
+
+            itemType = 0;
+            stack = 1;
+            ushort tileType = tile.TileType;
+            if (tileType >= TileLoader.TileCount || !Main.tileFrameImportant[tileType])
+                return false;
+
+            int style = TileObjectData.GetTileStyle(tile);
+            if (style < 0)
+            {
+                int infoStyle = 0;
+                int alternate = 0;
+                TileObjectData.GetTileInfo(tile, ref infoStyle, ref alternate);
+                style = Math.Max(0, infoStyle);
+            }
+
+            InteractionEntry? entry = InteractionMapProvider.GetFirstTileInteraction(tileType, style);
+            if (entry is not null)
+            {
+                int visual = entry.GetVisualItemId();
+                if (visual > ItemID.None)
+                {
+                    itemType = visual;
+                    return true;
+                }
+            }
+
+            // Exact createTile + placeStyle match from ContentSamples.
+            if (TryFindPlacementItem(tileType, style, requireExactStyle: true, out itemType))
+                return true;
+
+            // Any placeable for this tile type when style tables are incomplete (doors, gates).
+            return TryFindPlacementItem(tileType, style, requireExactStyle: false, out itemType);
+        }
+
+        /// <summary>Finds a ContentSamples item that places the given tile type (optionally matching placeStyle).</summary>
+        private static bool TryFindPlacementItem(int tileType, int style, bool requireExactStyle, out int itemType)
+        {
+            // --- Scan placement samples only; never treat tools with incidental createTile as loot.
+
+            itemType = 0;
+            foreach (KeyValuePair<int, Item> pair in ContentSamples.ItemsByType)
+            {
+                Item sample = pair.Value;
+                if (sample is null || sample.createTile != tileType || sample.type <= ItemID.None)
+                    continue;
+
+                // Skip non-placeables that still stamp createTile (wands / tools).
+                if (sample.maxStack <= 0)
+                    continue;
+
+                if (requireExactStyle && sample.placeStyle != style)
+                    continue;
+
+                itemType = sample.type;
                 return true;
             }
 
@@ -345,13 +554,19 @@ namespace TheArchitectsBlueprintMod.Utils
             return _killTileGetItemDrops;
         }
 
+        private static MethodInfo? GetKillTileDropItemsMethod()
+        {
+            EnsureReflectionInitialized();
+            return _killTileDropItems;
+        }
+
         private static MethodInfo? GetKillWallGetItemDropsMethod()
         {
             EnsureReflectionInitialized();
             return _killWallGetItemDrops;
         }
 
-        /// <summary>Lazily binds Kill*GetItemDrops methods and warns once when either is missing.</summary>
+        /// <summary>Lazily binds Kill* drop helpers and warns once when a required method is missing.</summary>
         private static void EnsureReflectionInitialized()
         {
             // --- Bind by name+signature; warn once per missing method after a tML update.
@@ -373,6 +588,12 @@ namespace TheArchitectsBlueprintMod.Utils
                 {
                     _killTileGetItemDrops = method;
                 }
+                else if (method.Name == "KillTile_DropItems"
+                    && parameters.Length >= 4
+                    && parameters[2].ParameterType == typeof(Tile))
+                {
+                    _killTileDropItems = method;
+                }
                 else if (method.Name == "KillWall_GetItemDrops"
                     && parameters.Length == 1
                     && parameters[0].ParameterType == typeof(Tile))
@@ -386,6 +607,14 @@ namespace TheArchitectsBlueprintMod.Utils
                 _warnedMissingKillTile = true;
                 TABLog.Warn(
                     "WorldGen.KillTile_GetItemDrops was not found; Store tile clears use public drop APIs only.",
+                    "Drops");
+            }
+
+            if (_killTileDropItems is null && !_warnedMissingKillTileDropItems)
+            {
+                _warnedMissingKillTileDropItems = true;
+                TABLog.Warn(
+                    "WorldGen.KillTile_DropItems was not found; Store clears cannot use the vanilla DropItems predict path.",
                     "Drops");
             }
 

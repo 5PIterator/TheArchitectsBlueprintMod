@@ -6,6 +6,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.UI;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 
 namespace TheArchitectsBlueprintMod.Core.Client
 {
@@ -53,24 +54,32 @@ namespace TheArchitectsBlueprintMod.Core.Client
             switch (Main.netMode)
             {
                 case NetmodeID.SinglePlayer:
-                    // Single player or listen-server host: read active operations for the local player.
-                    _localScratch.Clear();
-                    var pasting = ModContent.GetInstance<PastingSystem>();
-                    foreach (var op in pasting.ActiveOperations)
-                    {
-                        if (op.Projection.Owner != Main.myPlayer)
-                            continue;
-                        if (op.TryBuildOverlaySnapshot(out PasteOverlaySnapshot snap))
-                            _localScratch.Add(snap);
-                    }
-                    RegisterSnapshots(_localScratch, LocalFamilyPrefix, _lastLocalOverlayIds);
+                    RegisterLocalActiveOperations();
                     break;
                 case NetmodeID.MultiplayerClient:
-                    RegisterSnapshots(_remoteFromServer, RemoteFamilyPrefix, _lastRemoteOverlayIds);
+                    // Host & Play host executes paste locally; remote clients use server overlay snapshots.
+                    if (TileMappingAuthority.IsLocalHostClient())
+                        RegisterLocalActiveOperations();
+                    else
+                        RegisterSnapshots(_remoteFromServer, RemoteFamilyPrefix, _lastRemoteOverlayIds);
                     break;
                 case NetmodeID.Server:
                     return;
             }
+        }
+
+        private void RegisterLocalActiveOperations()
+        {
+            _localScratch.Clear();
+            var pasting = ModContent.GetInstance<PastingSystem>();
+            foreach (var op in pasting.ActiveOperations)
+            {
+                if (op.Execution.Owner != Main.myPlayer)
+                    continue;
+                if (op.TryBuildOverlaySnapshot(out PasteOverlaySnapshot snap))
+                    _localScratch.Add(snap);
+            }
+            RegisterSnapshots(_localScratch, LocalFamilyPrefix, _lastLocalOverlayIds);
         }
 
         private static void UnregisterTrackedFamilies(HashSet<int> ids, string prefix)

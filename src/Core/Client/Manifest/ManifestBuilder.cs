@@ -21,25 +21,38 @@ namespace TheArchitectsBlueprintMod.Core
         /// </summary>
         public static Manifest Build(Projection projection)
         {
-            // --- Ensure the interaction map is available, snapshot inventories, then merge demand into entries.
+            // --- Convert the live ghost into an execution context, then reuse the server-safe builder.
 
             if (projection is not { IsDefined: true, HasPayload: true })
+                return new Manifest([], []);
+
+            return Build(PasteExecutionContext.FromProjection(projection));
+        }
+
+        /// <summary>
+        /// Computes demand for a paste execution context without mutating world or inventory state.
+        /// </summary>
+        public static Manifest Build(PasteExecutionContext execution)
+        {
+            // --- Ensure the interaction map is available, snapshot inventories, then merge demand into entries.
+
+            if (execution is not { IsDefined: true } || !execution.Payload.IsDefined)
                 return new Manifest([], []);
 
             bool ownedLoad = EnsureInteractionMapForPlanning();
             try
             {
-                List<Inventory> inventories = PasteInventorySources.Collect(projection);
+                List<Inventory> inventories = PasteInventorySources.Collect(execution);
                 InventoryStackLedger ledger = InventoryStackLedger.FromInventories(inventories);
-                PasteTileLookup lookup = PastePlanningLookup.Build(projection);
+                PasteTileLookup lookup = PastePlanningLookup.Build(execution);
                 LayerPipeline pipeline = LayerSystem.ComposePipeline();
                 PastingConfig config = ModContent.GetInstance<PastingConfig>();
-                PasteContext identifyContext = CreateIdentifyContext(projection, lookup);
+                PasteContext identifyContext = CreateIdentifyContext(execution, lookup);
 
                 PasteDemandAccounting totalAccounting = new(ledger);
                 PasteDemandAccounting remainingAccounting = new(ledger);
-                CollectDemand(projection, lookup, pipeline, config, in identifyContext, skipMatched: false, totalAccounting);
-                CollectDemand(projection, lookup, pipeline, config, in identifyContext, skipMatched: true, remainingAccounting);
+                CollectDemand(execution, lookup, pipeline, config, in identifyContext, skipMatched: false, totalAccounting);
+                CollectDemand(execution, lookup, pipeline, config, in identifyContext, skipMatched: true, remainingAccounting);
 
                 Dictionary<DemandPairKey, int> totalDemand = totalAccounting.BuildFinalPairs();
                 Dictionary<DemandPairKey, int> remainingDemand = remainingAccounting.BuildFinalPairs();
@@ -122,7 +135,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (!ItrStorage.CanLoadPasteInteractionMaps())
             {
                 TABLog.Warn(
-                    "Manifest demand cannot load CompiledMaps on this client; paint/wall lookups may be unresolved.",
+                    "Manifest demand cannot load CompiledMaps on this net mode; paint/wall lookups may be unresolved.",
                     TABLog.ManifestCategory);
                 LogMapStatus(mapLoaded: false, ownedLoad: false, reusedExisting: false);
                 return false;
@@ -173,7 +186,7 @@ namespace TheArchitectsBlueprintMod.Core
             TABLog.Debug(message, "InteractionMap");
         }
 
-        private static PasteContext CreateIdentifyContext(Projection projection, PasteTileLookup lookup)
+        private static PasteContext CreateIdentifyContext(PasteExecutionContext execution, PasteTileLookup lookup)
         {
             // --- Manifest planning ignores live inventory gates; demand recording owns item math.
 
@@ -181,17 +194,17 @@ namespace TheArchitectsBlueprintMod.Core
                 ModContent.GetInstance<PastingConfig>(),
                 PasteClientHints.FromClientConfig());
             return new PasteContext(
-                playerIndex: projection.Owner,
+                playerIndex: execution.Owner,
                 inventoryLookup: null,
                 policy: policy,
                 lookup: lookup,
                 effectSession: null,
                 interactionBudget: null,
-                payload: projection.Payload);
+                payload: execution.Payload);
         }
 
         private static void CollectDemand(
-            Projection projection,
+            PasteExecutionContext execution,
             PasteTileLookup lookup,
             LayerPipeline pipeline,
             PastingConfig config,
@@ -205,19 +218,15 @@ namespace TheArchitectsBlueprintMod.Core
             var visitedFrameOrigins = new HashSet<Point>();
             var visitedFluidPools = new HashSet<Point>();
 
-            Blueprint.BlueprintCell[,] targetTiles = projection.TargetTiles;
-            int width = targetTiles.GetLength(0);
-            int height = targetTiles.GetLength(1);
-
-            for (int x = 0; x < width; x++)
+            Point size = execution.PayloadSize;
+            for (int x = 0; x < size.X; x++)
             {
-                for (int y = 0; y < height; y++)
+                for (int y = 0; y < size.Y; y++)
                 {
-                    Blueprint.BlueprintCell targetCell = targetTiles[x, y];
-                    if (!targetCell.Included)
+                    Point rel = new(x, y);
+                    if (!execution.IsIncluded(rel))
                         continue;
 
-                    Point rel = targetCell.Relative;
                     if (!lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
                         continue;
                     if (pasteTile.PayloadCell.IsEmpty)

@@ -4,6 +4,7 @@ using System.IO;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.Phases;
+using TheArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -16,27 +17,39 @@ namespace TheArchitectsBlueprintMod.Core.Server
         PasteAck = 2,
         PasteCancel = 3,
         PasteOverlaySyncV1 = 4,
+        PasteOwnerChat = 5,
+        PasteWorldFx = 6,
+        ManifestRequest = 7,
     }
 
-    internal readonly struct PasteAckPacket(int requestId, bool accepted, PasteRejectReason reason)
+    /// <summary>Lifecycle outcome for a paste request correlation id.</summary>
+    internal enum PasteAckKind : byte
+    {
+        Rejected = 0,
+        Accepted = 1,
+        Cancelled = 2,
+        Finished = 3,
+    }
+
+    internal readonly struct PasteAckPacket(int requestId, PasteAckKind kind, PasteRejectReason reason)
     {
         public int RequestId { get; } = requestId;
-        public bool Accepted { get; } = accepted;
+        public PasteAckKind Kind { get; } = kind;
         public PasteRejectReason Reason { get; } = reason;
 
         public void Write(BinaryWriter writer)
         {
             writer.Write(RequestId);
-            writer.Write(Accepted);
+            writer.Write((byte)Kind);
             writer.Write((byte)Reason);
         }
 
         public static PasteAckPacket Read(BinaryReader reader)
         {
             int requestId = reader.ReadInt32();
-            bool accepted = reader.ReadBoolean();
+            var kind = (PasteAckKind)reader.ReadByte();
             var reason = (PasteRejectReason)reader.ReadByte();
-            return new PasteAckPacket(requestId, accepted, reason);
+            return new PasteAckPacket(requestId, kind, reason);
         }
     }
 
@@ -65,6 +78,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
         public int ArrowSpeed { get; private set; }
         public float ArrowMinSpeed { get; private set; }
         public float ArrowMaxSpeed { get; private set; }
+        public PasteClientLogHints LogHints { get; private set; }
         public List<Point> ExcludedRelatives { get; private set; } = [];
         public byte[] PayloadBytes { get; private set; } = [];
 
@@ -106,6 +120,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
             request.ArrowSpeed = hints.ArrowSpeed;
             request.ArrowMinSpeed = hints.ArrowMinSpeed;
             request.ArrowMaxSpeed = hints.ArrowMaxSpeed;
+            request.LogHints = PasteClientLogHints.FromClientConfig();
             request.SourceArea = projection.SourceArea;
             request.CutSource = !projection.SourceArea.IsEmpty && projection.CutSource;
             request.ExcludedRelatives = CollectExcludedRelatives(projection);
@@ -128,6 +143,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
             writer.Write(ArrowSpeed);
             writer.Write(ArrowMinSpeed);
             writer.Write(ArrowMaxSpeed);
+            LogHints.Write(writer);
             writer.Write(ExcludedRelatives.Count);
             for (int i = 0; i < ExcludedRelatives.Count; i++)
             {
@@ -165,6 +181,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
             request.ArrowSpeed = reader.ReadInt32();
             request.ArrowMinSpeed = reader.ReadSingle();
             request.ArrowMaxSpeed = reader.ReadSingle();
+            request.LogHints = PasteClientLogHints.Read(reader);
 
             int excludedCount = reader.ReadInt32();
             if (excludedCount < 0 || excludedCount > MaxExcludedRelativeCells)
@@ -183,9 +200,17 @@ namespace TheArchitectsBlueprintMod.Core.Server
             return request;
         }
 
-        public bool TryBuildProjection(int ownerPlayerIndex, out Projection projection, out PasteRejectReason reason)
+        /// <summary>
+        /// Builds a server-safe paste execution context from this request's Payload and placement metadata.
+        /// </summary>
+        public bool TryBuildExecutionContext(
+            int ownerPlayerIndex,
+            out PasteExecutionContext execution,
+            out PasteRejectReason reason)
         {
-            projection = null;
+            // --- Parse payload bytes, then assemble target origin / source / inclusion without Projection UI.
+
+            execution = null!;
             reason = PasteRejectReason.None;
 
             if (Bounds.IsEmpty || PayloadBytes.Length == 0)
@@ -194,7 +219,11 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 return false;
             }
 
-            if (!PayloadSerialization.TryParsePayloadDocument(PayloadBytes, out Payload payload, out PayloadDocumentInfo docInfo, out string? parseError)
+            if (!PayloadSerialization.TryParsePayloadDocument(
+                    PayloadBytes,
+                    out Payload payload,
+                    out PayloadDocumentInfo docInfo,
+                    out _)
                 || !payload.IsDefined)
             {
                 reason = PasteRejectReason.InvalidPacket;
@@ -207,23 +236,24 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 return false;
             }
 
-            Player shellOwner = Main.player[ownerPlayerIndex];
-            Rectangle sourceRect = SourceArea.IsEmpty ? Bounds : SourceArea;
-            var sourceSelection = new Selection(shellOwner.whoAmI);
-            sourceSelection.Define(sourceRect);
-
-            bool cutSource = !SourceArea.IsEmpty && CutSource;
-            projection = new Projection(ownerPlayerIndex, sourceSelection, cutSource)
+            try
             {
-                Id = RequestId,
-            };
-
-            if (projection.Area.Location != Bounds.Location)
-                projection.MoveTo(Bounds.Location);
-
-            projection.ApplyPayloadForPasteExecution(payload, docInfo.ModsLoaded);
-            ApplyExcludedRelatives(projection, ExcludedRelatives);
-            return true;
+                execution = PasteExecutionContext.FromParsedRequest(
+                    owner: ownerPlayerIndex,
+                    correlationId: RequestId,
+                    payload: payload,
+                    targetOrigin: Bounds.Location,
+                    sourceArea: SourceArea,
+                    cutSource: !SourceArea.IsEmpty && CutSource,
+                    excludedRelatives: ExcludedRelatives,
+                    metadataModsLoaded: docInfo.ModsLoaded);
+                return true;
+            }
+            catch (Exception)
+            {
+                reason = PasteRejectReason.InvalidPacket;
+                return false;
+            }
         }
 
         private static List<Point> CollectExcludedRelatives(Projection projection)
@@ -239,18 +269,6 @@ namespace TheArchitectsBlueprintMod.Core.Server
             }
 
             return excluded;
-        }
-
-        private static void ApplyExcludedRelatives(Projection projection, IReadOnlyList<Point> excludedRelatives)
-        {
-            for (int i = 0; i < excludedRelatives.Count; i++)
-            {
-                Point rel = excludedRelatives[i];
-                if (!projection.TryGetTileByRelative(rel, out Blueprint.BlueprintCell? cell) || cell is null)
-                    continue;
-
-                cell.Included = false;
-            }
         }
 
         private static bool TryParseClearStrategy(byte value, out ClearStyle strategy)

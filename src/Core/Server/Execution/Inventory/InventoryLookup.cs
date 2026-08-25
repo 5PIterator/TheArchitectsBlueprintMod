@@ -716,14 +716,24 @@ namespace TheArchitectsBlueprintMod.Core{
                 return true;
             }
 
-            // Inventories are priority-sorted; index 0 is the best remaining source (often the player).
-            inventoryIndex = 0;
-            destination = InventoryManager.GetInventoryWorldCenter(_inventories[0], player);
+            for (int i = 0; i < _inventories.Count; i++)
+            {
+                if (!_inventories[i].IsPlayerInventory)
+                    continue;
+
+                inventoryIndex = i;
+                destination = InventoryManager.GetInventoryWorldCenter(_inventories[i], player);
+                TABLog.Debug(
+                    $"StoreDestination item={itemId} -> index={inventoryIndex} "
+                    + $"source={InventoryManager.DescribeSource(_inventories[i])} mode=playerFallback",
+                    TABLog.InventoryCategory);
+                return true;
+            }
+
             TABLog.Debug(
-                $"StoreDestination item={itemId} -> index=0 "
-                + $"source={InventoryManager.DescribeSource(_inventories[0])} mode=playerFallback",
+                $"StoreDestination miss: no adjacent inventory item={itemId}",
                 TABLog.InventoryCategory);
-            return true;
+            return false;
         }
 
         private void RebuildIfNeeded()

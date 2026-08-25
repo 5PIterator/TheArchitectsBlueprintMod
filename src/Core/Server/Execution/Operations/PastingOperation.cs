@@ -37,7 +37,7 @@ namespace TheArchitectsBlueprintMod.Core
         private HashSet<Point>? _allowedPlaceRelatives;
         private bool _preparationComplete;
 
-        public Projection Projection { get; }
+        public PasteExecutionContext Execution { get; }
         public LayerPipeline Pipeline { get; }
         internal TileEffectSession EffectSession { get; }
 
@@ -97,43 +97,43 @@ namespace TheArchitectsBlueprintMod.Core
         /// <param name="projection"></param>
         /// <param name="config"></param>
         /// <param name="policy"></param>
-        public PastingOperation(Projection projection, PastingConfig config, EffectivePastePolicy policy)
+        public PastingOperation(PasteExecutionContext execution, PastingConfig config, EffectivePastePolicy policy)
         {
-            /// Validate projection ownership/payload, then initialize layer pipeline and tile lookup.
+            /// Validate ownership/payload, then initialize layer pipeline and tile lookup.
 
-            // Validate the projection
-            Projection = projection ?? throw new ArgumentNullException(nameof(projection));
-            if (Projection.Owner < 0 || Projection.Owner >= Main.maxPlayers)
-                throw new InvalidOperationException($"Projection has invalid owner index: {Projection.Owner}");
-            if (!projection.HasPayload)
-                throw new InvalidOperationException("Projection has no source payload. Recreate the projection.");
+            // Validate the execution context
+            Execution = execution ?? throw new ArgumentNullException(nameof(execution));
+            if (Execution.Owner < 0 || Execution.Owner >= Main.maxPlayers)
+                throw new InvalidOperationException($"Paste execution has invalid owner index: {Execution.Owner}");
+            if (!execution.HasPayload)
+                throw new InvalidOperationException("Paste execution has no source payload.");
 
             // Initialize the paste configuration and client preferences.
             PasteConfig = config;
             _policy = policy;
-            ApplySourceClear = (Projection.CutSource && !Projection.SourceArea.IsEmpty) || _policy.CutPhase.Strategy.EnableCutPasteProcess;
+            ApplySourceClear = (Execution.CutSource && !Execution.SourceArea.IsEmpty) || _policy.CutPhase.Strategy.EnableCutPasteProcess;
             // Compose the layer pipeline.
             Pipeline = LayerSystem.ComposePipeline();
             // Build the tile lookup.
-            Lookup = PastePlanningLookup.Build(Projection);
+            Lookup = PastePlanningLookup.Build(Execution);
             _planPhase = new PlanPhase(this, _policy.PlanPhase);
             _clearPhase = new ClearPhase(this, _policy.ClearPhase);
             _cutPhase = new CutPhase(this, _policy.CutPhase);
             _placePhase = new PlacePhase(this, _policy.PlacePhase);
             _sweepPhase = new SweepPhase(this, _policy.SweepPhase);
             EffectSession = new TileEffectSession(TileEffectSession.AllocateOperationId(), () => Context);
-            _progress = new PasteProgressTracker(Projection.Owner)
+            _progress = new PasteProgressTracker(Execution.Owner)
             {
-                CorrelationId = Projection.Id,
+                CorrelationId = Execution.CorrelationId,
                 OverlayId = OverlayId,
                 PlacementStyle = _placePhase.Strategy.Style,
             };
             UpdateContext();
             TABLog.Debug(
-                $"Paste started: sourceClear={ApplySourceClear} (projection={Projection.CutSource}, debug={_cutPhase.Strategy.EnableCutPasteProcess}), targetArea=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height}",
+                $"Paste started: sourceClear={ApplySourceClear} (projection={Execution.CutSource}, debug={_cutPhase.Strategy.EnableCutPasteProcess}), targetArea=({Execution.Area.X},{Execution.Area.Y}) {Execution.Area.Width}x{Execution.Area.Height}",
                 "Paste");
             TABLog.Debug(
-                $"START | area=({Projection.Area.X},{Projection.Area.Y}) {Projection.Area.Width}x{Projection.Area.Height} | sourceClear={ApplySourceClear} | srcTiles={Projection.SourceTiles.Length} tgtTiles={Projection.TargetTiles.Length} | sweep={_sweepPhase.Active} planClear={_planPhase.Strategy.Style} clearItemDrop={_clearPhase.Strategy.ItemDrop} retryOnMissingItems={_placePhase.Strategy.RetryOnMissingItems} retryOnInvalidPlacement={_placePhase.Strategy.RetryOnInvalidPlacement} requireItems={_placePhase.Strategy.RequireItems}",
+                $"START | area=({Execution.Area.X},{Execution.Area.Y}) {Execution.Area.Width}x{Execution.Area.Height} | sourceClear={ApplySourceClear} | srcTiles={(Execution.SourceArea.Width * Execution.SourceArea.Height)} tgtTiles={(Execution.GridWidth * Execution.GridHeight)} | sweep={_sweepPhase.Active} planClear={_planPhase.Strategy.Style} clearItemDrop={_clearPhase.Strategy.ItemDrop} retryOnMissingItems={_placePhase.Strategy.RetryOnMissingItems} retryOnInvalidPlacement={_placePhase.Strategy.RetryOnInvalidPlacement} requireItems={_placePhase.Strategy.RequireItems}",
                 "Paste");
 
             _prepWork = PrepWorkStage.PlanPlace;
@@ -187,7 +187,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         private void SyncProgressIdentity()
         {
-            _progress.CorrelationId = Projection.Id;
+            _progress.CorrelationId = Execution.CorrelationId;
             _progress.OverlayId = OverlayId;
             _progress.PlacementStyle = _placePhase.Strategy.Style;
         }
@@ -206,12 +206,11 @@ namespace TheArchitectsBlueprintMod.Core
 
         /// <summary>
         /// Called when this operation leaves <see cref="PastingSystem"/> (completion, cancel, or invalid projection).
-        /// Unlocks <see cref="Projection"/>.
+        /// Unlocks the live client projection when this operation was built from one.
         /// </summary>
         internal void Teardown()
         {
-            Projection.Id = 0;
-            Projection.Unlock();
+            Execution.NotifyClientUnlocked();
         }
 
         /// <summary>
@@ -225,13 +224,14 @@ namespace TheArchitectsBlueprintMod.Core
             _inventoryLookup.Refresh(_inventories);
 
             Context = new PasteContext(
-                playerIndex: Projection.Owner,
+                playerIndex: Execution.Owner,
                 inventoryLookup: _inventoryLookup,
                 policy: _policy,
                 lookup: Lookup,
                 effectSession: EffectSession,
                 interactionBudget: _interactionBudget,
-                payload: Projection.Payload);
+                payload: Execution.Payload,
+                targetOrigin: Execution.TargetArea.Location);
         }
 
         /// <summary>Builds place context with every pending frame candidate from the frame layer queue.</summary>
@@ -239,14 +239,15 @@ namespace TheArchitectsBlueprintMod.Core
         {
             // --- Snapshot queued frame tasks so placement can defer objects waiting on lower support.
             return new PasteContext(
-                playerIndex: Projection.Owner,
+                playerIndex: Execution.Owner,
                 inventoryLookup: _inventoryLookup,
                 policy: _policy,
                 lookup: Lookup,
                 effectSession: EffectSession,
                 pendingFramePlaceCandidates: CollectPendingFramePlaceCandidates(frameLayerIndex),
                 interactionBudget: _interactionBudget,
-                payload: Projection.Payload);
+                payload: Execution.Payload,
+                targetOrigin: Execution.TargetArea.Location);
         }
 
         /// <summary>Collects logical frame objects still waiting in the frame place queue.</summary>
@@ -278,11 +279,11 @@ namespace TheArchitectsBlueprintMod.Core
             _inventories.Clear();
 
             // Refresh chest footprints from world state so paste does not rely on a stale client cache.
-            Projection.RefreshInventories();
-            Rectangle targetArea = Projection.TargetArea;
+            Execution.RefreshInventories();
+            Rectangle targetArea = Execution.TargetArea;
 
             int discoveryIndex = 0;
-            foreach (Rectangle footprint in Projection.Inventories)
+            foreach (Rectangle footprint in Execution.Inventories)
             {
                 int priority = InventoryManager.ComputeChestPriority(footprint, targetArea);
                 _inventories.Add(Inventory.FromRectangle(footprint, priority, discoveryIndex));
@@ -290,7 +291,7 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             // Player inventory is only eligible inside the same reach window used for chests.
-            Player player = Main.player[Projection.Owner];
+            Player player = Main.player[Execution.Owner];
             if (InventoryManager.IsPlayerInInventoryRange(player, targetArea))
                 _inventories.Add(Inventory.FromPlayer(player, Inventory.PlayerPriority, discoveryIndex));
 
@@ -326,7 +327,14 @@ namespace TheArchitectsBlueprintMod.Core
                 InitializePlanningState();
 
             // Clear identification ignores inventory; place planning uses <see cref="Context"/>.
-            var identifyContext = new PasteContext(Projection.Owner, null, _policy, Lookup, null, payload: Projection.Payload);
+            var identifyContext = new PasteContext(
+                Execution.Owner,
+                null,
+                _policy,
+                Lookup,
+                null,
+                payload: Execution.Payload,
+                targetOrigin: Execution.TargetArea.Location);
             PasteContext planningContext = Context;
 
             // Consume the prep budget by advancing the active plan stage one tile at a time.
@@ -407,13 +415,13 @@ namespace TheArchitectsBlueprintMod.Core
 
             TABLog.Debug("Prep: PlaceSource — queuing place tasks from source tiles", "Paste");
             TABLog.Debug(
-                $"Prep: begin prepTileBudget={_planPhase.TickSize} sourceTiles={Projection.SourceTiles.Length} lookupTiles={Lookup.Count} targetTiles={Projection.TargetTiles.Length} clearStrategy={_planPhase.Strategy.Style} sourceAreaClear={ApplySourceClear}",
+                $"Prep: begin prepTileBudget={_planPhase.TickSize} sourceTiles={(Execution.SourceArea.Width * Execution.SourceArea.Height)} lookupTiles={Lookup.Count} targetTiles={(Execution.GridWidth * Execution.GridHeight)} clearStrategy={_planPhase.Strategy.Style} sourceAreaClear={ApplySourceClear}",
                 "Paste");
             TABLog.Info(
                 "--- [Plan] START ---",
                 TABLog.GenericCategory,
                 chatColor: Color.LightSkyBlue,
-                ownerPlayer: Projection.Owner);
+                ownerPlayer: Execution.Owner);
         }
 
         /// <summary>
@@ -425,21 +433,19 @@ namespace TheArchitectsBlueprintMod.Core
             // --- Walk the source-tile list once, projecting each into place tasks at its target location.
 
             // Signal stage completion when the target-tile cursor is exhausted.
-            if (_prepIndex.X >= Projection.TargetTiles.GetLength(0) || _prepIndex.Y >= Projection.TargetTiles.GetLength(1))
+            if (_prepIndex.X >= Execution.GridWidth || _prepIndex.Y >= Execution.GridHeight)
                 return false;
 
             // Fetch the next target cell, advance the cursor, and respect the projection’s inclusion (not the live selection).
-            Blueprint.BlueprintCell targetCell = Projection.TargetTiles[_prepIndex.X, _prepIndex.Y];
+            Point rel = _prepIndex;
             _prepIndex.X++;
-            if (_prepIndex.X >= Projection.TargetTiles.GetLength(0))
+            if (_prepIndex.X >= Execution.GridWidth)
             {
                 _prepIndex.X = 0;
                 _prepIndex.Y++;
             }
-            if (!targetCell.Included)
+            if (!Execution.IsIncluded(rel))
                 return true;
-
-            Point rel = targetCell.Relative;
 
             // Skip relatives that are not represented in the payload lookup.
             if (!Lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
@@ -475,19 +481,18 @@ namespace TheArchitectsBlueprintMod.Core
 
             if (useTargetCursor)
             {
-                if (_prepIndex.X >= Projection.TargetTiles.GetLength(0) || _prepIndex.Y >= Projection.TargetTiles.GetLength(1))
+                if (_prepIndex.X >= Execution.GridWidth || _prepIndex.Y >= Execution.GridHeight)
                     return false;
 
-                var clearCell = Projection.TargetTiles[_prepIndex.X, _prepIndex.Y];
-                Point rel = clearCell.Relative;
+                Point rel = _prepIndex;
                 _prepIndex.X++;
-                if (_prepIndex.X >= Projection.TargetTiles.GetLength(0))
+                if (_prepIndex.X >= Execution.GridWidth)
                 {
                     _prepIndex.X = 0;
                     _prepIndex.Y++;
                 }
 
-                if (!clearCell.Included)
+                if (!Execution.IsIncluded(rel))
                     return true;
 
                 bool inAllowed = _allowedPlaceRelatives!.Contains(rel);
@@ -527,7 +532,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (!Lookup.TryGetPasteTile(opaqueRel, out PasteTile opaqueTile))
                 return true;
 
-            if (Projection.TryGetTileByRelative(opaqueTile.Relative, out var projCell) && !projCell.Included)
+            if (!Execution.IsIncluded(opaqueTile.Relative))
                 return true;
 
             // Identify clear layers without any restriction — the full lookup footprint, minus excluded relatives.
@@ -558,19 +563,17 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
 
             // One row/column at a time on the same relative grid as the target/payload; inclusion comes from the projection.
-            if (_prepIndex.X >= Projection.TargetTiles.GetLength(0) || _prepIndex.Y >= Projection.TargetTiles.GetLength(1))
+            if (_prepIndex.X >= Execution.GridWidth || _prepIndex.Y >= Execution.GridHeight)
                 return false;
-
-            var cutCell = Projection.TargetTiles[_prepIndex.X, _prepIndex.Y];
-            Point rel = cutCell.Relative;
+            Point rel = _prepIndex;
             _prepIndex.X++;
-            if (_prepIndex.X >= Projection.TargetTiles.GetLength(0))
+            if (_prepIndex.X >= Execution.GridWidth)
             {
                 _prepIndex.X = 0;
                 _prepIndex.Y++;
             }
 
-            if (!cutCell.Included)
+            if (!Execution.IsIncluded(rel))
                 return true;
 
             // Restrict source-area clears to the allowed place footprint — we only cut what we would paste.
@@ -662,7 +665,7 @@ namespace TheArchitectsBlueprintMod.Core
                 PastingInfoLog.FormatPlanEnd(placeBatches, clearBatches),
                 TABLog.GenericCategory,
                 chatColor: Color.LightGreen,
-                ownerPlayer: Projection.Owner);
+                ownerPlayer: Execution.Owner);
             if (placeBatches == 0)
             {
                 TABLog.Warn(
@@ -676,7 +679,7 @@ namespace TheArchitectsBlueprintMod.Core
             _queuedCutByLayer = null;
             _queuedPlaceByLayer = null;
             _allowedPlaceRelatives = null;
-            PasteTaskMapDebug.WriteTaskMap(Projection, ApplySourceClear, Pipeline, clearTasks, placeTasks);
+            PasteTaskMapDebug.WriteTaskMap(Execution, ApplySourceClear, Pipeline, clearTasks, placeTasks);
         }
 
         private string FormatPrepProgress()
@@ -684,12 +687,12 @@ namespace TheArchitectsBlueprintMod.Core
             return _prepWork switch
             {
                 PrepWorkStage.PlanPlace =>
-                    $"{Math.Min(_prepIndex.X, Projection.TargetTiles.GetLength(0))}x{Math.Min(_prepIndex.Y, Projection.TargetTiles.GetLength(1))}",
+                    $"{Math.Min(_prepIndex.X, Execution.GridWidth)}x{Math.Min(_prepIndex.Y, Execution.GridHeight)}",
                 PrepWorkStage.PlanClear => (_planPhase.Strategy.Style == ClearStyle.Transparent || _planPhase.Strategy.Style == ClearStyle.Negative)
-                    ? $"{Math.Min(_prepIndex.X, Projection.TargetTiles.GetLength(0))}x{Math.Min(_prepIndex.Y, Projection.TargetTiles.GetLength(1))}"
+                    ? $"{Math.Min(_prepIndex.X, Execution.GridWidth)}x{Math.Min(_prepIndex.Y, Execution.GridHeight)}"
                     : $"{Math.Min(_prepIndex.X, Lookup.PasteTiles.GetLength(0))}x{Math.Min(_prepIndex.Y, Lookup.PasteTiles.GetLength(1))}",
                 PrepWorkStage.PlanCut =>
-                    $"{Math.Min(_prepIndex.X, Projection.TargetTiles.GetLength(0))}x{Math.Min(_prepIndex.Y, Projection.TargetTiles.GetLength(1))}",
+                    $"{Math.Min(_prepIndex.X, Execution.GridWidth)}x{Math.Min(_prepIndex.Y, Execution.GridHeight)}",
                 PrepWorkStage.Done => "complete",
                 _ => "?"
             };
@@ -796,10 +799,10 @@ namespace TheArchitectsBlueprintMod.Core
             tile = default;
             if (!Lookup.TryGetPasteTile(rel, out PasteTile baseTile))
                 return false;
-            if (!Projection.TryGetSourceTile(rel, out Tile sourceAreaTile))
+            if (!Execution.TryGetSourceTile(rel, out Tile sourceAreaTile))
                 return false;
 
-            Point world = new(Projection.SourceArea.X + rel.X, Projection.SourceArea.Y + rel.Y);
+            Point world = new(Execution.SourceArea.X + rel.X, Execution.SourceArea.Y + rel.Y);
             Tile clearedIntent = default;
             tile = new PasteTile(
                 payloadCell: baseTile.PayloadCell,
@@ -1190,15 +1193,13 @@ namespace TheArchitectsBlueprintMod.Core
         {
             // --- Build clear/cut/place queues without plan-derived filtering.
             PasteContext identifyContext = Context;
-            for (int y = 0; y < Projection.TargetTiles.GetLength(1); y++)
+            for (int y = 0; y < Execution.GridHeight; y++)
             {
-                for (int x = 0; x < Projection.TargetTiles.GetLength(0); x++)
+                for (int x = 0; x < Execution.GridWidth; x++)
                 {
-                    Blueprint.BlueprintCell targetCell = Projection.TargetTiles[x, y];
-                    if (!targetCell.Included)
+                    Point rel = new(x, y);
+                    if (!Execution.IsIncluded(rel))
                         continue;
-
-                    Point rel = targetCell.Relative;
                     if (!Lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
                         continue;
 

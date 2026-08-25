@@ -51,6 +51,24 @@ UI: {
 		MissingMods: Missing mods
 		LegacyOnly: Legacy
 	}
+
+	Paste: {
+		None: No error (internal).
+		InvalidProjection: Invalid projection (missing payload or not ready to paste).
+		InvalidPayload: Invalid payload for paste.
+		InvalidPacket: Invalid paste request packet or send failed (wrong game mode).
+		NotHost: Only host can paste in multiplayer.
+		AreaLimit: Projection exceeds area limits.
+		VolumeLimit: Projection exceeds tile volume limit.
+		PlayerOperationLimit: Player operation limit reached.
+		ServerOperationLimit: Server operation limit reached.
+		AlreadyActive: Paste operation already active.
+		Unsupported: Invalid or unsupported paste request.
+		AckTimeout: Paste request timed out waiting for the server.
+		RejectedPrefix: Paste rejected: {0}
+		BlockedArea: Paste blocked: projection exceeds area limits.
+		BlockedVolume: Paste blocked: projection exceeds tile volume limit.
+	}
 }
 
 Items: {

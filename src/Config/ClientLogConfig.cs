@@ -5,7 +5,8 @@ using TheArchitectsBlueprintMod.Debug;
 namespace TheArchitectsBlueprintMod.Config
 {
     /// <summary>
-    /// Client-only logging preferences. Does not change paste behavior or tile-map compilation on the server.
+    /// Client-only logging preferences. Sent with each paste request so the dedicated server
+    /// knows which owner-scoped lines to forward back to this client.
     /// </summary>
     public sealed class ClientLogConfig : ModConfig
     {

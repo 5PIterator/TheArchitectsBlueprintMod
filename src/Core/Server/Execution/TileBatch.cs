@@ -151,6 +151,59 @@ namespace TheArchitectsBlueprintMod.Core
             return $" ({pass}/{total})";
         }
 
+        /// <summary>
+        /// Builds the world-tile AABB used for MP <c>SendTileSquare</c>, preferring the full cluster footprint.
+        /// </summary>
+        public bool TryGetSyncSquare(out Rectangle syncSquare)
+        {
+            // --- Prefer ClusterContext relatives mapped via head origin; else use remaining PasteTile worlds.
+
+            syncSquare = Rectangle.Empty;
+            if (_tiles.Count == 0)
+                return false;
+
+            PasteTile head = _tiles[0];
+            int minX;
+            int minY;
+            int maxX;
+            int maxY;
+
+            if (_clusterContext is { AllRelatives.Count: > 0 } cluster)
+            {
+                // Map relative cluster cells into world space from the head tile's origin.
+                Point origin = new(head.World.X - head.Relative.X, head.World.Y - head.Relative.Y);
+                IReadOnlyList<Point> relatives = cluster.AllRelatives;
+                minX = maxX = origin.X + relatives[0].X;
+                minY = maxY = origin.Y + relatives[0].Y;
+                for (int i = 1; i < relatives.Count; i++)
+                {
+                    int wx = origin.X + relatives[i].X;
+                    int wy = origin.Y + relatives[i].Y;
+                    if (wx < minX) minX = wx;
+                    if (wy < minY) minY = wy;
+                    if (wx > maxX) maxX = wx;
+                    if (wy > maxY) maxY = wy;
+                }
+            }
+            else
+            {
+                // Fall back to the current remaining execution queue.
+                minX = maxX = head.World.X;
+                minY = maxY = head.World.Y;
+                for (int i = 1; i < _tiles.Count; i++)
+                {
+                    Point world = _tiles[i].World;
+                    if (world.X < minX) minX = world.X;
+                    if (world.Y < minY) minY = world.Y;
+                    if (world.X > maxX) maxX = world.X;
+                    if (world.Y > maxY) maxY = world.Y;
+                }
+            }
+
+            syncSquare = new Rectangle(minX, minY, maxX - minX + 1, maxY - minY + 1);
+            return syncSquare.Width > 0 && syncSquare.Height > 0;
+        }
+
         private bool TryGetBatchProgress(int countBefore, int remainingAfter, out int pass, out int total)
         {
             if (remainingAfter < countBefore)

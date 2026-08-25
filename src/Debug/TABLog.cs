@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core.Server;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -85,8 +86,23 @@ namespace TheArchitectsBlueprintMod.Debug
                 else if (entry.Level == TabLogLevel.Info)
                     infoLines.AppendLine(line);
 
-                if (entry.EchoToChat)
+                // Dedicated server: forward owner-scoped lines when that client's paste prefs allow it.
+                if (Main.netMode == NetmodeID.Server
+                    && entry.OwnerPlayer is int owner
+                    && owner >= 0
+                    && ClientLogRelayPrefs.ShouldRelay(owner, entry.Category, entry.Level))
+                {
+                    PasteNetworking.SendOwnerChatLine(
+                        mod,
+                        owner,
+                        entry.Message,
+                        entry.Category,
+                        entry.ChatColor);
+                }
+                else if (entry.EchoToChat)
+                {
                     Chat(entry.Message, entry.Category, entry.ChatColor, entry.OwnerPlayer);
+                }
             }
 
             if (debugLines.Length > 0)
@@ -220,12 +236,12 @@ namespace TheArchitectsBlueprintMod.Debug
         /// </summary>
         private static bool ShouldShowForOwner(int? ownerPlayer)
         {
-            // --- Unscoped lines always pass; scoped lines are client-only and local-owner-only.
+            // --- Unscoped lines always pass; scoped lines enqueue on server for log+forward, else local owner only.
             if (ownerPlayer is null)
                 return true;
 
             if (Main.netMode == NetmodeID.Server)
-                return false;
+                return true;
 
             return Main.myPlayer == ownerPlayer.Value;
         }

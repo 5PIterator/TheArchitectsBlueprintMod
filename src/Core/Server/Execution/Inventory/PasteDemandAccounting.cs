@@ -297,61 +297,15 @@ namespace TheArchitectsBlueprintMod.Core
             out int candidateCount,
             out bool met)
         {
-            // --- Manifest-only: finite shopping-list paths beat infinite tools (Staff / Spectre).
-            // --- Prefer the cheapest met finite; among same-priority ties keep the last (e.g. Grand Design).
-            // --- Fall back to any other met finite (LavaBomb vs LavaBucket) before infinite / unmet preferred.
+            // --- Delegate to shared finite-first selection with this pass's ledger met-check.
 
-            InteractionEntry? preferredFinite = null;
-            InteractionEntry? preferredInfinite = null;
-            InteractionEntry? firstMetFinite = null;
-            InteractionEntry? firstMetInfinite = null;
-            InteractionEntry? lastMetFiniteInClass = null;
-            InteractionEntry? lastMetInfiniteInClass = null;
-            candidateCount = 0;
-
-            foreach (InteractionEntry entry in candidates)
-            {
-                if (!IsRecordable(entry))
-                    continue;
-
-                candidateCount++;
-                bool infinite = InteractionBudget.IsInfiniteYield(entry);
-
-                // Track preferred unmet candidates with finite first (seeds before Staff).
-                if (infinite)
-                    preferredInfinite ??= entry;
-                else
-                    preferredFinite ??= entry;
-
-                if (_ledger is not null && !IsMetByLedger(entry))
-                    continue;
-
-                // First met in priority order (LavaBucket before LavaBomb when both present).
-                if (infinite)
-                    firstMetInfinite ??= entry;
-                else
-                    firstMetFinite ??= entry;
-
-                // Among same priority class, keep the last (multipurpose after specialized).
-                InteractionEntry? classPreferred = infinite ? preferredInfinite : preferredFinite;
-                if (classPreferred is null
-                    || InteractionPriorityComparer.Instance.Compare(entry, classPreferred) != 0)
-                    continue;
-
-                if (infinite)
-                    lastMetInfiniteInClass = entry;
-                else
-                    lastMetFiniteInClass = entry;
-            }
-
-            preferred = preferredFinite ?? preferredInfinite;
-            chosen = lastMetFiniteInClass
-                ?? firstMetFinite
-                ?? lastMetInfiniteInClass
-                ?? firstMetInfinite
-                ?? preferred;
-            met = firstMetFinite is not null || firstMetInfinite is not null;
-            return chosen is not null;
+            return InteractionSelection.TrySelectFiniteFirst(
+                candidates,
+                isMet: IsMetByLedger,
+                out chosen,
+                out preferred,
+                out candidateCount,
+                out met);
         }
 
         /// <summary>Records the first ledger-met item id, or the first valid preferred id when unmet.</summary>
@@ -398,7 +352,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         /// <summary>Whether the entry has a positive tool item id suitable for demand recording.</summary>
         private static bool IsRecordable(InteractionEntry entry) =>
-            entry.ItemId.HasValue && entry.ItemId.Value > 0;
+            InteractionSelection.IsRecordable(entry);
 
         /// <summary>Whether the ledger can currently supply the tool and any required consumable for this entry.</summary>
         private bool IsMetByLedger(InteractionEntry entry)

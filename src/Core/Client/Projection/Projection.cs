@@ -5,7 +5,6 @@ using TheArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
-using Terraria.ObjectData;
 using Terraria.ModLoader;
 
 namespace TheArchitectsBlueprintMod.Core
@@ -419,24 +418,7 @@ namespace TheArchitectsBlueprintMod.Core
         {
             // --- Rebuild nearby chest footprints from authoritative world chest state.
 
-            Inventories.Clear();
-            Rectangle targetArea = TargetArea;
-
-            for (int ci = 0; ci < Main.maxChests; ci++)
-            {
-                Chest chest = Main.chest[ci];
-                if (chest is null || chest.x < 0)
-                    continue;
-
-                Tile tile = Main.tile[chest.x, chest.y];
-                TileObjectData tileData = TileObjectData.GetTileData(tile);
-                int w = tileData?.Width ?? 2;
-                int h = tileData?.Height ?? 2;
-                Rectangle footprint = new(chest.x, chest.y, w, h);
-
-                if (InventoryManager.IsChestInInventoryReachRing(footprint, targetArea))
-                    Inventories.Add(footprint);
-            }
+            Inventories = PasteInventoryReach.CollectChestFootprints(TargetArea);
         }
 
         /// <summary>
@@ -459,15 +441,22 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>
-        /// Rebuilds this owner's projection overlay family on the client (no-op on server / invalid owner).
+        /// Rebuilds this owner's projection overlay family on the client (no-op on dedicated server / invalid owner).
         /// </summary>
         internal void UpdateOverlay()
         {
+            // --- Server paste rebuilds Projection via MoveTo; overlays are client-only.
+
+            if (Main.dedServ)
+                return;
+
             if (Owner < 0 || Owner >= Main.maxPlayers)
                 return;
+
             Player owner = Main.player[Owner];
             if (owner is not { active: true })
                 return;
+
             ModContent.GetInstance<ProjectionSystem>().UpdateProjectionOverlay(owner);
         }
     }

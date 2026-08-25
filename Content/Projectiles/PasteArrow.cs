@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
@@ -8,6 +9,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.Utils;
 
 namespace TheArchitectsBlueprintMod.Content.Projectiles
@@ -24,6 +26,11 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
         private float _minSpeed;
         private float _maxSpeed;
         private int _cachedItemType;
+        private bool _hasSyncedDestination;
+        private Vector2 _syncedDestination;
+        private bool _hasSyncedFlightProfile;
+        private ArrowFlightProfile _syncedFlightProfile;
+        private bool _missingDestinationLogged;
 
         public override string Texture => "Terraria/Images/Projectile_1";
 
@@ -59,7 +66,63 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
             _spawnFxPlayed = false;
             _ageTicks = 0;
             _cachedItemType = 0;
+            _hasSyncedDestination = false;
+            _syncedDestination = Vector2.Zero;
+            _hasSyncedFlightProfile = false;
+            _syncedFlightProfile = default;
+            _missingDestinationLogged = false;
             ApplyFlightProfile(ResolveFlightProfile());
+            RefreshCachedItemType();
+        }
+
+        /// <summary>Writes destination, item type, and flight profile for MP clients that lack server sessions.</summary>
+        public override void SendExtraAI(BinaryWriter writer)
+        {
+            // --- Mirror SpawnProjectile localAI plus the authoritative flight profile from the server session.
+
+            writer.Write(Projectile.localAI[0]);
+            writer.Write(Projectile.localAI[1]);
+
+            int itemType = Projectile.damage > 0 ? Projectile.damage : (int)Projectile.localAI[2];
+            writer.Write(itemType);
+
+            ArrowFlightProfile profile = ResolveFlightProfile();
+            writer.Write(profile.TimeoutTicks);
+            writer.Write(profile.ManeuverTicks);
+            writer.Write(profile.MinSpeed);
+            writer.Write(profile.MaxSpeed);
+        }
+
+        /// <summary>Restores arrow payload received from the dedicated server over the network.</summary>
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            // --- Populate synced fields so client AI can fly and draw without TileEffectSession.
+
+            _syncedDestination = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+            _hasSyncedDestination = _syncedDestination != Vector2.Zero;
+
+            int itemType = reader.ReadInt32();
+            if (itemType > 0 && itemType < ItemLoader.ItemCount)
+            {
+                if (Projectile.damage <= 0)
+                    Projectile.damage = itemType;
+                Projectile.localAI[2] = itemType;
+            }
+
+            _syncedFlightProfile = new ArrowFlightProfile
+            {
+                TimeoutTicks = reader.ReadInt32(),
+                ManeuverTicks = reader.ReadInt32(),
+                MinSpeed = reader.ReadSingle(),
+                MaxSpeed = reader.ReadSingle(),
+            };
+            _hasSyncedFlightProfile = true;
+
+            Projectile.localAI[0] = _syncedDestination.X;
+            Projectile.localAI[1] = _syncedDestination.Y;
+
+            ApplyFlightProfile(_syncedFlightProfile);
+            _cachedItemType = 0;
             RefreshCachedItemType();
         }
 
@@ -69,6 +132,16 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
             RefreshCachedItemType();
 
             bool hasDestination = TryGetDestination(out Vector2 destination);
+            if (!hasDestination && _ageTicks == 1 && Main.netMode == NetmodeID.MultiplayerClient && !_missingDestinationLogged)
+            {
+                _missingDestinationLogged = true;
+                if (TABLog.IsDebugEnabled)
+                {
+                    TABLog.Debug(
+                        $"PasteArrow missing destination op={(int)Projectile.ai[1]} mut={(int)Projectile.ai[2]}",
+                        TABLog.TileExecutorCategory);
+                }
+            }
             if (_ageTicks >= _timeoutTicks)
             {
                 _arrivedAtDestination = false;
@@ -200,6 +273,12 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
 
         private bool TryGetDestination(out Vector2 destination)
         {
+            if (_hasSyncedDestination)
+            {
+                destination = _syncedDestination;
+                return true;
+            }
+
             int operationId = TileEffectSession.ReadProjectileOperationId(Projectile);
             int mutationId = TileEffectSession.ReadProjectileMutationId(Projectile);
             if (TileExecutorSystem.TryGetProjectileDestination(operationId, mutationId, out destination))
@@ -241,6 +320,7 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
         {
             RefreshCachedItemType();
             int itemType = _cachedItemType;
+            // itemType 0 → default wooden-arrow projectile sprite (flight rotation preserved).
             if (itemType <= 0 || itemType >= ItemLoader.ItemCount)
                 return true;
 
@@ -264,6 +344,9 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
 
         private ArrowFlightProfile ResolveFlightProfile()
         {
+            if (_hasSyncedFlightProfile)
+                return _syncedFlightProfile;
+
             int operationId = TileEffectSession.ReadProjectileOperationId(Projectile);
             int mutationId = TileEffectSession.ReadProjectileMutationId(Projectile);
             if (TileExecutorSystem.TryGetArrowFlightProfile(operationId, mutationId, out ArrowFlightProfile profile))

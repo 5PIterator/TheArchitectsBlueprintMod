@@ -7,6 +7,7 @@ using TheArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace TheArchitectsBlueprintMod.Core
@@ -297,20 +298,32 @@ namespace TheArchitectsBlueprintMod.Core
                     if (PasteLimits.ExceedsArea(projection, config))
                     {
                         if (Main.netMode != NetmodeID.Server)
-                            Main.NewText("Paste blocked: projection exceeds area limits.", Color.OrangeRed);
+                        {
+                            Main.NewText(
+                                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.Paste.BlockedArea"),
+                                Color.OrangeRed);
+                        }
                         return;
                     }
 
                     if (PasteLimits.ExceedsVolume(projection, config))
                     {
                         if (Main.netMode != NetmodeID.Server)
-                            Main.NewText("Paste blocked: projection exceeds tile volume limit.", Color.OrangeRed);
+                        {
+                            Main.NewText(
+                                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.Paste.BlockedVolume"),
+                                Color.OrangeRed);
+                        }
                         return;
                     }
 
                     if (!PastingSystem.StartPaste(projection, out var startReject))
                     {
-                        Main.NewText($"Paste rejected: {startReject}", Color.OrangeRed);
+                        Main.NewText(
+                            Language.GetTextValue(
+                                "Mods.TheArchitectsBlueprintMod.UI.Paste.RejectedPrefix",
+                                PasteNetworking.FormatPasteRejectReason(startReject)),
+                            Color.OrangeRed);
                     }
                     break;
                 // Right-click: Run the RESET action.

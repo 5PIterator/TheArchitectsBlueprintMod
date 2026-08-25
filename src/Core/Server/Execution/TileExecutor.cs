@@ -11,6 +11,7 @@ using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Content.Projectiles;
 using TheArchitectsBlueprintMod.Core.Layers;
 using TheArchitectsBlueprintMod.Core.Phases;
+using TheArchitectsBlueprintMod.Core.Server;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.Utils;
@@ -181,12 +182,12 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
 
             // Build the mutation, then process it inline instead of deferring to the session queue.
-            TileMutation mutation = TileMutation.New(
+            TileMutation mutation = session.ApplyActiveSyncStamp(TileMutation.New(
                 mutationId: session.NextMutationId(),
                 operationId: session.OperationId,
                 kind: TileMutationKind.Sweep,
                 world: tile.World,
-                payload: tile.PayloadCell);
+                payload: tile.PayloadCell));
 
             return ProcessQueuedMutation(session, mutation);
         }
@@ -518,7 +519,8 @@ namespace TheArchitectsBlueprintMod.Core
             switch (mutation.Kind)
             {
                 case TileMutationKind.PlaceTile:
-                    applied = WorldGen.PlaceTile(x, y, mutation.Type, mute: false, forced: mutation.Forced, plr: ctx.Player.whoAmI, style: Math.Max(0, mutation.Style));
+                    // Mute WorldGen; PasteWorldFx owns the place cue after a successful write.
+                    applied = WorldGen.PlaceTile(x, y, mutation.Type, mute: true, forced: mutation.Forced, plr: ctx.Player.whoAmI, style: Math.Max(0, mutation.Style));
                     if (applied)
                         applied = TryApplyBundledPostPlaceFrame(x, y, in mutation) && applied;
                     break;
@@ -528,7 +530,8 @@ namespace TheArchitectsBlueprintMod.Core
                         applied = TryApplyBundledPostPlaceFrame(x, y, in mutation, runPlacementHooks: false) && applied;
                     break;
                 case TileMutationKind.PlaceWall:
-                    WorldGen.PlaceWall(x, y, mutation.Type, mute: false);
+                    // Mute WorldGen; PasteWorldFx owns the wall place cue after a successful write.
+                    WorldGen.PlaceWall(x, y, mutation.Type, mute: true);
                     applied = Main.tile[x, y].WallType == mutation.Type;
                     break;
                 case TileMutationKind.PlaceWireRed:
@@ -601,29 +604,34 @@ namespace TheArchitectsBlueprintMod.Core
 
             if (applied)
             {
+                // Drop liquid pool payload after apply; MP sync uses the stamped batch square.
                 if (mutation.Kind == TileMutationKind.SetLiquid
-                    && ctx.EffectSession is not null
-                    && ctx.EffectSession.TryGetLiquidPool(mutation.MutationId, out LiquidPoolCell[] poolCells))
+                    && ctx.EffectSession is not null)
                 {
-                    for (int i = 0; i < poolCells.Length; i++)
-                    {
-                        Point cell = poolCells[i].World;
-                        SyncTileSquare(cell.X, cell.Y);
-                        SyncLiquid(cell.X, cell.Y);
-                    }
                     ctx.EffectSession.ClearLiquidPool(mutation.MutationId);
                 }
-                else
-                {
-                    SyncTileSquare(x, y);
-                    if (mutation.Kind == TileMutationKind.SetLiquid)
-                        SyncLiquid(x, y);
-                }
 
+                // One Dig cue for SP and all MP clients after a place/clear write succeeds.
+                if (EmitsWorldFx(mutation.Kind))
+                    PasteWorldFxNetworking.Notify(x, y);
+
+                TileBatchNetSync.Send(mutation.SyncSquare, mutation.World);
             }
 
             TileExecutorLog.Applied(in mutation, applied);
             return applied;
+        }
+
+        /// <summary>True when a successful mutation should play paste Dig audio.</summary>
+        private static bool EmitsWorldFx(TileMutationKind kind)
+        {
+            // --- Place/clear tile and wall writes emit Dig; other kinds stay silent.
+
+            return kind is TileMutationKind.PlaceTile
+                or TileMutationKind.PlaceWall
+                or TileMutationKind.PlaceObject
+                or TileMutationKind.ClearTile
+                or TileMutationKind.ClearWall;
         }
 
         private static bool TryGetSession(in PasteContext ctx, out TileEffectSession session)
@@ -942,11 +950,21 @@ namespace TheArchitectsBlueprintMod.Core
 
             if (mutation.ProjectileMode == PasteProjectileMode.Place)
             {
-                actionSucceeded = arrived && ApplyMutation(mutation with { ProjectileMode = null }, in ctx);
-                if (actionSucceeded)
-                    CommitPlacementReservation(mutation.MutationId, in ctx);
-                else
+                // AbortArrow passes arrived=false explicitly; orphaned resolves pass null and still place.
+                bool isAbort = arrivedAtDestination == false;
+                if (isAbort)
+                {
                     SettleFailedPlacement(mutation.MutationId, dropTile, in ctx);
+                    actionSucceeded = false;
+                }
+                else
+                {
+                    actionSucceeded = ApplyMutation(mutation with { ProjectileMode = null }, in ctx);
+                    if (actionSucceeded)
+                        CommitPlacementReservation(mutation.MutationId, in ctx);
+                    else
+                        SettleFailedPlacement(mutation.MutationId, dropTile, in ctx);
+                }
 
                 if (!arrivedAtDestination.HasValue)
                     TileExecutorLog.ImpactResolved(in mutation, arrived, actionSucceeded, $"drop=({dropTile.X},{dropTile.Y})");
@@ -1064,65 +1082,77 @@ namespace TheArchitectsBlueprintMod.Core
             TileMutation mutation,
             in PasteContext ctx)
         {
-            if (!ShouldConsumeOnPlace(in ctx, mutation.ConsumeItem))
-                return ApplyMutation(mutation with { ProjectileMode = null }, in ctx);
+            // --- Consume path reserves inventory then flies chest→tile; cosmetic path flies paste origin→tile.
 
             int placeStyle = mutation.Style;
             int itemType;
             Vector2 origin;
-            bool fromChest;
-            Chest? sourceChest;
-            PlacementReservationLedger ledger;
-            if (ctx.InventoryLookup is null)
-                return false;
+            bool fromChest = false;
+            Chest? sourceChest = null;
+            PlacementReservationLedger ledger = default;
+            bool cosmetic = !ShouldConsumeOnPlace(in ctx, mutation.ConsumeItem);
 
-            if (mutation.Kind == TileMutationKind.SetLiquid
-                && session.TryGetLiquidPool(mutation.MutationId, out LiquidPoolCell[] poolCells)
-                && poolCells.Length > 0)
+            if (cosmetic)
             {
-                // --- Reserve the selected liquid tool once per pool cell, then fire one shared arrow.
-                if (!ctx.InventoryLookup.TryReserveForLiquidPool(
-                        mutation.Type,
-                        poolCells.Length,
-                        ctx.Player,
-                        ctx.InteractionBudget,
-                        out ledger,
-                        out origin,
-                        out fromChest,
-                        out sourceChest))
+                // No item debit: spawn from relative (0,0) of the paste footprint.
+                itemType = ResolveCosmeticPlaceItemType(mutation, in ctx);
+                origin = InventoryManager.GetTileWorldCenter(ctx.TargetOrigin);
+            }
+            else
+            {
+                if (ctx.InventoryLookup is null)
                     return false;
 
-                itemType = ledger.VisualItemType > 0 ? ledger.VisualItemType : mutation.Type;
-                TABLog.Debug(
-                    $"FireLiquidPool mutation={mutation.MutationId} cells={poolCells.Length} visual={itemType} "
-                    + $"debited={ledger.DebitedStackCount} freeYield={ledger.FreeYieldSpendCount}",
-                    TABLog.TileExecutorCategory);
-            }
-            else if (!TryReserveForPlacementMutation(
-                mutation,
-                in ctx,
-                out placeStyle,
-                out itemType,
-                out origin,
-                out fromChest,
-                out sourceChest,
-                out ledger))
-            {
-                return false;
-            }
+                if (mutation.Kind == TileMutationKind.SetLiquid
+                    && session.TryGetLiquidPool(mutation.MutationId, out LiquidPoolCell[] poolCells)
+                    && poolCells.Length > 0)
+                {
+                    // --- Reserve the selected liquid tool once per pool cell, then fire one shared arrow.
+                    if (!ctx.InventoryLookup.TryReserveForLiquidPool(
+                            mutation.Type,
+                            poolCells.Length,
+                            ctx.Player,
+                            ctx.InteractionBudget,
+                            out ledger,
+                            out origin,
+                            out fromChest,
+                            out sourceChest))
+                        return false;
 
-            if (ledger.VisualItemType > 0)
-                itemType = ledger.VisualItemType;
+                    itemType = ledger.VisualItemType > 0 ? ledger.VisualItemType : mutation.Type;
+                    TABLog.Debug(
+                        $"FireLiquidPool mutation={mutation.MutationId} cells={poolCells.Length} visual={itemType} "
+                        + $"debited={ledger.DebitedStackCount} freeYield={ledger.FreeYieldSpendCount}",
+                        TABLog.TileExecutorCategory);
+                }
+                else if (!TryReserveForPlacementMutation(
+                    mutation,
+                    in ctx,
+                    out placeStyle,
+                    out itemType,
+                    out origin,
+                    out fromChest,
+                    out sourceChest,
+                    out ledger))
+                {
+                    return false;
+                }
+
+                if (ledger.VisualItemType > 0)
+                    itemType = ledger.VisualItemType;
+            }
 
             var impactMutation = mutation with
             {
                 // Keep ApplyPaintState.Paint intact; Style is only for tile/object placement.
                 Style = mutation.Kind == TileMutationKind.ApplyPaintState ? mutation.Style : placeStyle,
                 ItemType = itemType,
-                ItemStack = Math.Max(1, ledger.DebitedStackCount)
+                ItemStack = cosmetic ? 0 : Math.Max(1, ledger.DebitedStackCount),
+                ConsumeItem = !cosmetic && mutation.ConsumeItem,
             };
 
-            session.AttachPlacementLedger(impactMutation.MutationId, ledger);
+            if (!cosmetic)
+                session.AttachPlacementLedger(impactMutation.MutationId, ledger);
 
             Vector2 destination = InventoryManager.GetTileWorldCenter(mutation.World);
             uint firedAt = Main.GameUpdateCount;
@@ -1156,11 +1186,105 @@ namespace TheArchitectsBlueprintMod.Core
             TileExecutorLog.ArrowState(
                 in impactMutation,
                 state: spawned ? "Fire" : "Headless",
-                detail: $"eta={arriveBy - firedAt}");
+                detail: cosmetic ? $"cosmetic eta={arriveBy - firedAt}" : $"eta={arriveBy - firedAt}");
             TileExecutorLog.Projectile(in impactMutation, fired: true);
             if (fromChest && sourceChest is not null)
                 InventoryManager.PlayChestEatAnimation(sourceChest);
             return true;
+        }
+
+        /// <summary>Picks a display item id for non-consuming place arrows from the interaction map.</summary>
+        private static int ResolveCosmeticPlaceItemType(TileMutation mutation, in PasteContext ctx)
+        {
+            // --- Prefer finite shopping-list rows (seeds) over infinite tools for cosmetic icons.
+
+            InteractionEntry? entry = ResolveCosmeticPlaceInteraction(mutation, in ctx);
+            if (entry is not null)
+            {
+                int visual = entry.GetVisualItemId();
+                if (visual > 0)
+                    return visual;
+            }
+
+            // No mapped place item: 0 lets PasteArrow draw its default wooden-arrow projectile sprite.
+            return 0;
+        }
+
+        /// <summary>Resolves the interaction row for a cosmetic place arrow, including fake place targets.</summary>
+        private static InteractionEntry? ResolveCosmeticPlaceInteraction(TileMutation mutation, in PasteContext ctx)
+        {
+            // --- Finite-first among mapped candidates; ledger is unused when RequireItems is false.
+
+            if (!InteractionSelection.TrySelectFiniteFirst(
+                    EnumerateCosmeticPlaceInteractions(mutation, ctx),
+                    isMet: null,
+                    out InteractionEntry? chosen,
+                    out _,
+                    out _,
+                    out _)
+                || chosen is null)
+            {
+                return null;
+            }
+
+            return chosen;
+        }
+
+        /// <summary>Yields interaction candidates for cosmetic arrow icon selection.</summary>
+        private static IEnumerable<InteractionEntry> EnumerateCosmeticPlaceInteractions(
+            TileMutation mutation,
+            PasteContext ctx)
+        {
+            // --- Priority-ordered rows for the placed main; fake targets append after direct rows.
+
+            switch (mutation.Kind)
+            {
+                case TileMutationKind.PlaceTile or TileMutationKind.PlaceObject:
+                    foreach (InteractionEntry entry in InteractionMapProvider.EnumerateTileInteractions(
+                                 mutation.Type,
+                                 mutation.Style,
+                                 ResolveBaseTileIdForMutation(mutation)))
+                        yield return entry;
+                    break;
+                case TileMutationKind.PlaceWall:
+                    foreach (InteractionEntry entry in InteractionMapProvider.EnumerateWallInteractions(mutation.Type))
+                        yield return entry;
+                    break;
+                case TileMutationKind.SetLiquid:
+                    foreach (InteractionEntry entry in InteractionMapProvider.EnumerateLiquidInteractions(mutation.Type))
+                        yield return entry;
+                    break;
+                case TileMutationKind.PlaceWireRed
+                    or TileMutationKind.PlaceWireGreen
+                    or TileMutationKind.PlaceWireBlue
+                    or TileMutationKind.PlaceWireYellow
+                    or TileMutationKind.PlaceActuator:
+                    foreach (InteractionEntry entry in InteractionMapProvider.EnumerateWireInteractions(
+                                 WireKindFromMutationKind(mutation.Kind)))
+                        yield return entry;
+                    break;
+                case TileMutationKind.ApplyPaintState:
+                    foreach (InteractionEntry entry in InteractionMapProvider.EnumeratePaintInteractions(
+                                 mutation.Paint.TileColor != 0 ? mutation.Paint.TileColor : mutation.Paint.WallColor))
+                        yield return entry;
+                    break;
+                default:
+                    InteractionEntry? resolvedEntry = ResolveInteractionForMutation(mutation, ctx);
+                    if (resolvedEntry is not null)
+                        yield return resolvedEntry;
+                    break;
+            }
+
+            InteractionEntry? fakeEntry = mutation.Kind switch
+            {
+                TileMutationKind.PlaceTile or TileMutationKind.PlaceObject =>
+                    InteractionMapProvider.Current?.FindByFakeMain("Tile", mutation.Type, mutation.Style),
+                TileMutationKind.PlaceWall =>
+                    InteractionMapProvider.Current?.FindByFakeMain("Wall", mutation.Type),
+                _ => null,
+            };
+            if (fakeEntry is not null)
+                yield return fakeEntry;
         }
 
         private static bool TryFireStorePasteArrow(
@@ -1178,13 +1302,15 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             int inventoryIndex = -1;
-            if (!ctx.InventoryLookup.TryResolveStoreDestinationForItem(
+            // Default to the cleared tile; only fly to chest/player when an adjacent source resolves.
+            Vector2 destination = InventoryManager.GetTileWorldCenter(mutation.World);
+            if (ctx.InventoryLookup.TryResolveStoreDestinationForItem(
                     mutation.ItemType,
                     ctx.Player,
-                    out Vector2 destination,
+                    out Vector2 resolvedDestination,
                     out inventoryIndex))
             {
-                destination = ctx.Player.Center;
+                destination = resolvedDestination;
             }
 
             var trackedMutation = mutation with
@@ -1230,6 +1356,7 @@ namespace TheArchitectsBlueprintMod.Core
             return true;
         }
 
+        /// <summary>Spawns a PasteArrow owned by the server in multiplayer so AI and impact resolve authoritatively.</summary>
         internal static bool SpawnProjectile(
             TileMutation mutation,
             Vector2 origin,
@@ -1237,9 +1364,15 @@ namespace TheArchitectsBlueprintMod.Core
             int ownerPlayerId,
             out int projectileIndex)
         {
+            // --- NewProjectile with server owner (255) on NetmodeID.Server; otherwise the requesting player.
+
             projectileIndex = -1;
             int projType = ModContent.ProjectileType<PasteArrow>();
             int itemType = Math.Max(0, mutation.ItemType);
+
+            // Client-owned arrows run AI on the client; OnKill there never completes the place.
+            int projectileOwner = Main.netMode == NetmodeID.Server ? 255 : ownerPlayerId;
+
             int projIndex = Projectile.NewProjectile(
                 new EntitySource_Misc("TAB.TileMutation"),
                 origin.X,
@@ -1249,7 +1382,7 @@ namespace TheArchitectsBlueprintMod.Core
                 projType,
                 itemType,
                 0f,
-                ownerPlayerId,
+                projectileOwner,
                 (float)mutation.ProjectileMode!.Value,
                 mutation.OperationId,
                 mutation.MutationId);
@@ -1267,48 +1400,69 @@ namespace TheArchitectsBlueprintMod.Core
             p.localAI[2] = itemType;
             p.netUpdate = true;
 
+            if (Main.netMode == NetmodeID.Server)
+                NetMessage.SendData(MessageID.SyncProjectile, -1, -1, null, projIndex);
+
             projectileIndex = projIndex;
             return true;
         }
 
         private static bool ApplyClearTile(int x, int y, TileMutation mutation, in PasteContext ctx)
         {
-            switch (mutation.ItemDropStyle)
+            // --- Mute KillTile Dig; PasteWorldFx Notify owns the clear cue after apply.
+
+            InventoryLookup? inventory = ctx.InventoryLookup;
+            bool result = false;
+            SuppressTileSound.Run(() =>
             {
-                case ClearItemDropStyle.Void:
-                    SuppressTileDrop.KillTile(x, y);
-                    return true;
-                case ClearItemDropStyle.Drop:
-                    WorldGen.KillTile(x, y, fail: false, effectOnly: false, noItem: false);
-                    return true;
-                case ClearItemDropStyle.Store:
-                    SuppressTileDrop.KillTile(x, y);
-                    if (mutation.ItemType > 0)
-                        ctx.InventoryLookup?.ApplyStoreOnArrival(mutation.ItemType, mutation.ItemStack, mutation.World);
-                    return true;
-                default:
-                    return false;
-            }
+                switch (mutation.ItemDropStyle)
+                {
+                    case ClearItemDropStyle.Void:
+                        SuppressTileDrop.KillTile(x, y);
+                        result = true;
+                        break;
+                    case ClearItemDropStyle.Drop:
+                        WorldGen.KillTile(x, y, fail: false, effectOnly: false, noItem: false);
+                        result = true;
+                        break;
+                    case ClearItemDropStyle.Store:
+                        SuppressTileDrop.KillTile(x, y);
+                        if (mutation.ItemType > 0)
+                            inventory?.ApplyStoreOnArrival(mutation.ItemType, mutation.ItemStack, mutation.World);
+                        result = true;
+                        break;
+                }
+            });
+            return result;
         }
 
         private static bool ApplyClearWall(int x, int y, TileMutation mutation, in PasteContext ctx)
         {
-            switch (mutation.ItemDropStyle)
+            // --- Mute KillWall Dig; PasteWorldFx Notify owns the clear cue after apply.
+
+            InventoryLookup? inventory = ctx.InventoryLookup;
+            bool result = false;
+            SuppressTileSound.Run(() =>
             {
-                case ClearItemDropStyle.Void:
-                    SuppressTileDrop.KillWall(x, y);
-                    return true;
-                case ClearItemDropStyle.Drop:
-                    WorldGen.KillWall(x, y, fail: false);
-                    return true;
-                case ClearItemDropStyle.Store:
-                    SuppressTileDrop.KillWall(x, y);
-                    if (mutation.ItemType > 0)
-                        ctx.InventoryLookup?.ApplyStoreOnArrival(mutation.ItemType, mutation.ItemStack, mutation.World);
-                    return true;
-                default:
-                    return false;
-            }
+                switch (mutation.ItemDropStyle)
+                {
+                    case ClearItemDropStyle.Void:
+                        SuppressTileDrop.KillWall(x, y);
+                        result = true;
+                        break;
+                    case ClearItemDropStyle.Drop:
+                        WorldGen.KillWall(x, y, fail: false);
+                        result = true;
+                        break;
+                    case ClearItemDropStyle.Store:
+                        SuppressTileDrop.KillWall(x, y);
+                        if (mutation.ItemType > 0)
+                            inventory?.ApplyStoreOnArrival(mutation.ItemType, mutation.ItemStack, mutation.World);
+                        result = true;
+                        break;
+                }
+            });
+            return result;
         }
 
         private static bool ApplyClearWire(
@@ -1481,6 +1635,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
 
             // TileObject.Place writes tiles only. This hook is what creates Chest / Sign / TE.
+            // Do not SquareTileFrame here: framing can destroy the just-created host without re-running the hook.
             TileObjectData.CallPostPlacementPlayerHook(
                 x,
                 y,
@@ -1490,7 +1645,6 @@ namespace TheArchitectsBlueprintMod.Core
                 mutation.Alternate,
                 objectData);
 
-            WorldGen.SquareTileFrame(x, y);
             Tile tile = Main.tile[x, y];
             return tile.HasTile && tile.TileType == type;
         }
@@ -1624,7 +1778,7 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         private static bool ShouldUsePlaceProjectile(in PasteContext ctx, bool consumeItem) =>
-            ShouldConsumeOnPlace(in ctx, consumeItem);
+            !ctx.IsSweep;
 
         private static bool ShouldConsumeOnPlace(in PasteContext ctx, bool consumeItem) =>
             consumeItem && ctx.RequireItems && ctx.InventoryLookup is not null && !ctx.IsSweep;
@@ -1740,18 +1894,6 @@ namespace TheArchitectsBlueprintMod.Core
             TABLog.Debug(
                 $"StoreClear wall=({x},{y}) type={wallType} item={itemType} stack={itemStack}",
                 TABLog.TileExecutorCategory);
-        }
-
-        private static void SyncTileSquare(int x, int y)
-        {
-            if (Main.netMode == NetmodeID.Server)
-                NetMessage.SendTileSquare(-1, x, y, 1, 1);
-        }
-
-        private static void SyncLiquid(int x, int y)
-        {
-            if (Main.netMode == NetmodeID.Server)
-                NetMessage.SendData(MessageID.LiquidUpdate, -1, -1, null, x, y);
         }
 
         private static Point WorldToTile(Vector2 worldPosition) =>

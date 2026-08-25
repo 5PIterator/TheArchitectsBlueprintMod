@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Microsoft.Xna.Framework;
 using Newtonsoft.Json;
 using Terraria;
@@ -380,37 +379,6 @@ namespace TheArchitectsBlueprintMod.Core
             return new Payload(width, height, filteredEntries, sanitizedEntities);
         }
 
-        /// <summary>
-        /// Decodes a sparse payload: width, height, count, then (x, y, cellTagBytes) tuples.
-        /// </summary>
-        public static Payload FromNetwork(BinaryReader reader)
-        {
-            ArgumentNullException.ThrowIfNull(reader);
-            int width = reader.ReadInt32();
-            int height = reader.ReadInt32();
-            int count = reader.ReadInt32();
-            if (width <= 0 || height <= 0 || count < 0)
-                return Empty;
-
-            var entries = new List<Entry>(count);
-            for (int i = 0; i < count; i++)
-            {
-                int x = reader.ReadInt32();
-                int y = reader.ReadInt32();
-                int byteLen = reader.ReadInt32();
-                if (byteLen < 0 || byteLen > 1024 * 1024)
-                    continue;
-
-                byte[] cellBytes = reader.ReadBytes(byteLen);
-                if (!PayloadTagIO.TryCellFromBytes(cellBytes, out PayloadCell cell) || !cell.HasSparseContent)
-                    continue;
-
-                entries.Add(new Entry(new Point(x, y), cell));
-            }
-
-            return FromSparse(entries, width, height);
-        }
-
         /// <summary>Loads a payload from a schema 3–4 TagCompound document root.</summary>
         public static bool TryFromTagDocument(TagCompound root, out Payload payload, out PayloadDocumentInfo info, out string? error)
         {
@@ -435,33 +403,6 @@ namespace TheArchitectsBlueprintMod.Core
 
         /// <summary>Snapshot for one world <see cref="Tile"/> (air omitted).</summary>
         public static PayloadCell CellFromTile(Tile tile) => PayloadCell.FromTile(tile);
-
-        /// <summary>
-        /// Encodes a payload: width, height, count, then (x, y, cellTagBytes) tuples for non-air cells.
-        /// </summary>
-        public void ToNetwork(BinaryWriter writer)
-        {
-            ArgumentNullException.ThrowIfNull(writer);
-            writer.Write(_width);
-            writer.Write(_height);
-            if (!IsDefined)
-            {
-                writer.Write(0);
-                return;
-            }
-
-            writer.Write(_entries.Length);
-            for (int i = 0; i < _entries.Length; i++)
-            {
-                Entry entry = _entries[i];
-                Point rel = entry.Relative;
-                byte[] cellBytes = PayloadTagIO.CellTagToBytes(PayloadTagIO.CellBodyToTag(entry.Cell));
-                writer.Write(rel.X);
-                writer.Write(rel.Y);
-                writer.Write(cellBytes.Length);
-                writer.Write(cellBytes);
-            }
-        }
 
         /// <summary>
         /// Returns a cell at <paramref name="relative"/> when inside payload bounds.

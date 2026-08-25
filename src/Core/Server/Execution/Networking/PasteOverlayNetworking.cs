@@ -44,7 +44,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 var list = new List<PasteOverlaySnapshot>();
                 foreach (var op in system.ActiveOperations)
                 {
-                    if (op.Projection.Owner != i)
+                    if (op.Execution.Owner != i)
                         continue;
                     if (op.TryBuildOverlaySnapshot(out PasteOverlaySnapshot snap))
                         list.Add(snap);

@@ -65,37 +65,45 @@ namespace TheArchitectsBlueprintMod.Core
 
             PasteTile head = Batch.Head;
 
-            LayerResult res = _layer.Clear(Batch, in context);
-            TABLog.Debug($"Clear execute layer={_layer.Id} world=({Batch.Head.World.X},{Batch.Head.World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
-
-            bool taskCompletes = ResolveClearTaskCompletes(in res);
-            outcome = PasteProgress.ClassifyClearAttempt(in res, taskCompletes);
-            failReason = res.FailReason;
-            detail = res.Detail;
-            string? contentMessage = PasteProgress.AppendBatchProgressToContent(res.Message, Batch, in res, outcome);
-            PastingInfoLog.Write(progress.WithTaskResult(
-                in head,
-                outcome,
-                contentMessage: contentMessage,
-                okLabel: res.OkLabel,
-                failReason: res.FailReason,
-                detail: res.Detail,
-                layerId: _layer.Id));
-
-            if (!res.Success)
+            context.EffectSession?.BeginSyncBatch(Batch, head);
+            try
             {
-                if (res.FailReason == LayerFailReason.InsufficientPickaxePower)
-                    return true;
-                return false;
-            }
+                LayerResult res = _layer.Clear(Batch, in context);
+                TABLog.Debug($"Clear execute layer={_layer.Id} world=({Batch.Head.World.X},{Batch.Head.World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
 
-            if (res.TileBatch is not null && res.TileBatch.Tiles.Count > 0)
+                bool taskCompletes = ResolveClearTaskCompletes(in res);
+                outcome = PasteProgress.ClassifyClearAttempt(in res, taskCompletes);
+                failReason = res.FailReason;
+                detail = res.Detail;
+                string? contentMessage = PasteProgress.AppendBatchProgressToContent(res.Message, Batch, in res, outcome);
+                PastingInfoLog.Write(progress.WithTaskResult(
+                    in head,
+                    outcome,
+                    contentMessage: contentMessage,
+                    okLabel: res.OkLabel,
+                    failReason: res.FailReason,
+                    detail: res.Detail,
+                    layerId: _layer.Id));
+
+                if (!res.Success)
+                {
+                    if (res.FailReason == LayerFailReason.InsufficientPickaxePower)
+                        return true;
+                    return false;
+                }
+
+                if (res.TileBatch is not null && res.TileBatch.Tiles.Count > 0)
+                {
+                    Batch.ReplaceWith(res.TileBatch);
+                    return false;
+                }
+
+                return true;
+            }
+            finally
             {
-                Batch.ReplaceWith(res.TileBatch);
-                return false;
+                context.EffectSession?.EndSyncBatchPass();
             }
-
-            return true;
         }
 
         private static bool ResolveClearTaskCompletes(in LayerResult res)
@@ -175,62 +183,70 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             // Execute the placing operation. If it fails, return false and requeue the task.
-            LayerResult res = _layer.Place(Batch, in context);
-            if (_layer.Id == LayerSystem.Wiring.Id)
+            context.EffectSession?.BeginSyncBatch(Batch, head);
+            try
             {
-                TABLog.Debug(
-                    $"Place execute layer=Wiring world=({head.World.X},{head.World.Y}) after={LayerLogFormat.FormatWireStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
-                    "Paste");
-            }
-            else if (_layer.Id == LayerSystem.Detail.Id)
-            {
-                TABLog.Debug(
-                    $"Place execute layer=Detail world=({head.World.X},{head.World.Y}) after={LayerLogFormat.FormatDetailStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
-                    "Paste");
-            }
-            else if (_layer.Id == LayerSystem.Paint.Id)
-            {
-                TABLog.Debug(
-                    $"Place execute layer=Paint world=({head.World.X},{head.World.Y}) after={LayerLogFormat.FormatPaintStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
-                    "Paste");
-            }
-            else
-            {
-                TABLog.Debug($"Place execute layer={_layer.Id} world=({Batch.Head.World.X},{Batch.Head.World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
-            }
+                LayerResult res = _layer.Place(Batch, in context);
+                if (_layer.Id == LayerSystem.Wiring.Id)
+                {
+                    TABLog.Debug(
+                        $"Place execute layer=Wiring world=({head.World.X},{head.World.Y}) after={LayerLogFormat.FormatWireStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
+                        "Paste");
+                }
+                else if (_layer.Id == LayerSystem.Detail.Id)
+                {
+                    TABLog.Debug(
+                        $"Place execute layer=Detail world=({head.World.X},{head.World.Y}) after={LayerLogFormat.FormatDetailStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
+                        "Paste");
+                }
+                else if (_layer.Id == LayerSystem.Paint.Id)
+                {
+                    TABLog.Debug(
+                        $"Place execute layer=Paint world=({head.World.X},{head.World.Y}) after={LayerLogFormat.FormatPaintStateAt(head.World.X, head.World.Y)} success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}",
+                        "Paste");
+                }
+                else
+                {
+                    TABLog.Debug($"Place execute layer={_layer.Id} world=({Batch.Head.World.X},{Batch.Head.World.Y}) success={res.Success} failReason={res.FailReason} remaining={res.RemainingTiles.Count}", "Paste");
+                }
 
-            bool taskCompletes = ResolvePlaceTaskCompletes(in res, in context);
-            outcome = PasteProgress.ClassifyPlaceAttempt(in res, in context, taskCompletes);
-            failReason = res.FailReason;
-            detail = res.Detail;
-            string? contentMessage = PasteProgress.AppendBatchProgressToContent(res.Message, Batch, in res, outcome);
-            PastingInfoLog.Write(progress.WithTaskResult(
-                in head,
-                outcome,
-                contentMessage: contentMessage,
-                okLabel: res.OkLabel,
-                failReason: res.FailReason,
-                detail: res.Detail,
-                layerId: _layer.Id));
+                bool taskCompletes = ResolvePlaceTaskCompletes(in res, in context);
+                outcome = PasteProgress.ClassifyPlaceAttempt(in res, in context, taskCompletes);
+                failReason = res.FailReason;
+                detail = res.Detail;
+                string? contentMessage = PasteProgress.AppendBatchProgressToContent(res.Message, Batch, in res, outcome);
+                PastingInfoLog.Write(progress.WithTaskResult(
+                    in head,
+                    outcome,
+                    contentMessage: contentMessage,
+                    okLabel: res.OkLabel,
+                    failReason: res.FailReason,
+                    detail: res.Detail,
+                    layerId: _layer.Id));
 
-            if (!res.Success)
-            {
-                if (res.FailReason == LayerFailReason.UnresolvedInteraction)
-                    return true;
-                if (!context.RetryOnMissingItems && res.FailReason == LayerFailReason.MissingItems)
-                    return true;
-                if (!context.RetryOnInvalidPlacement && res.FailReason == LayerFailReason.InvalidPlacement)
-                    return true;
-                return false;
+                if (!res.Success)
+                {
+                    if (res.FailReason == LayerFailReason.UnresolvedInteraction)
+                        return true;
+                    if (!context.RetryOnMissingItems && res.FailReason == LayerFailReason.MissingItems)
+                        return true;
+                    if (!context.RetryOnInvalidPlacement && res.FailReason == LayerFailReason.InvalidPlacement)
+                        return true;
+                    return false;
+                }
+
+                if (res.TileBatch is not null && res.TileBatch.Tiles.Count > 0)
+                {
+                    Batch.ReplaceWith(res.TileBatch);
+                    return false;
+                }
+
+                return true;
             }
-
-            if (res.TileBatch is not null && res.TileBatch.Tiles.Count > 0)
+            finally
             {
-                Batch.ReplaceWith(res.TileBatch);
-                return false;
+                context.EffectSession?.EndSyncBatchPass();
             }
-
-            return true;
         }
 
         private static bool ResolvePlaceTaskCompletes(in LayerResult res, in PasteContext context)

@@ -83,7 +83,8 @@ namespace TheArchitectsBlueprintMod.Core
         int TargetInventoryIndex = -1,
         short PostPlaceFrameX = -1,
         short PostPlaceFrameY = -1,
-        PaintMutationState Paint = default)
+        PaintMutationState Paint = default,
+        Rectangle SyncSquare = default)
     {
         public const short NoPostPlaceFrame = -1;
 
@@ -108,7 +109,8 @@ namespace TheArchitectsBlueprintMod.Core
             int targetInventoryIndex = -1,
             short postPlaceFrameX = NoPostPlaceFrame,
             short postPlaceFrameY = NoPostPlaceFrame,
-            PaintMutationState paint = default) =>
+            PaintMutationState paint = default,
+            Rectangle syncSquare = default) =>
             new(
                 MutationId: mutationId,
                 OperationId: operationId,
@@ -128,6 +130,7 @@ namespace TheArchitectsBlueprintMod.Core
                 TargetInventoryIndex: targetInventoryIndex,
                 PostPlaceFrameX: postPlaceFrameX,
                 PostPlaceFrameY: postPlaceFrameY,
-                Paint: paint);
+                Paint: paint,
+                SyncSquare: syncSquare);
     }
 }

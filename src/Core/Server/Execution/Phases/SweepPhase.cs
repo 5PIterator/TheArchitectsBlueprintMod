@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Terraria;
 using TheArchitectsBlueprintMod.Core.Layers;
 using TheArchitectsBlueprintMod.Debug;
@@ -57,7 +58,7 @@ namespace TheArchitectsBlueprintMod.Core.Phases
 
             if (!_entitiesApplied)
             {
-                WorldEntityOps.PurgeHostsInSweepArea(Operation.Projection.TargetArea);
+                WorldEntityOps.PurgeHostsInSweepArea(Operation.Execution.TargetArea);
                 PasteContext ctx = Operation.Context;
                 WorldEntityOps.ApplyAllPayloadEntitiesForSweep(in ctx);
                 _entitiesApplied = true;
@@ -73,14 +74,14 @@ namespace TheArchitectsBlueprintMod.Core.Phases
             if (!Active)
                 return;
 
-            for (int y = 0; y < Operation.Projection.TargetTiles.GetLength(1); y++)
+            for (int y = 0; y < Operation.Execution.GridHeight; y++)
             {
-                for (int x = 0; x < Operation.Projection.TargetTiles.GetLength(0); x++)
+                for (int x = 0; x < Operation.Execution.GridWidth; x++)
                 {
-                    Blueprint.BlueprintCell targetCell = Operation.Projection.TargetTiles[x, y];
-                    if (!targetCell.Included)
+                    Point rel = new(x, y);
+                    if (!Operation.Execution.IsIncluded(rel))
                         continue;
-                    if (!Operation.TryGetLookupPasteTile(targetCell.Relative, out PasteTile pasteTile))
+                    if (!Operation.TryGetLookupPasteTile(rel, out PasteTile pasteTile))
                         continue;
                     if (_queuedWorldTiles.Add(pasteTile.World))
                         _sweepTasks.Enqueue(pasteTile);
@@ -92,55 +93,75 @@ namespace TheArchitectsBlueprintMod.Core.Phases
 
         private void ProcessSweepQueue()
         {
+            // --- Drain up to TickSize tiles into one TileBatch, stamp sync AABB, then apply each inline.
+
             Operation._currentStepPlaceTiles.Clear();
             Operation._currentStepClearTiles.Clear();
             if (_sweepTasks.Count == 0)
                 return;
 
+            // Collect this tick's sweep tiles into a batch so MP sync covers the full AABB.
             int batchTotal = System.Math.Min(TickSize, _sweepTasks.Count);
-            int applied = 0;
-            while (_sweepTasks.Count > 0 && applied < TickSize)
+            var tickTiles = new List<PasteTile>(batchTotal);
+            while (_sweepTasks.Count > 0 && tickTiles.Count < TickSize)
+                tickTiles.Add(_sweepTasks.Dequeue());
+
+            var syncBatch = new TileBatch(tickTiles);
+            PasteContext ctx = Operation.Context;
+            if (!syncBatch.IsEmpty)
+                ctx.EffectSession?.BeginSyncBatch(syncBatch, syncBatch.Head);
+
+            try
             {
-                PasteTile pt = _sweepTasks.Dequeue();
-                int wx = pt.World.X;
-                int wy = pt.World.Y;
-                PasteProgress progress = Operation.CreateBatchProgress(applied + 1, batchTotal);
-                if (!WorldGen.InWorld(wx, wy))
+                int applied = 0;
+                for (int i = 0; i < tickTiles.Count; i++)
                 {
-                    const string outsideDetail = "target tile outside world";
-                    PasteProgress progressEvent = progress.WithTaskResult(
+                    PasteTile pt = tickTiles[i];
+                    int wx = pt.World.X;
+                    int wy = pt.World.Y;
+                    PasteProgress progress = Operation.CreateBatchProgress(applied + 1, batchTotal);
+                    if (!WorldGen.InWorld(wx, wy))
+                    {
+                        const string outsideDetail = "target tile outside world";
+                        PasteProgress progressEvent = progress.WithTaskResult(
+                            pt.World,
+                            PasteProgressOutcome.Failed,
+                            contentMessage: LayerLogFormat.FormatSweepPayload(in pt),
+                            okLabel: "Error",
+                            detail: outsideDetail);
+                        PastingInfoLog.Write(in progressEvent);
+                        Operation.RecordTaskCompletion(PasteProgressOutcome.Failed, detail: outsideDetail);
+                        applied++;
+                        continue;
+                    }
+
+                    // Apply first, then verify — deferred enqueue used to log Error before the tile existed.
+                    bool sweepApplied = TileExecutor.EnqueueSweep(pt, ctx);
+                    bool sweepOk = sweepApplied && PastingInfoLog.IsSweepSatisfied(in pt);
+                    PasteProgressOutcome outcome = sweepOk ? PasteProgressOutcome.Ok : PasteProgressOutcome.Failed;
+                    string? detail = sweepOk ? null : PastingInfoLog.ExplainSweepFailure(in pt);
+                    string sweepOkLabel = sweepOk ? "Sweeped" : "Error";
+                    PasteProgress progressEvent2 = progress.WithTaskResult(
                         pt.World,
-                        PasteProgressOutcome.Failed,
+                        outcome,
                         contentMessage: LayerLogFormat.FormatSweepPayload(in pt),
-                        okLabel: "Error",
-                        detail: outsideDetail);
-                    PastingInfoLog.Write(in progressEvent);
-                    Operation.RecordTaskCompletion(PasteProgressOutcome.Failed, detail: outsideDetail);
+                        okLabel: sweepOkLabel,
+                        detail: detail);
+                    PastingInfoLog.Write(in progressEvent2);
+                    Operation.RecordTaskCompletion(outcome, detail: detail);
+
+                    if (Operation._currentStepPlaceTiles.Count < Operation.PasteConfig.Limits.Server.MaxTilesPerCategory)
+                        Operation._currentStepPlaceTiles.Add(pt.World);
                     applied++;
-                    continue;
                 }
 
-                // Apply first, then verify — deferred enqueue used to log Error before the tile existed.
-                bool sweepApplied = TileExecutor.EnqueueSweep(pt, Operation.Context);
-                bool sweepOk = sweepApplied && PastingInfoLog.IsSweepSatisfied(in pt);
-                PasteProgressOutcome outcome = sweepOk ? PasteProgressOutcome.Ok : PasteProgressOutcome.Failed;
-                string? detail = sweepOk ? null : PastingInfoLog.ExplainSweepFailure(in pt);
-                string sweepOkLabel = sweepOk ? "Sweeped" : "Error";
-                PasteProgress progressEvent2 = progress.WithTaskResult(
-                    pt.World,
-                    outcome,
-                    contentMessage: LayerLogFormat.FormatSweepPayload(in pt),
-                    okLabel: sweepOkLabel,
-                    detail: detail);
-                PastingInfoLog.Write(in progressEvent2);
-                Operation.RecordTaskCompletion(outcome, detail: detail);
-
-                if (Operation._currentStepPlaceTiles.Count < Operation.PasteConfig.Limits.Server.MaxTilesPerCategory)
-                    Operation._currentStepPlaceTiles.Add(pt.World);
-                applied++;
+                TABLog.Debug($"Sweep: applied {applied} tiles, remaining={_sweepTasks.Count}", "Paste");
             }
-
-            TABLog.Debug($"Sweep: applied {applied} tiles, remaining={_sweepTasks.Count}", "Paste");
+            finally
+            {
+                if (!syncBatch.IsEmpty)
+                    ctx.EffectSession?.EndSyncBatchPass();
+            }
         }
     }
 }

@@ -183,6 +183,11 @@ namespace TheArchitectsBlueprintMod.Core
         /// </summary>
         internal void UpdateProjectionOverlay(Player player)
         {
+            // --- Dedicated server has no overlay catalog; paste reconstruction must not touch it.
+
+            if (Main.dedServ)
+                return;
+
             int who = player.whoAmI;
             string family = $"projection:{who}";
 

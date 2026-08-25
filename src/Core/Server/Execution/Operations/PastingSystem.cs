@@ -14,7 +14,7 @@ namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Global manager for all active paste operations.
-    /// Owns the tick/update loop; per-projection state lives in <see cref="PastingOperation"/>.
+    /// Owns the tick/update loop; per-request state lives in <see cref="PastingOperation"/>.
     /// </summary>
     public sealed class PastingSystem : ModSystem
     {
@@ -24,21 +24,36 @@ namespace TheArchitectsBlueprintMod.Core
         internal IReadOnlyList<PastingOperation> ActiveOperations => _operations;
 
         /// <summary>
-        /// Entry point for paste from client tools. Remote clients request only; authoritative instances execute locally.
+        /// Entry point for paste from client tools. Remote clients request; SP, server, and Host &amp; Play host execute locally.
         /// </summary>
         internal bool StartPaste(Projection projection, out PasteRejectReason rejectReason)
         {
+            // --- Remote MP clients send a request; local authority builds an execution context and ExecutePaste.
+
             rejectReason = PasteRejectReason.None;
             ArgumentNullException.ThrowIfNull(projection);
 
             var config = ModContent.GetInstance<PastingConfig>();
             WarnIfClientPreferencesDisabled(config);
 
-            if (Main.netMode == NetmodeID.MultiplayerClient && !TileMappingAuthority.IsAuthoritativePastePacketSide())
+            if (Main.netMode == NetmodeID.MultiplayerClient && !TileMappingAuthority.IsLocalHostClient())
+            {
+                TABLog.Info(
+                    $"[PasteNet] StartPaste route=RequestPaste netMode={Main.netMode} localHost=false",
+                    "PasteNet");
                 return RequestPaste(projection, out rejectReason);
+            }
+
+            TABLog.Info(
+                $"[PasteNet] StartPaste route=ExecutePaste netMode={Main.netMode} "
+                + $"localHost={TileMappingAuthority.IsLocalHostClient()}",
+                "PasteNet");
+
+            if (!TryBuildLocalExecution(projection, out PasteExecutionContext execution, out rejectReason))
+                return false;
 
             var policy = EffectivePastePolicy.Resolve(config, PasteClientHints.FromClientConfig());
-            return ExecutePaste(projection, policy, out rejectReason);
+            return ExecutePaste(execution, policy, out rejectReason);
         }
 
         /// <summary>
@@ -64,34 +79,55 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>
         /// Validates and starts a paste operation on the authoritative execution side.
         /// </summary>
-        internal bool ExecutePaste(Projection projection, EffectivePastePolicy policy, out PasteRejectReason rejectReason)
+        internal bool ExecutePaste(PasteExecutionContext execution, EffectivePastePolicy policy, out PasteRejectReason rejectReason)
         {
             rejectReason = PasteRejectReason.None;
-            ArgumentNullException.ThrowIfNull(projection);
+            ArgumentNullException.ThrowIfNull(execution);
 
-            if (!ValidateForPasteExecution(projection, out rejectReason))
+            if (!ValidateForPasteExecution(execution, out rejectReason))
                 return false;
 
             var config = ModContent.GetInstance<PastingConfig>();
 
-            var (tileIds, wallIds) = CollectTileAndWallIds(projection);
+            var (tileIds, wallIds) = CollectTileAndWallIds(execution);
             foreach (PastingOperation operation in _operations)
             {
-                var (opTiles, opWalls) = CollectTileAndWallIds(operation.Projection);
+                var (opTiles, opWalls) = CollectTileAndWallIds(operation.Execution);
                 tileIds.UnionWith(opTiles);
                 wallIds.UnionWith(opWalls);
             }
 
             ItrStorage.PrepareForPaste(tileIds, wallIds);
 
-            var op = new PastingOperation(projection, config, policy)
+            var op = new PastingOperation(execution, config, policy)
             {
                 OverlayId = ++_nextPasteOverlayInstanceId
             };
 
-            projection.Lock();
+            execution.NotifyClientLocked();
             _operations.Add(op);
             TileExecutorSystem.RegisterSession(op.EffectSession);
+            return true;
+        }
+
+        /// <summary>Builds a local execution context from a live client projection.</summary>
+        private static bool TryBuildLocalExecution(
+            Projection projection,
+            out PasteExecutionContext execution,
+            out PasteRejectReason rejectReason)
+        {
+            // --- Snapshot payload/inclusion from the ghost without touching OverlaySystem on the server path.
+
+            execution = null!;
+            rejectReason = PasteRejectReason.None;
+
+            if (!ValidateProjectionPayload(projection))
+            {
+                rejectReason = PasteRejectReason.InvalidProjection;
+                return false;
+            }
+
+            execution = PasteExecutionContext.FromProjection(projection);
             return true;
         }
 
@@ -125,15 +161,15 @@ namespace TheArchitectsBlueprintMod.Core
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 PasteNetworking.SendCancelIfPending(Mod, projection);
 
-            foreach (PastingOperation operation in _operations)
+            for (int i = 0; i < _operations.Count; i++)
             {
-                if (ReferenceEquals(operation.Projection, projection))
-                {
-                    TileExecutorSystem.UnregisterSession(operation.EffectSession.OperationId);
-                    operation.Teardown();
-                    _operations.Remove(operation);
-                    break;
-                }
+                if (!_operations[i].Execution.IsBoundTo(projection))
+                    continue;
+
+                TileExecutorSystem.UnregisterSession(_operations[i].EffectSession.OperationId);
+                _operations[i].Teardown();
+                _operations.RemoveAt(i);
+                break;
             }
         }
 
@@ -198,9 +234,9 @@ namespace TheArchitectsBlueprintMod.Core
                 if (DebugStepper.IsHoldingDebugStick(op.Context.Player))
                     continue;
 
-                if (op.Projection is null || !op.Projection.IsDefined)
+                if (op.Execution is null || !op.Execution.IsDefined)
                 {
-                    TABLog.Debug("Paste ended: projection became invalid during update", "Paste");
+                    TABLog.Debug("Paste ended: execution context became invalid during update", "Paste");
                     RemoveOperationAt(i);
                     continue;
                 }
@@ -229,11 +265,22 @@ namespace TheArchitectsBlueprintMod.Core
             return anyStepped;
         }
 
-        private void RemoveOperationAt(int index)
+        /// <summary>Removes an active operation and optionally notifies the owning multiplayer client that paste finished.</summary>
+        private void RemoveOperationAt(int index, bool sendFinishedAck = true)
         {
-            TileExecutorSystem.UnregisterSession(_operations[index].EffectSession.OperationId);
-            _operations[index].Teardown();
+            // --- Capture correlation before Teardown clears client id; Finished ACK only on natural completion.
+
+            PastingOperation op = _operations[index];
+            int owner = op.Execution.Owner;
+            int correlationId = op.Execution.CorrelationId;
+
+            TileExecutorSystem.UnregisterSession(op.EffectSession.OperationId);
+            op.Teardown();
             _operations.RemoveAt(index);
+
+            if (sendFinishedAck)
+                PasteNetworking.SendFinished(Mod, owner, correlationId);
+
             if (_operations.Count == 0)
                 ItrStorage.Release();
         }
@@ -241,6 +288,20 @@ namespace TheArchitectsBlueprintMod.Core
         /// <inheritdoc />
         public override void PostUpdatePlayers()
         {
+            // --- Remote clients only tick ACK timeouts; SP/server/listen-host tick paste execution.
+
+            if (Main.netMode == NetmodeID.MultiplayerClient && !TileMappingAuthority.IsLocalHostClient())
+            {
+                PasteNetworking.TickClientPendingAckTimeouts();
+                return;
+            }
+
+            if (Main.netMode == NetmodeID.MultiplayerClient)
+                PasteNetworking.TickClientPendingAckTimeouts();
+
+            if (!TileMappingAuthority.ShouldTickPasteExecution())
+                return;
+
             ProcessOperations();
             TileExecutorSystem.ProcessSessions();
             PasteOverlayNetworking.BroadcastPasteOverlaysToRemoteClients(this);
@@ -262,6 +323,9 @@ namespace TheArchitectsBlueprintMod.Core
 
         private static bool ValidateProjectionPayload(Projection projection) =>
             projection is { IsDefined: true, HasPayload: true };
+
+        private static bool ValidateExecutionPayload(PasteExecutionContext execution) =>
+            execution is { IsDefined: true, HasPayload: true };
 
         /// <summary>Lightweight validation for outbound paste requests from non-authoritative clients.</summary>
         private static bool ValidateForPasteRequest(Projection projection, out PasteRejectReason rejectReason)
@@ -290,12 +354,12 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>Authoritative validation before creating a paste operation.</summary>
-        private bool ValidateForPasteExecution(Projection projection, out PasteRejectReason rejectReason)
+        private bool ValidateForPasteExecution(PasteExecutionContext execution, out PasteRejectReason rejectReason)
         {
             rejectReason = PasteRejectReason.None;
-            ArgumentNullException.ThrowIfNull(projection);
+            ArgumentNullException.ThrowIfNull(execution);
 
-            if (!ValidateProjectionPayload(projection))
+            if (!ValidateExecutionPayload(execution))
             {
                 rejectReason = PasteRejectReason.InvalidProjection;
                 return false;
@@ -308,19 +372,19 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             var config = ModContent.GetInstance<PastingConfig>();
-            if (PasteLimits.ExceedsArea(projection, config))
+            if (PasteLimits.ExceedsArea(execution, config))
             {
                 rejectReason = PasteRejectReason.AreaLimit;
                 return false;
             }
 
-            if (PasteLimits.ExceedsVolume(projection, config))
+            if (PasteLimits.ExceedsVolume(execution, config))
             {
                 rejectReason = PasteRejectReason.VolumeLimit;
                 return false;
             }
 
-            if (GetActiveOperationCountForPlayer(projection.Owner) >= config.Limits.Client.PlayerOperationLimit)
+            if (GetActiveOperationCountForPlayer(execution.Owner) >= config.Limits.Client.PlayerOperationLimit)
             {
                 rejectReason = PasteRejectReason.PlayerOperationLimit;
                 return false;
@@ -334,7 +398,16 @@ namespace TheArchitectsBlueprintMod.Core
 
             for (int i = 0; i < _operations.Count; i++)
             {
-                if (ReferenceEquals(_operations[i].Projection, projection))
+                if (execution.ClientProjection is not null
+                    && _operations[i].Execution.IsBoundTo(execution.ClientProjection))
+                {
+                    rejectReason = PasteRejectReason.AlreadyActive;
+                    return false;
+                }
+
+                if (execution.CorrelationId > 0
+                    && _operations[i].Execution.Owner == execution.Owner
+                    && _operations[i].Execution.CorrelationId == execution.CorrelationId)
                 {
                     rejectReason = PasteRejectReason.AlreadyActive;
                     return false;
@@ -344,15 +417,15 @@ namespace TheArchitectsBlueprintMod.Core
             return true;
         }
 
-        private static (HashSet<int> TileIds, HashSet<int> WallIds) CollectTileAndWallIds(Projection projection)
+        private static (HashSet<int> TileIds, HashSet<int> WallIds) CollectTileAndWallIds(PasteExecutionContext execution)
         {
             var tileIds = new HashSet<int>();
             var wallIds = new HashSet<int>();
 
-            if (projection is null || !projection.HasPayload)
+            if (execution is null || !execution.HasPayload)
                 return (tileIds, wallIds);
 
-            IReadOnlyList<Payload.Entry> entries = projection.Payload.Entries;
+            IReadOnlyList<Payload.Entry> entries = execution.Payload.Entries;
             for (int i = 0; i < entries.Count; i++)
             {
                 PayloadCell cell = entries[i].Cell;
@@ -386,7 +459,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (projection is null) return false;
             for (int i = 0; i < _operations.Count; i++)
             {
-                if (ReferenceEquals(_operations[i].Projection, projection))
+                if (_operations[i].Execution.IsBoundTo(projection))
                     return true;
             }
             return false;
@@ -399,23 +472,26 @@ namespace TheArchitectsBlueprintMod.Core
             int count = 0;
             for (int i = 0; i < _operations.Count; i++)
             {
-                if (_operations[i].Projection.Owner == ownerPlayerIndex)
+                if (_operations[i].Execution.Owner == ownerPlayerIndex)
                     count++;
             }
             return count;
         }
 
+        /// <summary>Stops a paste matched by owner and correlation id without sending a Finished ACK (cancel path sends Cancelled).</summary>
         internal bool TryStopPasteByCorrelation(int ownerPlayerIndex, int correlationId)
         {
+            // --- Match owner + request id, then tear down without Finished so HandlePasteCancel owns the ACK.
+
             if (correlationId <= 0)
                 return false;
 
             for (int i = _operations.Count - 1; i >= 0; i--)
             {
-                Projection projection = _operations[i].Projection;
-                if (projection.Owner == ownerPlayerIndex && projection.Id == correlationId)
+                PasteExecutionContext execution = _operations[i].Execution;
+                if (execution.Owner == ownerPlayerIndex && execution.CorrelationId == correlationId)
                 {
-                    RemoveOperationAt(i);
+                    RemoveOperationAt(i, sendFinishedAck: false);
                     return true;
                 }
             }
@@ -430,7 +506,7 @@ namespace TheArchitectsBlueprintMod.Core
 
             for (int i = 0; i < _operations.Count; i++)
             {
-                if (_operations[i].Projection.Owner == player.whoAmI)
+                if (_operations[i].Execution.Owner == player.whoAmI)
                 {
                     requireItems = _operations[i].Context.RequireItems;
                     return true;
@@ -445,13 +521,13 @@ namespace TheArchitectsBlueprintMod.Core
 
             for (int i = 0; i < _operations.Count; i++)
             {
-                if (!ReferenceEquals(_operations[i].Projection, projection))
+                if (!_operations[i].Execution.IsBoundTo(projection))
                     continue;
 
                 var op = _operations[i];
-                if (op.Projection is null || !op.Projection.IsDefined)
+                if (op.Execution is null || !op.Execution.IsDefined)
                 {
-                    TABLog.Debug("Paste ended: projection became invalid during manual step", "Paste");
+                    TABLog.Debug("Paste ended: execution context became invalid during manual step", "Paste");
                     RemoveOperationAt(i);
                     return false;
                 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Terraria;
 using TheArchitectsBlueprintMod.Debug;
 
 namespace TheArchitectsBlueprintMod.Core
@@ -18,9 +19,10 @@ namespace TheArchitectsBlueprintMod.Core
         /// </summary>
         public static bool TryPlaceEntity(Point world, in PayloadEntity entity, in PasteContext ctx)
         {
-            // --- Entity sidecars are keyed by captured origin coordinates.
+            // --- Prefer the host Frame/Block just created; recreate the table entry if framing left tiles without one.
 
-            if (!PayloadEntityHandlers.TryFind(entity.FullName, world.X, world.Y))
+            if (!PayloadEntityHandlers.TryFind(entity.FullName, world.X, world.Y)
+                && !TryEnsureHostForPlacedTiles(world, in entity))
             {
                 TABLog.Warn(
                     $"EntityPlace ({world.X},{world.Y}) rel=({entity.Relative.X},{entity.Relative.Y}) "
@@ -30,6 +32,39 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             return TryReplaceEntityData(world, in entity, "EntityPlace");
+        }
+
+        /// <summary>
+        /// Recreates a missing chest/sign/TE table entry when live tiles already occupy the payload origin.
+        /// </summary>
+        private static bool TryEnsureHostForPlacedTiles(Point world, in PayloadEntity entity)
+        {
+            // --- Only when Frame left tiles; skip empty air so intentionally unplaced frames stay missing.
+
+            if (!WorldGen.InWorld(world.X, world.Y))
+                return false;
+
+            Tile tile = Main.tile[world.X, world.Y];
+            if (!tile.HasTile)
+                return false;
+
+            if (!PayloadEntityHandlers.TryEnsureHost(entity.FullName, world.X, world.Y))
+            {
+                TABLog.Warn(
+                    $"EntityPlace ({world.X},{world.Y}) rel=({entity.Relative.X},{entity.Relative.Y}) "
+                    + $"n={entity.FullName} result=ensureFail",
+                    LogCategory);
+                return false;
+            }
+
+            if (!PayloadEntityHandlers.TryFind(entity.FullName, world.X, world.Y))
+                return false;
+
+            TABLog.Info(
+                $"EntityPlace ({world.X},{world.Y}) rel=({entity.Relative.X},{entity.Relative.Y}) "
+                + $"n={entity.FullName} result=ensured",
+                LogCategory);
+            return true;
         }
 
         /// <summary>Wipes live chest, sign, or TileEntity contents at the payload origin.</summary>

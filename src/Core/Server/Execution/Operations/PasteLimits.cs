@@ -22,6 +22,25 @@ namespace TheArchitectsBlueprintMod.Core
             return count;
         }
 
+        /// <summary>Returns true when execution width or height exceeds configured paste limits.</summary>
+        public static bool ExceedsArea(PasteExecutionContext execution, PastingConfig config)
+        {
+            if (execution is null || !execution.IsDefined)
+                return true;
+
+            Rectangle area = execution.TargetArea;
+            return area.Width > config.Limits.Client.MaxPasteWidth || area.Height > config.Limits.Client.MaxPasteHeight;
+        }
+
+        /// <summary>Returns true when included cell count exceeds the configured volume limit.</summary>
+        public static bool ExceedsVolume(PasteExecutionContext execution, PastingConfig config)
+        {
+            if (execution is null || !execution.IsDefined)
+                return true;
+
+            return execution.CountIncludedVolume() > config.Limits.Client.VolumeLimit;
+        }
+
         /// <summary>Returns true when projection width or height exceeds configured paste limits.</summary>
         public static bool ExceedsArea(Projection projection, PastingConfig config)
         {

@@ -101,10 +101,15 @@ namespace TheArchitectsBlueprintMod.Core.Phases
                         $"Frame place tick: no ready candidate queue={queue.Count} pending={pending.Count} {blockers}",
                         "Paste");
 
-                    // Retry only while a pending frame supporter may still appear; otherwise drop stuck tasks.
+                    // Defer while support, missing items, or invalid-placement retry may still unlock candidates.
                     if (FrameOperations.HasPendingPlaceSupportWait(pending, in context)
-                        || (context.RetryOnMissingItems && HasPendingMissingItems(pending, in context)))
+                        || (context.RetryOnMissingItems && HasPendingMissingItems(pending, in context))
+                        || context.RetryOnInvalidPlacement)
                     {
+                        TABLog.Debug(
+                            $"Frame place tick: defer queue={queue.Count} "
+                            + $"retryInvalid={context.RetryOnInvalidPlacement} {blockers}",
+                            "Paste");
                         break;
                     }
 
@@ -196,11 +201,15 @@ namespace TheArchitectsBlueprintMod.Core.Phases
             IReadOnlyList<FrameOperations.FrameCandidate> pending,
             HashSet<Point>? overlayDoneThisLayer)
         {
-            // --- Permanently invalid candidates must leave the queue; retryOnInvalidPlacement does not apply here.
+            // --- Drain only when retry flags cannot unlock these candidates.
+            string detail = FrameOperations.FormatPendingPlaceBlockers(pending, Operation.Context);
+            TABLog.Debug(
+                $"Frame place tick: drop permanentlyBlocked queue={queue.Count} {detail}",
+                "Paste");
+
             while (queue.Count > 0)
             {
                 PlacingTask task = queue.Dequeue();
-                string detail = FrameOperations.FormatPendingPlaceBlockers(pending, Operation.Context);
                 Operation.RecordTaskCompletion(
                     PasteProgressOutcome.Failed,
                     LayerFailReason.InvalidPlacement,
@@ -212,7 +221,7 @@ namespace TheArchitectsBlueprintMod.Core.Phases
                 }
 
                 TABLog.Debug(
-                    $"Frame place tick: drop permanentlyBlocked remainingTiles={task.Tiles.Count} {detail}",
+                    $"Frame place tick: drop task remainingTiles={task.Tiles.Count}",
                     "Paste");
             }
         }

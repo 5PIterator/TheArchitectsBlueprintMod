@@ -25,7 +25,7 @@ internal static class PasteTaskMapDebug
     };
 
     internal static void WriteTaskMap(
-        Projection projection,
+        PasteExecutionContext execution,
         bool applySourceClear,
         LayerPipeline pipeline,
         IReadOnlyList<Queue<ClearingTask>> clearTasksByLayer,
@@ -36,12 +36,12 @@ internal static class PasteTaskMapDebug
 
         var dto = new TaskMapDto
         {
-            ProjectionClearsSource = projection.CutSource,
+            ProjectionClearsSource = execution.CutSource,
             ApplySourceClear = applySourceClear,
-            TargetArea = Rect(projection.Area),
-            SourceArea = Rect(projection.SourceArea),
-            SourceTileCount = projection.SourceTiles.Length,
-            TargetTileCount = projection.TargetTiles.Length,
+            TargetArea = Rect(execution.TargetArea),
+            SourceArea = Rect(execution.SourceArea),
+            SourceTileCount = execution.SourceArea.Width * execution.SourceArea.Height,
+            TargetTileCount = execution.GridWidth * execution.GridHeight,
             ClearTasks = BuildClearMap(pipeline, clearTasksByLayer),
             PlaceTasks = BuildPlaceMap(pipeline, placeTasksByLayer),
         };

@@ -160,6 +160,17 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
         /// <summary>Returns the tile/wall id to place: FakeId when set, otherwise MainId.</summary>
         public int? GetPlaceMainId() => FakeId ?? MainId;
+
+        /// <summary>Returns the item icon for arrows and UI: distinct ammo when set, otherwise the tool item.</summary>
+        public int GetVisualItemId()
+        {
+            // --- Match PlacementReservationLedger / ConsumableItemId used by consuming place arrows.
+
+            if (AmmoId is int ammo && ammo > 0)
+                return ammo;
+
+            return ItemId is int item && item > 0 ? item : 0;
+        }
     }
 
     /// <summary>
@@ -455,6 +466,45 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             return ids;
         }
 
+        /// <summary>Finds an interaction whose fake place target matches the given main id.</summary>
+        internal InteractionEntry? FindByFakeMain(string? layer, int fakeMainId, int? style = null)
+        {
+            // --- Scan compiled rows; prefer exact style, then style-agnostic (0).
+
+            var normLayer = ContentNameResolver.NormalizeLayer(layer);
+            if (normLayer is null || fakeMainId <= 0)
+                return null;
+
+            int effectiveStyle = Math.Max(0, style ?? 0);
+            InteractionEntry? styleMatch = null;
+            InteractionEntry? styleAgnostic = null;
+
+            foreach (KeyValuePair<(string Layer, int MainId, int Style), List<InteractionEntry>> kvp in _byMain)
+            {
+                if (!string.Equals(kvp.Key.Layer, normLayer, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                List<InteractionEntry> list = kvp.Value;
+                for (int i = 0; i < list.Count; i++)
+                {
+                    InteractionEntry entry = list[i];
+                    if (entry.FakeId != fakeMainId)
+                        continue;
+
+                    int entryStyle = entry.Style ?? 0;
+                    if (entryStyle == effectiveStyle)
+                        return entry;
+
+                    if (entryStyle == 0)
+                        styleAgnostic ??= entry;
+
+                    styleMatch ??= entry;
+                }
+            }
+
+            return styleAgnostic ?? styleMatch;
+        }
+
         /// <summary>
         /// True when the interaction map registers more than one placement style for a tile type.
         /// </summary>
@@ -724,6 +774,22 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
         internal static InteractionEntry? ResolveTileInteraction(ushort tileType, int? style, int? baseId) =>
             ResolvePreferred("Tile", tileType, style, baseId);
+
+        /// <summary>Resolves an interaction for a placed main id, including fake place targets.</summary>
+        internal static InteractionEntry? ResolvePlacedMainInteraction(
+            string layer,
+            int placedMainId,
+            int? style = null,
+            int? baseId = null)
+        {
+            // --- Direct main lookup first, then rows that place via Fake.
+
+            InteractionEntry? direct = ResolvePreferred(layer, placedMainId, style, baseId);
+            if (direct is not null)
+                return direct;
+
+            return Current?.FindByFakeMain(layer, placedMainId, style);
+        }
 
         /// <summary>
         /// Yields candidate tile interactions in priority order, optionally filtered to a conversion base.
