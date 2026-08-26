@@ -311,6 +311,13 @@ namespace TheArchitectsBlueprintMod.Core
                 if (!entryTag.ContainsKey(KeyCellBody) || entryTag[KeyCellBody] is not TagCompound body)
                     continue;
 
+                // Tile bodies without style are invalid documents (style 0 must still be written).
+                if (CellBodyRequiresStyle(body) && !body.ContainsKey("style"))
+                {
+                    error = $"Payload cell ({x},{y}): tile cells require style.";
+                    return false;
+                }
+
                 if (!TryCellFromTag(body, out PayloadCell cell) || !cell.HasSparseContent)
                     continue;
 
@@ -515,6 +522,24 @@ namespace TheArchitectsBlueprintMod.Core
             return PackFlags(cell) != 0;
         }
 
+        /// <summary>Returns true when a cell body is a placed tile and must include placeStyle.</summary>
+        private static bool CellBodyRequiresStyle(TagCompound body)
+        {
+            // --- Tile FullName or HasTile flag both imply placeStyle is required (including 0).
+
+            if (body.ContainsKey("tile"))
+                return true;
+
+            if (body.ContainsKey("flags")
+                && TryGetInt32(body, "flags", out int flags)
+                && (flags & (int)CellFlags.HasTile) != 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public static TagCompound CellBodyToTag(PayloadCell cell)
         {
             if (!CellHasBodyContent(cell))
@@ -547,7 +572,8 @@ namespace TheArchitectsBlueprintMod.Core
             if (cell.Wall.FrameY != 0)
                 tag["wFY"] = cell.Wall.FrameY;
 
-            if (data.TileStyle != 0)
+            // Tile cells always carry placeStyle (including 0); imports reject missing style.
+            if (cell.Detail.HasTile)
                 tag["style"] = data.TileStyle;
             if (data.TileAlternate != 0)
                 tag["alt"] = data.TileAlternate;
@@ -650,8 +676,18 @@ namespace TheArchitectsBlueprintMod.Core
                 data.TWWStateData.TileFrameNumber = 0;
                 data.TWWStateData.WallFrameNumber = 0;
 
-                if (tag.ContainsKey("style") && TryGetInt32(tag, "style", out int style))
+                // HasTile cells require an explicit style key (0 is valid; omission is not).
+                if (CellBodyRequiresStyle(tag))
+                {
+                    if (!tag.ContainsKey("style") || !TryGetInt32(tag, "style", out int style) || style < 0)
+                        return false;
                     data.TileStyle = style;
+                }
+                else if (tag.ContainsKey("style") && TryGetInt32(tag, "style", out int styleOnly))
+                {
+                    data.TileStyle = styleOnly;
+                }
+
                 if (tag.ContainsKey("alt") && TryGetInt32(tag, "alt", out int alt))
                     data.TileAlternate = alt;
 

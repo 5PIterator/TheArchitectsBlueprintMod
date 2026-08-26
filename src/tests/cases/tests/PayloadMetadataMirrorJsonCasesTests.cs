@@ -47,7 +47,7 @@ public sealed class PayloadMetadataMirrorJsonCasesTests
               "format": "TheArchitectsBlueprintMod.Payload",
               "schemaVersion": 4,
               "cells": [
-                { "x": 0, "y": 0, "c": { "tile": "Tile_1" } }
+                { "x": 0, "y": 0, "c": { "tile": "Tile_1", "style": 0 } }
               ]
             }
             """);
@@ -79,7 +79,7 @@ public sealed class PayloadMetadataMirrorJsonCasesTests
               "format": "TheArchitectsBlueprintMod.Payload",
               "schemaVersion": 4,
               "payload": [
-                [ { "tile": "Tile_1" }, null ]
+                [ { "tile": "Tile_1", "style": 0 }, null ]
               ]
             }
             """);

@@ -22,7 +22,7 @@ namespace TheArchitectsBlueprintMod.Core.ScenarioTests
             if (!ScenarioTestGuards.RequireLocalPlayer(player, Id, reporter))
                 return;
 
-            if (!PayloadTagIO.TryCellFromTag(new TagCompound { ["tile"] = "Tile_1" }, out PayloadCell stone))
+            if (!PayloadTagIO.TryCellFromTag(new TagCompound { ["tile"] = "Tile_1", ["style"] = 0 }, out PayloadCell stone))
             {
                 reporter.Fail(Id, "Failed to build stone test cell.");
                 return;

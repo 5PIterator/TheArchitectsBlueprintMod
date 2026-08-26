@@ -14,8 +14,8 @@ public sealed class PayloadJsonPeekCasesTests
             "height": 1
           },
           "payload": [
-            { "x": 0, "y": 0, "c": { "tile": "Tile_1" } },
-            { "x": 1, "y": 0, "c": { "tile": "Tile_1" } }
+            { "x": 0, "y": 0, "c": { "tile": "Tile_1", "style": 0 } },
+            { "x": 1, "y": 0, "c": { "tile": "Tile_1", "style": 0 } }
           ]
         }
         """;

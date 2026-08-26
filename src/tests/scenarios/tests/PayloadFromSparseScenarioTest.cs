@@ -21,7 +21,7 @@ namespace TheArchitectsBlueprintMod.Core.ScenarioTests
             if (!ScenarioTestGuards.RequireLocalPlayer(player, Id, reporter))
                 return;
 
-            var body = new TagCompound { ["tile"] = "Tile_1" };
+            var body = new TagCompound { ["tile"] = "Tile_1", ["style"] = 0 };
             if (!PayloadTagIO.TryCellFromTag(body, out PayloadCell stone))
             {
                 reporter.Fail(Id, "Failed to parse stone test cell.");

@@ -230,7 +230,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Returns the placement style stored on this payload cell at capture/import time.</summary>
         public int ResolvePlacementStyle()
         {
-            // --- Use the cached style field; do not re-derive from sprite frames.
+            // --- Documents require style on tile cells; never re-derive from sprite frames.
 
             return _data?.TileStyle ?? 0;
         }

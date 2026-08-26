@@ -45,9 +45,9 @@ Example:
   "metadata": { "...": "..." },
   "payload": [
     { "x": 22, "y": 0, "c": { "tile": "Containers", "style": 0, "tFX": 0, "tFY": 0 } },
-    { "x": 23, "y": 0, "c": { "tile": "Containers", "tFX": 18, "tFY": 0 } },
-    { "x": 22, "y": 1, "c": { "tile": "Containers", "tFX": 0, "tFY": 18 } },
-    { "x": 23, "y": 1, "c": { "tile": "Containers", "tFX": 18, "tFY": 18 } }
+    { "x": 23, "y": 0, "c": { "tile": "Containers", "style": 0, "tFX": 18, "tFY": 0 } },
+    { "x": 22, "y": 1, "c": { "tile": "Containers", "style": 0, "tFX": 0, "tFY": 18 } },
+    { "x": 23, "y": 1, "c": { "tile": "Containers", "style": 0, "tFX": 18, "tFY": 18 } }
   ],
   "entities": [
     {

@@ -46,7 +46,7 @@ namespace TheArchitectsBlueprintMod.Core.ScenarioTests
 
         private static TagCompound BuildMinimalDocument()
         {
-            var cellBody = new TagCompound { ["tile"] = "Tile_1" };
+            var cellBody = new TagCompound { ["tile"] = "Tile_1", ["style"] = 0 };
             var entry = new TagCompound
             {
                 ["x"] = 0,

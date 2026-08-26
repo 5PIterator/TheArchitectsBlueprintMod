@@ -1827,21 +1827,16 @@ namespace TheArchitectsBlueprintMod.Core
             return true;
         }
 
+        /// <summary>Places liquid via WorldGen; fails closed when PlaceLiquid rejects the cell.</summary>
         private static bool TryWriteLiquid(int x, int y, int liquidType, byte amount)
         {
+            // --- Trust PlaceLiquid for solid checks, merges, framing, and sendWater; no LiquidData fallback.
+
             if (!WorldGen.InWorld(x, y))
                 return false;
 
-            if (WorldGen.PlaceLiquid(x, y, (byte)liquidType, amount))
-                return true;
-
-            Tile dest = Main.tile[x, y];
-            ref LiquidData liquid = ref dest.Get<LiquidData>();
-            liquid.LiquidType = liquidType;
-            liquid.Amount = amount;
-            liquid.SkipLiquid = false;
-            liquid.CheckingLiquid = false;
-            return Main.tile[x, y].LiquidAmount == amount && Main.tile[x, y].LiquidType == liquidType;
+            // PlaceLiquid owns placement failure, merge tiles, SquareTileFrame, and MP water sync.
+            return WorldGen.PlaceLiquid(x, y, (byte)liquidType, amount);
         }
 
         private static void ResolveStoreDropForClearTile(int x, int y, ClearItemDropStyle style, out int itemType, out int itemStack)

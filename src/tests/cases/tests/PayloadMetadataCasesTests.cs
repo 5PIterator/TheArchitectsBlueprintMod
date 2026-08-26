@@ -57,7 +57,7 @@ public sealed class PayloadMetadataCasesTests
               "schemaVersion": 4,
               "metadata": { "width": 1, "height": 1 },
               "payload": [
-                { "x": 0, "y": 0, "c": { "tile": "Tile_1" } }
+                { "x": 0, "y": 0, "c": { "tile": "Tile_1", "style": 0 } }
               ]
             }
             """);
