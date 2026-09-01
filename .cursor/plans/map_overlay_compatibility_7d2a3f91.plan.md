@@ -1,6 +1,6 @@
 ---
 name: Map overlay compatibility
-overview: "Implement fullscreen-map support from [src/notes.md](src/notes.md): draw blueprint/projection overlays at correct map coordinates via a ModMapLayer + MapOverlayDrawContext, and route map cursor input for any held architect tool—no tier or progression gates."
+overview: "Implement fullscreen-map support from [src/#notes.md](src/%23notes.md): draw blueprint/projection overlays at correct map coordinates via a ModMapLayer + MapOverlayDrawContext, and route map cursor input for any held architect tool—no tier or progression gates."
 todos:
   - id: map-overlay-draw
     content: Add ModMapLayer draw path calling OverlaySystem catalog with map transforms; refactor tile primitives (Point, TileFill, TileRectFill, TileBounds, TileBorder) for world vs map; preserve early/late fill passes; fix GetPointHandleRect for map hover; skip Screen kind on map
@@ -16,7 +16,7 @@ isProject: false
 
 # Map compatibility: overlays + tool input
 
-## Goals (from [src/notes.md](src/notes.md))
+## Goals (from [src/#notes.md](src/%23notes.md))
 
 1. **Overlays on the fullscreen map** — When `Main.mapFullscreen`, blueprint/projection visuals should appear aligned to the map (not hidden and not misaligned).
 2. **Tool interaction on the map** — **Any** held architect tool (Tier 1 sticks, Tier 2 wands, `ArchitectsStencil`, `DebugStick`, etc.) should resolve the map cursor and drive the same `ToolActionManager` flows as in-world. No Tier 4/5 progression, accessory, or held-item whitelist.

@@ -376,7 +376,7 @@ namespace TheArchitectsBlueprintMod.UI
         /// <summary>Draws catalog overlays on the fullscreen map (called from <see cref="ArchitectOverlayMapLayer"/>).</summary>
         public static void DrawMapOverlays(ref MapOverlayDrawContext context)
         {
-            if (Main.gameMenu || !Main.mapFullscreen)
+            if (Main.gameMenu || !ArchitectMapTransform.IsMapViewActive)
                 return;
 
             IsMapDrawMode = true;
@@ -424,10 +424,10 @@ namespace TheArchitectsBlueprintMod.UI
         /// <summary>Tile-space rectangle converted to screen pixels (world view or fullscreen map).</summary>
         public static Rectangle GetTileRectangleScreenPixels(Rectangle tileBounds)
         {
-            if (Main.mapFullscreen)
+            if (ArchitectMapTransform.IsMapViewActive)
             {
-                float pxPerTile = GetFullscreenMapPixelsPerTile();
-                Vector2 topLeft = MapTileToFullscreenScreen(new Point(tileBounds.X, tileBounds.Y), pxPerTile);
+                float pxPerTile = ArchitectMapTransform.PixelsPerTile;
+                Vector2 topLeft = ArchitectMapTransform.TileToScreen(new Point(tileBounds.X, tileBounds.Y));
                 return new Rectangle(
                     (int)topLeft.X,
                     (int)topLeft.Y,
@@ -443,24 +443,13 @@ namespace TheArchitectsBlueprintMod.UI
                 tileBounds.Height * TilePixelSize);
         }
 
-        private static float GetFullscreenMapPixelsPerTile() =>
-            TilePixelSize * Main.mapFullscreenScale * Main.UIScale;
-
-        private static Vector2 MapTileToFullscreenScreen(Point tile, float pixelsPerTile)
+        private static float MapTileDrawScale()
         {
-            Vector2 screenCenter = new(Main.screenWidth / 2f, Main.screenHeight / 2f);
-            Vector2 playerTile = Main.LocalPlayer.Center / 16f;
-            Vector2 delta = new Vector2(tile.X, tile.Y) - playerTile;
-            return screenCenter + delta * pixelsPerTile;
-        }
+            float drawScale = _mapDrawContext.DrawScale;
+            if (drawScale <= 0f)
+                return _mapDrawContext.MapScale;
 
-        private static float MapPixelsPerTile() =>
-            TilePixelSize * _mapDrawContext.MapScale * _mapDrawContext.DrawScale;
-
-        private static Vector2 MapTileToScreen(Point tile)
-        {
-            float pxPerTile = MapPixelsPerTile();
-            return MapTileToFullscreenScreen(tile, pxPerTile);
+            return _mapDrawContext.MapScale / drawScale;
         }
 
         private static void DrawPointsOnMap(Point[] points, Color color)
@@ -468,20 +457,19 @@ namespace TheArchitectsBlueprintMod.UI
             var pixel = ModUtils.DummyTexture;
             var frame = new SpriteFrame(1, 1, 0, 0);
             Point mouse = new(Main.mouseX, Main.mouseY);
-            float baseScale = _mapDrawContext.MapScale * _mapDrawContext.DrawScale;
 
             for (int i = 0; i < points.Length; i++)
             {
                 Point tile = points[i];
                 bool hovered = GetPointHandleRect(tile, PointHandleSizePx).Contains(mouse);
-                float scale = (hovered ? PointHandleHoverSizePx : PointHandleSizePx) / TilePixelSize;
+                float scale = hovered ? PointHandleHoverSizePx : PointHandleSizePx;
                 _mapDrawContext.Draw(
                     pixel,
-                    new Vector2(tile.X, tile.Y),
+                    new Vector2(tile.X + 0.5f, tile.Y + 0.5f),
                     color * 0.9f,
                     frame,
-                    scale * baseScale,
-                    scale * baseScale,
+                    scale,
+                    scale,
                     Alignment.Center);
             }
         }
@@ -490,7 +478,7 @@ namespace TheArchitectsBlueprintMod.UI
         {
             var pixel = ModUtils.DummyTexture;
             var frame = new SpriteFrame(1, 1, 0, 0);
-            float scale = _mapDrawContext.MapScale * _mapDrawContext.DrawScale;
+            float scale = MapTileDrawScale();
 
             for (int i = 0; i < tiles.Length; i++)
             {
@@ -507,19 +495,27 @@ namespace TheArchitectsBlueprintMod.UI
 
         private static void DrawTileRectFillOnMap(Rectangle[] rects, Color fill)
         {
-            float pxPerTile = MapPixelsPerTile();
             var pixel = ModUtils.DummyTexture;
+            var frame = new SpriteFrame(1, 1, 0, 0);
+            float scale = MapTileDrawScale();
 
             for (int i = 0; i < rects.Length; i++)
             {
                 Rectangle r = rects[i];
-                Vector2 topLeft = MapTileToScreen(new Point(r.X, r.Y));
-                var screenRect = new Rectangle(
-                    (int)topLeft.X,
-                    (int)topLeft.Y,
-                    (int)(r.Width * pxPerTile),
-                    (int)(r.Height * pxPerTile));
-                Main.spriteBatch.Draw(pixel, screenRect, PixelSource, fill);
+                for (int y = r.Top; y < r.Bottom; y++)
+                {
+                    for (int x = r.Left; x < r.Right; x++)
+                    {
+                        _mapDrawContext.Draw(
+                            pixel,
+                            new Vector2(x, y),
+                            fill,
+                            frame,
+                            scale,
+                            scale,
+                            Alignment.TopLeft);
+                    }
+                }
             }
 
             if (ModContent.GetInstance<ClientPasteConfig>().Overlay.RectBorders)
@@ -542,8 +538,8 @@ namespace TheArchitectsBlueprintMod.UI
 
         private static void DrawBorderedRectOnMap(Rectangle tileBounds, Color fill, Color outline, int borderWidth)
         {
-            float pxPerTile = MapPixelsPerTile();
-            Vector2 topLeft = MapTileToScreen(new Point(tileBounds.X, tileBounds.Y));
+            float pxPerTile = ArchitectMapTransform.PixelsPerTile;
+            Vector2 topLeft = ArchitectMapTransform.TileToScreen(new Point(tileBounds.X, tileBounds.Y));
             var screenRect = new Rectangle(
                 (int)topLeft.X,
                 (int)topLeft.Y,
@@ -556,7 +552,7 @@ namespace TheArchitectsBlueprintMod.UI
             if (borderWidth <= 0)
                 return;
 
-            int bw = borderWidth;
+            int bw = Math.Max(1, (int)Math.Round(borderWidth * pxPerTile / TilePixelSize));
             Main.spriteBatch.Draw(pixel, new Rectangle(screenRect.Left, screenRect.Top, screenRect.Width, bw), PixelSource, outline);
             Main.spriteBatch.Draw(pixel, new Rectangle(screenRect.Left, screenRect.Bottom - bw, screenRect.Width, bw), PixelSource, outline);
             Main.spriteBatch.Draw(pixel, new Rectangle(screenRect.Left, screenRect.Top, bw, screenRect.Height), PixelSource, outline);
@@ -657,10 +653,10 @@ namespace TheArchitectsBlueprintMod.UI
         /// </summary>
         public static Rectangle GetPointHandleRect(Point tile, int sizePx)
         {
-            if (Main.mapFullscreen)
+            if (ArchitectMapTransform.IsMapViewActive)
             {
-                float pxPerTile = GetFullscreenMapPixelsPerTile();
-                Vector2 center = MapTileToFullscreenScreen(tile, pxPerTile) + new Vector2(pxPerTile / 2f, pxPerTile / 2f);
+                float pxPerTile = ArchitectMapTransform.PixelsPerTile;
+                Vector2 center = ArchitectMapTransform.TileToScreen(tile) + new Vector2(pxPerTile / 2f, pxPerTile / 2f);
                 return new Rectangle(
                     (int)center.X - sizePx / 2,
                     (int)center.Y - sizePx / 2,

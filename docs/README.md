@@ -14,5 +14,5 @@ Detailed guides for The Architect's Blueprint. Start with the [README](../README
 
 These stay near the code they describe:
 
-- [src/Core/notes.md](../src/Core/notes.md) — paste/mapping bugs and investigations
-- [src/UI/TmodGUI/notes.md](../src/UI/TmodGUI/notes.md) — payload browser UI issues
+- [src/Core/#notes.md](../src/Core/%23notes.md) — paste/mapping bugs and investigations
+- [src/UI/TmodGUI/#notes.md](../src/UI/TmodGUI/%23notes.md) — payload browser UI issues

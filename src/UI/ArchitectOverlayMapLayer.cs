@@ -1,6 +1,7 @@
 using Terraria;
 using Terraria.Map;
 using Terraria.ModLoader;
+using TheArchitectsBlueprintMod.Core;
 
 namespace TheArchitectsBlueprintMod.UI
 {
@@ -11,10 +12,18 @@ namespace TheArchitectsBlueprintMod.UI
     {
         public override void Draw(ref MapOverlayDrawContext context, ref string text)
         {
-            if (Main.gameMenu || !Main.mapFullscreen)
+            if (Main.gameMenu || !ArchitectMapTransform.IsMapViewActive)
                 return;
 
-            OverlaySystem.DrawMapOverlays(ref context);
+            ArchitectMapTransform.SetCurrent(in context);
+            try
+            {
+                OverlaySystem.DrawMapOverlays(ref context);
+            }
+            finally
+            {
+                ArchitectMapTransform.ClearCurrent();
+            }
         }
     }
 }

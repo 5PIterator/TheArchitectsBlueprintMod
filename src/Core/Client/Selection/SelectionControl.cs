@@ -111,7 +111,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (selection is not { IsDefined: true })
                 return false;
 
-            Rectangle screenBounds = Main.mapFullscreen
+            Rectangle screenBounds = ArchitectMapTransform.IsMapViewActive
                 ? OverlaySystem.GetTileRectangleScreenPixels(selection.Area)
                 : selection.GetScreenPixelBounds(Main.screenPosition, TilePixelSize);
             Point mouse = new(Main.mouseX, Main.mouseY);

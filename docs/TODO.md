@@ -5,16 +5,16 @@ Engineering tracker for the pre-release. Player-facing summary: [README](../READ
 ## Remaining (pre-release / known issues)
 
 ### Correctness
-- [ ] Plants / tile-anchored objects (blue mushrooms, candles) mis-routed through the block layer instead of plant/frame — see [src/Core/notes.md](../src/Core/notes.md)
+- [ ] Plants / tile-anchored objects (blue mushrooms, candles) mis-routed through the block layer instead of plant/frame — see [src/Core/#notes.md](../src/Core/%23notes.md)
 - [ ] Mod resistance: session-level `modsLoaded` + skip/Unloaded placeholders only; per-tile export tracking and pre-projection compatibility checks not complete
-- [ ] Paste planning lag on moderate payloads (identification / `BuildLookup`) — see [src/Core/notes.md](../src/Core/notes.md)
+- [ ] Paste planning lag on moderate payloads (identification / `BuildLookup`) — see [src/Core/#notes.md](../src/Core/%23notes.md)
 
 ### Multiplayer
 - [ ] Playtest paste on dedicated server + remote client + host-and-play (architecture exists; needs verification)
 
 ### UX / polish
 - [ ] Export browser: pick export target like import file picker (currently always topmost projection with a payload)
-- [ ] Payload browser UI polish (text fields, layout) — see [src/UI/TmodGUI/notes.md](../src/UI/TmodGUI/notes.md)
+- [ ] Payload browser UI polish (text fields, layout) — see [src/UI/TmodGUI/#notes.md](../src/UI/TmodGUI/%23notes.md)
 - [ ] Clear operations may hang on stubborn inventories — skip after first failure + chat message
 - [ ] Large payload move/scale/export performance (untested at ~548×339)
 

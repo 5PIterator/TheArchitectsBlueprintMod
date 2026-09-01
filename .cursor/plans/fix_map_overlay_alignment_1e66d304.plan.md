@@ -4,19 +4,19 @@ overview: "Fix fullscreen map overlay drift by replacing the custom player-cente
 todos:
   - id: map-transform
     content: Add ArchitectMapTransform with cached MapOverlayDrawContext + TileToScreen / ScreenToTile (context-first, vanilla DrawMap fallback)
-    status: pending
+    status: completed
   - id: unify-map-draw
     content: Refactor OverlaySystem map primitives to use context.Draw only; fix scale params (no MapScale*DrawScale double-apply); remove MapTileToFullscreenScreen
-    status: pending
+    status: completed
   - id: fix-map-input-hit
     content: Update ArchitectMapInput, GetPointHandleRect, GetTileRectangleScreenPixels to use ArchitectMapTransform
-    status: pending
+    status: completed
   - id: camera-mode-gate
     content: "Optional: gate map overlay/input when CaptureInterface.Active && UsingMap() same as mapFullscreen"
-    status: pending
+    status: completed
   - id: verify-pan-zoom
     content: "Manual verify: pan, zoom, tool clicks, selection handles, Camera Mode map framing"
-    status: pending
+    status: completed
 isProject: false
 ---
 

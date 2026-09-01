@@ -2,8 +2,8 @@
 
 Documentation index: [docs/README.md](../docs/README.md)  
 Pre-release tracker: [docs/TODO.md](../docs/TODO.md)  
-Live paste/mapping issues: [src/Core/notes.md](Core/notes.md)  
-Browser UI issues: [src/UI/TmodGUI/notes.md](UI/TmodGUI/notes.md)
+Live paste/mapping issues: [src/Core/#notes.md](Core/%23notes.md)  
+Browser UI issues: [src/UI/TmodGUI/#notes.md](UI/TmodGUI/%23notes.md)
 
 ## Code base changes (historical)
 

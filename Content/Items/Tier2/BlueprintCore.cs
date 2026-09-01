@@ -27,7 +27,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 				.AddIngredient(ItemID.LargeTopaz, 1)
 				.AddIngredient(ItemID.LargeAmber, 1)
 				.AddRecipeGroup(RecipeGroup.recipeGroupIDs[ArchitectRecipeGroups.EvilBossSummonGroupName], 1)
-				.AddIngredient(ItemID.FallenStar, 50) // Star Cloud (1.4.9+: replace with mod Star Cloud when available)
+				.AddIngredient(ItemID.ManaCrystal, 5) // 50 Star Cloud (1.4.9+: replace with mod Star Cloud when available)
 				.AddIngredient(ItemID.Wood, 25)
 				//.AddIngredient(5710, 25) // Feywood (not in 1.4.9 ItemID)
 				.AddTile(TileID.DemonAltar)
