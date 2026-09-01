@@ -62,7 +62,8 @@ namespace TheArchitectsBlueprintMod.Content.Items
 				return null;
 
 			var actionManager = ModContent.GetInstance<ToolActionManager>();
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return true;
 
 			if (player.altFunctionUse == 0)
 			{
@@ -93,7 +94,9 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			if (player.whoAmI != Main.myPlayer)
 				return;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return;
+
 			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			if (Main.mouseLeft && Main.mouseRight)

@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -40,25 +39,13 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         ];
 
         /// <summary>Scans loaded items and writes Wands.itr to SourceMaps.</summary>
-        public static void Run(Mod mod, Action<string> msg)
+        public static void Run(Mod mod)
         {
             ArgumentNullException.ThrowIfNull(mod);
-            ArgumentNullException.ThrowIfNull(msg);
 
-            var debugPath = GetDebugPath("WandDiscovery_Debug.txt");
             var outputPath = GetOutputPath("Wands");
-            using var debugWriter = new StreamWriter(debugPath, append: false);
-
-            void Log(string s)
-            {
-                var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {s}";
-                debugWriter.WriteLine(line);
-                debugWriter.Flush();
-                msg(s);
-            }
 
             Log($"Wand discovery started. Output: {outputPath}");
-            Log($"Debug log: {debugPath}");
 
             // --- Resolve shared ammo ids once, then scan every item for tileWand links.
             int wireItemId = ItemID.Wire;
@@ -82,7 +69,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 if (item.GetFlexibleTileWand() is not null)
                 {
                     skippedFlexible++;
-                    Log($"  SKIP flexible wand: {ContentNameResolver.GetItemName(itemId)}");
+                    LogDebug($"  SKIP flexible wand: {ContentNameResolver.GetItemName(itemId)}");
                     continue;
                 }
 
@@ -110,7 +97,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     if (wireKinds.Count == 0)
                     {
                         skippedUnknown++;
-                        Log($"  SKIP wire tool (unknown color): {toolName}");
+                        LogDebug($"  SKIP wire tool (unknown color): {toolName}");
                         continue;
                     }
 
@@ -143,16 +130,16 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 }
 
                 skippedUnknown++;
-                Log($"  SKIP tileWand tool: {toolName} (ammo={ammoName}, createTile={item.createTile}, createWall={item.createWall})");
+                LogDebug($"  SKIP tileWand tool: {toolName} (ammo={ammoName}, createTile={item.createTile}, createWall={item.createWall})");
             }
 
             Log($"Discovered {tileWands} tile wands, {wallWands} wall wands, {wireTools} wire tools, {actuatorTools} actuator tools.");
             if (skippedFlexible > 0)
                 Log($"Skipped {skippedFlexible} flexible tile wands.");
             if (skippedUnknown > 0)
-                Log($"Skipped {skippedUnknown} unrecognized tileWand tools (see debug log).");
+                Log($"Skipped {skippedUnknown} unrecognized tileWand tools.");
 
-            Save(mod, output, Log);
+            Save(mod, output);
             Log($"Wand discovery complete. Output: {outputPath}");
         }
 
@@ -244,7 +231,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             group.Interactions.Add(interaction);
         }
 
-        private static void Save(Mod mod, Dictionary<string, WandItemOutput> output, Action<string> log)
+        private static void Save(Mod mod, Dictionary<string, WandItemOutput> output)
         {
             // --- Emit specialized wire tools before multipurpose ones so load order matches coverage sort.
 
@@ -266,7 +253,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "wand"),
                 Data = ordered,
             };
-            SaveJson(GetOutputPath("Wands"), doc, log, "WandInteractionMap");
+            SaveJson(GetOutputPath("Wands"), doc, "WandInteractionMap");
         }
 
         /// <summary>Whether the tool name is a known multipurpose wire wrench.</summary>

@@ -216,7 +216,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         /// Custom loads before generated maps so same-item curated overrides win export dedupe;
         /// cross-item priority still comes from <see cref="InteractionPriorityComparer"/> (e.g. yield 1 before bombs).
         /// </summary>
-        public static void LoadAllInto(string directory, InteractionMap map, Action<string> msg)
+        public static void LoadAllInto(string directory, InteractionMap map)
         {
             var cfg = ModContent.GetInstance<TileMappingConfig>();
             foreach (var mapType in InteractionMapTypes)
@@ -233,16 +233,16 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     {
                         var format = meta.Format ?? "";
                         if (string.Equals(mapType, "shimmer", StringComparison.OrdinalIgnoreCase))
-                            LoadShimmer(dataEl, map, msg);
+                            LoadShimmer(dataEl, map);
                         else if (string.Equals(format, "item-first", StringComparison.OrdinalIgnoreCase))
-                            LoadItemFirst(dataEl, map, msg);
+                            LoadItemFirst(dataEl, map);
                         else if (string.Equals(format, "tile-first", StringComparison.OrdinalIgnoreCase))
-                            LoadTileFirst(dataEl, map, msg);
+                            LoadTileFirst(dataEl, map);
                     });
                 }
                 catch (Exception ex)
                 {
-                    msg($"{mapType}: {ex.Message}");
+                    TABLog.Warn($"{mapType}: {ex.Message}", "TileMapping");
                 }
             }
         }
@@ -262,7 +262,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 _ => true,
             };
 
-        private static void LoadItemFirst(JsonElement dataEl, InteractionMap map, Action<string> msg)
+        private static void LoadItemFirst(JsonElement dataEl, InteractionMap map)
         {
             var itemEl = ItrFileProcessor.GetItemFirstRoot(dataEl);
             if (!itemEl.HasValue) return;
@@ -274,14 +274,14 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
                 foreach (var ia in arr.EnumerateArray())
                 {
-                    var entry = ParseItemFirstInteraction(ia, item, msg);
+                    var entry = ParseItemFirstInteraction(ia, item);
                     if (entry is not null)
                         map.Add(entry);
                 }
             }
         }
 
-        private static void LoadShimmer(JsonElement dataEl, InteractionMap map, Action<string> msg)
+        private static void LoadShimmer(JsonElement dataEl, InteractionMap map)
         {
             var shimmerBucket = ShimmerDiscovery.BucketName;
             var itemEl = ItrFileProcessor.GetItemFirstRoot(dataEl);
@@ -294,7 +294,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
                 foreach (var ia in arr.EnumerateArray())
                 {
-                    var entry = ParseItemFirstInteraction(ia, shimmerBucket, msg);
+                    var entry = ParseItemFirstInteraction(ia, shimmerBucket);
                     if (entry is not null)
                     {
                         entry.Ammo = sourceItem;
@@ -304,12 +304,12 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             }
         }
 
-        private static InteractionEntry? ParseItemFirstInteraction(JsonElement ia, string item, Action<string> msg)
+        private static InteractionEntry? ParseItemFirstInteraction(JsonElement ia, string item)
         {
             var layer = ia.TryGetProperty("layer", out var l) ? l.GetString() : null;
             if (string.IsNullOrEmpty(layer))
             {
-                msg($"Interaction skipped (layer missing, item={item})");
+                TABLog.Warn($"Interaction skipped (layer missing, item={item})", "InteractionMap");
                 return null;
             }
             var normLayer = ContentNameResolver.NormalizeLayer(layer);
@@ -318,7 +318,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             string? main = ResolveMainFromJson(ia, normLayer);
             if (string.IsNullOrEmpty(main))
             {
-                msg($"Interaction skipped (main missing, item={item})");
+                TABLog.Warn($"Interaction skipped (main missing, item={item})", "InteractionMap");
                 return null;
             }
 
@@ -383,7 +383,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             return null;
         }
 
-        private static void LoadTileFirst(JsonElement dataEl, InteractionMap map, Action<string> msg)
+        private static void LoadTileFirst(JsonElement dataEl, InteractionMap map)
         {
             if (dataEl.TryGetProperty("tiles", out var tilesEl) || dataEl.TryGetProperty("Tiles", out tilesEl))
             {
@@ -394,7 +394,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
                     foreach (var ia in arr.EnumerateArray())
                     {
-                        var entry = ParseTileFirstInteraction(ia, "Tile", main, msg);
+                        var entry = ParseTileFirstInteraction(ia, "Tile", main);
                         if (entry is not null)
                             map.Add(entry);
                     }
@@ -415,7 +415,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                             string? item = el.ValueKind == JsonValueKind.String ? el.GetString() : null;
                             if (string.IsNullOrEmpty(item))
                             {
-                                msg($"Placement: interaction skipped (item missing, main={main})");
+                                TABLog.Warn($"Placement: interaction skipped (item missing, main={main})", "InteractionMap");
                                 continue;
                             }
                             map.Add(new InteractionEntry { Layer = "Wall", Main = main, Item = item });
@@ -425,7 +425,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     {
                         foreach (var ia in arr.EnumerateArray())
                         {
-                            var entry = ParseTileFirstInteraction(ia, "Wall", main, msg);
+                            var entry = ParseTileFirstInteraction(ia, "Wall", main);
                             if (entry is not null)
                                 map.Add(entry);
                         }
@@ -434,12 +434,12 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             }
         }
 
-        private static InteractionEntry? ParseTileFirstInteraction(JsonElement ia, string layer, string main, Action<string> msg)
+        private static InteractionEntry? ParseTileFirstInteraction(JsonElement ia, string layer, string main)
         {
             string? item = ia.TryGetProperty("Item", out var i) ? i.GetString() : null;
             if (string.IsNullOrEmpty(item))
             {
-                msg("Placement: interaction skipped (item missing)");
+                TABLog.Warn("Placement: interaction skipped (item missing)", "InteractionMap");
                 return null;
             }
 

@@ -25,7 +25,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         public string? Base { get; set; }
         /// <summary>Placement style for direct placement (e.g. torch variant). Null for style-agnostic; interpreted as 0 when indexing.</summary>
         public int? Style { get; set; }
-        /// <summary>Interactions per item; null omits serialization. Direct tile/wall placement defaults to 1 at runtime.</summary>
+        /// <summary>Stack debits per placement; omit or null defaults to 1 at runtime. Use -1 (or any ≤ 0) for infinite.</summary>
         public int? Yield { get; set; }
         /// <summary>Ammo consumed instead of the tool.</summary>
         public string? Ammo { get; set; }
@@ -1043,19 +1043,19 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             int cmp = aBase.CompareTo(bBase);
             if (cmp != 0) return cmp;
 
-            int? aYieldValue = InteractionBudget.GetEffectiveYield(a);
-            int? bYieldValue = InteractionBudget.GetEffectiveYield(b);
-            bool aFinite = aYieldValue is > 0;
-            bool bFinite = bYieldValue is > 0;
+            int aYieldValue = InteractionBudget.GetEffectiveYield(a);
+            int bYieldValue = InteractionBudget.GetEffectiveYield(b);
+            bool aFinite = aYieldValue > 0;
+            bool bFinite = bYieldValue > 0;
 
-            // Infinite yield (null / <= 0) before finite spend rates.
+            // Explicit infinite yield (<= 0) before finite spend rates.
             cmp = (aFinite ? 1 : 0).CompareTo(bFinite ? 1 : 0);
             if (cmp != 0) return cmp;
 
             // Among finite yields, prefer cheaper single-tile items (DirtBlock 1 before DirtBomb 25).
             if (aFinite && bFinite)
             {
-                cmp = aYieldValue!.Value.CompareTo(bYieldValue!.Value);
+                cmp = aYieldValue.CompareTo(bYieldValue);
                 if (cmp != 0) return cmp;
             }
 

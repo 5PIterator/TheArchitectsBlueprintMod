@@ -28,7 +28,7 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             int plr = caller.Player?.whoAmI ?? Main.myPlayer;
-            BiomeDiscovery.Run(Mod, Main.player[plr], msg => caller.Reply(msg));
+            BiomeDiscovery.Run(Mod, Main.player[plr]);
         }
     }
 }

@@ -26,7 +26,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            PaintDiscovery.Run(Mod, msg => caller.Reply(msg));
+            PaintDiscovery.Run(Mod);
         }
     }
 }

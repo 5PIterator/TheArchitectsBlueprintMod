@@ -1,80 +1,93 @@
 ---
 name: Map overlay compatibility
-overview: "Implement fullscreen-map support from [Content/Items/notes.md](Content/Items/notes.md): draw selection overlays at correct map coordinates using tModLoader’s `MapOverlayDrawContext`, route map input per Tier 4/5 rules, and show overlays (world + map) only while holding an Architect tool—Tier 4/5-specific visibility beyond that is deferred to a later UI milestone."
+overview: "Implement fullscreen-map support from [src/notes.md](src/notes.md): draw blueprint/projection overlays at correct map coordinates via a ModMapLayer + MapOverlayDrawContext, and route map cursor input for any held architect tool—no tier or progression gates."
 todos:
   - id: map-overlay-draw
-    content: Add MapOverlayDrawContext draw path in OverlaySystem (ModSystem map hook), refactor catalog/primitives for world vs map transforms; fix GetPointHandleRect for map hover
-    status: pending
+    content: Add ModMapLayer draw path calling OverlaySystem catalog with map transforms; refactor tile primitives (Point, TileFill, TileRectFill, TileBounds, TileBorder) for world vs map; preserve early/late fill passes; fix GetPointHandleRect for map hover; skip Screen kind on map
+    status: completed
   - id: map-cursor-helper
-    content: Implement TryGetCursorTile + CanUseMapTools (Hand equipped OR ModPlayer Soul flag) + held-item whitelist; vanilla map mouse→tile conversion
-    status: pending
-  - id: wire-items-modplayer
-    content: Route all tool items through cursor helper; add ModPlayer flag + OnConsumeItem on ArchitectsSoul; gate catalog draw on IsHoldingAnyArchitectTool (Tier 4/5-only UI behavior left to future UI work)
-    status: pending
+    content: Implement TryGetCursorTile with map mouse→tile conversion when mapFullscreen; gate map input on IsArchitectTool(held item) only—no tier whitelist or progression checks
+    status: completed
+  - id: wire-items
+    content: Route all architect tool items through TryGetCursorTile instead of inline MouseWorld; reuse ArchitectOverlayVisibility scope filtering on map draw path (unchanged from world)
+    status: completed
 isProject: false
 ---
 
-# Map compatibility: overlays + Tier 4/5 tool input
+# Map compatibility: overlays + tool input
 
-## Goals (from notes)
+## Goals (from [src/notes.md](src/notes.md))
 
 1. **Overlays on the fullscreen map** — When `Main.mapFullscreen`, blueprint/projection visuals should appear aligned to the map (not hidden and not misaligned).
-2. **Tool interaction on the map** — Equipped tools should work against map cursor **only** for the Tier 4/5 progression (per your scope choice): lower tiers remain **world-only**.
-
-3. **Overlay visibility** — Blueprint/projection overlays (world **and** fullscreen map) are shown **only** while the local player is **holding** one of the mod’s Architect tool items (Tier 1 sticks, Tier 2 wands, `ArchitectsStencil`, etc.). **Tier 4/5** cases where the player might expect overlays or controls **without** a tool in hand (e.g. accessory-only `ArchitectsHand`, post–`ArchitectsSoul` GUI) are **not** part of this milestone; a **later UI implementation** will own that visibility and interaction surface.
+2. **Tool interaction on the map** — **Any** held architect tool (Tier 1 sticks, Tier 2 wands, `ArchitectsStencil`, `DebugStick`, etc.) should resolve the map cursor and drive the same `ToolActionManager` flows as in-world. No Tier 4/5 progression, accessory, or held-item whitelist.
+3. **Overlay visibility** — Same rules as world today: overlays draw while the local player holds a tool whose `ArchitectOverlayScope` matches the overlay family (via [`ArchitectOverlayVisibility`](src/Core/Client/ArchitectOverlayVisibility.cs)). Accessory-only / GUI-only visibility (e.g. `ArchitectsHand`, `ArchitectsBlueprint`) remains deferred to a later UI milestone.
 
 ## Current behavior ([`src/UI/OverlaySystem.cs`](src/UI/OverlaySystem.cs))
 
-- [`OverlayContext.ShouldDrawWorldOverlay`](src/UI/OverlaySystem.cs) is `!Main.gameMenu && !Main.mapFullscreen`, so **the entire catalog is skipped** while the fullscreen map is open (lines 295–305).
-- World drawing uses **world camera** math: tile → screen via `Main.screenPosition` (e.g. `DrawPoints`, `DrawTileFill`, `GetPointHandleRect`). That is correct for the live world, not for the map projection.
-- Tool code (e.g. items) typically resolves tiles with `Terraria.Utils.ToTileCoordinates(Main.MouseWorld)`, which does **not** match the tile under the cursor on the fullscreen map.
+- [`OverlayContext.ShouldDrawWorldOverlay`](src/UI/OverlaySystem.cs) is `!Main.gameMenu && !Main.mapFullscreen`, so **the entire catalog is skipped** while the fullscreen map is open (see `DrawOverlayEarly` / `DrawOverlayLate`, ~lines 345–372).
+- World drawing uses **world camera** math: tile → screen via `Main.screenPosition` (e.g. `DrawPoints`, `DrawTileFill`, `DrawTileBounds` via `ModUtils.DrawBorderedRect`, `GetPointHandleRect`). Correct for live world, not for the map projection.
+- Tool code (e.g. items) resolves tiles with `Terraria.Utils.ToTileCoordinates(Main.MouseWorld)`, which does **not** match the tile under the cursor on the fullscreen map.
+- **Visibility is scope-based** via [`ArchitectOverlayVisibility`](src/Core/Client/ArchitectOverlayVisibility.cs) + [`ArchitectOverlayPlayer`](src/Core/Client/ArchitectOverlayPlayer.cs). World draw filters per overlay family through `IsOverlayFamilyVisible` — reuse on the map path unchanged.
+- **Overlay catalog has grown** since the initial draft: two-pass draw (early borders/points, late fills), `TileRectFill` / `RegPasteTileFill` (paste progress via [`PasteOverlayMonitor`](src/Core/Client/PasteOverlayMonitor.cs)), and `Screen` drawables (projection sprite preview via [`PayloadPreview`](src/Core/Client/Preview/PayloadPreview.cs), toolbox via [`ProjectionToolboxControl`](src/UI/ProjectionToolboxControl.cs)).
 
 ## Design
 
 ### A. Split draw paths: world vs map
 
-Keep the existing **world** path (current `LegacyGameInterfaceLayer` + `Main.screenPosition` math) for normal gameplay.
+Keep the existing **world** path (current `LegacyGameInterfaceLayer` early/late passes + `Main.screenPosition` math) for normal gameplay.
 
 Add a **map** path driven by tModLoader’s map overlay API:
 
-- Use [`Terraria.Map.MapOverlayDrawContext`](https://docs.tmodloader.net/docs/1.4-stable/struct_terraria_1_1_map_1_1_map_overlay_draw_context.html): draw calls take positions in **tile space**; the context supplies `MapOffset`, `MapPosition`, `MapScale`, `DrawScale`, etc.
-- Implement this on the same [`OverlaySystem`](src/UI/OverlaySystem.cs) (already a `ModSystem`) by **overriding the ModSystem hook** your tML version exposes for map icon / overlay drawing (exact override name may vary by tML branch—confirm in IDE against your reference assemblies; the docs center on `MapOverlayDrawContext`).
+- Use [`ModMapLayer`](https://docs.tmodloader.net/docs/stable/class_mod_map_layer.html) with `Draw(ref MapOverlayDrawContext context, ref string text)` — **not** a generic ModSystem override. `ModMapLayer` is the current tML entry point for custom map drawing.
+- Add a thin layer class (e.g. `ArchitectOverlayMapLayer` under `src/UI/`) that delegates to catalog draw methods on [`OverlaySystem`](src/UI/OverlaySystem.cs).
+- Use [`MapOverlayDrawContext`](https://docs.tmodloader.net/docs/stable/struct_map_overlay_draw_context.html): draw calls take positions in **tile space**; the context supplies `MapOffset`, `MapPosition`, `MapScale`, `DrawScale`, etc.
+- **Gate to fullscreen only:** `ModMapLayer` runs for fullscreen map, overlay map, and minimap. Inside `Draw`, return early unless `Main.mapFullscreen` (and not `Main.gameMenu`). Minimap/overlay-map drawing is **out of scope** for this milestone unless testing shows it is trivially correct.
+
+**Drawable coverage**
+
+| Kind | Map support | Notes |
+|------|-------------|-------|
+| `Point` | Yes | `context.Draw` at tile `Vector2`, centered alignment |
+| `TileFill` | Yes | Per-tile or batched `context.Draw` calls |
+| `TileRectFill` | Yes | Paste overlays (`RegPasteTileFill`); batch rects |
+| `TileBounds` / `TileBorder` | Yes | Map-space lines/quads from tile `Rectangle` + context transforms; replace `ModUtils.DrawBorderedRect` screenPosition path |
+| `Screen` | **No (world-only)** | Projection sprites (`PayloadPreview.Draw`) and toolbox UI (`ProjectionToolboxControl`) use world/screen coordinates — skip on map path |
 
 **Rendering strategy**
 
 - **Points / small markers:** use `context.Draw` with the dummy 1×1 texture at tile `Vector2`, appropriate `Alignment` (e.g. centered), and scales derived from `DrawScale` / `MapScale` so hover enlargement still reads well.
 - **Per-tile fills:** either many `Draw` calls (acceptable for small previews) or batch into fewer quads if hotspots appear in profiling.
-- **Rectangular borders (tile bounds):** compute **screen-space** lines or thin quads from the tile `Rectangle` using `MapOffset`, `MapPosition`, and `MapScale` (same transform vanilla uses for map tiles—verify in one test session so corners stay pixel-aligned when zooming/panning).
+- **Rectangular borders (tile bounds):** compute screen-space lines or thin quads from the tile `Rectangle` using `MapOffset`, `MapPosition`, and `MapScale` (same transform vanilla uses for map tiles — verify in one test session so corners stay pixel-aligned when zooming/panning).
+- **Two-pass ordering:** Mirror the world path’s early/late fill split on the map path so borders/points draw before fills where z-order matters.
 
-Refactor slightly so `OverlayCatalog.Draw()` either accepts a **mode enum** (`World` vs `Map`) plus optional `MapOverlayDrawContext`, or register two parallel draw delegates—whichever keeps call sites in blueprint/projection code minimal.
+Refactor so `OverlayCatalog.Draw()` accepts a **mode enum** (`World` vs `Map`) plus optional `MapOverlayDrawContext`, routing each `OverlayDrawableKind` to the correct transform. Call sites in blueprint/projection/paste code stay unchanged.
 
 ### B. When to draw (world and map)
 
-- **Held-tool gate (applies everywhere):** Before drawing the catalog in either path, require `Main.LocalPlayer` to be holding **any** Architect mod tool (central helper, e.g. `IsHoldingAnyArchitectTool(Player)` keyed off `ModContent.ItemType<>` for sticks, wands, stencil, debug stick if applicable). If not holding a tool, **skip the entire overlay draw** even if the catalog still has entries (call sites may keep registering; draw is a no-op when unarmed).
-- **Map path:** When the fullscreen map is open (and not main menu), run the map-specific draw **only if** the held-tool gate passes—same as world. Remove the blanket “skip all overlays when `mapFullscreen`” behavior, but replace it with map-aware drawing instead of world math.
-- **Tier 4/5:** Do **not** add special overlay visibility rules for Hand/Soul in this task. Future UI will decide when overlays or chrome appear for accessory-only / consumable-upgrade flows.
+- **Scope gate (applies everywhere, unchanged):** Reuse `IsOverlayFamilyVisible` / `ArchitectOverlayVisibility.IsFamilyVisible(family, heldScope)` on **both** world and map paths. Each overlay family only draws when the held tool’s scope includes the required bits. If `heldScope == ArchitectOverlayScope.None` (vanilla item or empty hand), skip all overlay families.
+- **Map path:** When `Main.mapFullscreen` (and not main menu), run map-specific draw with the same scope filtering as world. Remove the blanket “skip all overlays when `mapFullscreen`” behavior from the world path only; map path replaces it with map-aware drawing.
 
-### C. Map cursor + Tier 4/5-only tool routing
+**Registered tools** ([`ArchitectOverlayVisibility.OnModLoad`](src/Core/Client/ArchitectOverlayVisibility.cs)): Tier 1 sticks, Tier 2 wands, `ArchitectsStencil`, `DebugStick`.
 
-**Eligibility (player progression)**
+### C. Map cursor + tool routing
 
-- **`ArchitectsHand` equipped** in an accessory slot (once that item exists), **or**
-- **`ArchitectsSoul` permanent flag** on a small [`ModPlayer`](https://github.com/tModLoader/tModLoader/wiki/Basic-Player) (set when the consumable is used—Soul is currently a stub in [`Content/Items/Tier4/ArchitectsSoul.cs`](Content/Items/Tier4/ArchitectsSoul.cs)).
+**Eligibility**
 
-**Held-item restriction (“lower tiers world-only”)**
-
-- Only allow map-based gestures when the **selected item** is an **allowed high-tier tool**—minimal whitelist to implement: [`ArchitectsStencil`](Content/Items/Tier3/ArchitectsStencil.cs) and, if it becomes a usable tool, [`ArchitectsHand`](Content/Items/Tier4/ArchitectsHand.cs). **Exclude** Tier 1 sticks and Tier 2 wands by type.
+- **Any registered architect tool** in the held slot: `ArchitectOverlayVisibility.GetItemScope(heldItem.type) != ArchitectOverlayScope.None`.
+- No `ArchitectsHand` accessory check, no `ArchitectsBlueprint` progression flag, no Stencil-only whitelist. Lower-tier sticks and wands behave on the map the same as higher-tier tools.
 
 **Cursor resolution**
 
-- Add a single helper (e.g. `ArchitectMapInput.TryGetCursorTile(Player player, out Point tile)` in `src/UI` or `src/Core/Client`):
-  - If **not** `Main.mapFullscreen`: use existing `ToTileCoordinates(Main.MouseWorld)`.
-  - If **map fullscreen** and **not** (`CanUseMapTools(player)` **and** `IsAllowedHeldItem(player)`): **do not** run architect tool logic in `UseItem` / `HoldItem` (return early / no-op) so lower-tier tools never act on bogus coordinates.
-  - If **map fullscreen** and allowed: convert **screen mouse** to **map tile** using the same approach as vanilla’s map (inspect `Main` / `MapHelper` / decompiled map update in your tML version—this is the “Terraria API” the notes refer to).
+- Add a single helper (e.g. `ArchitectMapInput.TryGetCursorTile(Player player, out Point tile)` in `src/Core/Client/`):
+  - If **not** `Main.mapFullscreen`: use `ToTileCoordinates(Main.MouseWorld)` (unchanged).
+  - If **map fullscreen** and held item is **not** an architect tool: return false / let caller no-op (vanilla items should not run architect logic on bogus map coordinates).
+  - If **map fullscreen** and held item **is** an architect tool: convert **screen mouse** to **map tile** using vanilla’s map math (inspect `Main` / `MapHelper` / decompiled map update in your tML version).
+
+Optional convenience: `IsArchitectTool(int itemType)` wraps `GetItemScope(itemType) != None`.
 
 **Call sites**
 
-- Every mod item that calls `ToolActionManager.Handle(..., cursorTile)` should obtain `cursorTile` via the helper instead of inlining `MouseWorld` (PinStick-style items, wands, stencil, etc.). Centralizing avoids drift.
+- Every mod item that calls `ToolActionManager.Handle(..., cursorTile)` should obtain `cursorTile` via the helper instead of inlining `MouseWorld` (all Tier 1–3 tool items, `DebugStick`, and [`ScenarioTestGuards`](src/tests/scenarios/ScenarioTestGuards.cs) if applicable). Items that are not architect tools need no changes.
 
 **Hit-testing**
 
@@ -84,34 +97,41 @@ Refactor slightly so `OverlayCatalog.Draw()` either accepts a **mode enum** (`Wo
 
 | Area | File(s) |
 |------|---------|
-| Overlays + hook | [`src/UI/OverlaySystem.cs`](src/UI/OverlaySystem.cs) |
-| Cursor + gates | New small static class or partial in UI/Core client |
+| Map layer (new) | New `ArchitectOverlayMapLayer` (or similar) under `src/UI/` |
+| Overlays + transforms | [`src/UI/OverlaySystem.cs`](src/UI/OverlaySystem.cs) |
+| Visibility (reuse as-is) | [`src/Core/Client/ArchitectOverlayVisibility.cs`](src/Core/Client/ArchitectOverlayVisibility.cs), [`src/Core/Client/ArchitectOverlayPlayer.cs`](src/Core/Client/ArchitectOverlayPlayer.cs) |
+| Cursor helper | New static class in `src/Core/Client/` (e.g. `ArchitectMapInput.cs`) |
 | Items | [`Content/Items/**/*.cs`](Content/Items/) that pass `cursorTile` into `ToolActionManager` |
-| Soul / Hand progression | [`Content/Items/Tier4/ArchitectsSoul.cs`](Content/Items/Tier4/ArchitectsSoul.cs), new `ModPlayer`, optional `ArchitectsHand` when added |
+| Overlay registrars (no API changes expected) | [`SelectionSystem`](src/Core/Client/Selection/SelectionSystem.cs), [`ProjectionSystem`](src/Core/Client/Projection/ProjectionSystem.cs), [`InclusionControl`](src/Core/Client/Selection/InclusionControl.cs), [`PasteOverlayMonitor`](src/Core/Client/PasteOverlayMonitor.cs) |
+| World-only (no map port) | [`ProjectionToolboxControl`](src/UI/ProjectionToolboxControl.cs), [`PayloadPreview`](src/Core/Client/Preview/PayloadPreview.cs) — `Screen` kind skipped on map |
 
 ### E. Verification
 
-- With blueprint/projection active but **no** Architect tool selected: **no** overlays in world or on fullscreen map.
-- Holding **any** Architect tool: overlays show in world as today (unchanged aside from gate); on fullscreen map they align when panning/zooming.
-- With **no** Hand/Soul: map open + Tier 1 tool — **no** architect **map** interaction (world still works when not on map).
-- With Hand **or** Soul flag + **ArchitectsStencil** held: clicks/drags on the map hit the expected tiles and drive the same systems as in-world.
+- With blueprint/projection active but **no** architect tool held (`heldScope == None`): **no** overlays in world or on fullscreen map.
+- Holding a **selection** tool (e.g. PinStick): selection overlays visible on world and map; paste overlays **not** visible (scope filtering unchanged).
+- Holding a **paste** tool (e.g. PasteStick): paste overlays visible and align on map when panning/zooming.
+- **Any** architect tool on fullscreen map: clicks/drags hit the expected tiles and drive the same systems as in-world (PinStick pins, SelectionWand sets, CopyStick copies, etc.).
+- **Screen** overlays (projection sprites, toolbox): visible in world when scope allows; **not** drawn on fullscreen map.
+- Paste in progress + paste-scoped tool held: paste tile overlays (`RegPasteTileFill`) align on map.
 - Regression: world-mode tool behavior unchanged when not using the map.
 
 ```mermaid
 flowchart LR
   subgraph draw [Draw]
-    WorldLayer[InterfaceLayer world draw]
-    MapHook[ModSystem map overlay hook]
+    WorldLayer[InterfaceLayer early/late]
+    MapLayer[ModMapLayer fullscreen gate]
     Catalog[OverlayCatalog]
-    WorldLayer --> Catalog
-    MapHook --> Catalog
+    ScopeFilter[ArchitectOverlayVisibility]
+    WorldLayer --> ScopeFilter
+    MapLayer --> ScopeFilter
+    ScopeFilter --> Catalog
   end
   subgraph input [Input]
     Items[ModItem UseItem HoldItem]
-    Gate{mapFullscreen and allowed?}
+    Gate{mapFullscreen and architect tool?}
     Helper[TryGetCursorTile]
     Items --> Gate
-    Gate -->|no| NoOp[Skip tool logic]
+    Gate -->|no| MouseWorld[MouseWorld or no-op]
     Gate -->|yes| Helper
     Helper --> TAM[ToolActionManager.Handle]
   end

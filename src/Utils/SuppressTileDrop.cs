@@ -57,11 +57,14 @@ namespace TheArchitectsBlueprintMod.Utils
 
         public static void KillTile(int i, int j)
         {
-            RunSuppressed(() => WorldGen.KillTile(i, j, fail: false, effectOnly: false, noItem: true));
+            // Mute Dig while also suppressing item drops for sandbox/discovery/paste clears.
+            SuppressTileSound.Run(() =>
+                RunSuppressed(() => WorldGen.KillTile(i, j, fail: false, effectOnly: false, noItem: true)));
         }
 
         public static void KillWall(int i, int j) =>
-            RunSuppressed(() => WorldGen.KillWall(i, j, fail: false));
+            SuppressTileSound.Run(() =>
+                RunSuppressed(() => WorldGen.KillWall(i, j, fail: false)));
 
         public static void EmptyLiquid(int x, int y) =>
             RunSuppressed(() => WorldGen.EmptyLiquid(x, y));

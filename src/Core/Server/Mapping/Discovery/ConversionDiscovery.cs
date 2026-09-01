@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -20,36 +19,24 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         private const string SpectrePaintRollerItem = "SpectrePaintRoller";
 
         /// <summary>Runs all conversion family handlers and writes Conversion.itr.json.</summary>
-        public static void Run(Mod mod, Action<string> msg)
+        public static void Run(Mod mod)
         {
             // --- Build shared indexes once, then let each family append interactions into one item-first map.
 
             ArgumentNullException.ThrowIfNull(mod);
-            ArgumentNullException.ThrowIfNull(msg);
 
-            var debugPath = GetDebugPath("ConversionDiscovery_Debug.txt");
             var outputPath = GetOutputPath("Conversion");
-            using var debugWriter = new StreamWriter(debugPath, append: false);
-
-            void Log(string s)
-            {
-                var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {s}";
-                debugWriter.WriteLine(line);
-                debugWriter.Flush();
-                msg(s);
-            }
 
             Log($"Conversion discovery started. Output: {outputPath}");
-            Log($"Debug log: {debugPath}");
 
             IReadOnlyDictionary<int, int> createWallItems = BuildCreateWallItemIndex();
             var output = new Dictionary<string, ConversionItemOutput>(StringComparer.OrdinalIgnoreCase);
             int total = 0;
 
-            total += DiscoverWallConversionFamily(output, createWallItems, Log);
+            total += DiscoverWallConversionFamily(output, createWallItems);
 
             Log($"Discovered {total} conversion interactions across families.");
-            Save(mod, output, Log);
+            Save(mod, output);
             Log($"Conversion discovery complete. Output: {outputPath}");
         }
 
@@ -58,15 +45,14 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         /// </summary>
         private static int DiscoverWallConversionFamily(
             Dictionary<string, ConversionItemOutput> output,
-            IReadOnlyDictionary<int, int> createWallItems,
-            Action<string> log)
+            IReadOnlyDictionary<int, int> createWallItems)
         {
             // --- Craftable walls use their createWall item as ammo; unsafes without createWall use wallBlend.
 
-            log("Family: WallConversion");
+            Log("Family: WallConversion");
             if (!ContentNameResolver.ResolveItem(SpectrePaintRollerItem).HasValue)
             {
-                log("  SKIP WallConversion: SpectrePaintRoller item unresolved.");
+                LogWarn("  SKIP WallConversion: SpectrePaintRoller item unresolved.");
                 return 0;
             }
 
@@ -82,7 +68,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 if (wallId <= 0 || ammoItemId <= 0)
                     continue;
 
-                AddWallConversion(output, wallId, ammoItemId, log, "craftable");
+                AddWallConversion(output, wallId, ammoItemId, "craftable");
                 coveredWalls.Add(wallId);
                 craftable++;
             }
@@ -102,16 +88,16 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
                 if (!TryResolveRelatedWallItem(wallId, createWallItems, out int ammoItemId))
                 {
-                    log($"  SKIP {wallName} ({wallId}): no related placeable wall item.");
+                    LogDebug($"  SKIP {wallName} ({wallId}): no related placeable wall item.");
                     continue;
                 }
 
-                AddWallConversion(output, wallId, ammoItemId, log, "unsafe");
+                AddWallConversion(output, wallId, ammoItemId, "unsafe");
                 coveredWalls.Add(wallId);
                 unsafeOnly++;
             }
 
-            log($"  WallConversion summary: {craftable} craftable, {unsafeOnly} unsafe-only, {craftable + unsafeOnly} total.");
+            Log($"  WallConversion summary: {craftable} craftable, {unsafeOnly} unsafe-only, {craftable + unsafeOnly} total.");
             return craftable + unsafeOnly;
         }
 
@@ -120,7 +106,6 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             Dictionary<string, ConversionItemOutput> output,
             int wallId,
             int ammoItemId,
-            Action<string> log,
             string source)
         {
             // --- Record roller tool + wall-item ammo for this wall main.
@@ -133,7 +118,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 Yield = 1,
                 Ammo = ammoName,
             });
-            log($"  {wallName} ({wallId}) -> {SpectrePaintRollerItem} ammo={ammoName} ({source})");
+            LogDebug($"  {wallName} ({wallId}) -> {SpectrePaintRollerItem} ammo={ammoName} ({source})");
         }
 
         /// <summary>Builds createWall wall-id -> item-id for every placeable wall item.</summary>
@@ -253,14 +238,14 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             group.Interactions.Add(interaction);
         }
 
-        private static void Save(Mod mod, Dictionary<string, ConversionItemOutput> output, Action<string> log)
+        private static void Save(Mod mod, Dictionary<string, ConversionItemOutput> output)
         {
             var doc = new InteractionMapDocument<Dictionary<string, ConversionItemOutput>>
             {
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "conversion"),
                 Data = output,
             };
-            SaveJson(GetOutputPath("Conversion"), doc, log, "ConversionInteractionMap");
+            SaveJson(GetOutputPath("Conversion"), doc, "ConversionInteractionMap");
         }
 
         private sealed class ConversionItemOutput

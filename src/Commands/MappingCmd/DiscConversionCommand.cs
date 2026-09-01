@@ -26,7 +26,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            ConversionDiscovery.Run(Mod, msg => caller.Reply(msg));
+            ConversionDiscovery.Run(Mod);
         }
     }
 }

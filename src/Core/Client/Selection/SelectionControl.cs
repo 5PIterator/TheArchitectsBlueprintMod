@@ -2,6 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
+using TheArchitectsBlueprintMod.UI;
 
 namespace TheArchitectsBlueprintMod.Core
 {
@@ -110,7 +111,9 @@ namespace TheArchitectsBlueprintMod.Core
             if (selection is not { IsDefined: true })
                 return false;
 
-            Rectangle screenBounds = selection.GetScreenPixelBounds(Main.screenPosition, TilePixelSize);
+            Rectangle screenBounds = Main.mapFullscreen
+                ? OverlaySystem.GetTileRectangleScreenPixels(selection.Area)
+                : selection.GetScreenPixelBounds(Main.screenPosition, TilePixelSize);
             Point mouse = new(Main.mouseX, Main.mouseY);
 
             HitRegion region = HitTest(player, screenBounds, mouse);
@@ -317,12 +320,8 @@ namespace TheArchitectsBlueprintMod.Core
             return HitRegion.None;
         }
 
-        private static Rectangle GetPointHandleRect(Point tile)
-        {
-            int centerX = tile.X * TilePixelSize + TilePixelSize / 2 - (int)Main.screenPosition.X;
-            int centerY = tile.Y * TilePixelSize + TilePixelSize / 2 - (int)Main.screenPosition.Y;
-            return new Rectangle(centerX - PointHandleSizePx / 2, centerY - PointHandleSizePx / 2, PointHandleSizePx, PointHandleSizePx);
-        }
+        private static Rectangle GetPointHandleRect(Point tile) =>
+            OverlaySystem.GetPointHandleRect(tile, PointHandleSizePx);
 
         private static Rectangle ResizeFromCursor(Rectangle start, DragKind kind, Point cursorTile)
         {

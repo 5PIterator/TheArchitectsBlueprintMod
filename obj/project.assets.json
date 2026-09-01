@@ -60,11 +60,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\TheArchitectsBlueprintMod.csproj",
+      "projectUniqueName": "r:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\TheArchitectsBlueprintMod.csproj",
       "projectName": "TheArchitectsBlueprintMod",
-      "projectPath": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\TheArchitectsBlueprintMod.csproj",
+      "projectPath": "r:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\TheArchitectsBlueprintMod.csproj",
       "packagesPath": "C:\\Users\\theiterator\\.nuget\\packages\\",
-      "outputPath": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\obj\\",
+      "outputPath": "r:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\theiterator\\AppData\\Roaming\\NuGet\\NuGet.Config"

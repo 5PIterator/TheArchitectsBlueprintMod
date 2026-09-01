@@ -26,7 +26,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            RubbleDiscovery.Run(Mod, msg => caller.Reply(msg));
+            RubbleDiscovery.Run(Mod);
         }
     }
 }

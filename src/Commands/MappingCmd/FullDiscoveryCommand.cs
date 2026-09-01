@@ -1,16 +1,13 @@
-using System;
-using System.Collections;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Core.TileMapping;
-using TheArchitectsBlueprintMod.Debug;
 
 namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Runs all discovery steps (placement, wand, paint, vine, biome, shimmer) and then compiles the tile map.
-    /// Usage: /tab.discAll. When holding Debug Stick: left-click to step through each phase, right-click to cancel.
+    /// Runs all discovery steps without compiling.
+    /// Usage: /tab.discAll. Debug Stick: click-to-step; otherwise auto at 500 steps/frame.
     /// </summary>
     public sealed class FullDiscoveryCommand : ModCommand
     {
@@ -18,7 +15,7 @@ namespace TheArchitectsBlueprintMod.Core
         public override CommandType Type => CommandType.Chat;
 
         public override string Usage => "/tab.discAll";
-        public override string Description => "Runs all discovery steps and compiles the tile map.";
+        public override string Description => "Runs all discovery steps.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
@@ -28,57 +25,8 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            Action<string> reply = msg => caller.Reply(msg);
             int plr = caller.Player?.whoAmI ?? Main.myPlayer;
-            var player = Main.player[plr];
-
-            var enumerator = CreateSteppedRun(Mod, player, reply);
-            if (DebugStepper.IsHoldingDebugStick(player))
-            {
-                DebugStepper.StartSession(player, enumerator, onComplete: null, onCancel: null, log: reply);
-                return;
-            }
-
-            while (enumerator.MoveNext()) { }
-        }
-
-        private static IEnumerator CreateSteppedRun(Mod mod, Player player, Action<string> reply)
-        {
-            reply("Discovery: Placement...");
-            PlacementDiscovery.Run(mod, player, reply, allowStepping: false);
-            yield return null;
-
-            reply("Discovery: Wand...");
-            WandDiscovery.Run(mod, reply);
-            yield return null;
-
-            reply("Discovery: Rubble...");
-            RubbleDiscovery.Run(mod, reply);
-            yield return null;
-
-            reply("Discovery: Paint...");
-            PaintDiscovery.Run(mod, reply);
-            yield return null;
-
-            reply("Discovery: Plant...");
-            PlantDiscovery.Run(mod, reply);
-            yield return null;
-
-            reply("Discovery: Conversion...");
-            ConversionDiscovery.Run(mod, reply);
-            yield return null;
-
-            reply("Discovery: Biome...");
-            BiomeDiscovery.Run(mod, player, reply, allowStepping: false);
-            yield return null;
-
-            reply("Discovery: Shimmer...");
-            ShimmerDiscovery.Run(mod, reply, player, allowStepping: false);
-            yield return null;
-
-            reply("Compiling tile map...");
-            TileMappingSystem.Compile(mod, reply);
-            reply("Full discovery and compile complete.");
+            TileMappingSystem.StartFullDiscovery(Mod, Main.player[plr], allowStepping: true, compileAtEnd: false);
         }
     }
 }

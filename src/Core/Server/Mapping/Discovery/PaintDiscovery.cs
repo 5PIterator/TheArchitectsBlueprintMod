@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -25,30 +24,18 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         ];
 
         /// <summary>Scans loaded items and writes Paints.itr.</summary>
-        public static void Run(Mod mod, Action<string> msg)
+        public static void Run(Mod mod)
         {
             // --- Collect ammo and tools, then emit one Paint interaction per tool/ammo pair.
 
             ArgumentNullException.ThrowIfNull(mod);
-            ArgumentNullException.ThrowIfNull(msg);
 
-            var debugPath = GetDebugPath("PaintDiscovery_Debug.txt");
             var outputPath = GetOutputPath("Paints");
-            using var debugWriter = new StreamWriter(debugPath, append: false);
-
-            void Log(string s)
-            {
-                var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {s}";
-                debugWriter.WriteLine(line);
-                debugWriter.Flush();
-                msg(s);
-            }
 
             Log($"Paint discovery started. Output: {outputPath}");
-            Log($"Debug log: {debugPath}");
 
-            List<PaintAmmo> ammo = CollectAmmo(Log);
-            List<PaintTool> tools = CollectTools(Log);
+            List<PaintAmmo> ammo = CollectAmmo();
+            List<PaintTool> tools = CollectTools();
             Log($"Collected {ammo.Count} paint/coating ammo and {tools.Count} paint tools.");
 
             var output = new Dictionary<string, PaintItemOutput>(StringComparer.OrdinalIgnoreCase);
@@ -71,12 +58,12 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             }
 
             Log($"Emitted {interactions} paint interactions.");
-            Save(mod, output, Log);
+            Save(mod, output);
             Log($"Paint discovery complete. Output: {outputPath}");
         }
 
         /// <summary>Collects every paint color and coating consumable as Paint-layer ammo.</summary>
-        private static List<PaintAmmo> CollectAmmo(Action<string> log)
+        private static List<PaintAmmo> CollectAmmo()
         {
             // --- Prefer PaintOrCoating items; map coatings onto synthetic Paint mains.
 
@@ -93,25 +80,25 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 string ammoName = ContentNameResolver.GetItemName(itemId);
                 if (!TryResolvePaintMain(item, out string main))
                 {
-                    log($"  SKIP paint ammo (unknown coating): {ammoName} paint={item.paint} coating={item.paintCoating}");
+                    LogDebug($"  SKIP paint ammo (unknown coating): {ammoName} paint={item.paint} coating={item.paintCoating}");
                     continue;
                 }
 
                 if (!seenMains.Add(main))
                 {
-                    log($"  SKIP duplicate paint main: {main} from {ammoName}");
+                    LogDebug($"  SKIP duplicate paint main: {main} from {ammoName}");
                     continue;
                 }
 
                 result.Add(new PaintAmmo(main, ammoName));
-                log($"  AMMO {ammoName} -> main={main}");
+                LogDebug($"  AMMO {ammoName} -> main={main}");
             }
 
             return result;
         }
 
         /// <summary>Collects vanilla and SortingPriorityPainting paint tools, excluding scrapers.</summary>
-        private static List<PaintTool> CollectTools(Action<string> log)
+        private static List<PaintTool> CollectTools()
         {
             // --- Seed known vanilla tools, then add modded painting-sort items that are not scrapers/ammo.
 
@@ -121,7 +108,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             for (int i = 0; i < VanillaPaintTools.Length; i++)
             {
                 int toolId = VanillaPaintTools[i];
-                if (!TryAddTool(result, seen, toolId, log))
+                if (!TryAddTool(result, seen, toolId))
                     continue;
             }
 
@@ -139,14 +126,14 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 if (item.IsAir || item.type != itemId || item.PaintOrCoating || item.consumable)
                     continue;
 
-                TryAddTool(result, seen, itemId, log);
+                TryAddTool(result, seen, itemId);
             }
 
             return result;
         }
 
         /// <summary>Adds one paint tool with a yield heuristic derived from its id and name.</summary>
-        private static bool TryAddTool(List<PaintTool> tools, HashSet<int> seen, int itemId, Action<string> log)
+        private static bool TryAddTool(List<PaintTool> tools, HashSet<int> seen, int itemId)
         {
             // --- Resolve the tool name and assign brush/roller/sprayer/spectre yield.
 
@@ -161,7 +148,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             string name = ContentNameResolver.GetItemName(itemId);
             int yield = ResolveToolYield(itemId, name);
             tools.Add(new PaintTool(name, yield));
-            log($"  TOOL {name} yield={yield}");
+            LogDebug($"  TOOL {name} yield={yield}");
             return true;
         }
 
@@ -248,14 +235,14 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             group.Interactions.Add(interaction);
         }
 
-        private static void Save(Mod mod, Dictionary<string, PaintItemOutput> output, Action<string> log)
+        private static void Save(Mod mod, Dictionary<string, PaintItemOutput> output)
         {
             var doc = new InteractionMapDocument<Dictionary<string, PaintItemOutput>>
             {
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "paint"),
                 Data = output,
             };
-            SaveJson(GetOutputPath("Paints"), doc, log, "PaintInteractionMap");
+            SaveJson(GetOutputPath("Paints"), doc, "PaintInteractionMap");
         }
 
         private readonly record struct PaintAmmo(string Main, string AmmoName);

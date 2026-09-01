@@ -3,7 +3,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using Terraria;
@@ -27,38 +26,26 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             typeof(FlexibleTileWand).GetField("_options", BindingFlags.Instance | BindingFlags.NonPublic);
 
         /// <summary>Scans flexible tile wands and writes Rubble.itr.json to SourceMaps.</summary>
-        public static void Run(Mod mod, Action<string> msg)
+        public static void Run(Mod mod)
         {
             // --- Enumerate Rubblemaker tables (merged), pots, then other flexible wands.
 
             ArgumentNullException.ThrowIfNull(mod);
-            ArgumentNullException.ThrowIfNull(msg);
 
-            var debugPath = GetDebugPath("RubbleDiscovery_Debug.txt");
             var outputPath = GetOutputPath("Rubble");
-            using var debugWriter = new StreamWriter(debugPath, append: false);
-
-            void Log(string s)
-            {
-                var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {s}";
-                debugWriter.WriteLine(line);
-                debugWriter.Flush();
-                msg(s);
-            }
 
             Log($"Rubble discovery started. Output: {outputPath}");
-            Log($"Debug log: {debugPath}");
 
             if (OptionsField is null)
             {
-                Log("FAIL: FlexibleTileWand._options field not found.");
+                LogWarn("FAIL: FlexibleTileWand._options field not found.");
                 return;
             }
 
             // Resolve Rubblemaker mode item names for the canonical tool + alias list.
-            if (!TryResolveRubblemakerItems(out int smallId, out string smallName, out List<string> modeAliases, Log))
+            if (!TryResolveRubblemakerItems(out int smallId, out string smallName, out List<string> modeAliases))
             {
-                Log("FAIL: Could not resolve Rubblemaker item ids.");
+                LogWarn("FAIL: Could not resolve Rubblemaker item ids.");
                 return;
             }
 
@@ -72,25 +59,22 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 FlexibleTileWand.RubblePlacementSmall,
                 smallName,
                 modeAliases,
-                createTileItems,
-                Log);
+                createTileItems);
             optionCount += EmitWandOptions(
                 output,
                 FlexibleTileWand.RubblePlacementMedium,
                 smallName,
                 modeAliases,
-                createTileItems,
-                Log);
+                createTileItems);
             optionCount += EmitWandOptions(
                 output,
                 FlexibleTileWand.RubblePlacementLarge,
                 smallName,
                 modeAliases,
-                createTileItems,
-                Log);
+                createTileItems);
 
             // Unused pot recipes: throwaway wand so live Rubblemaker tables stay untouched.
-            optionCount += EmitPotsOptions(output, smallName, modeAliases, createTileItems, Log);
+            optionCount += EmitPotsOptions(output, smallName, modeAliases, createTileItems);
 
             // Remaining flexible wands (Mitey-Titey, Sandcastle, Portable Kiln, modded).
             var seenWands = new HashSet<FlexibleTileWand>();
@@ -113,11 +97,11 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     continue;
 
                 string toolName = ContentNameResolver.GetItemName(itemId);
-                optionCount += EmitWandOptions(output, wand, toolName, aliasNames: null, createTileItems, Log);
-                Log($"  Flexible wand: {toolName}");
+                optionCount += EmitWandOptions(output, wand, toolName, aliasNames: null, createTileItems);
+                LogDebug($"  Flexible wand: {toolName}");
             }
 
-            Save(mod, output, Log);
+            Save(mod, output);
             Log($"Discovered {optionCount} rubble placement options across {output.Count} tools.");
             Log($"Rubble discovery complete. Output: {outputPath}");
         }
@@ -127,8 +111,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             Dictionary<string, RubbleItemOutput> output,
             string rubblemakerName,
             List<string> modeAliases,
-            HashSet<int> createTileItems,
-            Action<string> log)
+            HashSet<int> createTileItems)
         {
             // --- Build a throwaway wand, register unused pot recipes, then emit dual rows.
 
@@ -136,8 +119,8 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             int echoPileStyle = 0;
             ushort tileType = TileID.PotsEcho;
             FlexibleTileWand.ForModders_AddPotsToWand(wand, ref echoPileStyle, ref tileType);
-            int added = EmitWandOptions(output, wand, rubblemakerName, modeAliases, createTileItems, log);
-            log($"  PotsEcho options via ForModders_AddPotsToWand: {added}");
+            int added = EmitWandOptions(output, wand, rubblemakerName, modeAliases, createTileItems);
+            LogDebug($"  PotsEcho options via ForModders_AddPotsToWand: {added}");
             return added;
         }
 
@@ -147,14 +130,13 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             FlexibleTileWand wand,
             string toolName,
             List<string>? aliasNames,
-            HashSet<int> createTileItems,
-            Action<string> log)
+            HashSet<int> createTileItems)
         {
             // --- Reflect _options (ammo → PlacementOption list) and emit natural+fake and echo-as-main rows.
 
             if (OptionsField?.GetValue(wand) is not IDictionary options)
             {
-                log($"  WARN: could not read _options for {toolName}");
+                LogWarn($"  WARN: could not read _options for {toolName}");
                 return 0;
             }
 
@@ -282,8 +264,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         private static bool TryResolveRubblemakerItems(
             out int smallId,
             out string smallName,
-            out List<string> aliases,
-            Action<string> log)
+            out List<string> aliases)
         {
             // --- Scan items bound to the three RubblePlacement* tables.
 
@@ -310,7 +291,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
                 string name = ContentNameResolver.GetItemName(itemId);
                 modeIds.Add((itemId, name, wand));
-                log($"  Rubblemaker mode: {name} ({itemId})");
+                LogDebug($"  Rubblemaker mode: {name} ({itemId})");
             }
 
             if (modeIds.Count == 0)
@@ -431,7 +412,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             return tileId > 0;
         }
 
-        private static void Save(Mod mod, Dictionary<string, RubbleItemOutput> output, Action<string> log)
+        private static void Save(Mod mod, Dictionary<string, RubbleItemOutput> output)
         {
             // --- Strip dedupe keys before serialize; write item-first rubble mapType.
 
@@ -449,7 +430,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "rubble"),
                 Data = serializable,
             };
-            SaveJson(GetOutputPath("Rubble"), doc, log, "RubbleInteractionMap");
+            SaveJson(GetOutputPath("Rubble"), doc, "RubbleInteractionMap");
         }
 
         private sealed class RubbleItemOutput

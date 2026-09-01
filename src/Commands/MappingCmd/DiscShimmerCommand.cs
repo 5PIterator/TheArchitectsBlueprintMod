@@ -28,7 +28,7 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             int plr = caller.Player?.whoAmI ?? Main.myPlayer;
-            ShimmerDiscovery.Run(Mod, msg => caller.Reply(msg), Main.player[plr]);
+            ShimmerDiscovery.Run(Mod, Main.player[plr]);
         }
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using TheArchitectsBlueprintMod.Debug;
 using Terraria.ModLoader;
 
 namespace TheArchitectsBlueprintMod.Core.TileMapping
@@ -9,19 +10,21 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
     /// </summary>
     internal static class ItrCompiler
     {
-        public static void Compile(Mod mod, Action<string> msg)
+        private const string LogCategory = "TileMapping";
+
+        public static void Compile(Mod mod)
         {
             var map = new InteractionMap();
             var directory = TileMappingSystem.GetSourceMapsDirectory();
 
-            msg("Loading SourceMaps into InteractionMap...");
-            ItrLoader.LoadAllInto(directory, map, msg);
+            TABLog.Info("Loading SourceMaps into InteractionMap...", LogCategory);
+            ItrLoader.LoadAllInto(directory, map);
 
-            msg("Writing unified interaction maps...");
-            SaveUnifiedMaps(mod, map, msg);
+            TABLog.Info("Writing unified interaction maps...", LogCategory);
+            SaveUnifiedMaps(mod, map);
         }
 
-        private static void SaveUnifiedMaps(Mod mod, InteractionMap map, Action<string> msg)
+        private static void SaveUnifiedMaps(Mod mod, InteractionMap map)
         {
             try
             {
@@ -35,12 +38,12 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 using (var json = File.Create(jsonPath))
                     InteractionMapTagIO.WriteJsonDocument(json, map, metadata);
 
-                msg($"Compiled interaction map written: {binaryPath}");
-                msg($"Readable interaction map written: {jsonPath}");
+                TABLog.Info($"Compiled interaction map written: {binaryPath}", LogCategory);
+                TABLog.Info($"Readable interaction map written: {jsonPath}", LogCategory);
             }
             catch (Exception ex)
             {
-                msg($"Failed to save unified interaction maps: {ex.Message}");
+                TABLog.Warn($"Failed to save unified interaction maps: {ex.Message}", LogCategory);
             }
         }
     }

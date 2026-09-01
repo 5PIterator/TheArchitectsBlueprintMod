@@ -18,26 +18,14 @@ namespace TheArchitectsBlueprintMod.Core
     {
         private readonly Dictionary<InteractionBudgetKey, int> _remainingFreeUses = [];
 
-        /// <summary>True when yield is null or non-positive (no stack debit).</summary>
-        public static bool IsInfiniteYield(int? yield) => !yield.HasValue || yield.Value <= 0;
+        /// <summary>True when yield is explicitly non-positive (no stack debit).</summary>
+        public static bool IsInfiniteYield(int? yield) => yield.HasValue && yield.Value <= 0;
 
-        /// <summary>
-        /// Resolves the yield budget for an interaction. Direct tile/wall placement without
-        /// base or ammo defaults to 1; explicit null on conversion/tool entries stays infinite.
-        /// </summary>
-        public static int? GetEffectiveYield(in InteractionEntry entry)
-        {
-            if (entry.Yield.HasValue)
-                return entry.Yield;
-
-            if (IsDirectConsumablePlacement(entry))
-                return 1;
-
-            return null;
-        }
+        /// <summary>Resolves stack debits per placement; omitted yield defaults to 1.</summary>
+        public static int GetEffectiveYield(in InteractionEntry entry) => entry.Yield ?? 1;
 
         public static bool IsInfiniteYield(in InteractionEntry entry) =>
-            IsInfiniteYield(GetEffectiveYield(entry));
+            IsInfiniteYield(entry.Yield);
 
         /// <summary>True when the entry names ammo that is distinct from the tool item.</summary>
         public static bool HasDistinctAmmo(in InteractionEntry entry)
@@ -50,21 +38,6 @@ namespace TheArchitectsBlueprintMod.Core
             return entry.AmmoId.HasValue
                 && entry.AmmoId.Value > 0
                 && entry.AmmoId.Value != entry.ItemId.Value;
-        }
-
-        private static bool IsDirectConsumablePlacement(in InteractionEntry entry)
-        {
-            if (!string.Equals(entry.Layer, "Tile", StringComparison.OrdinalIgnoreCase)
-                && !string.Equals(entry.Layer, "Wall", StringComparison.OrdinalIgnoreCase))
-                return false;
-
-            if (entry.BaseId.HasValue || !string.IsNullOrEmpty(entry.Base))
-                return false;
-
-            if (entry.AmmoId.HasValue || !string.IsNullOrEmpty(entry.Ammo))
-                return false;
-
-            return true;
         }
 
         public static InteractionBudgetKey KeyFor(in InteractionEntry entry)
@@ -101,7 +74,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (IsInfiniteYield(entry))
                 return false;
 
-            int yield = GetEffectiveYield(entry)!.Value;
+            int yield = GetEffectiveYield(entry);
             InteractionBudgetKey key = KeyFor(entry);
             if (_remainingFreeUses.TryGetValue(key, out int remaining) && remaining > 0)
             {
@@ -119,7 +92,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (IsInfiniteYield(entry))
                 return;
 
-            int yield = GetEffectiveYield(entry)!.Value;
+            int yield = GetEffectiveYield(entry);
             InteractionBudgetKey key = KeyFor(entry);
             if (consumedStack)
             {

@@ -8,7 +8,6 @@ using TheArchitectsBlueprintMod.Core.Layers;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.ObjectData;
 
 namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
@@ -59,49 +58,36 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         ];
 
         /// <summary>Scans plant families and writes Plants.itr to SourceMaps.</summary>
-        public static void Run(Mod mod, Action<string> msg)
+        public static void Run(Mod mod)
         {
             // --- Index placeable items, then discover vines, thorns, plants, sunflower styles, and tree wand pairs.
 
             ArgumentNullException.ThrowIfNull(mod);
-            ArgumentNullException.ThrowIfNull(msg);
 
-            var debugPath = GetDebugPath("PlantDiscovery_Debug.txt");
             var outputPath = GetOutputPath("Plants");
-            using var debugWriter = new StreamWriter(debugPath, append: false);
-
-            void Log(string s)
-            {
-                var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {s}";
-                debugWriter.WriteLine(line);
-                debugWriter.Flush();
-                msg(s);
-            }
 
             Log($"Plant discovery started. Output: {outputPath}");
-            Log($"Debug log: {debugPath}");
 
             IReadOnlyDictionary<int, string> createTileItems = BuildCreateTileItemIndex();
             var map = new PlacementInteractionMap();
-            int vines = DiscoverVines(map, createTileItems, Log);
-            int thorns = DiscoverThorns(map, createTileItems, Log);
-            int plants = DiscoverGroundPlants(map, createTileItems, Log);
-            int sunflowers = DiscoverSunflowerStyles(map, Log);
-            int trees = DiscoverTreeWandEntries(map, Log);
+            int vines = DiscoverVines(map, createTileItems);
+            int thorns = DiscoverThorns(map, createTileItems);
+            int plants = DiscoverGroundPlants(map, createTileItems);
+            int sunflowers = DiscoverSunflowerStyles(map);
+            int trees = DiscoverTreeWandEntries(map);
 
             Log($"Discovered vines={vines} thorns={thorns} plants={plants} sunflowerStyles={sunflowers} treeWand={trees}.");
-            Save(mod, map, Log);
+            Save(mod, map);
             Log($"Plant discovery complete. Output: {outputPath}");
         }
 
         /// <summary>Maps vine and reverse-vine tiles onto Staff of Regrowth with optional seed fallback.</summary>
         private static int DiscoverVines(
             PlacementInteractionMap map,
-            IReadOnlyDictionary<int, string> createTileItems,
-            Action<string> log)
+            IReadOnlyDictionary<int, string> createTileItems)
         {
             // --- Prefer Staff; add a finite seed fallback only when a plant consumable exists.
-            log("Family: Vines");
+            Log("Family: Vines");
             int discovered = 0;
 
             for (int tileId = 0; tileId < TileLoader.TileCount; tileId++)
@@ -110,45 +96,43 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     continue;
 
                 string tileName = ContentNameResolver.GetTileName(tileId);
-                AddStaffAndOptionalSeed(map, tileId, createTileItems, preferAnchorSeed: true, log, tileName);
+                AddStaffAndOptionalSeed(map, tileId, createTileItems, preferAnchorSeed: true, tileName);
                 discovered++;
             }
 
-            log($"  Vines summary: {discovered} tiles.");
+            Log($"  Vines summary: {discovered} tiles.");
             return discovered;
         }
 
         /// <summary>Maps biome thorn bushes onto Staff of Regrowth with matching grass seed fallbacks.</summary>
         private static int DiscoverThorns(
             PlacementInteractionMap map,
-            IReadOnlyDictionary<int, string> createTileItems,
-            Action<string> log)
+            IReadOnlyDictionary<int, string> createTileItems)
         {
             // --- Staff first; Corrupt/Crimson/Jungle seeds charge the finite shopping-list path.
 
-            log("Family: Thorns");
+            Log("Family: Thorns");
             int discovered = 0;
 
             // Emit Staff + biome seed for each known thorn tile.
             foreach (int tileId in ThornAnchorTiles.Keys)
             {
                 string tileName = ContentNameResolver.GetTileName(tileId);
-                AddStaffAndOptionalSeed(map, tileId, createTileItems, preferAnchorSeed: true, log, tileName);
+                AddStaffAndOptionalSeed(map, tileId, createTileItems, preferAnchorSeed: true, tileName);
                 discovered++;
             }
 
-            log($"  Thorns summary: {discovered} tiles.");
+            Log($"  Thorns summary: {discovered} tiles.");
             return discovered;
         }
 
         /// <summary>Maps PlantLayer-owned tiles onto Staff of Regrowth with optional seed fallback.</summary>
         private static int DiscoverGroundPlants(
             PlacementInteractionMap map,
-            IReadOnlyDictionary<int, string> createTileItems,
-            Action<string> log)
+            IReadOnlyDictionary<int, string> createTileItems)
         {
             // --- Skip placeable tiles except sunflower (handled separately); keep classifiers in sync with PlantLayer.
-            log("Family: GroundPlants");
+            Log("Family: GroundPlants");
             int discovered = 0;
 
             for (int tileId = 0; tileId < TileLoader.TileCount; tileId++)
@@ -165,27 +149,27 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
                 if (createTileItems.ContainsKey(tileId))
                 {
-                    log($"  SKIP {ContentNameResolver.GetTileName(tileId)} ({tileId}): already has createTile item.");
+                    LogDebug($"  SKIP {ContentNameResolver.GetTileName(tileId)} ({tileId}): already has createTile item.");
                     continue;
                 }
 
                 string tileName = ContentNameResolver.GetTileName(tileId);
-                AddStaffAndOptionalSeed(map, tileId, createTileItems, preferAnchorSeed: false, log, tileName);
+                AddStaffAndOptionalSeed(map, tileId, createTileItems, preferAnchorSeed: false, tileName);
                 discovered++;
             }
 
-            log($"  GroundPlants summary: {discovered} tiles.");
+            Log($"  GroundPlants summary: {discovered} tiles.");
             return discovered;
         }
 
         /// <summary>Emits the Sunflower item for every TileObjectData placement style.</summary>
-        private static int DiscoverSunflowerStyles(PlacementInteractionMap map, Action<string> log)
+        private static int DiscoverSunflowerStyles(PlacementInteractionMap map)
         {
             // --- FrameLayer places sunflowers; style keys must match captured RandomStyleRange variants.
-            log("Family: SunflowerStyles");
+            Log("Family: SunflowerStyles");
             if (!ContentNameResolver.ResolveItem(SunflowerItem).HasValue)
             {
-                log("  SKIP Sunflower: item unresolved.");
+                LogWarn("  SKIP Sunflower: item unresolved.");
                 return 0;
             }
 
@@ -198,22 +182,22 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     style: style,
                     yield: ConsumableYield));
                 added++;
-                log($"  Sunflower style {style} -> {SunflowerItem}");
+                LogDebug($"  Sunflower style {style} -> {SunflowerItem}");
             }
 
-            log($"  SunflowerStyles summary: {added} styles.");
+            Log($"  SunflowerStyles summary: {added} styles.");
             return added;
         }
 
         /// <summary>Emits Living Wood Wand interactions for cactus, bamboo, styled Trees/PalmTree, and gem trees.</summary>
-        private static int DiscoverTreeWandEntries(PlacementInteractionMap map, Action<string> log)
+        private static int DiscoverTreeWandEntries(PlacementInteractionMap map)
         {
             // --- Style-keyed Trees/Palm rows plus fixed wand+ammo families (cactus, bamboo, gems).
 
-            log("Family: TreeWand");
+            Log("Family: TreeWand");
             if (!ContentNameResolver.ResolveItem(LivingWoodWandItem).HasValue)
             {
-                log("  SKIP TreeWand: LivingWoodWand item unresolved.");
+                LogWarn("  SKIP TreeWand: LivingWoodWand item unresolved.");
                 return 0;
             }
 
@@ -221,14 +205,14 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             for (int i = 0; i < FixedTreeAmmo.Length; i++)
             {
                 (int tileId, int ammoItemId) = FixedTreeAmmo[i];
-                added += AddTreeWandEntry(map, tileId, ammoItemId, style: 0, log);
+                added += AddTreeWandEntry(map, tileId, ammoItemId, style: 0);
             }
 
             foreach ((int style, int ammoItemId) in TreeLayer.EnumerateTreesStyleAmmo())
-                added += AddTreeWandEntry(map, TileID.Trees, ammoItemId, style, log);
+                added += AddTreeWandEntry(map, TileID.Trees, ammoItemId, style);
 
             foreach ((int style, int ammoItemId) in TreeLayer.EnumeratePalmStyleAmmo())
-                added += AddTreeWandEntry(map, TileID.PalmTree, ammoItemId, style, log);
+                added += AddTreeWandEntry(map, TileID.PalmTree, ammoItemId, style);
 
             for (int tileId = TileID.Count; tileId < TileLoader.TileCount; tileId++)
             {
@@ -239,10 +223,10 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 if (drop <= 0)
                     drop = ItemID.Wood;
 
-                added += AddTreeWandEntry(map, tileId, drop, style: 0, log);
+                added += AddTreeWandEntry(map, tileId, drop, style: 0);
             }
 
-            log($"  TreeWand summary: {added} interactions.");
+            Log($"  TreeWand summary: {added} interactions.");
             return added;
         }
 
@@ -252,7 +236,6 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             int tileId,
             IReadOnlyDictionary<int, string> createTileItems,
             bool preferAnchorSeed,
-            Action<string> log,
             string tileName)
         {
             // --- Infinite Staff first; finite seed only when it does not place a different tile family.
@@ -263,11 +246,11 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     item: StaffOfRegrowthItem,
                     yield: DecorativeYield,
                     style: null));
-                log($"  {tileName} ({tileId}) -> {StaffOfRegrowthItem} yield={DecorativeYield}");
+                LogDebug($"  {tileName} ({tileId}) -> {StaffOfRegrowthItem} yield={DecorativeYield}");
             }
             else
             {
-                log($"  WARN {tileName} ({tileId}): StaffofRegrowth unresolved.");
+                LogWarn($"  WARN {tileName} ({tileId}): StaffofRegrowth unresolved.");
             }
 
             if (!TryResolveSeedFallback(tileId, createTileItems, preferAnchorSeed, out string seedItem, out string source))
@@ -278,7 +261,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 item: seedItem,
                 yield: ConsumableYield,
                 style: null));
-            log($"  {tileName} ({tileId}) -> {seedItem} yield={ConsumableYield} ({source})");
+            LogDebug($"  {tileName} ({tileId}) -> {seedItem} yield={ConsumableYield} ({source})");
         }
 
         /// <summary>Resolves a finite seed/drop fallback that is safe to charge for the plant tile.</summary>
@@ -387,8 +370,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             PlacementInteractionMap map,
             int tileId,
             int ammoItemId,
-            int style,
-            Action<string> log)
+            int style)
         {
             // --- Skip unresolved ammo; TreeLayer selects the styled row at paste/manifest time.
             if (ammoItemId <= 0)
@@ -402,26 +384,8 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 ammoId: ammoItemId,
                 yield: ConsumableYield,
                 style: style));
-            log($"  {ContentNameResolver.GetTileName(tileId)} ({tileId}) style={style} -> {LivingWoodWandItem} ammo={ammoName}");
+            LogDebug($"  {ContentNameResolver.GetTileName(tileId)} ({tileId}) style={style} -> {LivingWoodWandItem} ammo={ammoName}");
             return 1;
-        }
-
-        /// <summary>Enumerates placement styles for a frame tile from TileObjectData random/wrap ranges.</summary>
-        private static IEnumerable<int> EnumeratePlacementStyles(int tileId)
-        {
-            // --- Cover RandomStyleRange variants so captured style N still resolves to the placeable item.
-            TileObjectData? data = TileObjectData.GetTileData(tileId, 0);
-            if (data is null)
-            {
-                yield return 0;
-                yield break;
-            }
-
-            int randomRange = data.RandomStyleRange > 0 ? data.RandomStyleRange : 1;
-            int multiplier = data.StyleMultiplier > 0 ? data.StyleMultiplier : 1;
-            int count = Math.Max(randomRange * multiplier, 1);
-            for (int style = 0; style < count; style++)
-                yield return style;
         }
 
         /// <summary>Returns true when the tile is a hanging or reverse vine thread.</summary>
@@ -448,7 +412,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             return index;
         }
 
-        private static void Save(Mod mod, PlacementInteractionMap map, Action<string> log)
+        private static void Save(Mod mod, PlacementInteractionMap map)
         {
             var output = ToNameBasedOutput(map);
             var doc = new InteractionMapDocument<PlacementOutput>
@@ -456,7 +420,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 Metadata = InteractionMapMetadata.Create(mod, "tile-first", "plant"),
                 Data = output,
             };
-            SavePlacementJson(GetOutputPath("Plants"), doc, log, "PlantInteractionMap");
+            SavePlacementJson(GetOutputPath("Plants"), doc, "PlantInteractionMap");
         }
 
         private static PlacementOutput ToNameBasedOutput(PlacementInteractionMap map)
@@ -477,7 +441,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             return output;
         }
 
-        private static void SavePlacementJson<T>(string path, T output, Action<string> log, string errorContext)
+        private static void SavePlacementJson<T>(string path, T output, string errorContext)
         {
             try
             {
@@ -486,7 +450,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             }
             catch (Exception ex)
             {
-                log($"Failed to save {errorContext}: {ex.Message}");
+                LogWarn($"Failed to save {errorContext}: {ex.Message}");
             }
         }
 

@@ -26,7 +26,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            PlantDiscovery.Run(Mod, msg => caller.Reply(msg));
+            PlantDiscovery.Run(Mod);
         }
     }
 }

@@ -46,7 +46,9 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return true;
+
 			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			// If the player is using the primary function (left-click), trigger an exclude action.
@@ -72,7 +74,9 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			if (player.whoAmI != Main.myPlayer)
 				return;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return;
+
 			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			// If both left and right buttons are down, emit a right-click cancel event (for rectangle cancellation).

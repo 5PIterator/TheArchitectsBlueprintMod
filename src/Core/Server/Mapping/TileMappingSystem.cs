@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -217,8 +218,6 @@ namespace TheArchitectsBlueprintMod.Core
 
         private static void ExecuteQueuedAction(Mod mod, QueuedMappingAction action)
         {
-            void Log(string s) => TABLog.Info(s, "TileMapping");
-
             switch (action)
             {
                 case QueuedMappingAction.DiscoverPlacement:
@@ -229,43 +228,43 @@ namespace TheArchitectsBlueprintMod.Core
                         return;
                     }
 
-                    Log("Config action: placement discovery.");
-                    PlacementDiscovery.Run(mod, player, Log, allowStepping: false);
+                    TABLog.Info("Config action: placement discovery.", "TileMapping");
+                    PlacementDiscovery.Run(mod, player, allowStepping: false);
                     return;
                 }
 
                 case QueuedMappingAction.DiscoverWand:
                 {
-                    Log("Config action: wand discovery.");
-                    WandDiscovery.Run(mod, Log);
+                    TABLog.Info("Config action: wand discovery.", "TileMapping");
+                    WandDiscovery.Run(mod);
                     return;
                 }
 
                 case QueuedMappingAction.DiscoverRubble:
                 {
-                    Log("Config action: rubble discovery.");
-                    RubbleDiscovery.Run(mod, Log);
+                    TABLog.Info("Config action: rubble discovery.", "TileMapping");
+                    RubbleDiscovery.Run(mod);
                     return;
                 }
 
                 case QueuedMappingAction.DiscoverPaint:
                 {
-                    Log("Config action: paint discovery.");
-                    PaintDiscovery.Run(mod, Log);
+                    TABLog.Info("Config action: paint discovery.", "TileMapping");
+                    PaintDiscovery.Run(mod);
                     return;
                 }
 
                 case QueuedMappingAction.DiscoverPlant:
                 {
-                    Log("Config action: plant discovery.");
-                    PlantDiscovery.Run(mod, Log);
+                    TABLog.Info("Config action: plant discovery.", "TileMapping");
+                    PlantDiscovery.Run(mod);
                     return;
                 }
 
                 case QueuedMappingAction.DiscoverConversion:
                 {
-                    Log("Config action: conversion discovery.");
-                    ConversionDiscovery.Run(mod, Log);
+                    TABLog.Info("Config action: conversion discovery.", "TileMapping");
+                    ConversionDiscovery.Run(mod);
                     return;
                 }
 
@@ -277,8 +276,8 @@ namespace TheArchitectsBlueprintMod.Core
                         return;
                     }
 
-                    Log("Config action: biome discovery.");
-                    BiomeDiscovery.Run(mod, player, Log, allowStepping: false);
+                    TABLog.Info("Config action: biome discovery.", "TileMapping");
+                    BiomeDiscovery.Run(mod, player, allowStepping: false);
                     return;
                 }
 
@@ -290,14 +289,14 @@ namespace TheArchitectsBlueprintMod.Core
                         return;
                     }
 
-                    Log("Config action: shimmer discovery.");
-                    ShimmerDiscovery.Run(mod, Log, player, allowStepping: false);
+                    TABLog.Info("Config action: shimmer discovery.", "TileMapping");
+                    ShimmerDiscovery.Run(mod, player, allowStepping: false);
                     return;
                 }
 
                 case QueuedMappingAction.CompileOnly:
-                    Log("Config action: compile interaction map.");
-                    Compile(mod, Log);
+                    TABLog.Info("Config action: compile interaction map.", "TileMapping");
+                    Compile(mod);
                     return;
 
                 case QueuedMappingAction.FullDiscoveryAndCompile:
@@ -308,21 +307,93 @@ namespace TheArchitectsBlueprintMod.Core
                         return;
                     }
 
-                    Log("Config action: full discovery + compile.");
-                    PlacementDiscovery.Run(mod, player, Log, allowStepping: false);
-                    WandDiscovery.Run(mod, Log);
-                    RubbleDiscovery.Run(mod, Log);
-                    PaintDiscovery.Run(mod, Log);
-                    PlantDiscovery.Run(mod, Log);
-                    ConversionDiscovery.Run(mod, Log);
-                    BiomeDiscovery.Run(mod, player, Log, allowStepping: false);
-                    ShimmerDiscovery.Run(mod, Log, player, allowStepping: false);
-                    Compile(mod, Log);
+                    TABLog.Info("Config action: full discovery + compile.", "TileMapping");
+                    StartFullDiscovery(mod, player, allowStepping: false, compileAtEnd: true);
                     return;
                 }
 
                 default:
                     return;
+            }
+        }
+
+        /// <summary>
+        /// Runs every discovery phase, optionally ending with compile, budgeted across frames (or stick-stepped).
+        /// </summary>
+        public static void StartFullDiscovery(Mod mod, Player player, bool allowStepping = true, bool compileAtEnd = false)
+        {
+            // --- Compose one enumerator so a single stepper session owns the whole pipeline.
+
+            ArgumentNullException.ThrowIfNull(mod);
+            ArgumentNullException.ThrowIfNull(player);
+
+            (IEnumerator enumerator, Action onCancel) = CreateFullDiscoveryEnumerator(mod, player, compileAtEnd);
+            DebugStepper.RunEnumerator(
+                enumerator,
+                player,
+                allowStepping,
+                onCancel: onCancel,
+                log: msg => TABLog.Debug(msg, "TileMapping"));
+        }
+
+        /// <summary>Builds the full discovery enumerator and biome cancel hook.</summary>
+        private static (IEnumerator Enumerator, Action OnCancel) CreateFullDiscoveryEnumerator(Mod mod, Player player, bool compileAtEnd)
+        {
+            // --- Chain each discovery's yields; keep biome ring teardown for mid-run cancel.
+
+            (IEnumerator biomeEnumerator, Action biomeCancel) = BiomeDiscovery.CreateEnumeratorWithCancel(mod, player);
+            IEnumerator pipeline = FullDiscoveryPipeline(mod, player, biomeEnumerator, compileAtEnd);
+            return (pipeline, biomeCancel);
+        }
+
+        /// <summary>Yields each discovery phase in order; compiles when <paramref name="compileAtEnd"/> is true.</summary>
+        private static IEnumerator FullDiscoveryPipeline(Mod mod, Player player, IEnumerator biomeEnumerator, bool compileAtEnd)
+        {
+            // --- Placement first (heavy), then lighter maps, biome/shimmer, then compile.
+
+            TABLog.Info("Discovery: Placement...", "TileMapping");
+            IEnumerator placement = PlacementDiscovery.CreateEnumerator(mod, player);
+            while (placement.MoveNext())
+                yield return placement.Current;
+
+            TABLog.Info("Discovery: Wand...", "TileMapping");
+            WandDiscovery.Run(mod);
+            yield return null;
+
+            TABLog.Info("Discovery: Rubble...", "TileMapping");
+            RubbleDiscovery.Run(mod);
+            yield return null;
+
+            TABLog.Info("Discovery: Paint...", "TileMapping");
+            PaintDiscovery.Run(mod);
+            yield return null;
+
+            TABLog.Info("Discovery: Plant...", "TileMapping");
+            PlantDiscovery.Run(mod);
+            yield return null;
+
+            TABLog.Info("Discovery: Conversion...", "TileMapping");
+            ConversionDiscovery.Run(mod);
+            yield return null;
+
+            TABLog.Info("Discovery: Biome...", "TileMapping");
+            while (biomeEnumerator.MoveNext())
+                yield return biomeEnumerator.Current;
+
+            TABLog.Info("Discovery: Shimmer...", "TileMapping");
+            IEnumerator shimmer = ShimmerDiscovery.CreateEnumerator(mod);
+            while (shimmer.MoveNext())
+                yield return shimmer.Current;
+
+            if (compileAtEnd)
+            {
+                TABLog.Info("Compiling tile map...", "TileMapping");
+                Compile(mod);
+                TABLog.Info("Full discovery and compile complete.", "TileMapping");
+            }
+            else
+            {
+                TABLog.Info("Full discovery complete.", "TileMapping");
             }
         }
 
@@ -360,29 +431,19 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>
         /// Compiles all layer maps and writes them to JSON.
         /// Loads SourceMaps once, merges by layer, writes CompiledMaps.
-        /// All messages are written to TileMapCompile_Debug.txt in addition to the msg callback.
+        /// Progress is routed through TABLog under the TileMapping category.
         /// </summary>
-        public static void Compile(Mod mod, Action<string> msg)
+        public static void Compile(Mod mod)
         {
             if (!TileMappingAuthority.UsesLocalMappingFilesystem())
             {
-                msg("Tile map compilation runs only in single-player or on the server / listen host (not on remote multiplayer clients).");
+                TABLog.Warn("Tile map compilation runs only in single-player or on the server / listen host (not on remote multiplayer clients).", "TileMapping");
                 return;
             }
 
-            var debugPath = GetPath("TileMapCompile_Debug.txt");
-            using var debugWriter = new StreamWriter(debugPath, append: false);
-            void Log(string s)
-            {
-                var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {s}";
-                debugWriter.WriteLine(line);
-                debugWriter.Flush();
-                msg(s);
-            }
-
-            Log("Tile map compilation started.");
-            ItrCompiler.Compile(mod, Log);
-            Log("Tile map compilation complete.");
+            TABLog.Info("Tile map compilation started.", "TileMapping");
+            ItrCompiler.Compile(mod);
+            TABLog.Info("Tile map compilation complete.", "TileMapping");
         }
     }
 }

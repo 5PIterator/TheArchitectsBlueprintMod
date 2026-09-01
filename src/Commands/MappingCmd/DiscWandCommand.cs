@@ -26,7 +26,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            WandDiscovery.Run(Mod, msg => caller.Reply(msg));
+            WandDiscovery.Run(Mod);
         }
     }
 }

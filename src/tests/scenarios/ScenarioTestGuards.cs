@@ -36,7 +36,11 @@ namespace TheArchitectsBlueprintMod.Core.ScenarioTests
             out Projection? projection)
         {
             projection = null;
-            Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+            if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+            {
+                reporter.Fail(scenarioId, "Could not resolve cursor tile (map open without architect tool?).");
+                return false;
+            }
             BlueprintSystem blueprintSystem = ModContent.GetInstance<BlueprintSystem>();
             if (blueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection? found) && found is not null)
             {

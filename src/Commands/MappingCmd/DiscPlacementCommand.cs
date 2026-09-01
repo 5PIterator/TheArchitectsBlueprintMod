@@ -27,7 +27,7 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             int plr = caller.Player?.whoAmI ?? Main.myPlayer;
-            PlacementDiscovery.Run(Mod, Main.player[plr], msg => caller.Reply(msg));
+            PlacementDiscovery.Run(Mod, Main.player[plr]);
         }
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -15,7 +14,7 @@ namespace TheArchitectsBlueprintMod.Core
         public override CommandType Type => CommandType.Chat;
 
         public override string Usage => "/tab.compile";
-        public override string Description => "Compiles the tile map to a JSON file.";
+        public override string Description => "Compiles the interaction map from enabled SourceMaps.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
@@ -25,7 +24,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            TileMappingSystem.Compile(Mod, msg => caller.Reply(msg));
+            TileMappingSystem.Compile(Mod);
         }
     }
 }

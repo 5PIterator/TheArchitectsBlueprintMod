@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.DataStructures;
+using Terraria.Map;
 using Terraria.ModLoader;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Config;
@@ -35,6 +37,15 @@ namespace TheArchitectsBlueprintMod.UI
 
         public void Draw()
         {
+            if (OverlaySystem.IsMapDrawMode)
+            {
+                if (_kind == OverlayDrawableKind.Screen)
+                    return;
+
+                OverlaySystem.DrawOnMap(_kind, _data, _color, _borderWidth);
+                return;
+            }
+
             switch (_kind)
             {
                 case OverlayDrawableKind.Point:
@@ -198,6 +209,10 @@ namespace TheArchitectsBlueprintMod.UI
 
         private readonly OverlayCatalog _catalog = new();
 
+        internal static bool IsMapDrawMode { get; private set; }
+
+        private static MapOverlayDrawContext _mapDrawContext;
+
         private static OverlaySystem Instance => ModContent.GetInstance<OverlaySystem>();
 
         /// <summary>Throws if new registrations are not allowed in the current context or <paramref name="id"/> is invalid.</summary>
@@ -358,6 +373,196 @@ namespace TheArchitectsBlueprintMod.UI
             Instance._catalog.Draw(lateFillsOnly: true, familyVisible: IsOverlayFamilyVisible);
         }
 
+        /// <summary>Draws catalog overlays on the fullscreen map (called from <see cref="ArchitectOverlayMapLayer"/>).</summary>
+        public static void DrawMapOverlays(ref MapOverlayDrawContext context)
+        {
+            if (Main.gameMenu || !Main.mapFullscreen)
+                return;
+
+            IsMapDrawMode = true;
+            _mapDrawContext = context;
+            try
+            {
+                Instance._catalog.Draw(
+                    excludeLateFills: true,
+                    familyVisible: IsOverlayFamilyVisible,
+                    skipKind: OverlayDrawableKind.Screen);
+                Instance._catalog.Draw(
+                    lateFillsOnly: true,
+                    familyVisible: IsOverlayFamilyVisible,
+                    skipKind: OverlayDrawableKind.Screen);
+            }
+            finally
+            {
+                IsMapDrawMode = false;
+                _mapDrawContext = default;
+            }
+        }
+
+        internal static void DrawOnMap(OverlayDrawableKind kind, object data, Color color, int borderWidth)
+        {
+            switch (kind)
+            {
+                case OverlayDrawableKind.Point:
+                    DrawPointsOnMap((Point[])data, color);
+                    break;
+                case OverlayDrawableKind.TileFill:
+                    DrawTileFillOnMap((Point[])data, color);
+                    break;
+                case OverlayDrawableKind.TileRectFill:
+                    DrawTileRectFillOnMap((Rectangle[])data, color);
+                    break;
+                case OverlayDrawableKind.TileBounds:
+                    DrawTileBoundsOnMap((Rectangle)data, color, borderWidth);
+                    break;
+                case OverlayDrawableKind.TileBorder:
+                    DrawTileBorderOnMap((Rectangle)data, color, borderWidth);
+                    break;
+            }
+        }
+
+        /// <summary>Tile-space rectangle converted to screen pixels (world view or fullscreen map).</summary>
+        public static Rectangle GetTileRectangleScreenPixels(Rectangle tileBounds)
+        {
+            if (Main.mapFullscreen)
+            {
+                float pxPerTile = GetFullscreenMapPixelsPerTile();
+                Vector2 topLeft = MapTileToFullscreenScreen(new Point(tileBounds.X, tileBounds.Y), pxPerTile);
+                return new Rectangle(
+                    (int)topLeft.X,
+                    (int)topLeft.Y,
+                    (int)(tileBounds.Width * pxPerTile),
+                    (int)(tileBounds.Height * pxPerTile));
+            }
+
+            Vector2 pos = new Vector2(tileBounds.X, tileBounds.Y) * TilePixelSize - Main.screenPosition;
+            return new Rectangle(
+                (int)pos.X,
+                (int)pos.Y,
+                tileBounds.Width * TilePixelSize,
+                tileBounds.Height * TilePixelSize);
+        }
+
+        private static float GetFullscreenMapPixelsPerTile() =>
+            TilePixelSize * Main.mapFullscreenScale * Main.UIScale;
+
+        private static Vector2 MapTileToFullscreenScreen(Point tile, float pixelsPerTile)
+        {
+            Vector2 screenCenter = new(Main.screenWidth / 2f, Main.screenHeight / 2f);
+            Vector2 playerTile = Main.LocalPlayer.Center / 16f;
+            Vector2 delta = new Vector2(tile.X, tile.Y) - playerTile;
+            return screenCenter + delta * pixelsPerTile;
+        }
+
+        private static float MapPixelsPerTile() =>
+            TilePixelSize * _mapDrawContext.MapScale * _mapDrawContext.DrawScale;
+
+        private static Vector2 MapTileToScreen(Point tile)
+        {
+            float pxPerTile = MapPixelsPerTile();
+            return MapTileToFullscreenScreen(tile, pxPerTile);
+        }
+
+        private static void DrawPointsOnMap(Point[] points, Color color)
+        {
+            var pixel = ModUtils.DummyTexture;
+            var frame = new SpriteFrame(1, 1, 0, 0);
+            Point mouse = new(Main.mouseX, Main.mouseY);
+            float baseScale = _mapDrawContext.MapScale * _mapDrawContext.DrawScale;
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                Point tile = points[i];
+                bool hovered = GetPointHandleRect(tile, PointHandleSizePx).Contains(mouse);
+                float scale = (hovered ? PointHandleHoverSizePx : PointHandleSizePx) / TilePixelSize;
+                _mapDrawContext.Draw(
+                    pixel,
+                    new Vector2(tile.X, tile.Y),
+                    color * 0.9f,
+                    frame,
+                    scale * baseScale,
+                    scale * baseScale,
+                    Alignment.Center);
+            }
+        }
+
+        private static void DrawTileFillOnMap(Point[] tiles, Color fill)
+        {
+            var pixel = ModUtils.DummyTexture;
+            var frame = new SpriteFrame(1, 1, 0, 0);
+            float scale = _mapDrawContext.MapScale * _mapDrawContext.DrawScale;
+
+            for (int i = 0; i < tiles.Length; i++)
+            {
+                _mapDrawContext.Draw(
+                    pixel,
+                    new Vector2(tiles[i].X, tiles[i].Y),
+                    fill,
+                    frame,
+                    scale,
+                    scale,
+                    Alignment.TopLeft);
+            }
+        }
+
+        private static void DrawTileRectFillOnMap(Rectangle[] rects, Color fill)
+        {
+            float pxPerTile = MapPixelsPerTile();
+            var pixel = ModUtils.DummyTexture;
+
+            for (int i = 0; i < rects.Length; i++)
+            {
+                Rectangle r = rects[i];
+                Vector2 topLeft = MapTileToScreen(new Point(r.X, r.Y));
+                var screenRect = new Rectangle(
+                    (int)topLeft.X,
+                    (int)topLeft.Y,
+                    (int)(r.Width * pxPerTile),
+                    (int)(r.Height * pxPerTile));
+                Main.spriteBatch.Draw(pixel, screenRect, PixelSource, fill);
+            }
+
+            if (ModContent.GetInstance<ClientPasteConfig>().Overlay.RectBorders)
+            {
+                Color borderColor = new(fill.R, fill.G, fill.B, (byte)255);
+                for (int i = 0; i < rects.Length; i++)
+                    DrawTileBorderOnMap(rects[i], borderColor, 2);
+            }
+        }
+
+        private static void DrawTileBoundsOnMap(Rectangle tileBounds, Color color, int borderWidth)
+        {
+            DrawBorderedRectOnMap(tileBounds, color * 0.3f, color, borderWidth);
+        }
+
+        private static void DrawTileBorderOnMap(Rectangle tileBounds, Color color, int borderWidth)
+        {
+            DrawBorderedRectOnMap(tileBounds, Color.Transparent, color, borderWidth);
+        }
+
+        private static void DrawBorderedRectOnMap(Rectangle tileBounds, Color fill, Color outline, int borderWidth)
+        {
+            float pxPerTile = MapPixelsPerTile();
+            Vector2 topLeft = MapTileToScreen(new Point(tileBounds.X, tileBounds.Y));
+            var screenRect = new Rectangle(
+                (int)topLeft.X,
+                (int)topLeft.Y,
+                (int)(tileBounds.Width * pxPerTile),
+                (int)(tileBounds.Height * pxPerTile));
+
+            var pixel = ModUtils.DummyTexture;
+            Main.spriteBatch.Draw(pixel, screenRect, PixelSource, fill);
+
+            if (borderWidth <= 0)
+                return;
+
+            int bw = borderWidth;
+            Main.spriteBatch.Draw(pixel, new Rectangle(screenRect.Left, screenRect.Top, screenRect.Width, bw), PixelSource, outline);
+            Main.spriteBatch.Draw(pixel, new Rectangle(screenRect.Left, screenRect.Bottom - bw, screenRect.Width, bw), PixelSource, outline);
+            Main.spriteBatch.Draw(pixel, new Rectangle(screenRect.Left, screenRect.Top, bw, screenRect.Height), PixelSource, outline);
+            Main.spriteBatch.Draw(pixel, new Rectangle(screenRect.Right - bw, screenRect.Top, bw, screenRect.Height), PixelSource, outline);
+        }
+
         internal static bool IsLateFillKind(OverlayDrawableKind kind) =>
             kind is OverlayDrawableKind.TileFill or OverlayDrawableKind.TileRectFill;
 
@@ -452,6 +657,17 @@ namespace TheArchitectsBlueprintMod.UI
         /// </summary>
         public static Rectangle GetPointHandleRect(Point tile, int sizePx)
         {
+            if (Main.mapFullscreen)
+            {
+                float pxPerTile = GetFullscreenMapPixelsPerTile();
+                Vector2 center = MapTileToFullscreenScreen(tile, pxPerTile) + new Vector2(pxPerTile / 2f, pxPerTile / 2f);
+                return new Rectangle(
+                    (int)center.X - sizePx / 2,
+                    (int)center.Y - sizePx / 2,
+                    sizePx,
+                    sizePx);
+            }
+
             int centerX = tile.X * TilePixelSize + TilePixelSize / 2 - (int)Main.screenPosition.X;
             int centerY = tile.Y * TilePixelSize + TilePixelSize / 2 - (int)Main.screenPosition.Y;
             return new Rectangle(centerX - sizePx / 2, centerY - sizePx / 2, sizePx, sizePx);
