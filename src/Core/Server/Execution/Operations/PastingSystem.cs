@@ -350,6 +350,13 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
             }
 
+            Player owner = Main.player[projection.Owner];
+            if (!BlueprintGuard.TryValidateIncludedTiles(owner, projection, out BlueprintGuardFailure guardFailure))
+            {
+                rejectReason = BlueprintGuard.ToPasteRejectReason(guardFailure);
+                return false;
+            }
+
             return true;
         }
 
@@ -362,6 +369,13 @@ namespace TheArchitectsBlueprintMod.Core
             if (!ValidateExecutionPayload(execution))
             {
                 rejectReason = PasteRejectReason.InvalidProjection;
+                return false;
+            }
+
+            Player owner = Main.player[execution.Owner];
+            if (!BlueprintGuard.TryValidateIncludedTiles(owner, execution, out BlueprintGuardFailure guardFailure))
+            {
+                rejectReason = BlueprintGuard.ToPasteRejectReason(guardFailure);
                 return false;
             }
 

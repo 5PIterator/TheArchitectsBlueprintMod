@@ -356,6 +356,9 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 PasteRejectReason.PlayerOperationLimit => "Mods.TheArchitectsBlueprintMod.UI.Paste.PlayerOperationLimit",
                 PasteRejectReason.ServerOperationLimit => "Mods.TheArchitectsBlueprintMod.UI.Paste.ServerOperationLimit",
                 PasteRejectReason.AlreadyActive => "Mods.TheArchitectsBlueprintMod.UI.Paste.AlreadyActive",
+                PasteRejectReason.OutOfWorldTiles => "Mods.TheArchitectsBlueprintMod.UI.Paste.OutOfWorldTiles",
+                PasteRejectReason.UnrevealedTiles => "Mods.TheArchitectsBlueprintMod.UI.Paste.UnrevealedTiles",
+                PasteRejectReason.OutOfRange => "Mods.TheArchitectsBlueprintMod.UI.Paste.OutOfRange",
                 _ => "Mods.TheArchitectsBlueprintMod.UI.Paste.Unsupported",
             };
 

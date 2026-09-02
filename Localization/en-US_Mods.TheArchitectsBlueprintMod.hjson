@@ -68,6 +68,15 @@ UI: {
 		RejectedPrefix: Paste rejected: {0}
 		BlockedArea: Paste blocked: projection exceeds area limits.
 		BlockedVolume: Paste blocked: projection exceeds tile volume limit.
+		OutOfWorldTiles: Paste blocked: projection targets tiles outside the world.
+		UnrevealedTiles: Paste blocked: projection targets unexplored map tiles.
+		OutOfRange: Paste blocked: projection is beyond player reach.
+	}
+
+	Capture: {
+		BlockedOutOfWorld: Capture blocked: selection includes tiles outside the world.
+		BlockedUnrevealed: Capture blocked: selection includes unexplored map tiles.
+		BlockedOutOfRange: Capture blocked: selection is beyond player reach.
 	}
 }
 
@@ -76,9 +85,9 @@ Items: {
 		DisplayName: Include Stick
 		Tooltip:
 			'''
-			Include tiles in the current selection.
+			Include tiles in the selection or projection.
 			Left: drag a rectangle to include tiles
-			Right: cancel the rectangle preview (release left first, or hold left + right while dragging)
+			Right: cancel the rectangle preview
 			'''
 	}
 
@@ -104,29 +113,25 @@ Items: {
 		DisplayName: Architect's Stencil
 		Tooltip:
 			'''
-			All-in-one: selection, projection, execution.
+			All blueprint actions in one tool.
 			Right: action wheel — PIN, SET, INC, EXC, COPY, PASTE, RESET
-			Left: use the selected mode (RESET clears only what is under the cursor when it hits a selection or projection)
-			While including/excluding tiles, right also cancels the rectangle preview.
+			Left: use the selected mode (RESET clears what is under the cursor)
+			While including or excluding tiles, right also cancels the rectangle preview.
 			'''
 	}
 
 	BlueprintCore: {
 		DisplayName: Blueprint Core
-		Tooltip:
-			'''
-			Crafted at a Demon or Crimson altar from large gems, a boss-summon item, fallen stars, and wood.
-			Combines with the tier-2 wands into the Architect's Stencil.
-			'''
+		Tooltip: Core material for advanced blueprint tools.
 	}
 
 	SelectionWand: {
 		DisplayName: Selection Wand
 		Tooltip:
 			'''
-			Selection bounds editing.
+			Edit selection bounds.
 			Right: action wheel — PIN, SET, RESET
-			Left: PIN (new pins) or SET (edit selection, or move a projection when the selection is not overlapping) depending on wheel; RESET clears only when the cursor is on the selection area
+			Left: use the selected mode (RESET clears what is under the cursor)
 			'''
 	}
 
@@ -135,8 +140,8 @@ Items: {
 		Tooltip:
 			'''
 			Create and move a projection.
-			Left: drag to place/move
-			Right: cancel move while dragging; otherwise remove projection or clear selection only if the cursor hits one
+			Left: drag to place or move
+			Right: remove the projection under the cursor
 			'''
 	}
 
@@ -155,10 +160,10 @@ Items: {
 		DisplayName: Debug Stick
 		Tooltip:
 			'''
-			Alt-click: debug action wheel. Left-click: apply the selected action (or advance an active step session first).
-			CUT: toggle CutSource on the projection under the cursor.
-			STP: start single-player stepped paste on the projection under the cursor; further left-clicks advance the paste or any discovery step session.
-			Right-click: cancel step session.
+			Debug and step-through helpers.
+			Right: action wheel — CUT, STP
+			Left: apply selected mode, or advance a step session
+			Right-click cancels an active step session.
 			'''
 	}
 
@@ -176,10 +181,10 @@ Items: {
 		DisplayName: Pin Stick
 		Tooltip:
 			'''
-			Start a new selection.
-			Left: place & drag bounds, then release to finalize
-			While dragging: hold left + right to cancel the pin gesture
-			When the left button is up: right clears the active selection
+			Start a new selection with two pins.
+			Left: place pin B, drag bounds, release to finalize
+			Right: RESET the selection
+			While dragging: hold left + right to cancel
 			'''
 	}
 
@@ -189,8 +194,8 @@ Items: {
 			'''
 			Manage projections.
 			Right: action wheel — COPY, PASTE, RESET
-			Left: place/move projection, start paste, or RESET hit (cursor must be on target)
-			Source-clear (CUT) is toggled on the projection in-world, not on this wand.
+			Left: use the selected mode (RESET clears what is under the cursor)
+			CUT is toggled on the projection overlay, not this wand.
 			'''
 	}
 
@@ -198,9 +203,9 @@ Items: {
 		DisplayName: Exclude Stick
 		Tooltip:
 			'''
-			Exclude tiles from the current selection.
+			Exclude tiles from the selection or projection.
 			Left: drag a rectangle to exclude tiles
-			Right: cancel the rectangle preview (release left first, or hold left + right while dragging)
+			Right: cancel the rectangle preview
 			'''
 	}
 
@@ -208,9 +213,10 @@ Items: {
 		DisplayName: Inclusion Wand
 		Tooltip:
 			'''
-			Include or exclude tiles within a selection.
-			Right: cancel active rectangle preview, or open action wheel — INC, EXC
-			Left: use the mode selected on the wheel
+			Refine the tile mask in a selection.
+			Right: action wheel — INCLUDE, EXCLUDE
+			Left: drag a rectangle with the selected mode
+			Hold left + right: cancel the rectangle preview
 			'''
 	}
 }
@@ -793,6 +799,36 @@ Configs: {
 		}
 
 		Tooltip: ""
+	}
+
+	ArchitectBlueprintConfig: {
+		DisplayName: Blueprint safeguards
+		Tooltip:
+			'''
+			Server/host rules for COPY capture and PASTE.
+			Out-of-world tiles are always blocked. Reveal and reach limits can be toggled below.
+			Reveal checks use each player's explored map (strongest in single-player / listen-server).
+			'''
+
+		Headers: {
+			MapExploration: Map exploration
+			PlayerReach: Player reach
+		}
+
+		RestrictCaptureAndPasteToRevealedTiles: {
+			Label: Require explored map tiles
+			Tooltip: When enabled, capture and paste fail if any included cell is on an unexplored map tile.
+		}
+
+		LimitCaptureAndPasteToPlayerReach: {
+			Label: Limit to player reach
+			Tooltip: When enabled, capture and paste fail if any included cell is farther than Max reach distance from the player.
+		}
+
+		MaxReachDistanceTiles: {
+			Label: Max reach distance (tiles)
+			Tooltip: Chebyshev tile distance from the player center. Used when player reach limit is enabled.
+		}
 	}
 
 	TileMappingConfig: {

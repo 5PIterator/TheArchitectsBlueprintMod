@@ -71,6 +71,14 @@ namespace TheArchitectsBlueprintMod.Core
 
                 case Selection topmost:
                 {
+                    BlueprintGuard.RefreshClientGuardMasks(player, skipWhenPasteActive: false);
+
+                    if (!BlueprintGuard.TryValidateIncludedTiles(player, topmost, out var failure))
+                    {
+                        BlueprintGuard.NotifyCaptureBlocked(failure);
+                        return;
+                    }
+
                     Projection projection = ProjectionSystem.NewProjection(player, topmost);
                     if (projection is null)
                     {

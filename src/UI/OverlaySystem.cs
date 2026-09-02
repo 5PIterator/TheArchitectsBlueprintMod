@@ -9,6 +9,7 @@ using Terraria.ModLoader;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.Preview;
 using TheArchitectsBlueprintMod.Utils;
 
 namespace TheArchitectsBlueprintMod.UI
@@ -42,6 +43,12 @@ namespace TheArchitectsBlueprintMod.UI
                 if (_kind == OverlayDrawableKind.Screen)
                     return;
 
+                if (_kind == OverlayDrawableKind.MapPayloadPreview)
+                {
+                    OverlaySystem.DrawMapPayloadPreview((Projection)_data);
+                    return;
+                }
+
                 OverlaySystem.DrawOnMap(_kind, _data, _color, _borderWidth);
                 return;
             }
@@ -63,6 +70,9 @@ namespace TheArchitectsBlueprintMod.UI
                 case OverlayDrawableKind.TileBorder:
                     OverlaySystem.DrawTileBorder((Rectangle)_data, _color, _borderWidth);
                     break;
+                case OverlayDrawableKind.GuardedTileMask:
+                    OverlaySystem.DrawTileFill((Point[])_data, _color);
+                    break;
                 case OverlayDrawableKind.Screen:
                     ((Action)_data)();
                     break;
@@ -78,6 +88,8 @@ namespace TheArchitectsBlueprintMod.UI
         TileBounds,
         TileBorder,
         Screen,
+        MapPayloadPreview,
+        GuardedTileMask,
     }
 
     /// <summary>
@@ -292,6 +304,16 @@ namespace TheArchitectsBlueprintMod.UI
         }
 
         /// <inheritdoc cref="RegPoints"/>
+        public static void RegTileRectFill(string id, Rectangle[] rects, Color fill, string? family = null, int? ttlMs = null)
+        {
+            ValidateRegistration(id);
+            ArgumentNullException.ThrowIfNull(rects);
+            var copy = new Rectangle[rects.Length];
+            Array.Copy(rects, copy, rects.Length);
+            Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.TileRectFill, copy, fill, 0), ttlMs);
+        }
+
+        /// <inheritdoc cref="RegPoints"/>
         public static void RegTileBounds(string id, Rectangle tileBounds, Color color, int borderWidth, string? family = null, int? ttlMs = null)
         {
             ValidateRegistration(id, tileBounds);
@@ -307,10 +329,36 @@ namespace TheArchitectsBlueprintMod.UI
         }
 
         /// <inheritdoc cref="RegPoints"/>
+        public static void RegGuardedTileMask(string id, Point[] tiles, string? family = null, int? ttlMs = null)
+        {
+            ValidateRegistration(id, tiles);
+            var copy = new Point[tiles.Length];
+            Array.Copy(tiles, copy, tiles.Length);
+            Instance._catalog.Register(
+                family,
+                id,
+                new OverlayDrawable(OverlayDrawableKind.GuardedTileMask, copy, new Color(0, 0, 0, 220), 0),
+                ttlMs);
+        }
+
+        /// <inheritdoc cref="RegPoints"/>
         public static void RegScreen(string id, Action draw, string? family = null, int? ttlMs = null)
         {
             ValidateRegistration(id, draw);
             Instance._catalog.Register(family, id, new OverlayDrawable(OverlayDrawableKind.Screen, draw, default, 0), ttlMs);
+        }
+
+        /// <summary>Registers a projection map-color preview drawn only on the fullscreen map.</summary>
+        /// <inheritdoc cref="RegPoints"/>
+        public static void RegMapPayloadPreview(string id, Projection projection, string? family = null, int? ttlMs = null)
+        {
+            ValidateRegistration(id);
+            ArgumentNullException.ThrowIfNull(projection);
+            Instance._catalog.Register(
+                family,
+                id,
+                new OverlayDrawable(OverlayDrawableKind.MapPayloadPreview, projection, default, 0),
+                ttlMs);
         }
 
         public static void Unregister(string id, string? family = null)
@@ -399,6 +447,11 @@ namespace TheArchitectsBlueprintMod.UI
             }
         }
 
+        internal static void DrawMapPayloadPreview(Projection projection)
+        {
+            PayloadPreview.DrawOnMap(ref _mapDrawContext, projection);
+        }
+
         internal static void DrawOnMap(OverlayDrawableKind kind, object data, Color color, int borderWidth)
         {
             switch (kind)
@@ -417,6 +470,9 @@ namespace TheArchitectsBlueprintMod.UI
                     break;
                 case OverlayDrawableKind.TileBorder:
                     DrawTileBorderOnMap((Rectangle)data, color, borderWidth);
+                    break;
+                case OverlayDrawableKind.GuardedTileMask:
+                    DrawTileFillOnMap((Point[])data, color);
                     break;
             }
         }
@@ -560,7 +616,9 @@ namespace TheArchitectsBlueprintMod.UI
         }
 
         internal static bool IsLateFillKind(OverlayDrawableKind kind) =>
-            kind is OverlayDrawableKind.TileFill or OverlayDrawableKind.TileRectFill;
+            kind is OverlayDrawableKind.TileFill
+                or OverlayDrawableKind.TileRectFill
+                or OverlayDrawableKind.GuardedTileMask;
 
         private static bool ShouldDrawWorldOverlay()
         {

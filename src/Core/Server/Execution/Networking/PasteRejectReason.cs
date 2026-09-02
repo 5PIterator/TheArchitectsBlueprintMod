@@ -12,5 +12,8 @@ namespace TheArchitectsBlueprintMod.Core
         PlayerOperationLimit = 7,
         ServerOperationLimit = 8,
         AlreadyActive = 9,
+        OutOfWorldTiles = 10,
+        UnrevealedTiles = 11,
+        OutOfRange = 12,
     }
 }

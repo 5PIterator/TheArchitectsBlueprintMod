@@ -317,6 +317,22 @@ namespace TheArchitectsBlueprintMod.Core
                         return;
                     }
 
+                    BlueprintGuard.RefreshClientGuardMasks(player, skipWhenPasteActive: false);
+
+                    if (!BlueprintGuard.TryValidateIncludedTiles(player, projection, out BlueprintGuardFailure guardFailure))
+                    {
+                        if (Main.netMode != NetmodeID.Server)
+                        {
+                            Main.NewText(
+                                Language.GetTextValue(
+                                    "Mods.TheArchitectsBlueprintMod.UI.Paste.RejectedPrefix",
+                                    PasteNetworking.FormatPasteRejectReason(
+                                        BlueprintGuard.ToPasteRejectReason(guardFailure))),
+                                Color.OrangeRed);
+                        }
+                        return;
+                    }
+
                     if (!PastingSystem.StartPaste(projection, out var startReject))
                     {
                         Main.NewText(

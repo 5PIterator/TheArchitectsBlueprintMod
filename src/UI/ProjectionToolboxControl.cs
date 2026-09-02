@@ -183,8 +183,18 @@ namespace TheArchitectsBlueprintMod.UI
             if (player is not { active: true } || player.dead)
                 return null;
 
-            // Spawn in place without a COPY drag so the button click does not pick up the ghost.
+            BlueprintGuard.RefreshClientGuardMasks(player, skipWhenPasteActive: false);
+
+            if (!BlueprintGuard.TryValidateIncludedTiles(player, selection, out var failure))
+            {
+                BlueprintGuard.NotifyCaptureBlocked(failure);
+                return null;
+            }
+
             Projection spawned = ModContent.GetInstance<ProjectionSystem>().NewProjection(player, selection);
+            if (spawned is null)
+                return null;
+
             _target = spawned;
             return spawned;
         }

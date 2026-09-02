@@ -46,6 +46,9 @@ namespace TheArchitectsBlueprintMod.Core
                 return null;
             }
 
+            if (!BlueprintGuard.TryValidateIncludedTiles(player, selection, out _))
+                return null;
+
             var projection = new Projection(player.whoAmI, selection, cutSource: false);
 
             // Load the payload from the world
@@ -66,6 +69,9 @@ namespace TheArchitectsBlueprintMod.Core
         public Projection NewProjection(Player player, Selection selection, bool captureWorldPayload = true)
         {
             ArgumentNullException.ThrowIfNull(selection);
+
+            if (captureWorldPayload && !BlueprintGuard.TryValidateIncludedTiles(player, selection, out _))
+                return null;
 
             var projection = new Projection(player.whoAmI, selection, cutSource: false);
 
@@ -210,6 +216,7 @@ namespace TheArchitectsBlueprintMod.Core
                     {
                         Projection capture = proj;
                         OverlaySystem.RegScreen($"{k}:sprites", () => PayloadPreview.Draw(capture), family);
+                        OverlaySystem.RegMapPayloadPreview($"{k}:mapPixels", proj, family);
                     }
 
                     // CUT vs COPY: border color. Locked: outline only (transparent interior); unlocked: border + tinted fill.
@@ -226,6 +233,8 @@ namespace TheArchitectsBlueprintMod.Core
                         else
                             OverlaySystem.RegTileBounds($"{k}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
                     }
+
+                    BlueprintGuard.RegisterGuardMask(player, proj, $"{k}:guarded", family);
                 }
             }
 

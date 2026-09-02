@@ -129,6 +129,8 @@ namespace TheArchitectsBlueprintMod.Core
                 OverlaySystem.RegPoints("b", [b], ArchitectVisualPalette.PinBColor, family);
             }
 
+            BlueprintGuard.RegisterGuardMask(player, selection, "guarded", family);
+
             ModContent.GetInstance<ProjectionToolboxControl>().RegisterToolbox(player);
         }
 

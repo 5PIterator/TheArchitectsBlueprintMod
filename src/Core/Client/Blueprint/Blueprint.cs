@@ -23,6 +23,12 @@ namespace TheArchitectsBlueprintMod.Core
             public Point Relative { get; } = relative;
             public Point World { get; internal set; } = world;
             public bool Included { get; set; } = included;
+
+            /// <summary>
+            /// Guard classification for this cell. Ignored when <see cref="Included"/> is false.
+            /// Refreshed on included cells by <see cref="BlueprintGuard.RefreshProtection"/>.
+            /// </summary>
+            public bool Protected { get; set; }
         }
 
         public int Owner { get; } = owner;

@@ -1,15 +1,20 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
+using Terraria.DataStructures;
+using Terraria.Map;
+using Terraria.UI;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.Layers;
+using TheArchitectsBlueprintMod.Utils;
 
 namespace TheArchitectsBlueprintMod.Core.Preview
 {
     /// <summary>
-    /// Entry point for payload previews (in-world projection overlay and UI thumbnails).
-    /// Rendering is delegated to <see cref="LayerSystem.DrawRegion"/>.
+    /// Entry point for payload previews (in-world projection overlay, map pixels, and UI thumbnails).
+    /// World rendering is delegated to <see cref="LayerSystem.DrawRegion"/>.
     /// </summary>
     internal static class PayloadPreview
     {
@@ -48,6 +53,60 @@ namespace TheArchitectsBlueprintMod.Core.Preview
                 proj.Area.X,
                 proj.Area.Y,
                 payload.Entities);
+        }
+
+        /// <summary>
+        /// Draws included payload cells as vanilla map-colored pixels on the fullscreen map.
+        /// </summary>
+        public static void DrawOnMap(ref MapOverlayDrawContext context, Projection proj)
+        {
+            if (proj.IsLocked || !proj.HasPayload || !proj.IsDefined)
+                return;
+
+            Payload payload = proj.Payload;
+            int w = payload.Width;
+            int h = payload.Height;
+            if (w <= 0 || h <= 0)
+                return;
+
+            GetVisibleRelativeRangeOnMap(proj.Area, w, h, out int minX, out int maxX, out int minY, out int maxY);
+            if (minX >= maxX || minY >= maxY)
+                return;
+
+            float tileDrawScale = context.DrawScale > 0f
+                ? context.MapScale / context.DrawScale
+                : context.MapScale;
+            if (tileDrawScale <= 0f)
+                return;
+
+            var pixel = ModUtils.DummyTexture;
+            var frame = new SpriteFrame(1, 1, 0, 0);
+            IReadOnlyList<Payload.Entry> entries = payload.Entries;
+
+            for (int i = 0; i < entries.Count; i++)
+            {
+                Point rel = entries[i].Relative;
+                if (rel.X < minX || rel.X >= maxX || rel.Y < minY || rel.Y >= maxY)
+                    continue;
+
+                if (!TryGetIncludedCell(proj, payload, rel, out PayloadCell cell))
+                    continue;
+
+                if (!PayloadMapColor.TryGetMapColor(cell, out Color mapColor))
+                    continue;
+
+                float tintAlpha = PreviewTint.A / 255f;
+                Color drawColor = mapColor * tintAlpha;
+                drawColor.A = (byte)(mapColor.A * tintAlpha);
+                context.Draw(
+                    pixel,
+                    new Vector2(proj.Area.X + rel.X, proj.Area.Y + rel.Y),
+                    drawColor,
+                    frame,
+                    tileDrawScale,
+                    tileDrawScale,
+                    Alignment.TopLeft);
+            }
         }
 
         /// <summary>Bakes a square preview texture for UI thumbnails. Caller must Dispose the result.</summary>
@@ -141,6 +200,40 @@ namespace TheArchitectsBlueprintMod.Core.Preview
             int rightTile = (int)((Main.screenPosition.X + Main.screenWidth) / TilePixelSize) + margin;
             int topTile = (int)(Main.screenPosition.Y / TilePixelSize) - margin;
             int bottomTile = (int)((Main.screenPosition.Y + Main.screenHeight) / TilePixelSize) + margin;
+
+            int minWorldX = Math.Max(area.Left, leftTile);
+            int maxWorldX = Math.Min(area.Right - 1, rightTile);
+            int minWorldY = Math.Max(area.Top, topTile);
+            int maxWorldY = Math.Min(area.Bottom - 1, bottomTile);
+
+            if (minWorldX > maxWorldX || minWorldY > maxWorldY)
+            {
+                minX = maxX = minY = maxY = 0;
+                return;
+            }
+
+            minX = Math.Clamp(minWorldX - area.X, 0, width);
+            maxX = Math.Clamp(maxWorldX - area.X + 1, 0, width);
+            minY = Math.Clamp(minWorldY - area.Y, 0, height);
+            maxY = Math.Clamp(maxWorldY - area.Y + 1, 0, height);
+        }
+
+        /// <summary>Clips payload-relative draw bounds to visible fullscreen-map tiles plus a margin.</summary>
+        private static void GetVisibleRelativeRangeOnMap(Rectangle area, int width, int height, out int minX, out int maxX, out int minY, out int maxY)
+        {
+            const int margin = 2;
+
+            if (!ArchitectMapTransform.TryScreenToTile(Vector2.Zero, out Point topLeft)
+                || !ArchitectMapTransform.TryScreenToTile(new Vector2(Main.screenWidth, Main.screenHeight), out Point bottomRight))
+            {
+                minX = maxX = minY = maxY = 0;
+                return;
+            }
+
+            int leftTile = Math.Min(topLeft.X, bottomRight.X) - margin;
+            int rightTile = Math.Max(topLeft.X, bottomRight.X) + margin;
+            int topTile = Math.Min(topLeft.Y, bottomRight.Y) - margin;
+            int bottomTile = Math.Max(topLeft.Y, bottomRight.Y) + margin;
 
             int minWorldX = Math.Max(area.Left, leftTile);
             int maxWorldX = Math.Min(area.Right - 1, rightTile);
