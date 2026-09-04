@@ -3,6 +3,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
 using static TheArchitectsBlueprintMod.Core.ToolActionManager;
 
 namespace TheArchitectsBlueprintMod.Content.Items
@@ -53,6 +54,9 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return null;
+
 			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
 				return true;
 
@@ -79,6 +83,9 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			// --- Track left-button drag state and cancel the gesture with right-click.
 
 			if (player.whoAmI != Main.myPlayer)
+				return;
+
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
 				return;
 
 			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))

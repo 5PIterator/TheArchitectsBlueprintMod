@@ -111,7 +111,10 @@ namespace TheArchitectsBlueprintMod.Core
             // Initialize the paste configuration and client preferences.
             PasteConfig = config;
             _policy = policy;
-            ApplySourceClear = (Execution.CutSource && !Execution.SourceArea.IsEmpty) || _policy.CutPhase.Strategy.EnableCutPasteProcess;
+            // Cut phase Active gates source clears; without it CutSource would queue orphaned cutTasks.
+            ApplySourceClear = _policy.CutPhase.Active
+                && ((Execution.CutSource && !Execution.SourceArea.IsEmpty)
+                    || _policy.CutPhase.Strategy.EnableCutPasteProcess);
             // Compose the layer pipeline.
             Pipeline = LayerSystem.ComposePipeline();
             // Build the tile lookup.
@@ -430,7 +433,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <returns><c>true</c> while source tiles remain to process; <c>false</c> once the PlaceSource stage is exhausted.</returns>
         private bool PlanPlaceTarget(ref int budget, ref int prepUnits, in PasteContext planningContext)
         {
-            // --- Walk the source-tile list once, projecting each into place tasks at its target location.
+            // --- Walk the target grid once; under Sweep only seed allowed relatives, else queue place layers.
 
             // Signal stage completion when the target-tile cursor is exhausted.
             if (_prepIndex.X >= Execution.GridWidth || _prepIndex.Y >= Execution.GridHeight)
@@ -450,6 +453,16 @@ namespace TheArchitectsBlueprintMod.Core
             // Skip relatives that are not represented in the payload lookup.
             if (!Lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
                 return true;
+
+            // Sweep blits the full included footprint and skips place identification; still seed allowed
+            // relatives so Transparent clear and CutSource match what Sweep will apply.
+            if (_sweepPhase.Active)
+            {
+                _allowedPlaceRelatives!.Add(rel);
+                budget--;
+                prepUnits++;
+                return true;
+            }
 
             // Vacant payload cells are cleared at destination, not placed.
             if (pasteTile.PayloadCell.IsEmpty)
@@ -652,20 +665,28 @@ namespace TheArchitectsBlueprintMod.Core
         {
             // --- Report queue sizes, flag preparation done, release scratch state, and dump the task map for debugging.
 
-            // Tally final queue depth for diagnostic reporting.
             int placeBatches = 0;
             for (int i = 0; i < placeTasks.Count; i++)
                 placeBatches += placeTasks[i].Count;
             int clearBatches = 0;
             for (int i = 0; i < clearTasks.Count; i++)
                 clearBatches += clearTasks[i].Count;
-            TABLog.Debug($"Prep: queues ready | placeBatches={placeBatches} clearBatches={clearBatches}", "Paste");
-            TABLog.Debug($"Prep: complete placeBatches={placeBatches} clearBatches={clearBatches}", "Paste");
+            int cutBatches = 0;
+            for (int i = 0; i < cutTasks.Count; i++)
+                cutBatches += cutTasks[i].Count;
+            TABLog.Debug($"Prep: queues ready | placeBatches={placeBatches} clearBatches={clearBatches} cutBatches={cutBatches}", "Paste");
+            TABLog.Debug($"Prep: complete placeBatches={placeBatches} clearBatches={clearBatches} cutBatches={cutBatches}", "Paste");
             TABLog.Info(
                 PastingInfoLog.FormatPlanEnd(placeBatches, clearBatches),
                 TABLog.GenericCategory,
                 chatColor: Color.LightGreen,
                 ownerPlayer: Execution.Owner);
+            if (ApplySourceClear && cutBatches == 0)
+            {
+                TABLog.Warn(
+                    "Prep: ApplySourceClear is on but no cut tasks were queued (check inclusion / allowed footprint)",
+                    "Paste");
+            }
             if (placeBatches == 0)
             {
                 TABLog.Warn(
@@ -679,7 +700,7 @@ namespace TheArchitectsBlueprintMod.Core
             _queuedCutByLayer = null;
             _queuedPlaceByLayer = null;
             _allowedPlaceRelatives = null;
-            PasteTaskMapDebug.WriteTaskMap(Execution, ApplySourceClear, Pipeline, clearTasks, placeTasks);
+            PasteTaskMapDebug.WriteTaskMap(Execution, ApplySourceClear, Pipeline, clearTasks, cutTasks, placeTasks);
         }
 
         private string FormatPrepProgress()
@@ -874,7 +895,7 @@ namespace TheArchitectsBlueprintMod.Core
                 && (planningContext.Payload is null || !planningContext.Payload.TryGetEntity(rel, out _)))
                 return;
 
-            // Sweep phase applies payload directly; layer place identification is unnecessary when sweep runs.
+            // Sweep blits payload directly; PlanPlaceTarget already seeds allowed relatives for Clear/Cut.
             if (_sweepPhase.Active)
                 return;
 
@@ -1179,7 +1200,7 @@ namespace TheArchitectsBlueprintMod.Core
 
             string layerId = _currentPhase == _placePhase
                 ? Pipeline.PlaceOrder[_currentLayerIndex].Id
-                : _currentPhase == _clearPhase
+                : _currentPhase is ClearPhase or CutPhase
                     ? Pipeline.ClearOrder[_currentLayerIndex].Id
                     : "?";
             TABLog.Debug(

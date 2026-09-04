@@ -1,0 +1,100 @@
+{
+  "metadata": {
+    "format": "tile-first",
+    "mapType": "vine",
+    "modVersion": "0.2.0",
+    "terrariaVersion": "v1.4.4.9",
+    "modsLoaded": [
+      "ModLoader",
+      "CheatSheet",
+      "TheArchitectsBlueprintMod"
+    ],
+    "generatedAt": "2026-08-13T14:05:31.0687075Z"
+  },
+  "data": {
+    "Tiles": {
+      "Vines": {
+        "interactions": [
+          {
+            "Item": "GrassSeeds",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "JungleVines": {
+        "interactions": [
+          {
+            "Item": "JungleGrassSeeds",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "HallowedVines": {
+        "interactions": [
+          {
+            "Item": "HallowedSeeds",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "CrimsonVines": {
+        "interactions": [
+          {
+            "Item": "CrimsonSeeds",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "VineFlowers": {
+        "interactions": [
+          {
+            "Item": "GrassSeeds",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "MushroomVines": {
+        "interactions": [
+          {
+            "Item": "MushroomGrassSeeds",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "Seaweed": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "CorruptVines": {
+        "interactions": [
+          {
+            "Item": "CorruptSeeds",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "AshVines": {
+        "interactions": [
+          {
+            "Item": "AshGrassSeeds",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      }
+    },
+    "Walls": {}
+  }
+}

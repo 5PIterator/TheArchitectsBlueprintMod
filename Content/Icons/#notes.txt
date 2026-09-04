@@ -1,0 +1,26 @@
+Architect Mode UI icons (Content/Icons/*.png, gitignored locally).
+
+tModLoader asset path = Content/Icons/<filename without .png>
+Example: Content/Icons/ArchitectMode.png → Mod.Assets.Request("Content/Icons/ArchitectMode")
+
+Wired in ArchitectModeSystem
+------------------------------
+Content/Icons/ArchitectMode   Equip-page entry tab (Camera row)
+Content/Icons/Button_Search   Toolbar 0 — payload browser
+Content/Icons/Manifest        Toolbar 1 — print manifest
+Content/Icons/PIN             Toolbar 2
+Content/Icons/SET             Toolbar 3
+Content/Icons/Include         Toolbar 4 — INCLUDE state
+Content/Icons/Exclude         Toolbar 4 — EXCLUDE state
+Content/Icons/Copy            Toolbar 5
+Content/Icons/Paste           Toolbar 6
+Content/Icons/Cut             Toolbar 7 — toggle CutSource
+Content/Icons/EXIT            Toolbar 8 — exit
+
+World toolbox (ProjectionToolboxControl): Search, Manifest, Cut.
+
+Map interaction requires Architect Mode — overlays still render on the map when mode is off.
+Map toggle is not on the toolbar — use vanilla map shortcuts.
+
+Reserved / future: Reset.png, settings.png
+Unused spares: Files.png, Tags.png, Info-More.png, Camera_*.png, etc.

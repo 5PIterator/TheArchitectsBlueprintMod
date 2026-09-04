@@ -13,6 +13,7 @@ Engineering tracker for the pre-release. Player-facing summary: [README](../READ
 - [ ] Playtest paste on dedicated server + remote client + host-and-play (architecture exists; needs verification)
 
 ### UX / polish
+- [ ] Architect Mode: re-enable Hand recipe + Hand→Blueprint shimmer when Mode is stable (currently gated off; cheat-spawn still works; map interaction requires Mode — see [PLAN.md](PLAN.md) Temporary implementation)
 - [ ] Export browser: pick export target like import file picker (currently always topmost projection with a payload)
 - [ ] Payload browser UI polish (text fields, layout) — see [src/UI/TmodGUI/#notes.md](../src/UI/TmodGUI/%23notes.md)
 - [ ] Clear operations may hang on stubborn inventories — skip after first failure + chat message

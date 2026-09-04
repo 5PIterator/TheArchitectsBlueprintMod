@@ -3,6 +3,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
 using static TheArchitectsBlueprintMod.Core.ToolActionManager;
 
 namespace TheArchitectsBlueprintMod.Content.Items
@@ -37,6 +38,9 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			// --- Ignore remote players; resolve tile under mouse; dispatch PASTE left vs right.
 
 			if (player.whoAmI != Main.myPlayer)
+				return null;
+
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
 				return null;
 
 			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))

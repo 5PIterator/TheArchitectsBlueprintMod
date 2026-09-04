@@ -350,7 +350,6 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 PasteRejectReason.InvalidProjection => "Mods.TheArchitectsBlueprintMod.UI.Paste.InvalidProjection",
                 PasteRejectReason.InvalidPayload => "Mods.TheArchitectsBlueprintMod.UI.Paste.InvalidPayload",
                 PasteRejectReason.InvalidPacket => "Mods.TheArchitectsBlueprintMod.UI.Paste.InvalidPacket",
-                PasteRejectReason.NotHost => "Mods.TheArchitectsBlueprintMod.UI.Paste.NotHost",
                 PasteRejectReason.AreaLimit => "Mods.TheArchitectsBlueprintMod.UI.Paste.AreaLimit",
                 PasteRejectReason.VolumeLimit => "Mods.TheArchitectsBlueprintMod.UI.Paste.VolumeLimit",
                 PasteRejectReason.PlayerOperationLimit => "Mods.TheArchitectsBlueprintMod.UI.Paste.PlayerOperationLimit",

@@ -6,6 +6,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
 using static TheArchitectsBlueprintMod.Core.ToolActionManager;
 using TheArchitectsBlueprintMod.Utils;
 
@@ -64,7 +65,10 @@ namespace TheArchitectsBlueprintMod.Content.Items
 		public override bool AltFunctionUse(Player player) => true;
 
 		/// <summary>Blocks use while the shared action wheel is open or opening.</summary>
-		public override bool CanUseItem(Player player) => !ActionWheel.IsActive && !ActionWheel.IsPendingOpen;
+		public override bool CanUseItem(Player player) =>
+			!ArchitectModeGuards.SuppressHeldToolInput(player)
+			&& !ActionWheel.IsActive
+			&& !ActionWheel.IsPendingOpen;
 
 		/// <summary>Opens the tool wheel on alt-use (after rectangle cancel when needed), or dispatches the current mode on primary use.</summary>
 		public override bool? UseItem(Player player)
@@ -72,6 +76,9 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			// --- Alt-use cancels rectangle preview, toggles wheel, or opens full action wheel; primary use runs current mode.
 
 			if (player.whoAmI != Main.myPlayer)
+				return null;
+
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
 				return null;
 
 			var actionManager = ModContent.GetInstance<ToolActionManager>();
@@ -111,6 +118,9 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			// --- While the wheel is visible, drop rectangle preview; otherwise use an IncludeStick-style hold chain.
 
 			if (player.whoAmI != Main.myPlayer)
+				return;
+
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
 				return;
 
 			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))

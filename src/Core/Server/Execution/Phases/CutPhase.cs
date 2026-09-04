@@ -31,6 +31,10 @@ namespace TheArchitectsBlueprintMod.Core.Phases
 
         public override void ExecuteTick()
         {
+            // Finish in-flight source clears before later cut layers observe world state.
+            if (Operation.TryWaitForCurrentLayerEffects(Operation.cutTasks))
+                return;
+
             Operation.AdvanceToNextNonEmptyLayer(Operation.cutTasks);
             if (Operation._currentLayerIndex >= Operation.cutTasks.Count)
             {

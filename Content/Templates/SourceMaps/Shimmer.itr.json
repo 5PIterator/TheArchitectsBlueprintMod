@@ -9,7 +9,7 @@
       "CheatSheet",
       "TheArchitectsBlueprintMod"
     ],
-    "generatedAt": "2026-07-11T12:43:43.465955Z"
+    "generatedAt": "2026-08-26T12:43:29.2715015Z"
   },
   "data": {
     "IronPickaxe": {
@@ -273,16 +273,6 @@
           "main": "Stone",
           "style": 0,
           "yield": 1
-        }
-      ]
-    },
-    "LesserHealingPotion": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 2
         }
       ]
     },
@@ -866,16 +856,6 @@
         }
       ]
     },
-    "BottledWater": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "SpaceGun": {
       "interactions": [
         {
@@ -1038,16 +1018,6 @@
         {
           "layer": "Tile",
           "main": "CopperBrick",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "WaterCandle": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Candles",
           "style": 0,
           "yield": 1
         }
@@ -1491,12 +1461,6 @@
           "main": "MushroomBlock",
           "style": 0,
           "yield": 1
-        },
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -1617,16 +1581,6 @@
         }
       ]
     },
-    "GillsPotion": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Coral",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "IronskinPotion": {
       "interactions": [
         {
@@ -1694,12 +1648,6 @@
           "main": "WoodBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -1879,16 +1827,6 @@
         }
       ]
     },
-    "Ale": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 4,
-          "yield": 1
-        }
-      ]
-    },
     "Bookcase": {
       "interactions": [
         {
@@ -1896,12 +1834,6 @@
           "main": "WoodBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -3503,12 +3435,6 @@
           "main": "Ebonwood",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -3519,12 +3445,6 @@
           "main": "RichMahogany",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -3535,12 +3455,6 @@
           "main": "Pearlwood",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -5123,12 +5037,6 @@
           "main": "Shadewood",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -5382,76 +5290,6 @@
         }
       ]
     },
-    "OrangeDye": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "DyePlants",
-          "style": 7,
-          "yield": 1
-        }
-      ]
-    },
-    "YellowDye": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "DyePlants",
-          "style": 3,
-          "yield": 1
-        }
-      ]
-    },
-    "LimeDye": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "DyePlants",
-          "style": 5,
-          "yield": 1
-        }
-      ]
-    },
-    "GreenDye": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "DyePlants",
-          "style": 1,
-          "yield": 1
-        }
-      ]
-    },
-    "TealDye": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "DyePlants",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "SkyBlueDye": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "DyePlants",
-          "style": 2,
-          "yield": 1
-        }
-      ]
-    },
-    "BlueDye": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "DyePlants",
-          "style": 4,
-          "yield": 1
-        }
-      ]
-    },
     "LihzahrdBrick": {
       "interactions": [
         {
@@ -5517,16 +5355,6 @@
           "main": "HoneyBlock",
           "style": 0,
           "yield": 5
-        }
-      ]
-    },
-    "BottledHoney": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -6580,16 +6408,6 @@
         }
       ]
     },
-    "StarinaBottle": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "WoodenFence": {
       "interactions": [
         {
@@ -7589,26 +7407,6 @@
         }
       ]
     },
-    "FireflyinaBottle": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "LightningBuginaBottle": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "CactusBookcase": {
       "interactions": [
         {
@@ -7616,12 +7414,6 @@
           "main": "CactusBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -7632,12 +7424,6 @@
           "main": "Ebonwood",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -7648,12 +7434,6 @@
           "main": "FleshBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -7664,12 +7444,6 @@
           "main": "HoneyBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -7680,12 +7454,6 @@
           "main": "Cog",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -7696,12 +7464,6 @@
           "main": "Glass",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -7712,12 +7474,6 @@
           "main": "RichMahogany",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -7728,12 +7484,6 @@
           "main": "Pearlwood",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -7744,12 +7494,6 @@
           "main": "SpookyWood",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -7760,12 +7504,6 @@
           "main": "Sunplate",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -7776,12 +7514,6 @@
           "main": "LihzahrdBrick",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -7792,12 +7524,6 @@
           "main": "IceBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -9138,12 +8864,6 @@
           "main": "WoodBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -9154,22 +8874,6 @@
           "main": "Shadewood",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
-        }
-      ]
-    },
-    "BoneBookcase": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -9421,86 +9125,6 @@
         }
       ]
     },
-    "MonarchButterflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "PurpleEmperorButterflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "RedAdmiralButterflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "UlyssesButterflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "SulphurButterflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "TreeNymphButterflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "ZebraSwallowtailButterflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "JuliaButterflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "VenomStaff": {
       "interactions": [
         {
@@ -9740,12 +9364,6 @@
           "main": "DynastyWood",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -9894,12 +9512,6 @@
           "main": "WoodBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -9910,12 +9522,6 @@
           "main": "FleshBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -9926,12 +9532,6 @@
           "main": "IceBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -10014,12 +9614,6 @@
           "main": "Glass",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -10030,12 +9624,6 @@
           "main": "HoneyBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -10046,12 +9634,6 @@
           "main": "Cog",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -10227,16 +9809,6 @@
         }
       ]
     },
-    "SonarPotion": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Coral",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "CratePotion": {
       "interactions": [
         {
@@ -10257,16 +9829,6 @@
         }
       ]
     },
-    "BonePiano": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "CactusPiano": {
       "interactions": [
         {
@@ -10274,12 +9836,6 @@
           "main": "CactusBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -10290,12 +9846,6 @@
           "main": "SpookyWood",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -10306,12 +9856,6 @@
           "main": "Sunplate",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -10322,12 +9866,6 @@
           "main": "LihzahrdBrick",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -10558,12 +10096,6 @@
           "main": "Stone",
           "style": 0,
           "yield": 5
-        },
-        {
-          "layer": "Tile",
-          "main": "Coral",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -10906,12 +10438,6 @@
           "main": "PalmWood",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -10968,12 +10494,6 @@
           "main": "PalmWood",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -11014,12 +10534,6 @@
           "main": "MushroomBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -11142,12 +10656,6 @@
           "main": "MushroomBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -11198,12 +10706,6 @@
           "main": "BorealWood",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -11368,12 +10870,6 @@
           "main": "BorealWood",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -11414,12 +10910,6 @@
           "main": "SlimeBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -11584,12 +11074,6 @@
           "main": "SlimeBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -12408,12 +11892,6 @@
           "main": "PumpkinBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -12424,12 +11902,6 @@
           "main": "PumpkinBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -13578,12 +13050,6 @@
           "main": "MartianConduitPlating",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -13642,12 +13108,6 @@
           "main": "MartianConduitPlating",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -14173,16 +13633,6 @@
         }
       ]
     },
-    "GoldButterflyCage": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "WebRope": {
       "interactions": [
         {
@@ -14574,12 +14024,6 @@
           "main": "MeteoriteBrick",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -14590,12 +14034,6 @@
           "main": "MarbleBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -14606,12 +14044,6 @@
           "main": "GraniteBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -14832,12 +14264,6 @@
           "main": "MeteoriteBrick",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -14848,12 +14274,6 @@
           "main": "MarbleBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -14864,12 +14284,6 @@
           "main": "GraniteBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -17552,16 +16966,6 @@
         }
       ]
     },
-    "SpiritFlame": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "DjinnLamp",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "MagicSandDropper": {
       "interactions": [
         {
@@ -17889,12 +17293,6 @@
           "main": "CrystalBlock",
           "style": 0,
           "yield": 40
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -17905,12 +17303,6 @@
           "main": "DynastyWood",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -17921,12 +17313,6 @@
           "main": "CrystalBlock",
           "style": 0,
           "yield": 50
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -17987,12 +17373,6 @@
           "main": "Spider",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -18157,12 +17537,6 @@
           "main": "Spider",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -18335,12 +17709,6 @@
           "main": "LesionBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -18505,12 +17873,6 @@
           "main": "LesionBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -19153,12 +18515,6 @@
           "main": "SolarBrick",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -19323,12 +18679,6 @@
           "main": "SolarBrick",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -19429,12 +18779,6 @@
           "main": "VortexBrick",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -19599,12 +18943,6 @@
           "main": "VortexBrick",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -19705,12 +19043,6 @@
           "main": "NebulaBrick",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -19875,12 +19207,6 @@
           "main": "NebulaBrick",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -19981,12 +19307,6 @@
           "main": "StardustBrick",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -20151,12 +19471,6 @@
           "main": "StardustBrick",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -20520,12 +19834,6 @@
           "main": "SmoothSandstone",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -20674,12 +19982,6 @@
           "main": "SmoothSandstone",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -20760,76 +20062,6 @@
           "main": "ClayBlock",
           "style": 0,
           "yield": 2
-        }
-      ]
-    },
-    "BlackDragonflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "BlueDragonflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "GreenDragonflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "OrangeDragonflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "RedDragonflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "YellowDragonflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "GoldDragonflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -21902,12 +21134,6 @@
           "main": "BambooBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -22072,12 +21298,6 @@
           "main": "BambooBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -22151,127 +21371,11 @@
         }
       ]
     },
-    "AppleJuice": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "GrapeJuice": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "Lemonade": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "BananaDaiquiri": {
       "interactions": [
         {
           "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        },
-        {
-          "layer": "Tile",
           "main": "SnowBlock",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "PeachSangria": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "PinaColada": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "TropicalSmoothie": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "BloodyMoscato": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "SmoothieofDarkness": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "PrismaticPunch": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "FruitJuice": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "FruitSalad": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bowls",
           "style": 0,
           "yield": 1
         }
@@ -22345,36 +21449,6 @@
         {
           "layer": "Tile",
           "main": "AmberStoneBlock",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "PinkFairyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "GreenFairyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "BlueFairyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
           "style": 0,
           "yield": 1
         }
@@ -22493,66 +21567,6 @@
           "main": "Torches",
           "style": 21,
           "yield": 5
-        }
-      ]
-    },
-    "SoulBottleLight": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "SoulBottleNight": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "SoulBottleFlight": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "SoulBottleSight": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "SoulBottleMight": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "SoulBottleFright": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -22838,32 +21852,24 @@
         }
       ]
     },
-    "HellButterflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
-    "LavaflyinaBottle": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "GemTreeTopazSeed": {
       "interactions": [
         {
           "layer": "Tile",
           "main": "Saplings",
           "style": 0,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "main": "Saplings",
+          "style": 1,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "main": "Saplings",
+          "style": 2,
           "yield": 1
         },
         {
@@ -22884,6 +21890,18 @@
         },
         {
           "layer": "Tile",
+          "main": "Saplings",
+          "style": 1,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "main": "Saplings",
+          "style": 2,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
           "main": "ExposedGems",
           "style": 0,
           "yield": 1
@@ -22896,6 +21914,18 @@
           "layer": "Tile",
           "main": "Saplings",
           "style": 0,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "main": "Saplings",
+          "style": 1,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "main": "Saplings",
+          "style": 2,
           "yield": 1
         },
         {
@@ -22916,6 +21946,18 @@
         },
         {
           "layer": "Tile",
+          "main": "Saplings",
+          "style": 1,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "main": "Saplings",
+          "style": 2,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
           "main": "ExposedGems",
           "style": 3,
           "yield": 1
@@ -22928,6 +21970,18 @@
           "layer": "Tile",
           "main": "Saplings",
           "style": 0,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "main": "Saplings",
+          "style": 1,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "main": "Saplings",
+          "style": 2,
           "yield": 1
         },
         {
@@ -22948,6 +22002,18 @@
         },
         {
           "layer": "Tile",
+          "main": "Saplings",
+          "style": 1,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "main": "Saplings",
+          "style": 2,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
           "main": "ExposedGems",
           "style": 5,
           "yield": 1
@@ -22960,6 +22026,18 @@
           "layer": "Tile",
           "main": "Saplings",
           "style": 0,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "main": "Saplings",
+          "style": 1,
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "main": "Saplings",
+          "style": 2,
           "yield": 1
         },
         {
@@ -23186,16 +22264,6 @@
         }
       ]
     },
-    "EmpressButterflyJar": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
-        }
-      ]
-    },
     "MusicBoxConsoleTitle": {
       "interactions": [
         {
@@ -23307,16 +22375,6 @@
         {
           "layer": "Tile",
           "main": "Dirt",
-          "style": 0,
-          "yield": 15
-        }
-      ]
-    },
-    "CapricornMask": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Coral",
           "style": 0,
           "yield": 15
         }
@@ -23571,12 +22629,6 @@
           "main": "ReefBlock",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -23741,12 +22793,6 @@
           "main": "ReefBlock",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -23847,12 +22893,6 @@
           "main": "SillyBalloonGreen",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -24017,12 +23057,6 @@
           "main": "SillyBalloonGreen",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -24123,12 +23157,6 @@
           "main": "AshWood",
           "style": 0,
           "yield": 20
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 10
         }
       ]
     },
@@ -24293,12 +23321,6 @@
           "main": "AshWood",
           "style": 0,
           "yield": 15
-        },
-        {
-          "layer": "Tile",
-          "main": "Books",
-          "style": 0,
-          "yield": 1
         }
       ]
     },
@@ -24653,16 +23675,6 @@
           "layer": "Wall",
           "main": "ShimmerBlockWall",
           "yield": 4
-        }
-      ]
-    },
-    "ShimmerflyinaBottle": {
-      "interactions": [
-        {
-          "layer": "Tile",
-          "main": "Bottles",
-          "style": 0,
-          "yield": 1
         }
       ]
     },

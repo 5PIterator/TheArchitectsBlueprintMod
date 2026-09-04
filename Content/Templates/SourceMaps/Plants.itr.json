@@ -1,0 +1,546 @@
+{
+  "metadata": {
+    "format": "tile-first",
+    "mapType": "plant",
+    "modVersion": "0.2.0",
+    "terrariaVersion": "v1.4.4.9",
+    "modsLoaded": [
+      "ModLoader",
+      "CheatSheet",
+      "TheArchitectsBlueprintMod"
+    ],
+    "generatedAt": "2026-08-26T12:43:29.036982Z"
+  },
+  "data": {
+    "Tiles": {
+      "Vines": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "GrassSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "JungleVines": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "JungleGrassSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "HallowedVines": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "HallowedSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "CrimsonVines": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "CrimsonSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "VineFlowers": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "GrassSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "MushroomVines": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "MushroomGrassSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "Seaweed": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "CorruptVines": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "CorruptSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "AshVines": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "AshGrassSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "CorruptThorns": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "CorruptSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "CrimsonThorns": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "CrimsonSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "JungleThorns": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "JungleGrassSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "PlanteraThorns": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "JungleGrassSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "CorruptPlants": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "JunglePlants": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "MushroomPlants": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "Plants2": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "JunglePlants2": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "HallowedPlants": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "HallowedPlants2": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "LongMoss": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "CrimsonPlants": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "LilyPad": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "Cattail": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "SeaOats": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "OasisPlants": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "AshPlants": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "Sunflower": {
+        "interactions": [
+          {
+            "Item": "Sunflower",
+            "Style": 0,
+            "Yield": 1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "Sunflower",
+            "Style": 1,
+            "Yield": 1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "Sunflower",
+            "Style": 2,
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "Cactus": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "Cactus",
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "Bamboo": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "BambooBlock",
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "TreeAsh": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "AshWood",
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "TreeAmethyst": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "Amethyst",
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "TreeTopaz": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "Topaz",
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "TreeSapphire": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "Sapphire",
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "TreeEmerald": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "Emerald",
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "TreeRuby": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "Ruby",
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "TreeDiamond": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "Diamond",
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "TreeAmber": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "Amber",
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "Trees": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "Wood",
+            "Layer": "Tile"
+          },
+          {
+            "Item": "LivingWoodWand",
+            "Style": 1,
+            "Yield": 1,
+            "Ammo": "Ebonwood",
+            "Layer": "Tile"
+          },
+          {
+            "Item": "LivingWoodWand",
+            "Style": 2,
+            "Yield": 1,
+            "Ammo": "RichMahogany",
+            "Layer": "Tile"
+          },
+          {
+            "Item": "LivingWoodWand",
+            "Style": 3,
+            "Yield": 1,
+            "Ammo": "Pearlwood",
+            "Layer": "Tile"
+          },
+          {
+            "Item": "LivingWoodWand",
+            "Style": 4,
+            "Yield": 1,
+            "Ammo": "BorealWood",
+            "Layer": "Tile"
+          },
+          {
+            "Item": "LivingWoodWand",
+            "Style": 5,
+            "Yield": 1,
+            "Ammo": "Shadewood",
+            "Layer": "Tile"
+          },
+          {
+            "Item": "LivingWoodWand",
+            "Style": 6,
+            "Yield": 1,
+            "Ammo": "RichMahogany",
+            "Layer": "Tile"
+          },
+          {
+            "Item": "LivingWoodWand",
+            "Style": 7,
+            "Yield": 1,
+            "Ammo": "GlowingMushroom",
+            "Layer": "Tile"
+          }
+        ]
+      },
+      "PalmTree": {
+        "interactions": [
+          {
+            "Item": "LivingWoodWand",
+            "Style": 0,
+            "Yield": 1,
+            "Ammo": "PalmWood",
+            "Layer": "Tile"
+          },
+          {
+            "Item": "LivingWoodWand",
+            "Style": 1,
+            "Yield": 1,
+            "Ammo": "PalmWood",
+            "Layer": "Tile"
+          },
+          {
+            "Item": "LivingWoodWand",
+            "Style": 2,
+            "Yield": 1,
+            "Ammo": "PalmWood",
+            "Layer": "Tile"
+          },
+          {
+            "Item": "LivingWoodWand",
+            "Style": 3,
+            "Yield": 1,
+            "Ammo": "PalmWood",
+            "Layer": "Tile"
+          }
+        ]
+      }
+    },
+    "Walls": {}
+  }
+}

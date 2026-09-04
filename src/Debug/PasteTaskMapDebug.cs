@@ -29,6 +29,7 @@ internal static class PasteTaskMapDebug
         bool applySourceClear,
         LayerPipeline pipeline,
         IReadOnlyList<Queue<ClearingTask>> clearTasksByLayer,
+        IReadOnlyList<Queue<ClearingTask>> cutTasksByLayer,
         IReadOnlyList<Queue<PlacingTask>> placeTasksByLayer)
     {
         if (!TileMappingAuthority.UsesLocalMappingFilesystem())
@@ -43,6 +44,7 @@ internal static class PasteTaskMapDebug
             SourceTileCount = execution.SourceArea.Width * execution.SourceArea.Height,
             TargetTileCount = execution.GridWidth * execution.GridHeight,
             ClearTasks = BuildClearMap(pipeline, clearTasksByLayer),
+            CutTasks = BuildClearMap(pipeline, cutTasksByLayer),
             PlaceTasks = BuildPlaceMap(pipeline, placeTasksByLayer),
         };
 
@@ -96,6 +98,7 @@ internal static class PasteTaskMapDebug
         public int SourceTileCount { get; set; }
         public int TargetTileCount { get; set; }
         public Dictionary<string, List<TaskPointDto>> ClearTasks { get; set; }
+        public Dictionary<string, List<TaskPointDto>> CutTasks { get; set; }
         public Dictionary<string, List<PlaceTaskDto>> PlaceTasks { get; set; }
     }
 

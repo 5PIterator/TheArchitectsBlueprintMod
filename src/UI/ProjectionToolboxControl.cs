@@ -2,13 +2,11 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
-using Terraria.Audio;
-using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
 using TheArchitectsBlueprintMod.UI.TmodGUI.Elements;
-using TheArchitectsBlueprintMod.UI.TmodGUI.Widgets;
 using TheArchitectsBlueprintMod.Utils;
 
 namespace TheArchitectsBlueprintMod.UI
@@ -21,7 +19,7 @@ namespace TheArchitectsBlueprintMod.UI
         private const int ButtonSizePx = 24;
         private const int ToolboxPaddingPx = 2;
         private const int ToolboxOffsetPx = 4;
-        private const int ToolboxButtonCount = 2;
+        private const int ToolboxButtonCount = 3;
 
         private Blueprint? _target;
         private int _hoveredButtonIndex = -1;
@@ -38,6 +36,14 @@ namespace TheArchitectsBlueprintMod.UI
             ArgumentNullException.ThrowIfNull(player);
 
             string family = $"toolbox:{player.whoAmI}";
+            if (ModContent.GetInstance<ArchitectModeSystem>().Active
+                || ArchitectMapTransform.IsMapViewActive)
+            {
+                OverlaySystem.UnregisterFamily(family);
+                _target = null;
+                return;
+            }
+
             _target = ModContent.GetInstance<BlueprintSystem>().GetTopmostDefinedSelectionOrProjection();
             if (_target is not { IsDefined: true })
             {
@@ -103,6 +109,13 @@ namespace TheArchitectsBlueprintMod.UI
             if (Main.dedServ || Main.gameMenu || _target is not { IsDefined: true })
                 return false;
 
+            if (ModContent.GetInstance<ArchitectModeSystem>().Active)
+                return false;
+
+            // Map view without Architect Mode is render-only; toolbox clicks must not drive tools.
+            if (ArchitectMapTransform.IsMapViewActive)
+                return false;
+
             player = Main.LocalPlayer;
             if (player is not { active: true } || player.dead)
                 return false;
@@ -127,76 +140,15 @@ namespace TheArchitectsBlueprintMod.UI
             switch (buttonIndex)
             {
                 case 0:
-                    OpenPayloadBrowser();
+                    ArchitectModeSystem.OpenPayloadBrowser();
                     break;
                 case 1:
-                    PrintManifest();
+                    ArchitectModeSystem.PrintManifest();
+                    break;
+                case 2:
+                    ArchitectModeSystem.ToggleCut();
                     break;
             }
-        }
-
-        /// <summary>Opens the payload browser for the toolbox projection, spawning one from a selection when needed.</summary>
-        private void OpenPayloadBrowser()
-        {
-            // --- Avoid duplicate sessions, then scope the browser to a live projection.
-
-            if (PayloadBrowser.HasActive
-                && global::TheArchitectsBlueprintMod.UI.TmodGUI.TmodGUI.GetActiveWidget() is TmodPayloadBrowserWidget)
-            {
-                return;
-            }
-
-            Projection? projection = EnsureProjectionForToolboxAction();
-            if (projection is null)
-                return;
-
-            SoundEngine.PlaySound(SoundID.MenuTick);
-            TmodPayloadBrowserWidget.Open(projection);
-        }
-
-        /// <summary>Prints the paste item manifest for the toolbox projection into chat.</summary>
-        private void PrintManifest()
-        {
-            // --- Resolve or spawn a projection, then emit a local chat bill of materials.
-
-            Projection? projection = EnsureProjectionForToolboxAction();
-            if (projection is null)
-                return;
-
-            SoundEngine.PlaySound(SoundID.MenuTick);
-            ManifestPrinter.Print(projection);
-        }
-
-        /// <summary>Returns the toolbox projection, creating a COPY projection from a selection when that is the target.</summary>
-        private Projection? EnsureProjectionForToolboxAction()
-        {
-            // --- Reuse a defined projection, or spawn a COPY projection from a defined selection.
-
-            if (_target is Projection projection && projection.IsDefined)
-                return projection;
-
-            if (_target is not Selection selection || !selection.IsDefined)
-                return null;
-
-            // Require a live local player before capturing world tiles into a new projection.
-            Player player = Main.LocalPlayer;
-            if (player is not { active: true } || player.dead)
-                return null;
-
-            BlueprintGuard.RefreshClientGuardMasks(player, skipWhenPasteActive: false);
-
-            if (!BlueprintGuard.TryValidateIncludedTiles(player, selection, out var failure))
-            {
-                BlueprintGuard.NotifyCaptureBlocked(failure);
-                return null;
-            }
-
-            Projection spawned = ModContent.GetInstance<ProjectionSystem>().NewProjection(player, selection);
-            if (spawned is null)
-                return null;
-
-            _target = spawned;
-            return spawned;
         }
 
         /// <summary>Draws the toolbox row and each registered projection tool button.</summary>
@@ -221,17 +173,14 @@ namespace TheArchitectsBlueprintMod.UI
         {
             // --- Resolve the indexed icon and add vanilla hover chrome around it.
 
-            string iconPath = buttonIndex switch
-            {
-                0 => TmodUIAssets.Bestiary.ButtonSearchPath,
-                1 => TmodUIAssets.Bestiary.StatCopperPath,
-                _ => TmodUIAssets.Bestiary.IconLockedPath
-            };
-
-            if (hovered)
+            bool cutSelected = buttonIndex == 2 && ArchitectModeSystem.IsFrontmostCutEnabled();
+            if (hovered || cutSelected)
             {
                 Texture2D border = TmodUIAssets.RequestTexture(TmodUIAssets.Bestiary.ButtonBorderPath).Value;
-                Main.spriteBatch.Draw(border, rect, Color.White);
+                Color borderTint = cutSelected && !hovered
+                    ? ArchitectVisualPalette.ProjectionCutColor
+                    : Color.White;
+                Main.spriteBatch.Draw(border, rect, borderTint);
             }
 
             const int iconInset = 4;
@@ -240,8 +189,32 @@ namespace TheArchitectsBlueprintMod.UI
                 rect.Y + iconInset,
                 rect.Width - iconInset * 2,
                 rect.Height - iconInset * 2);
-            Texture2D icon = TmodUIAssets.RequestTexture(iconPath).Value;
-            Main.spriteBatch.Draw(icon, iconRect, Color.White * (hovered ? 1f : 0.85f));
+            Texture2D? icon = TryGetButtonIcon(buttonIndex);
+            if (icon is null)
+                return;
+
+            Color iconTint = cutSelected
+                ? ArchitectVisualPalette.ProjectionCutColor
+                : Color.White;
+            Main.spriteBatch.Draw(icon, iconRect, iconTint * (hovered ? 1f : 0.85f));
+        }
+
+        /// <summary>Loads the toolbox button icon from Architect Mode assets, falling back to vanilla search.</summary>
+        private static Texture2D? TryGetButtonIcon(int buttonIndex)
+        {
+            // --- Prefer Content/Icons; keep vanilla search as a fallback for the browser slot.
+
+            var architectMode = ModContent.GetInstance<ArchitectModeSystem>();
+
+            // Search may fall back to the vanilla bestiary icon; Manifest and Cut are mod assets.
+            return buttonIndex switch
+            {
+                0 => architectMode.TryGetIconTexture(ArchitectModeSystem.SearchIconPath)
+                    ?? TmodUIAssets.RequestTexture(TmodUIAssets.Bestiary.ButtonSearchPath).Value,
+                1 => architectMode.TryGetIconTexture(ArchitectModeSystem.ManifestIconPath),
+                2 => architectMode.TryGetIconTexture(ArchitectModeSystem.CutIconPath),
+                _ => null
+            };
         }
 
         /// <summary>Returns tooltip text for a toolbox button.</summary>
@@ -253,6 +226,7 @@ namespace TheArchitectsBlueprintMod.UI
             {
                 0 => Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.OpenPayloadBrowser"),
                 1 => Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.PrintManifest"),
+                2 => Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.ToggleCut"),
                 _ => string.Empty
             };
         }

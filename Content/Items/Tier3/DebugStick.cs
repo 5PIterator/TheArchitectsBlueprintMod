@@ -6,6 +6,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.Utils;
 #if DEBUG
@@ -62,11 +63,17 @@ namespace TheArchitectsBlueprintMod.Content.Items
 
 		public override bool AltFunctionUse(Player player) => true;
 
-		public override bool CanUseItem(Player player) => !ActionWheel.IsActive && !ActionWheel.IsPendingOpen;
+		public override bool CanUseItem(Player player) =>
+			!ArchitectModeGuards.SuppressHeldToolInput(player)
+			&& !ActionWheel.IsActive
+			&& !ActionWheel.IsPendingOpen;
 
 		public override bool? UseItem(Player player)
 		{
 			if (player.whoAmI != Main.myPlayer)
+				return null;
+
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
 				return null;
 
 			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))

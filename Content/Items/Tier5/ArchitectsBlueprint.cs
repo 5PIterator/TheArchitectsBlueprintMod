@@ -1,11 +1,15 @@
 using Terraria;
+using Terraria.Audio;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
 
 namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// ARCHITECT'S BLUEPRINT: late-game upgrade from Shimmering Architect's Hand.
+	/// Permanently unlocks Architect Mode.
 	/// </summary>
 	public class ArchitectsBlueprint : ModItem
 	{
@@ -19,6 +23,31 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			Item.rare = ItemRarityID.Red;
 			Item.value = Item.buyPrice(gold: 10);
 			Item.UseSound = SoundID.Item4;
+			Item.consumable = true;
+			Item.maxStack = 1;
+		}
+
+		public override bool? UseItem(Player player)
+		{
+			if (player.whoAmI != Main.myPlayer)
+				return null;
+
+			var architectPlayer = player.GetModPlayer<ArchitectModePlayer>();
+			if (!architectPlayer.ArchitectGuiUnlocked)
+			{
+				architectPlayer.UnlockArchitectGuiPermanently();
+				Main.NewText(Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.ArchitectMode.UnlockChat"), byte.MaxValue, 220, 120);
+				SoundEngine.PlaySound(SoundID.Item4);
+				return true;
+			}
+
+			var architectMode = ModContent.GetInstance<ArchitectModeSystem>();
+			if (!architectMode.Active && architectMode.CanOpen(player))
+				architectMode.Toggle(true);
+			else
+				Main.NewText(Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.ArchitectMode.AlreadyUnlocked"), byte.MaxValue, 220, 120);
+
+			return true;
 		}
 	}
 }

@@ -10,6 +10,7 @@ using Terraria.ModLoader;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
 using TheArchitectsBlueprintMod.UI.TmodGUI;
 
 namespace TheArchitectsBlueprintMod.Utils
@@ -123,6 +124,9 @@ namespace TheArchitectsBlueprintMod.Utils
         {
             ArgumentNullException.ThrowIfNull(entries);
 
+            if (ModContent.GetInstance<ArchitectModeSystem>().Active)
+                return;
+
             // Ignore duplicate open requests from the current owner.
             if (IsActive && _ownerPlayer == ownerPlayer && _ownerHeldItemType == ownerHeldItemType)
             {
@@ -142,6 +146,12 @@ namespace TheArchitectsBlueprintMod.Utils
         internal static void ConsumePendingOpenIfAny()
         {
             if (TmodGUI.IsBlockingInput)
+            {
+                _pendingOpen = null;
+                return;
+            }
+
+            if (ModContent.GetInstance<ArchitectModeSystem>().Active)
             {
                 _pendingOpen = null;
                 return;

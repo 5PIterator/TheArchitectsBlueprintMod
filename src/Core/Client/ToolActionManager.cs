@@ -4,6 +4,7 @@ using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core.Server;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.UI;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
@@ -104,6 +105,10 @@ namespace TheArchitectsBlueprintMod.Core
                 // Ignore world clicks that hit the on-blueprint toolbox so PIN cannot wipe the selection.
                 if (key is ToolActionKey.LeftClick
                     && ModContent.GetInstance<ProjectionToolboxControl>().IsHovering)
+                    return;
+
+                var architectMode = ModContent.GetInstance<ArchitectModeSystem>();
+                if (architectMode.Active && architectMode.IsToolbarHovered)
                     return;
 
                 // Switch on high-level action and delegate to focused handlers or subsystems.

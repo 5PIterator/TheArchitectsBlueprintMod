@@ -9,6 +9,29 @@ UI: {
 	ExportReadableJsonHoverOn: Export readable .json
 	OpenPayloadBrowser: Open payload browser
 	PrintManifest: Print item manifest
+	ToggleCut: Toggle cut from source
+
+	ArchitectMode: {
+		Header: Architect Mode — {0}
+		EntryOpen: Architect Mode
+		EntryClose: Close Architect Mode
+		UnlockChat: Architect's Blueprint GUI permanently unlocked.
+		AlreadyUnlocked: Architect Mode is already unlocked.
+		PanicNeedsWorld: Enter a world before clearing permanent Architect Mode unlock.
+		PanicCleared: Permanent Architect Mode unlock cleared for this character.
+		PanicAlreadyCleared: This character did not have a permanent Architect Mode unlock.
+
+		Toolbar: {
+			Pin: Pin selection (PIN)
+			Set: Edit selection (SET)
+			Include: Include tiles (INC)
+			Exclude: Exclude tiles (EXC)
+			Copy: Copy projection (CPY)
+			Paste: Paste projection (PST)
+			Cut: Toggle cut from source (CUT)
+			Exit: Exit Architect Mode
+		}
+	}
 
 	Manifest: {
 		Header: --- Payload Manifest ---
@@ -56,8 +79,7 @@ UI: {
 		None: No error (internal).
 		InvalidProjection: Invalid projection (missing payload or not ready to paste).
 		InvalidPayload: Invalid payload for paste.
-		InvalidPacket: Invalid paste request packet or send failed (wrong game mode).
-		NotHost: Only host can paste in multiplayer.
+		InvalidPacket: Invalid paste request packet or send failed.
 		AreaLimit: Projection exceeds area limits.
 		VolumeLimit: Projection exceeds tile volume limit.
 		PlayerOperationLimit: Player operation limit reached.
@@ -95,8 +117,8 @@ Items: {
 		DisplayName: Architect's Hand
 		Tooltip:
 			'''
-			Late-game accessory.
-			Submerge in Shimmer to obtain Architect's Blueprint.
+			Enables Architect Mode while equipped.
+			Crafting is disabled until Architect Mode is more stable (cheat-spawn for testing).
 			'''
 	}
 
@@ -104,8 +126,8 @@ Items: {
 		DisplayName: Architect's Blueprint
 		Tooltip:
 			'''
-			Late-game item from shimmering Architect's Hand.
-			Usable animation only — full tool behavior is not implemented yet.
+			Permanently unlocks Architect Mode.
+			Crafting and shimmer upgrade are disabled until Architect Mode is more stable (cheat-spawn for testing).
 			'''
 	}
 
@@ -799,6 +821,25 @@ Configs: {
 		}
 
 		Tooltip: ""
+	}
+
+	ArchitectModeConfig: {
+		DisplayName: Architect Mode
+		Tooltip:
+			'''
+			Client utilities for Architect Mode.
+			Use the panic toggle if you unlocked the unstable Mode by mistake.
+			'''
+		Headers.Panic: Panic
+
+		ClearPermanentArchitectModeUnlock: {
+			Label: Clear permanent Architect Mode unlock
+			Tooltip:
+				'''
+				One-shot action. Save this config while in a world to remove the permanent unlock from the current character.
+				Closes Architect Mode if it is open. Architect's Hand still grants temporary access while equipped.
+				'''
+		}
 	}
 
 	ArchitectBlueprintConfig: {
