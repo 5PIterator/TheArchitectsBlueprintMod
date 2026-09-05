@@ -1,1 +1,47 @@
-This description will show up on the steam page, check out https://steamcommunity.com/comment/Guide/formattinghelp.
+[h1]The Architect's Blueprint[/h1]
+Capture a region of your world, refine which tiles belong in the build, and paste a ghost copy elsewhere using materials from your inventory and nearby chests.
+
+Save structures locally, load them back later, and build the same way in singleplayer or multiplayer.
+
+[hr][/hr]
+
+[h2]What you can do[/h2]
+[list]
+[*][b]Select[/b] a rectangle, then [b]include[/b] or [b]exclude[/b] tiles inside it
+[*][b]Copy[/b] the region into a movable [b]projection[/b] (ghost preview)
+[*][b]Paste[/b] using inventory and adjacent chests
+[*]Optional [b]cut[/b]: clear the source and reuse those materials first
+[*][b]Import / export[/b] local [b].tab[/b] payloads via the in-game browser
+[*]Use tools in the world [b]and[/b] on the fullscreen map
+[*]Multiplayer-ready: the host or dedicated server runs pastes
+[/list]
+
+[hr][/hr]
+
+[h2]Tools[/h2]
+Craft through tiers as you progress:
+
+[h2]Quick start[/h2]
+[olist]
+[*]Pin or select a region
+[*]Include / exclude tiles to refine the build
+[*]Copy to place and move a projection
+[*]Paste or export from the payload browser for later
+[/olist]
+
+Payloads live in your save folder under [b]TheArchitectsBlueprintMod/Payloads/[/b] as [b].tab[/b] (compact) or [b].tab.json[/b] (readable).
+
+[hr][/hr]
+
+[h2]Pre-release notes[/h2]
+Version [b]0.2.0[/b] is a pre-release. Core select → copy → paste, local save/load, map tools, and multiplayer paste authority are in. Rotate/mirror, remote sharing, and fuller endgame Blueprint behavior are still on the roadmap.
+
+Works with modded tiles via interaction maps and discovery. Most cases should work, and maps can be customized if needed.
+
+
+[hr][/hr]
+
+EXPERIMENTAL: This mod is still in development. Expect unfinished features bugs, performance issues and mod incompatibility.
+
+This is my first mod, so please report any issues you find on the github page.
+https://github.com/5PIterator/TheArchitectsBlueprintMod

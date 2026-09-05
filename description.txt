@@ -6,4 +6,7 @@ Capture a region of your world, refine which tiles belong in the build, and past
 - Optional cut/paste: clear the source and reuse those materials first
 - Works on the fullscreen map and in multiplayer (host runs pastes)
 
-Pre-release 0.2.0 — see README and docs/ for full guides. Rotate/mirror, remote sharing, and the Architect's Blueprint endgame item are on the roadmap.
+Pre-release 0.2.0 — see README and docs/ for full guides.
+Experimental: This mod is still in development. Expect unfinished features bugs, performance issues and mod incompatibility.
+This is my first mod, so please report any issues you find on the github page.
+https://github.com/5PIterator/TheArchitectsBlueprintMod
