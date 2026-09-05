@@ -6,3 +6,8 @@ obj/**
 obj/Debug/net8.0/TheArchitectsBlueprintMod.AssemblyInfo.cs
 obj/Release/net8.0/TheArchitectsBlueprintMod.AssemblyInfo.cs
 obj/Debug/net8.0/TheArchitectsBlueprintMod.AssemblyInfoInputs.cache
+
+# Ignore all dotfiles / dot-directories (keep .gitignore tracked)
+.*
+!.gitignore
+!**/.gitignore
