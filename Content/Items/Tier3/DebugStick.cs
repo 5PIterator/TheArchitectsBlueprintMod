@@ -68,7 +68,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			&& !ActionWheel.IsActive
 			&& !ActionWheel.IsPendingOpen;
 
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			if (player.whoAmI != Main.myPlayer)
 				return null;

@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -47,7 +48,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 		public override bool CanRightClick() => false;
 
 		/// <summary>Forwards PIN click/hold start (left) or cancel and remove the blueprint (right alt-use).</summary>
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			// --- Ignore remote players; map left to PIN click and right-alt to cancel and remove the blueprint.
 

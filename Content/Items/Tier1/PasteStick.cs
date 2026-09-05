@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -33,7 +34,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 		public override bool AltFunctionUse(Player player) => true;
 
 		/// <summary>Left: start/retry paste. Right: PASTE action reset (stops in-flight pastes, then RST hit-test.</summary>
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			// --- Ignore remote players; resolve tile under mouse; dispatch PASTE left vs right.
 

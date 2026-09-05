@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -74,7 +75,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			&& !ActionWheel.IsPendingOpen;
 
 		/// <summary>Opens the mode wheel on alt-use, or dispatches the chosen COPY/PASTE/RESET action on primary use.</summary>
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			// --- Alt-use toggles wheel or cancels owned wheel; primary use runs current mode.
 

@@ -1,3 +1,4 @@
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -27,7 +28,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			Item.maxStack = 1;
 		}
 
-		public override bool? UseItem(Player player)
+		public override bool? UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			if (player.whoAmI != Main.myPlayer)
 				return null;
