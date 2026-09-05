@@ -6,7 +6,7 @@
 	<!-- General -->
 	<PropertyGroup>
 		<NoWarn>$(NoWarn);CS8632;CS8604;CS0169;CS0649</NoWarn>
-		<DefaultItemExcludes>$(DefaultItemExcludes);tools\**</DefaultItemExcludes>
+		<DefaultItemExcludes>$(DefaultItemExcludes);tools\**;.OtherTools\**</DefaultItemExcludes>
 	</PropertyGroup>
 
 	<!-- Vanilla .xnb conversion inputs under Content/Icons must not be packed as mod assets. -->

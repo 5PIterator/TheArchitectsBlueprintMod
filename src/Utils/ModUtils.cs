@@ -65,7 +65,6 @@ namespace TheArchitectsBlueprintMod.Utils
 		public static KeyboardState PreviousKeyboardState { get; set; }
 		public static MouseState MouseState { get; set; }
 		public static MouseState PreviousMouseState { get; set; }
-		//public static UIKit.UIComponents.ItemTooltip ItemTooltip { get; set; }
 
 		/// <summary>
 		/// Time in seconds that has passed since the last update call.
@@ -154,8 +153,6 @@ namespace TheArchitectsBlueprintMod.Utils
 				//_logoTexture = HEROsMod.instance.GetTexture("Images/LogoNew0");
 				//_logoTexture2 = HEROsMod.instance.GetTexture("Images/LogoNew1");
 				//_testTubeTexture = HEROsMod.instance.GetTexture("Images/testTubeSpritesheet");
-				//ItemTooltip = new UIKit.UIComponents.ItemTooltip();
-				//UIKit.MasterView.gameScreen.AddChild(ItemTooltip);
 				previousInventoryItems = new Item[Main.player[Main.myPlayer].inventory.Length];
 				SetPreviousInventory();
 				Matrix projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -10000, 10000);
@@ -404,7 +401,6 @@ namespace TheArchitectsBlueprintMod.Utils
 		//                    break;
 		//                case 1:
 		//                    Main.menuMode = -2;
-		//                    UIKit.MasterView.menuScreen.AddChild(new UIKit.UIComponents.HostPlayWindow());
 		//                    break;
 		//                case 2:
 		//                    Main.PlaySound(11, -1, -1, 1);
@@ -438,14 +434,13 @@ namespace TheArchitectsBlueprintMod.Utils
 		//            break;
 		//        case 27: //if controls window
 		//            Main.menuMode = -2;
-		//            UIKit.MasterView.menuScreen.AddChild(new HEROsModMod.UIKit.UIComponents.KeybindWindow());
 		//            break;
 		//    }
 		//}
 
 		//public static void DrawPlayerChat(ref int textBlinkerCount, ref int textBlinkerState)
 		//{
-		//    Vector2 offset = HEROsMod.ServiceHotbar.ChatOffsetPosition;
+		//    Vector2 offset = Vector2.Zero;
 		//    if (Main.chatMode)
 		//    {
 		//        textBlinkerCount++;

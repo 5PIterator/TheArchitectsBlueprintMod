@@ -1,5 +1,4 @@
 using System;
-using ArchitectsStencilMod.ModUtils;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;

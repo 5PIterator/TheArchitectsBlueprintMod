@@ -543,11 +543,6 @@ namespace TheArchitectsBlueprintMod.Utils
 
             // While the wheel is open, consume mouse input so items/UI don't react.
             // Match vanilla radial behavior: only claim mouseInterface when actually hovering a wheel option.
-            // Don't call UIView.OverWriteGameMouseInput() here:
-            // it zeroes out Main.mouseLeft/Main.mouseRight which prevents the wheel from
-            // receiving select/cancel clicks, and it can leave UIView.GameMouseOverwritten
-            // stuck true which blocks tools from opening new wheels.
-
             // Don't rely on Main.mouseLeftRelease/Main.mouseRightRelease here; those flags can be
             // modified by other UI. Use edge detection instead.
             bool leftDown = Main.mouseLeft;
