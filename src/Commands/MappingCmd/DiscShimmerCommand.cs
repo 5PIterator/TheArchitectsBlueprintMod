@@ -1,22 +1,23 @@
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 
-namespace ArchitectsStencilMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Chat/console command to run shimmer transformation discovery.
     /// Part 1: Discovers ItemID.Sets.ShimmerTransformToItem and recipe decrafting, saves ShimmerMap.itr.
     /// Part 2: Pairs result items with Placement.itr tiles, exports Shimmer.itr (item-first, loadable).
+    /// Usage: /tab.discShimmer
     /// </summary>
     public sealed class DiscShimmerCommand : ModCommand
     {
-        public override string Command => "asm.discShimmer";
+        public override string Command => "tab.discShimmer";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/asm.discShimmer";
-        public override string Description => "Runs shimmer discovery; writes ShimmerMap.itr and Shimmer.itr.";
+        public override string Usage => "/tab.discShimmer";
+        public override string Description => "Runs shimmer discovery; writes ShimmerMap.itr.json and Shimmer.itr.json.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
@@ -27,7 +28,7 @@ namespace ArchitectsStencilMod.Core
             }
 
             int plr = caller.Player?.whoAmI ?? Main.myPlayer;
-            ShimmerDiscovery.Run(Mod, msg => caller.Reply(msg), Main.player[plr]);
+            ShimmerDiscovery.Run(Mod, Main.player[plr]);
         }
     }
 }

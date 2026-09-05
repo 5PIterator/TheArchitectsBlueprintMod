@@ -9,9 +9,11 @@ using Terraria.UI;
 using Terraria.ModLoader;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
-using ArchitectsStencilMod.Core;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using TheArchitectsBlueprintMod.UI.TmodGUI;
 
-namespace ArchitectsStencilMod.ModUtils
+namespace TheArchitectsBlueprintMod.Utils
 {
     /// <summary>
     /// Lightweight "action wheel" UI.
@@ -59,10 +61,10 @@ namespace ArchitectsStencilMod.ModUtils
         public static void OpenToolActionWheel(
             int ownerPlayer,
             int ownerHeldItemType,
-            IReadOnlyList<ToolAction> actions,
-            Func<ToolAction> getCurrent,
-            Action<ToolAction> setCurrent,
-            Func<ToolAction, bool> isVisibleForAction = null,
+            IReadOnlyList<ToolActionManager.ToolAction> actions,
+            Func<ToolActionManager.ToolAction> getCurrent,
+            Action<ToolActionManager.ToolAction> setCurrent,
+            Func<ToolActionManager.ToolAction, bool> isVisibleForAction = null,
             ActionWheelStyle style = null)
         {
             ArgumentNullException.ThrowIfNull(actions);
@@ -73,10 +75,10 @@ namespace ArchitectsStencilMod.ModUtils
             var entries = new List<ActionWheelEntry>(actions.Count);
             for (int i = 0; i < actions.Count; i++)
             {
-                ToolAction a = actions[i];
+                ToolActionManager.ToolAction a = actions[i];
                 entries.Add(new ActionWheelEntry(
-                    ToolActionDefinitions.GetActionId(a),
-                    ToolActionDefinitions.GetActionLabel(a),
+                    ToolActionManager.GetActionId(a),
+                    ToolActionManager.GetActionLabel(a),
                     onSelect: () => setCurrent(a),
                     isSelected: () => getCurrent() == a,
                     icon: null,
@@ -122,6 +124,9 @@ namespace ArchitectsStencilMod.ModUtils
         {
             ArgumentNullException.ThrowIfNull(entries);
 
+            if (ModContent.GetInstance<ArchitectModeSystem>().Active)
+                return;
+
             // Ignore duplicate open requests from the current owner.
             if (IsActive && _ownerPlayer == ownerPlayer && _ownerHeldItemType == ownerHeldItemType)
             {
@@ -140,6 +145,18 @@ namespace ArchitectsStencilMod.ModUtils
 
         internal static void ConsumePendingOpenIfAny()
         {
+            if (TmodGUI.IsBlockingInput)
+            {
+                _pendingOpen = null;
+                return;
+            }
+
+            if (ModContent.GetInstance<ArchitectModeSystem>().Active)
+            {
+                _pendingOpen = null;
+                return;
+            }
+
             if (_pendingOpen == null)
             {
                 return;
@@ -561,7 +578,7 @@ namespace ArchitectsStencilMod.ModUtils
             }
 
             layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
-                "ArchitectsStencilMod: ActionWheel",
+                "TheArchitectsBlueprintMod: ActionWheel",
                 DrawInterface,
                 InterfaceScaleType.UI
             ));

@@ -1,3 +1,4 @@
-displayName = Architect's Stencil Mod
+displayName = The Architect's Blueprint
 author = The Iterator
-version = 0.1
+version = 0.2.0
+weakReferences = ModLiquidLib

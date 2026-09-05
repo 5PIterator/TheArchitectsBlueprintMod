@@ -1,10 +1,12 @@
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
+using TheArchitectsBlueprintMod.Debug;
 
-namespace ArchitectsStencilMod.Config
+namespace TheArchitectsBlueprintMod.Config
 {
     /// <summary>
-    /// Client-only logging preferences. Does not change paste behavior or tile-map compilation on the server.
+    /// Client-only logging preferences. Sent with each paste request so the dedicated server
+    /// knows which owner-scoped lines to forward back to this client.
     /// </summary>
     public sealed class ClientLogConfig : ModConfig
     {
@@ -14,8 +16,61 @@ namespace ArchitectsStencilMod.Config
 
         [Header("Logging")]
 
+        [DefaultValue(TabLogLevel.Debug)]
+        public TabLogLevel MinimumLogLevel = TabLogLevel.Debug;
+
+        [Header("LogTags")]
+
         [DefaultValue(true)]
-        public bool ShowDebugLogs;
+        public bool TagGeneric;
+
+        [DefaultValue(true)]
+        public bool TagPaste;
+
+        [DefaultValue(true)]
+        public bool TagTileExecutor;
+
+        [DefaultValue(true)]
+        public bool TagInventory;
+
+        [DefaultValue(true)]
+        public bool TagProjection;
+
+        [DefaultValue(true)]
+        public bool TagSelection;
+
+        [DefaultValue(true)]
+        public bool TagLayers;
+
+        [DefaultValue(true)]
+        public bool TagFrameLayer;
+
+        [DefaultValue(true)]
+        public bool TagTileMapping;
+
+        [DefaultValue(true)]
+        public bool TagInteractionMap;
+
+        [DefaultValue(true)]
+        public bool TagNetworking;
+
+        [DefaultValue(true)]
+        public bool TagToolAction;
+
+        [DefaultValue(true)]
+        public bool TagTemplate;
+
+        [DefaultValue(true)]
+        public bool TagManifest;
+
+        [DefaultValue(true)]
+        public bool TagOther;
+
+        [DefaultValue(false)]
+        public bool PrintDebugLogsToChat;
+
+        [DefaultValue(false)]
+        public bool PrintInfoLogsToChat;
 
         public override void OnLoaded()
         {

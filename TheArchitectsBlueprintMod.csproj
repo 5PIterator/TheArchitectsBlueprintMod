@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+
+	<!-- General -->
+	<PropertyGroup>
+		<NoWarn>$(NoWarn);CS8632;CS8604;CS0169;CS0649</NoWarn>
+		<DefaultItemExcludes>$(DefaultItemExcludes);tools\**</DefaultItemExcludes>
+	</PropertyGroup>
+
+	<!-- Vanilla .xnb conversion inputs under Content/Icons must not be packed as mod assets. -->
+	<ItemGroup>
+		<None Remove="Content\Icons\**\*.xnb" />
+		<Content Remove="Content\Icons\**\*.xnb" />
+	</ItemGroup>
+
+	<!-- References -->
+	<ItemGroup>
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- Packaged in .tmod; TemplateInitializer copies to SavePath/TheArchitectsBlueprintMod on first launch. -->
+		<AdditionalFiles Include="Content\Templates\**\*.itr" />
+		<AdditionalFiles Include="Content\Templates\**\*.itr.json" />
+		<AdditionalFiles Include="Content\Icons\*.png" />
+		<EmbeddedResource Include="Content\Config\LayerOrder.json" LogicalName="TheArchitectsBlueprintMod.LayerOrder.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="src\tests\cases\**\*.cs" />
+	</ItemGroup>
+
+</Project>

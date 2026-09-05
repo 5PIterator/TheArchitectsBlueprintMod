@@ -1,10 +1,11 @@
 using System.ComponentModel;
+using TheArchitectsBlueprintMod.Core;
 using Terraria.ModLoader.Config;
 
-namespace ArchitectsStencilMod.Config
+namespace TheArchitectsBlueprintMod.Config
 {
     /// <summary>
-    /// Which SourceMaps interaction layers are included when compiling .itr files on the server or single-player host.
+    /// Server/host controls for mapping discovery and compile behavior.
     /// </summary>
     public sealed class TileMappingConfig : ModConfig
     {
@@ -21,14 +22,79 @@ namespace ArchitectsStencilMod.Config
         public bool EnableCustomInteractionMap;
 
         [DefaultValue(true)]
+        public bool EnableWandDiscovery;
+
+        [DefaultValue(true)]
+        public bool EnableRubbleDiscovery;
+
+        [DefaultValue(true)]
+        public bool EnablePaintDiscovery;
+
+        [DefaultValue(true)]
+        public bool EnablePlantDiscovery;
+
+        [DefaultValue(true)]
+        public bool EnableConversionDiscovery;
+
+        [DefaultValue(true)]
         public bool EnableBiomeConversions;
 
         [DefaultValue(true)]
         public bool EnableShimmerTransforms;
 
+        [Header("Actions")]
+
+        [DefaultValue(false)]
+        public bool RunPlacementDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunWandDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunRubbleDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunPaintDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunPlantDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunConversionDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunBiomeDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunShimmerDiscovery;
+
+        [DefaultValue(false)]
+        public bool RunCompileNow;
+
+        [DefaultValue(false)]
+        public bool RunFullDiscoveryAndCompile;
+
         public override void OnLoaded()
         {
             Instance = this;
+        }
+
+        public override void OnChanged()
+        {
+            Instance = this;
+            TileMappingSystem.QueueConfiguredActions(this);
+
+            // One-shot action toggles: saving with true enqueues work, then they reset to false.
+            RunPlacementDiscovery = false;
+            RunWandDiscovery = false;
+            RunRubbleDiscovery = false;
+            RunPaintDiscovery = false;
+            RunPlantDiscovery = false;
+            RunConversionDiscovery = false;
+            RunBiomeDiscovery = false;
+            RunShimmerDiscovery = false;
+            RunCompileNow = false;
+            RunFullDiscoveryAndCompile = false;
         }
     }
 }

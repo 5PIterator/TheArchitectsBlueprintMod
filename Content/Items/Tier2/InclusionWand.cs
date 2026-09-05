@@ -1,14 +1,16 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.UI;
-using ArchitectsStencilMod.ModUtils;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using static TheArchitectsBlueprintMod.Core.ToolActionManager;
+using TheArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// INCLUSION WAND: INCLUDE / EXCLUDE via action wheel (rectangle gestures for tile mask edits).
@@ -16,6 +18,7 @@ namespace ArchitectsStencilMod.Content.Items
 	public class InclusionWand : ModItem
 	{
 		private ToolAction _mode = ToolAction.INCLUDE;
+		private bool _leftDragSeenDown;
 
 		public override void SetDefaults()
 		{
@@ -53,18 +56,26 @@ namespace ArchitectsStencilMod.Content.Items
 
 		public override bool AltFunctionUse(Player player) => true;
 
-		public override bool CanUseItem(Player player) => !ActionWheel.IsActive && !ActionWheel.IsPendingOpen;
+		public override bool CanUseItem(Player player) =>
+			!ArchitectModeGuards.SuppressHeldToolInput(player)
+			&& !ActionWheel.IsActive
+			&& !ActionWheel.IsPendingOpen;
 
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return null;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return true;
 
 			if (player.altFunctionUse == 0)
 			{
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftClick, player, cursorTile);
+				actionManager.Handle(_mode, ToolActionKey.LeftClick, player, cursorTile);
 			}
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
 			{
@@ -74,9 +85,9 @@ namespace ArchitectsStencilMod.Content.Items
 				{
 				var entries = new List<ActionWheelEntry>(2)
 				{
-					new(ToolActionDefinitions.GetActionId(ToolAction.INCLUDE), ToolActionDefinitions.GetActionLabel(ToolAction.INCLUDE), onSelect: () => _mode = ToolAction.INCLUDE,
+					new(GetActionId(ToolAction.INCLUDE), GetActionLabel(ToolAction.INCLUDE), onSelect: () => _mode = ToolAction.INCLUDE,
 						isSelected: () => _mode == ToolAction.INCLUDE),
-					new(ToolActionDefinitions.GetActionId(ToolAction.EXCLUDE), ToolActionDefinitions.GetActionLabel(ToolAction.EXCLUDE), onSelect: () => _mode = ToolAction.EXCLUDE,
+					new(GetActionId(ToolAction.EXCLUDE), GetActionLabel(ToolAction.EXCLUDE), onSelect: () => _mode = ToolAction.EXCLUDE,
 						isSelected: () => _mode == ToolAction.EXCLUDE)
 				};
 					ActionWheel.OpenNew(Main.myPlayer, Item.type, entries);
@@ -91,14 +102,26 @@ namespace ArchitectsStencilMod.Content.Items
 			if (player.whoAmI != Main.myPlayer)
 				return;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return;
+
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			if (Main.mouseLeft && Main.mouseRight)
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.RightClick, player, cursorTile);
+				actionManager.Handle(_mode, ToolActionKey.RightClick, player, cursorTile);
 			else if (Main.mouseLeft && !Main.mouseLeftRelease)
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftHold, player, cursorTile);
-			else if (!Main.mouseLeft && Main.mouseLeftRelease)
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+				actionManager.Handle(_mode, ToolActionKey.LeftHold, player, cursorTile);
+			else if (_leftDragSeenDown && !Main.mouseLeft)
+			{
+				actionManager.Handle(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+				_leftDragSeenDown = false;
+			}
+
+			if (Main.mouseLeft)
+				_leftDragSeenDown = true;
 		}
 
 		public override void AddRecipes()

@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using ArchitectsStencilMod.Config;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Debug;
+using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Debug;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Low-level .itr file parsing. Parses metadata+data wrapper and extracts item-first root.
@@ -48,12 +48,12 @@ namespace ArchitectsStencilMod.Core.TileMapping
 
     /// <summary>
     /// Ultimate authority for the CompiledMaps directory. Owns path resolution, loading at paste time,
-    /// and the cached InteractionMap. Compile layers write via GetCompiledMapPath.
+    /// and the cached InteractionMap loaded from a unified InteractionMap document.
     /// </summary>
     /// <remarks>
     /// <para><b>Pipeline overview</b></para>
     /// <list type="number">
-    ///   <item><b>Compile-time</b>: TileMappingSystem.Compile writes Tile.itr, Wall.itr, etc. via GetCompiledMapPath.</item>
+    ///   <item><b>Compile-time</b>: TileMappingSystem.Compile writes InteractionMap.itr and InteractionMap.itr.json.</item>
     ///   <item><b>Paste start</b>: PastingSystem calls PrepareForPaste with tile/wall IDs from the projection.</item>
     ///   <item><b>Lookup</b>: Layers and PastingInventory use InteractionMapProvider.</item>
     ///   <item><b>Paste end</b>: When no operations remain, Release() clears the cache.</item>
@@ -62,6 +62,8 @@ namespace ArchitectsStencilMod.Core.TileMapping
     internal static class ItrStorage
     {
         private const string CompiledMapsDir = "CompiledMaps";
+        private const string CompiledInteractionMapFileName = "InteractionMap.itr";
+        private const string CompiledInteractionMapJsonFileName = "InteractionMap.itr.json";
 
         private static InteractionMap? _map;
 
@@ -76,10 +78,22 @@ namespace ArchitectsStencilMod.Core.TileMapping
         }
 
         /// <summary>
-        /// Gets full path for a file in ArchitectsStencilMod\CompiledMaps.
+        /// Gets full path for a file in TheArchitectsBlueprintMod\CompiledMaps.
         /// </summary>
         public static string GetCompiledMapPath(string fileName) =>
             Path.Combine(GetCompiledMapsDirectory(), fileName);
+
+        /// <summary>
+        /// Gets full path for the compact compiled interaction map.
+        /// </summary>
+        public static string GetCompiledInteractionMapPath() =>
+            GetCompiledMapPath(CompiledInteractionMapFileName);
+
+        /// <summary>
+        /// Gets full path for the readable compiled interaction map.
+        /// </summary>
+        public static string GetCompiledInteractionMapJsonPath() =>
+            GetCompiledMapPath(CompiledInteractionMapJsonFileName);
 
         /// <summary>
         /// True when this game instance may load CompiledMaps from disk for paste
@@ -88,59 +102,94 @@ namespace ArchitectsStencilMod.Core.TileMapping
         internal static bool CanLoadPasteInteractionMaps() => TileMappingAuthority.UsesLocalMappingFilesystem();
 
         /// <summary>
-        /// Prepares the interaction map for paste by loading only the given tile and wall IDs from JSON.
+        /// Prepares the interaction map for paste by loading only the given tile and wall IDs.
         /// Call at paste start before any lookups. Replaces any existing cached map.
         /// </summary>
-        /// <param name="tileIds">Tile IDs to load from Tile.itr. Null = load all.</param>
-        /// <param name="wallIds">Wall IDs to load from Wall.itr. Null = load all.</param>
+        /// <param name="tileIds">Tile IDs to load from InteractionMap.itr. Null = load all.</param>
+        /// <param name="wallIds">Wall IDs to load from InteractionMap.itr. Null = load all.</param>
         /// <remarks>Remote multiplayer clients do not load from disk; only single-player, dedicated server, or listen-server host.</remarks>
         public static void PrepareForPaste(IReadOnlySet<int>? tileIds, IReadOnlySet<int>? wallIds)
         {
             if (!CanLoadPasteInteractionMaps())
                 return;
 
-            _map = new InteractionMap();
-            InteractionMapProvider.Current = _map;
-            var dir = GetCompiledMapsDirectory();
+            _map = null;
+            InteractionMapProvider.Current = null;
 
-            if (!Directory.Exists(dir))
-                return;
-
-            foreach (var path in Directory.EnumerateFiles(dir, "*.itr"))
+            if (tileIds is null)
             {
-                if (_map is null) break;
-
-                var layer = GetLayerFromFileName(path);
-                if (layer is null) continue;
-
-                IReadOnlySet<int>? filter = layer switch
-                {
-                    "Tile" => tileIds,
-                    "Wall" => wallIds,
-                    _ => null,
-                };
-
-                try
-                {
-                    LoadFileInto(path, _map, layer, filter);
-                }
-                catch
-                {
-                    _map = null;
-                    InteractionMapProvider.Current = null;
-                    break;
-                }
+                TryLoadInteractionMap(null, wallIds);
+                return;
             }
 
-            _map?.SortAllByPriority();
+            var expandedTileIds = new HashSet<int>(tileIds);
+            if (!TryLoadInteractionMap(expandedTileIds, wallIds) || _map is null)
+                return;
+
+            if (!ExpandTileIdsWithRequiredBases(expandedTileIds, _map))
+                return;
+
+            _map = null;
+            InteractionMapProvider.Current = null;
+            TryLoadInteractionMap(expandedTileIds, wallIds);
+
+            if (TABLog.IsDebugEnabled)
+            {
+                TABLog.Debug(
+                    $"Interaction map loaded with {expandedTileIds.Count} tile ids (payload + conversion bases)",
+                    "InteractionMap");
+            }
         }
 
-        private static string? GetLayerFromFileName(string path)
+        private static bool TryLoadInteractionMap(IReadOnlySet<int>? tileIds, IReadOnlySet<int>? wallIds)
         {
-            if (!path.EndsWith(".itr", StringComparison.OrdinalIgnoreCase))
-                return null;
-            var fileName = Path.GetFileNameWithoutExtension(path);
-            return string.IsNullOrEmpty(fileName) ? null : ContentNameResolver.NormalizeLayer(fileName);
+            string binaryPath = GetCompiledInteractionMapPath();
+            if (File.Exists(binaryPath))
+            {
+                using var stream = File.OpenRead(binaryPath);
+                if (InteractionMapTagIO.TryReadBinaryDocument(stream, out InteractionMap map, tileIds, wallIds, out string? error))
+                {
+                    _map = map;
+                    InteractionMapProvider.Current = _map;
+                    return true;
+                }
+
+                TABLog.Warn($"Failed to load compiled interaction map '{binaryPath}': {error}", "InteractionMap");
+            }
+
+            string jsonPath = GetCompiledInteractionMapJsonPath();
+            if (!File.Exists(jsonPath))
+                return false;
+
+            try
+            {
+                string json = File.ReadAllText(jsonPath);
+                if (InteractionMapTagIO.TryReadJsonDocument(json, out InteractionMap map, tileIds, wallIds, out string? error))
+                {
+                    _map = map;
+                    InteractionMapProvider.Current = _map;
+                    return true;
+                }
+
+                TABLog.Warn($"Failed to load readable interaction map '{jsonPath}': {error}", "InteractionMap");
+            }
+            catch (Exception ex)
+            {
+                TABLog.Warn($"Failed to read readable interaction map '{jsonPath}': {ex.Message}", "InteractionMap");
+            }
+
+            return false;
+        }
+
+        /// <summary>Adds interaction-map base tile ids required by conversion placements in <paramref name="tileIds"/>.</summary>
+        private static bool ExpandTileIdsWithRequiredBases(HashSet<int> tileIds, InteractionMap map)
+        {
+            int[] snapshot = [.. tileIds];
+
+            for (int i = 0; i < snapshot.Length; i++)
+                map.CollectConversionBaseTiles(snapshot[i], 0, tileIds);
+
+            return tileIds.Count > snapshot.Length;
         }
 
         /// <summary>
@@ -151,246 +200,23 @@ namespace ArchitectsStencilMod.Core.TileMapping
             _map = null;
             InteractionMapProvider.Current = null;
         }
-
-        private static void LoadFileInto(string path, InteractionMap map, string layer, IReadOnlySet<int>? mainIdsToLoad)
-        {
-            var bytes = File.ReadAllBytes(path);
-            var reader = new Utf8JsonReader(bytes, new JsonReaderOptions { CommentHandling = JsonCommentHandling.Skip });
-
-            if (!reader.Read() || reader.TokenType != JsonTokenType.StartObject)
-                return;
-
-            string? format = null;
-            string? mapType = null;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject) break;
-                if (reader.TokenType != JsonTokenType.PropertyName) continue;
-
-                var propName = reader.GetString();
-                reader.Read();
-
-                if (string.Equals(propName, "metadata", StringComparison.Ordinal))
-                {
-                    ReadMetadata(ref reader, out format, out mapType);
-                    continue;
-                }
-
-                if (string.Equals(propName, "data", StringComparison.Ordinal))
-                {
-                    if (!string.Equals(format, "tile-first", StringComparison.OrdinalIgnoreCase) ||
-                        !string.Equals(mapType, "compiled", StringComparison.OrdinalIgnoreCase))
-                        return;
-
-                    ReadData(ref reader, map, layer, mainIdsToLoad);
-                    return;
-                }
-
-                reader.Skip();
-            }
-        }
-
-        private static void ReadMetadata(ref Utf8JsonReader reader, out string? format, out string? mapType)
-        {
-            format = null;
-            mapType = null;
-            if (reader.TokenType != JsonTokenType.StartObject) return;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject) return;
-                if (reader.TokenType != JsonTokenType.PropertyName) continue;
-
-                var name = reader.GetString();
-                reader.Read();
-
-                if (string.Equals(name, "format", StringComparison.Ordinal))
-                    format = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                else if (string.Equals(name, "mapType", StringComparison.Ordinal))
-                    mapType = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                else
-                    reader.Skip();
-            }
-        }
-
-        private static void ReadData(ref Utf8JsonReader reader, InteractionMap map, string layer, IReadOnlySet<int>? mainIdsToLoad)
-        {
-            if (reader.TokenType != JsonTokenType.StartObject) return;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject) return;
-                if (reader.TokenType != JsonTokenType.PropertyName) continue;
-
-                string main = reader.GetString() ?? "";
-                reader.Read();
-
-                var mainId = ContentNameResolver.ResolveMain(layer, main);
-                if (!mainId.HasValue)
-                {
-                    reader.Skip();
-                    continue;
-                }
-
-                bool shouldLoad = mainIdsToLoad is null || mainIdsToLoad.Contains(mainId.Value);
-                if (!shouldLoad)
-                {
-                    reader.Skip();
-                    continue;
-                }
-
-                ReadMainValue(ref reader, map, layer, main, mainId.Value);
-            }
-        }
-
-        private static void ReadMainValue(ref Utf8JsonReader reader, InteractionMap map, string layer, string main, int mainId)
-        {
-            if (reader.TokenType != JsonTokenType.StartObject)
-                return;
-
-            string? itemNamesLayer = null;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject) return;
-                if (reader.TokenType != JsonTokenType.PropertyName) continue;
-
-                var propName = reader.GetString();
-                reader.Read();
-
-                if (string.Equals(propName, "interactions", StringComparison.Ordinal) && reader.TokenType == JsonTokenType.StartArray)
-                {
-                    ReadInteractionsArray(ref reader, map, layer, main, mainId);
-                    continue;
-                }
-
-                if (string.Equals(propName, "itemNames", StringComparison.Ordinal) && reader.TokenType == JsonTokenType.StartArray)
-                {
-                    var useLayer = ContentNameResolver.NormalizeLayer(itemNamesLayer ?? layer);
-                    if (useLayer is not null)
-                        ReadItemNamesArray(ref reader, map, useLayer, main, mainId);
-                    else
-                        reader.Skip();
-                    continue;
-                }
-
-                if ((string.Equals(propName, "layer", StringComparison.Ordinal) || string.Equals(propName, "Layer", StringComparison.Ordinal)) && reader.TokenType == JsonTokenType.String)
-                    itemNamesLayer = reader.GetString();
-                else
-                    reader.Skip();
-            }
-        }
-
-        private static void ReadInteractionsArray(ref Utf8JsonReader reader, InteractionMap map, string layer, string main, int mainId)
-        {
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndArray) return;
-                if (reader.TokenType != JsonTokenType.StartObject) continue;
-
-                var (interactionLayer, item, @base, style) = ReadInteractionObject(ref reader);
-                if (string.IsNullOrEmpty(item))
-                    continue;
-
-                var normLayer = ContentNameResolver.NormalizeLayer(interactionLayer ?? layer);
-                if (normLayer is null)
-                {
-                    ASMLog.Warn($"Interaction skipped: layer missing (main={main}, item={item})", "InteractionMap");
-                    continue;
-                }
-
-                var itemId = ContentNameResolver.ResolveItem(item);
-                if (!itemId.HasValue || itemId.Value <= 0)
-                {
-                    ASMLog.Warn($"Interaction skipped: item unresolved (layer={normLayer}, main={main}, item={item})", "InteractionMap");
-                    continue;
-                }
-
-                var entry = InteractionEntry.Create(normLayer,
-                    main: main,
-                    mainId: mainId,
-                    item: item,
-                    itemId: itemId.Value,
-                    @base: @base,
-                    style: style);
-                map.Add(entry);
-            }
-        }
-
-        private static (string? Layer, string? Item, string? Base, int? Style) ReadInteractionObject(ref Utf8JsonReader reader)
-        {
-            string? layer = null;
-            string? item = null;
-            string? @base = null;
-            int? style = null;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndObject) break;
-                if (reader.TokenType != JsonTokenType.PropertyName) continue;
-
-                var name = reader.GetString();
-                reader.Read();
-
-                if (string.Equals(name, "Layer", StringComparison.Ordinal) || string.Equals(name, "layer", StringComparison.Ordinal))
-                    layer = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                else if (string.Equals(name, "Item", StringComparison.Ordinal))
-                    item = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                else if (string.Equals(name, "Base", StringComparison.Ordinal))
-                    @base = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                else if (string.Equals(name, "Style", StringComparison.Ordinal) && reader.TokenType == JsonTokenType.Number)
-                    style = reader.TryGetInt32(out int s) ? s : null;
-                else
-                    reader.Skip();
-            }
-
-            return (layer, item, @base, style);
-        }
-
-        private static void ReadItemNamesArray(ref Utf8JsonReader reader, InteractionMap map, string layer, string main, int mainId)
-        {
-            var normLayer = ContentNameResolver.NormalizeLayer(layer);
-            if (normLayer is null) return;
-
-            while (reader.Read())
-            {
-                if (reader.TokenType == JsonTokenType.EndArray) return;
-                var name = reader.TokenType == JsonTokenType.String ? reader.GetString() : null;
-                if (string.IsNullOrEmpty(name)) continue;
-
-                var itemId = ContentNameResolver.ResolveItem(name);
-                if (!itemId.HasValue || itemId.Value <= 0)
-                {
-                    ASMLog.Warn($"Interaction skipped: item unresolved (layer={normLayer}, main={main}, item={name})", "InteractionMap");
-                    continue;
-                }
-
-                var entry = InteractionEntry.Create(normLayer,
-                    main: main,
-                    mainId: mainId,
-                    item: name,
-                    itemId: itemId.Value,
-                    @base: null,
-                    style: null);
-                map.Add(entry);
-            }
-        }
     }
 
     /// <summary>
-    /// Loads source .itr files into InteractionMap. Standardized pipeline for custom, placement, biome, shimmer.
+    /// Loads source .itr.json files into InteractionMap. Standardized pipeline for custom, placement, biome, shimmer.
     /// Config files (baseContext, biomeConfig) are loaded separately by their consumers.
     /// </summary>
     internal static class ItrLoader
     {
-        private static readonly string[] InteractionMapTypes = ["custom", "placement", "biome", "shimmer"];
+        private static readonly string[] InteractionMapTypes = ["custom", "wand", "rubble", "paint", "plant", "placement", "conversion", "biome", "shimmer"];
 
         /// <summary>
-        /// Loads all interaction .itr files from the directory into the map.
-        /// Order: custom, placement, biome, shimmer (shimmer applies Shimmer Bucket transform).
+        /// Loads all interaction .itr.json files from the directory into the map.
+        /// Order: custom, wand, rubble, paint, plant, placement, conversion, biome, shimmer (shimmer applies Shimmer Bucket transform).
+        /// Custom loads before generated maps so same-item curated overrides win export dedupe;
+        /// cross-item priority still comes from <see cref="InteractionPriorityComparer"/> (e.g. yield 1 before bombs).
         /// </summary>
-        public static void LoadAllInto(string directory, InteractionMap map, Action<string> msg)
+        public static void LoadAllInto(string directory, InteractionMap map)
         {
             var cfg = ModContent.GetInstance<TileMappingConfig>();
             foreach (var mapType in InteractionMapTypes)
@@ -407,16 +233,16 @@ namespace ArchitectsStencilMod.Core.TileMapping
                     {
                         var format = meta.Format ?? "";
                         if (string.Equals(mapType, "shimmer", StringComparison.OrdinalIgnoreCase))
-                            LoadShimmer(dataEl, map, msg);
+                            LoadShimmer(dataEl, map);
                         else if (string.Equals(format, "item-first", StringComparison.OrdinalIgnoreCase))
-                            LoadItemFirst(dataEl, map, msg);
+                            LoadItemFirst(dataEl, map);
                         else if (string.Equals(format, "tile-first", StringComparison.OrdinalIgnoreCase))
-                            LoadTileFirst(dataEl, map, msg);
+                            LoadTileFirst(dataEl, map);
                     });
                 }
                 catch (Exception ex)
                 {
-                    msg($"{mapType}: {ex.Message}");
+                    TABLog.Warn($"{mapType}: {ex.Message}", "TileMapping");
                 }
             }
         }
@@ -425,13 +251,18 @@ namespace ArchitectsStencilMod.Core.TileMapping
             mapType switch
             {
                 "custom" => cfg.EnableCustomInteractionMap,
+                "wand" => cfg.EnableWandDiscovery,
+                "rubble" => cfg.EnableRubbleDiscovery,
+                "paint" => cfg.EnablePaintDiscovery,
+                "plant" => cfg.EnablePlantDiscovery,
                 "placement" => cfg.EnablePlacementDiscovery,
+                "conversion" => cfg.EnableConversionDiscovery,
                 "biome" => cfg.EnableBiomeConversions,
                 "shimmer" => cfg.EnableShimmerTransforms,
                 _ => true,
             };
 
-        private static void LoadItemFirst(JsonElement dataEl, InteractionMap map, Action<string> msg)
+        private static void LoadItemFirst(JsonElement dataEl, InteractionMap map)
         {
             var itemEl = ItrFileProcessor.GetItemFirstRoot(dataEl);
             if (!itemEl.HasValue) return;
@@ -443,14 +274,14 @@ namespace ArchitectsStencilMod.Core.TileMapping
 
                 foreach (var ia in arr.EnumerateArray())
                 {
-                    var entry = ParseItemFirstInteraction(ia, item, msg);
+                    var entry = ParseItemFirstInteraction(ia, item);
                     if (entry is not null)
                         map.Add(entry);
                 }
             }
         }
 
-        private static void LoadShimmer(JsonElement dataEl, InteractionMap map, Action<string> msg)
+        private static void LoadShimmer(JsonElement dataEl, InteractionMap map)
         {
             var shimmerBucket = ShimmerDiscovery.BucketName;
             var itemEl = ItrFileProcessor.GetItemFirstRoot(dataEl);
@@ -463,7 +294,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
 
                 foreach (var ia in arr.EnumerateArray())
                 {
-                    var entry = ParseItemFirstInteraction(ia, shimmerBucket, msg);
+                    var entry = ParseItemFirstInteraction(ia, shimmerBucket);
                     if (entry is not null)
                     {
                         entry.Ammo = sourceItem;
@@ -473,12 +304,12 @@ namespace ArchitectsStencilMod.Core.TileMapping
             }
         }
 
-        private static InteractionEntry? ParseItemFirstInteraction(JsonElement ia, string item, Action<string> msg)
+        private static InteractionEntry? ParseItemFirstInteraction(JsonElement ia, string item)
         {
             var layer = ia.TryGetProperty("layer", out var l) ? l.GetString() : null;
             if (string.IsNullOrEmpty(layer))
             {
-                msg($"Interaction skipped (layer missing, item={item})");
+                TABLog.Warn($"Interaction skipped (layer missing, item={item})", "InteractionMap");
                 return null;
             }
             var normLayer = ContentNameResolver.NormalizeLayer(layer);
@@ -487,7 +318,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
             string? main = ResolveMainFromJson(ia, normLayer);
             if (string.IsNullOrEmpty(main))
             {
-                msg($"Interaction skipped (main missing, item={item})");
+                TABLog.Warn($"Interaction skipped (main missing, item={item})", "InteractionMap");
                 return null;
             }
 
@@ -498,6 +329,8 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 Main = main,
                 Yield = ia.TryGetProperty("yield", out var y) && y.TryGetInt32(out int yv) ? yv : null,
                 Ammo = ia.TryGetProperty("ammo", out var a) ? a.GetString() : null,
+                Fake = ia.TryGetProperty("fake", out var f) ? f.GetString() : null,
+                Alias = ReadAliasNames(ia),
             };
 
             if (string.Equals(normLayer, "Tile", StringComparison.OrdinalIgnoreCase) || string.Equals(normLayer, "Wall", StringComparison.OrdinalIgnoreCase))
@@ -507,6 +340,32 @@ namespace ArchitectsStencilMod.Core.TileMapping
             }
 
             return entry;
+        }
+
+        /// <summary>Reads camelCase or PascalCase alias string arrays from an interaction element.</summary>
+        private static List<string>? ReadAliasNames(JsonElement ia)
+        {
+            // --- Prefer camelCase alias, then PascalCase Alias.
+
+            if (ia.TryGetProperty("alias", out var aliasEl) || ia.TryGetProperty("Alias", out aliasEl))
+            {
+                if (aliasEl.ValueKind != JsonValueKind.Array)
+                    return null;
+
+                var list = new List<string>();
+                foreach (var el in aliasEl.EnumerateArray())
+                {
+                    if (el.ValueKind != JsonValueKind.String)
+                        continue;
+                    string? name = el.GetString();
+                    if (!string.IsNullOrEmpty(name))
+                        list.Add(name);
+                }
+
+                return list.Count > 0 ? list : null;
+            }
+
+            return null;
         }
 
         private static string? ResolveMainFromJson(JsonElement ia, string layer)
@@ -524,7 +383,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
             return null;
         }
 
-        private static void LoadTileFirst(JsonElement dataEl, InteractionMap map, Action<string> msg)
+        private static void LoadTileFirst(JsonElement dataEl, InteractionMap map)
         {
             if (dataEl.TryGetProperty("tiles", out var tilesEl) || dataEl.TryGetProperty("Tiles", out tilesEl))
             {
@@ -535,7 +394,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
 
                     foreach (var ia in arr.EnumerateArray())
                     {
-                        var entry = ParseTileFirstInteraction(ia, "Tile", main, msg);
+                        var entry = ParseTileFirstInteraction(ia, "Tile", main);
                         if (entry is not null)
                             map.Add(entry);
                     }
@@ -556,7 +415,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                             string? item = el.ValueKind == JsonValueKind.String ? el.GetString() : null;
                             if (string.IsNullOrEmpty(item))
                             {
-                                msg($"Placement: interaction skipped (item missing, main={main})");
+                                TABLog.Warn($"Placement: interaction skipped (item missing, main={main})", "InteractionMap");
                                 continue;
                             }
                             map.Add(new InteractionEntry { Layer = "Wall", Main = main, Item = item });
@@ -566,7 +425,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                     {
                         foreach (var ia in arr.EnumerateArray())
                         {
-                            var entry = ParseTileFirstInteraction(ia, "Wall", main, msg);
+                            var entry = ParseTileFirstInteraction(ia, "Wall", main);
                             if (entry is not null)
                                 map.Add(entry);
                         }
@@ -575,12 +434,12 @@ namespace ArchitectsStencilMod.Core.TileMapping
             }
         }
 
-        private static InteractionEntry? ParseTileFirstInteraction(JsonElement ia, string layer, string main, Action<string> msg)
+        private static InteractionEntry? ParseTileFirstInteraction(JsonElement ia, string layer, string main)
         {
             string? item = ia.TryGetProperty("Item", out var i) ? i.GetString() : null;
             if (string.IsNullOrEmpty(item))
             {
-                msg("Placement: interaction skipped (item missing)");
+                TABLog.Warn("Placement: interaction skipped (item missing)", "InteractionMap");
                 return null;
             }
 
@@ -593,6 +452,8 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 Style = ia.TryGetProperty("Style", out var s) && s.TryGetInt32(out int sv) ? sv : null,
                 Yield = ia.TryGetProperty("Yield", out var y) && y.TryGetInt32(out int yv) ? yv : null,
                 Ammo = ia.TryGetProperty("Ammo", out var a) ? a.GetString() : null,
+                Fake = ia.TryGetProperty("Fake", out var f) ? f.GetString() : null,
+                Alias = ReadAliasNames(ia),
             };
 
             if (string.Equals(layer, "Wall", StringComparison.OrdinalIgnoreCase))

@@ -1,20 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ArchitectsStencilMod;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Core.Client;
+using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.Client;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.Net;
 
-namespace ArchitectsStencilMod.Core.Server
+namespace TheArchitectsBlueprintMod.Core.Server
 {
     /// <summary>
     /// Syncs in-progress paste highlight tiles (world coordinates only). Tile data for a paste is sent via
-    /// <see cref="PasteRequest"/> as compact <see cref="ArchitectsStencilMod.Core.Client.PayloadImport.PayloadDocument"/> JSON.
+    /// <see cref="PasteRequest"/> as canonical sparse payload JSON (see <see cref="PayloadTagIO"/> / <see cref="PayloadJsonImport"/>).
     /// </summary>
     internal static class PasteOverlayNetworking
     {
@@ -35,7 +35,7 @@ namespace ArchitectsStencilMod.Core.Server
 
             _lastSentSnapshotCountByPlayer ??= new int[Main.maxPlayers];
 
-            Mod mod = ModContent.GetInstance<ArchitectsStencilMod>()!;
+            Mod mod = ModContent.GetInstance<global::TheArchitectsBlueprintMod.TheArchitectsBlueprintMod>()!;
             for (int i = 0; i < Main.maxPlayers; i++)
             {
                 if (!Main.player[i].active || !Netplay.Clients[i].IsConnected())
@@ -44,7 +44,7 @@ namespace ArchitectsStencilMod.Core.Server
                 var list = new List<PasteOverlaySnapshot>();
                 foreach (var op in system.ActiveOperations)
                 {
-                    if (op.Projection.Owner != i)
+                    if (op.Execution.Owner != i)
                         continue;
                     if (op.TryBuildOverlaySnapshot(out PasteOverlaySnapshot snap))
                         list.Add(snap);
@@ -127,7 +127,8 @@ namespace ArchitectsStencilMod.Core.Server
         private static Point[] ReadPointArray(BinaryReader reader)
         {
             int len = reader.ReadInt32();
-            if (len < 0 || len > 4096)
+            int maxTiles = ModContent.GetInstance<PastingConfig>().Limits.Server.MaxTilesPerCategory;
+            if (len < 0 || len > maxTiles)
                 throw new InvalidDataException("Invalid paste overlay point array length.");
 
             var pts = new Point[len];

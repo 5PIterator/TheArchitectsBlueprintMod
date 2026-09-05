@@ -5,13 +5,13 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Xna.Framework;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Core.Layers;
-using ArchitectsStencilMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.Layers;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 using Terraria;
 using Terraria.ID;
 
-namespace ArchitectsStencilMod.Debug;
+namespace TheArchitectsBlueprintMod.Debug;
 
 /// <summary>
 /// Writes the task map built at the start of a PastingOperation to a debug JSON file.
@@ -25,10 +25,11 @@ internal static class PasteTaskMapDebug
     };
 
     internal static void WriteTaskMap(
-        Projection projection,
+        PasteExecutionContext execution,
         bool applySourceClear,
         LayerPipeline pipeline,
         IReadOnlyList<Queue<ClearingTask>> clearTasksByLayer,
+        IReadOnlyList<Queue<ClearingTask>> cutTasksByLayer,
         IReadOnlyList<Queue<PlacingTask>> placeTasksByLayer)
     {
         if (!TileMappingAuthority.UsesLocalMappingFilesystem())
@@ -36,13 +37,14 @@ internal static class PasteTaskMapDebug
 
         var dto = new TaskMapDto
         {
-            ProjectionClearsSource = projection.CutSource,
+            ProjectionClearsSource = execution.CutSource,
             ApplySourceClear = applySourceClear,
-            TargetArea = Rect(projection.Area),
-            SourceArea = Rect(projection.SourceArea),
-            SourceTileCount = projection.SourceTiles.Length,
-            TargetTileCount = projection.TargetTiles.Length,
+            TargetArea = Rect(execution.TargetArea),
+            SourceArea = Rect(execution.SourceArea),
+            SourceTileCount = execution.SourceArea.Width * execution.SourceArea.Height,
+            TargetTileCount = execution.GridWidth * execution.GridHeight,
             ClearTasks = BuildClearMap(pipeline, clearTasksByLayer),
+            CutTasks = BuildClearMap(pipeline, cutTasksByLayer),
             PlaceTasks = BuildPlaceMap(pipeline, placeTasksByLayer),
         };
 
@@ -96,6 +98,7 @@ internal static class PasteTaskMapDebug
         public int SourceTileCount { get; set; }
         public int TargetTileCount { get; set; }
         public Dictionary<string, List<TaskPointDto>> ClearTasks { get; set; }
+        public Dictionary<string, List<TaskPointDto>> CutTasks { get; set; }
         public Dictionary<string, List<PlaceTaskDto>> PlaceTasks { get; set; }
     }
 

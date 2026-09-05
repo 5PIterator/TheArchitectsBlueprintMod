@@ -1,11 +1,12 @@
 using System;
-using ArchitectsStencilMod.UI;
-using ArchitectsStencilMod.UIKit;
+using System.Linq;
+using TheArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Owns each player's active Selection for the world.
@@ -14,9 +15,9 @@ namespace ArchitectsStencilMod.Core
     /// </summary>
     public sealed class SelectionSystem : ModSystem
     {
+        private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
         private sealed class PlayerSelectionState
         {
-            public Selection Selection = null!;
             public bool HasPointA;
             public bool HasPointB;
             public Point PointA;
@@ -25,9 +26,9 @@ namespace ArchitectsStencilMod.Core
 
         private readonly PlayerSelectionState[] _playerStates = new PlayerSelectionState[Main.maxPlayers];
 
-        public Selection GetSelection(Player player)
+        public Selection GetSelection()
         {
-            return GetState(player).Selection;
+            return BlueprintSystem.GetTopmostSelection();
         }
 
         public bool TryGetPointA(Player player, out Point pointA)
@@ -77,13 +78,24 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         public void NewSelection(Player player)
         {
+            int who = player.whoAmI;
+            foreach (Selection existing in BlueprintSystem.GetSelections().ToList())
+            {
+                if (existing.Owner == who)
+                    BlueprintSystem.UnregisterBlueprint(existing);
+            }
+
+            Selection selection = new Selection(who);
             var state = GetState(player);
-            state.Selection = new Selection(player.whoAmI);
             state.HasPointA = false;
             state.HasPointB = false;
             state.PointA = default;
             state.PointB = default;
+
+            BlueprintSystem.RegisterBlueprint(selection);
             UpdateSelectionOverlay(player);
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"SelectionSystem.NewSelection: owner={player.whoAmI}", "SelectionSystem");
         }
 
         /// <summary>
@@ -92,46 +104,59 @@ namespace ArchitectsStencilMod.Core
         internal void UpdateSelectionOverlay(Player player)
         {
             int who = player.whoAmI;
-            UIView host = InterfaceSystem.GetPerPlayerHost(InterfaceLayer.Selection, who);
-            host.RemoveAllChildren();
+            string family = $"selection:{who}";
 
-            Selection selection = GetSelection(player);
-            if (!selection.IsDefined)
+            Selection selection = BlueprintSystem.GetTopmostSelection();
+            if (selection is null || !selection.IsDefined)
+            {
+                OverlaySystem.UnregisterFamily(family);
+                ModContent.GetInstance<ProjectionToolboxControl>().RegisterToolbox(player);
                 return;
+            }
 
-            host.AddChild(new UIBoundsTile(selection.Area, ArchitectVisualPalette.SelectionBoundsColor, 2));
+            // Draw the bounds of the selection
+            OverlaySystem.RegTileBounds("bounds", selection.Area, ArchitectVisualPalette.SelectionBoundsColor, 2, family);
+            // Clear previous exclusion fill: RegTileFill does not run when the mask is all included, and the
+            // catalog would otherwise keep the last non-empty "excluded" registration.
+            OverlaySystem.Unregister("excluded", family);
             Point[] excluded = selection.BuildExcludedTilePoints();
             if (excluded.Length > 0)
-                host.AddChild(new UITileFill(excluded, Color.Black * 0.35f));
+                OverlaySystem.RegTileFill("excluded", excluded, Color.Black * 0.35f, family);
+            // Draw the pin points of the selection
             if (TryGetPoints(player, out var a, out var b))
             {
-                host.AddChild(new UIPoint(a, ArchitectVisualPalette.PinAColor));
-                host.AddChild(new UIPoint(b, ArchitectVisualPalette.PinBColor));
+                OverlaySystem.RegPoints("a", [a], ArchitectVisualPalette.PinAColor, family);
+                OverlaySystem.RegPoints("b", [b], ArchitectVisualPalette.PinBColor, family);
             }
+
+            BlueprintGuard.RegisterGuardMask(player, selection, "guarded", family);
+
+            ModContent.GetInstance<ProjectionToolboxControl>().RegisterToolbox(player);
         }
 
         private static void UpdateSelection(PlayerSelectionState state)
         {
+            Selection selection = BlueprintSystem.GetTopmostSelection();
             // Invariant: Selection.Area should always reflect whichever endpoints have been provided.
             if (state.HasPointA && state.HasPointB)
             {
-                state.Selection.Define(state.PointA, state.PointB);
+                selection.Define(state.PointA, state.PointB);
                 return;
             }
 
             if (state.HasPointA)
             {
-                state.Selection.Define(new Rectangle(state.PointA.X, state.PointA.Y, 1, 1));
+                selection.Define(new Rectangle(state.PointA.X, state.PointA.Y, 1, 1));
                 return;
             }
 
             if (state.HasPointB)
             {
-                state.Selection.Define(new Rectangle(state.PointB.X, state.PointB.Y, 1, 1));
+                selection.Define(new Rectangle(state.PointB.X, state.PointB.Y, 1, 1));
                 return;
             }
 
-            state.Selection.Clear();
+            selection.Clear();
         }
 
         /// <summary>
@@ -139,13 +164,19 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         public void ClearSelection(Player player)
         {
+            Selection? selection = BlueprintSystem.GetTopmostSelection();
+            if (selection is null || selection.Owner != player.whoAmI)
+                return;
             var state = GetState(player);
             state.HasPointA = false;
             state.HasPointB = false;
             state.PointA = default;
             state.PointB = default;
-            state.Selection.Clear();
+            selection.Clear();
+            BlueprintSystem.UnregisterBlueprint(selection);
             UpdateSelectionOverlay(player);
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"SelectionSystem.ClearSelection: owner={player.whoAmI}", "SelectionSystem");
         }
 
         /// <summary>
@@ -154,10 +185,21 @@ namespace ArchitectsStencilMod.Core
         public void SetPointA(Player player, Point tilePosition)
         {
             var state = GetState(player);
+            if (state.HasPointA && state.PointA == tilePosition)
+                return;
+
             state.PointA = tilePosition;
             state.HasPointA = true;
             UpdateSelection(state);
             UpdateSelectionOverlay(player);
+            if (TABLog.IsDebugEnabled)
+            {
+                var sel = BlueprintSystem.GetTopmostSelection();
+                TABLog.Debug(
+                    $"SelectionSystem.SetPointA: owner={player.whoAmI} tile=({tilePosition.X},{tilePosition.Y}) " +
+                    $"areaDefined={sel?.IsDefined == true}",
+                    "SelectionSystem");
+            }
         }
 
         /// <summary>
@@ -166,24 +208,59 @@ namespace ArchitectsStencilMod.Core
         public void SetPointB(Player player, Point tilePosition)
         {
             var state = GetState(player);
+            if (state.HasPointB && state.PointB == tilePosition)
+                return;
+
             state.PointB = tilePosition;
             state.HasPointB = true;
             UpdateSelection(state);
             UpdateSelectionOverlay(player);
+            if (TABLog.IsDebugEnabled)
+            {
+                var sel = BlueprintSystem.GetTopmostSelection();
+                TABLog.Debug(
+                    $"SelectionSystem.SetPointB: owner={player.whoAmI} tile=({tilePosition.X},{tilePosition.Y}) " +
+                    $"areaDefined={sel?.IsDefined == true}",
+                    "SelectionSystem");
+            }
         }
 
         /// <summary>
-        /// Sets both points A and B in one call (tile coordinates).
         /// Useful for interactive resize/move so we only rebuild once.
         /// </summary>
         public void SetPoints(Player player, Point pointA, Point pointB)
         {
             var state = GetState(player);
+            if (state.HasPointA && state.HasPointB && state.PointA == pointA && state.PointB == pointB)
+                return;
+
             state.PointA = pointA;
             state.PointB = pointB;
             state.HasPointA = true;
             state.HasPointB = true;
             UpdateSelection(state);
+            UpdateSelectionOverlay(player);
+            if (TABLog.IsDebugEnabled)
+            {
+                var sel = BlueprintSystem.GetTopmostSelection();
+                TABLog.Debug(
+                    $"SelectionSystem.SetPoints: owner={player.whoAmI} A=({pointA.X},{pointA.Y}) B=({pointB.X},{pointB.Y}) " +
+                    $"area={(sel is { IsDefined: true } s ? $"({s.Area.X},{s.Area.Y}) {s.Area.Width}x{s.Area.Height}" : "empty")}",
+                    "SelectionSystem");
+            }
+        }
+
+        /// <summary>Moves the selection by a tile delta without reallocating the inclusion grid.</summary>
+        public void TranslateSelection(Player player, Point delta)
+        {
+            Selection? selection = BlueprintSystem.GetTopmostSelection();
+            if (selection is null || !selection.IsDefined)
+                return;
+
+            selection.Translate(delta);
+            var state = GetState(player);
+            state.PointA = new Point(selection.Area.Left, selection.Area.Top);
+            state.PointB = new Point(selection.Area.Right - 1, selection.Area.Bottom - 1);
             UpdateSelectionOverlay(player);
         }
 
@@ -200,11 +277,26 @@ namespace ArchitectsStencilMod.Core
 
             var a = new Point(bounds.Left, bounds.Top);
             var b = new Point(bounds.Right - 1, bounds.Bottom - 1);
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
+                    $"SelectionSystem.SetBounds: owner={player.whoAmI} bounds=({bounds.X},{bounds.Y}) {bounds.Width}x{bounds.Height}",
+                    "SelectionSystem");
             SetPoints(player, a, b);
         }
 
         public override void OnWorldUnload()
         {
+            int n = 0;
+            foreach (Selection selection in BlueprintSystem.GetSelections())
+            {
+                BlueprintSystem.UnregisterBlueprint(selection);
+                selection.Clear();
+                n++;
+            }
+
+            if (TABLog.IsDebugEnabled && n > 0)
+                TABLog.Debug($"SelectionSystem.OnWorldUnload: cleared {n} selection blueprint(s)", "SelectionSystem");
+
             for (int i = 0; i < _playerStates.Length; i++)
             {
                 if (_playerStates[i] is not { } state)
@@ -214,7 +306,6 @@ namespace ArchitectsStencilMod.Core
                 state.HasPointB = false;
                 state.PointA = default;
                 state.PointB = default;
-                state.Selection.Clear();
             }
         }
 
@@ -231,7 +322,6 @@ namespace ArchitectsStencilMod.Core
             if (_playerStates[index] is not { } state)
             {
                 state = new PlayerSelectionState();
-                state.Selection = new Selection(player.whoAmI);
                 _playerStates[index] = state;
             }
 

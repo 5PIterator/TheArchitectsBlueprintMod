@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -5,11 +6,12 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.UI;
-using ArchitectsStencilMod.ModUtils;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using static TheArchitectsBlueprintMod.Core.ToolActionManager;
+using TheArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// ARCHITECT'S STENCIL: PIN / SET / INC / EXC / COPY / PASTE / RESET in one tool via action wheel.
@@ -17,7 +19,8 @@ namespace ArchitectsStencilMod.Content.Items
 	public class ArchitectsStencil : ModItem
 	{
 		private ToolAction _mode = ToolAction.PIN;
-
+		/// <summary>True after left has been seen down this drag; cleared on one-shot <see cref="ToolActionKey.LeftRelease"/>.</summary>
+		private bool _leftDragSeenDown;
 
 		/// <summary>Sets endgame stencil stats; single UseItem per click, HoldItem drives drags.</summary>
 		public override void SetDefaults()
@@ -63,21 +66,29 @@ namespace ArchitectsStencilMod.Content.Items
 		public override bool AltFunctionUse(Player player) => true;
 
 		/// <summary>Blocks use while the shared action wheel is open or opening.</summary>
-		public override bool CanUseItem(Player player) => !ActionWheel.IsActive && !ActionWheel.IsPendingOpen;
+		public override bool CanUseItem(Player player) =>
+			!ArchitectModeGuards.SuppressHeldToolInput(player)
+			&& !ActionWheel.IsActive
+			&& !ActionWheel.IsPendingOpen;
 
 		/// <summary>Opens the tool wheel on alt-use (after rectangle cancel when needed), or dispatches the current mode on primary use.</summary>
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			// --- Alt-use cancels rectangle preview, toggles wheel, or opens full action wheel; primary use runs current mode.
 
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return null;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return true;
 
 			if (player.altFunctionUse == 0)
 			{
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftClick, player, cursorTile);
+				actionManager.Handle(_mode, ToolActionKey.LeftClick, player, cursorTile);
 			}
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
 			{
@@ -110,14 +121,26 @@ namespace ArchitectsStencilMod.Content.Items
 			if (player.whoAmI != Main.myPlayer)
 				return;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return;
+
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			if (Main.mouseLeft && Main.mouseRight)
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.RightClick, player, cursorTile);
+				actionManager.Handle(_mode, ToolActionKey.RightClick, player, cursorTile);
 			else if (Main.mouseLeft && !Main.mouseLeftRelease)
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftHold, player, cursorTile);
-			else if (!Main.mouseLeft && Main.mouseLeftRelease)
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+				actionManager.Handle(_mode, ToolActionKey.LeftHold, player, cursorTile);
+			else if (_leftDragSeenDown && !Main.mouseLeft)
+			{
+				actionManager.Handle(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+				_leftDragSeenDown = false;
+			}
+
+			if (Main.mouseLeft)
+				_leftDragSeenDown = true;
 		}
 
 		public override void AddRecipes()

@@ -1,0 +1,93 @@
+{
+  "metadata": {
+    "format": "item-first",
+    "mapType": "wand",
+    "modVersion": "0.2.0",
+    "terrariaVersion": "v1.4.4.9",
+    "modsLoaded": [
+      "ModLoader",
+      "CheatSheet",
+      "TheArchitectsBlueprintMod"
+    ],
+    "generatedAt": "2026-08-26T12:43:29.0116663Z"
+  },
+  "data": {
+    "LivingWoodWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "LivingWood",
+          "style": 0,
+          "yield": 1,
+          "ammo": "Wood"
+        }
+      ]
+    },
+    "BoneWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "BoneBlock",
+          "style": 0,
+          "yield": 1,
+          "ammo": "Bone"
+        }
+      ]
+    },
+    "LeafWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "LeafBlock",
+          "style": 0,
+          "yield": 1,
+          "ammo": "Wood"
+        }
+      ]
+    },
+    "HiveWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "Hive",
+          "style": 0,
+          "yield": 1,
+          "ammo": "Hive"
+        }
+      ]
+    },
+    "LivingMahoganyWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "LivingMahogany",
+          "style": 0,
+          "yield": 1,
+          "ammo": "RichMahogany"
+        }
+      ]
+    },
+    "LivingMahoganyLeafWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "LivingMahoganyLeaves",
+          "style": 0,
+          "yield": 1,
+          "ammo": "RichMahogany"
+        }
+      ]
+    },
+    "SandcastleBucket": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "Sandcastles",
+          "style": 0,
+          "yield": 1,
+          "ammo": "SandBlock"
+        }
+      ]
+    }
+  }
+}

@@ -1,62 +1,45 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsStencilMod.Debug;
+using System.Threading;
+using TheArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
-using Terraria.ObjectData;
+using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// A movable ghost of a <see cref="Selection"/>: carries the <see cref="Core.Payload">payload</see>
-    /// (detached <c>TileData</c> snapshots per cell), aligned with <see cref="SourceArea"/> / <see cref="TargetArea"/>,
-    /// <see cref="SourceTiles"/> is the original capture region (fixed clone); <see cref="TargetTiles"/> is this projection’s
-    /// grid (moves with the ghost) and is the only place where include/exclude is stored after construction.
-    /// <see cref="SourceArea"/> and the initial capture bounds are fixed when the projection is constructed;
-    /// fill <see cref="Payload"/> afterward via <see cref="LoadPayloadFromWorld"/> or <see cref="SetPayload"/>.
+    /// (detached <c>TileData</c> snapshots per cell), aligned with <see cref="SourceArea"/> / <see cref="TargetArea"/>.
+    /// <see cref="SourceTiles"/> is a snapshot of the capture region (clone); <see cref="TargetTiles"/> is this projection’s
+    /// grid (moves with the ghost) and is where include/exclude is edited after construction.
+    /// A projection always retains a selection snapshot; <see cref="SetPayload"/> resizes both target and source footprints
+    /// to the payload grid at the current ghost anchor when applying a defined payload.
+    /// Fill <see cref="Payload"/> via <see cref="LoadPayloadFromWorld"/> or <see cref="SetPayload"/>.
     /// </summary>
     /// <param name="selection">Selection blueprint used to seed initial target bounds and inclusion mask.</param>
-    /// <param name="cutSource">Initial cut-from-source flag (still clamped when there is no payload or no source area).</param>
-    /// <param name="sourceArea">World rectangle for world capture / source clear; omit or empty when not tied to a capture region (e.g. JSON-only).</param>
-    /// <param name="pendingSnapshotOverride">Optional sparse snapshot override (payload-relative) used to build the initial source walk.</param>
+    /// <param name="cutSource">Initial cut-from-source flag (clamped when there is no payload).</param>
     public class Projection : Blueprint
     {
+        private static int _nextOverlayInstanceKey;
+
         private Payload _payload = Payload.Empty;
-        private readonly Selection _selection;
+        private Selection _selection = null!;
+
+        /// <summary>
+        /// Per-instance value for <c>OverlaySystem</c> registration keys. <see cref="Id"/> is often 0 for multiple live projections.
+        /// </summary>
+        internal int OverlayInstanceKey { get; } = Interlocked.Increment(ref _nextOverlayInstanceKey);
 
         /// <summary>
         /// Builds a projection from a selection snapshot (e.g. server paste shell). Does not apply client cursor/size gates;
-        /// use <see cref="FromSelection"/> for in-world copy from the current selection.
+        /// use <see cref="ProjectionSystem.NewProjection"/> for in-world copy from the current selection.
         /// </summary>
-        public Projection(Selection selection, bool cutSource = false) : base(selection.Owner)
+        public Projection(int owner, Selection selection, bool cutSource = false) : base(owner)
         {
             ArgumentNullException.ThrowIfNull(selection);
-            if (!selection.IsDefined)
-                throw new Exception("Selection is not defined");
-            if (selection.Owner < 0 || selection.Owner >= Main.maxPlayers)
-                throw new Exception("Selection owner is invalid");
-
-
-
-            _selection = selection.Clone();
-            CutSource = cutSource;
-            Define(_selection.Area);
-            SyncInclusion();
-            RefreshTargetTiles();
-        }
-
-        private void SyncInclusion()
-        {
-            if (!IsDefined || _selection.Tiles is null || Tiles is null)
-            {
-                return;
-            }
-
-            foreach (var tile in Tiles)
-            {
-                tile.Included = _selection.Tiles[tile.Relative.X, tile.Relative.Y].Included;
-            }
+            AssignSelection(selection);
         }
 
         /// <summary>
@@ -78,10 +61,11 @@ namespace ArchitectsStencilMod.Core
         public bool IsLocked { get; private set; }
 
         /// <summary>
-        /// World rectangle that was captured into the payload (live <c>Main.tile</c> under this region
-        /// for cut / source clear). Distinct from <see cref="TargetArea"/>.
+        /// World rectangle for live <c>Main.tile</c> under the source snapshot (cut / source clear). Kept in lockstep with
+        /// <see cref="TargetArea"/> when <see cref="SetPayload"/> applies a defined payload.
         /// </summary>
         public Rectangle SourceArea => _selection.SourceArea;
+
         public BlueprintCell[,] SourceTiles => _selection.SourceTiles;
 
         /// <summary>
@@ -103,21 +87,10 @@ namespace ArchitectsStencilMod.Core
 
         /// <summary>
         /// Tile-footprint rectangles of containers detected within reach of this projection's
-        /// <see cref="TargetArea"/>. Empty means no nearby containers (paste falls back to player inventory).
-        /// Updated by <see cref="ProjectionSystem"/> whenever the projection overlay rebuilds.
+        /// <see cref="TargetArea"/>. Empty means no nearby containers; paste may still use the owner
+        /// player's inventory when that player is inside the same reach window.
         /// </summary>
         public List<Rectangle> Inventories { get; private set; } = [];
-
-        /// <summary>
-        /// Replaces <see cref="Inventories"/> with the contents of <paramref name="inventories"/>.
-        /// Called from <see cref="ProjectionSystem"/> during overlay rebuild; does not trigger another overlay pass.
-        /// </summary>
-        internal void SetInventories(List<Rectangle> inventories)
-        {
-            ArgumentNullException.ThrowIfNull(inventories);
-            Inventories.Clear();
-            Inventories.AddRange(inventories);
-        }
 
         /// <summary>
         /// Locks this projection (paste in progress). Updates the client projection overlay.
@@ -127,6 +100,8 @@ namespace ArchitectsStencilMod.Core
             if (IsLocked)
                 return;
             IsLocked = true;
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"Projection.Lock: id={Id} owner={Owner}", "Projection");
             UpdateOverlay();
         }
 
@@ -138,6 +113,45 @@ namespace ArchitectsStencilMod.Core
             if (!IsLocked)
                 return;
             IsLocked = false;
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"Projection.Unlock: id={Id} owner={Owner}", "Projection");
+            UpdateOverlay();
+        }
+
+        /// <summary>Moves the ghost so <see cref="TargetArea"/> top-left is <paramref name="targetAreaOrigin"/>.</summary>
+        /// <param name="isDragFrame">When true, skips expensive inventory/overlay refresh until <see cref="CommitDragRefresh"/>.</param>
+        public void MoveTo(Point targetAreaOrigin, bool isDragFrame = false)
+        {
+            if (!IsDefined)
+                return;
+
+            var delta = new Point(targetAreaOrigin.X - Area.X, targetAreaOrigin.Y - Area.Y);
+            if (delta.X == 0 && delta.Y == 0)
+                return;
+
+            Translate(delta);
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
+                    $"Projection.MoveTo: id={Id} owner={Owner} origin=({targetAreaOrigin.X},{targetAreaOrigin.Y}) delta=({delta.X},{delta.Y}) drag={isDragFrame}",
+                    "Projection");
+
+            if (isDragFrame)
+            {
+                UpdateOverlay();
+                return;
+            }
+
+            RefreshInventories();
+            UpdateOverlay();
+        }
+
+        /// <summary>Runs deferred work after a COPY-tool drag ends (inventories + overlay).</summary>
+        internal void CommitDragRefresh()
+        {
+            if (!IsDefined)
+                return;
+
+            RefreshInventories();
             UpdateOverlay();
         }
 
@@ -146,44 +160,138 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         public void SetCut(bool cutFromSource)
         {
-            bool want = cutFromSource && !SourceArea.IsEmpty && HasPayload;
+            bool want = cutFromSource && HasPayload;
             if (CutSource == want)
                 return;
             CutSource = want;
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"Projection.SetCut: id={Id} owner={Owner} cutSource={CutSource} hasPayload={HasPayload}", "Projection");
             UpdateOverlay();
         }
 
         /// <summary>
         /// Toggles cut-from-source when valid; otherwise forces cut off.
         /// </summary>
-        public void ToggleCut()
+        public bool ToggleCut()
         {
-            if (SourceArea.IsEmpty || !HasPayload)
+            if (!HasPayload)
+            {
                 SetCut(false);
-            else
-                SetCut(!CutSource);
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug($"Projection.ToggleCut: id={Id} owner={Owner} skipped (no payload)", "Projection");
+                return false;
+            }
+
+            SetCut(!CutSource);
+            return true;
         }
 
         /// <summary>
-        /// Rebuilds this owner's projection overlay family on the client (no-op on server / invalid owner).
+        /// Sets the selection snapshot (replaces the frozen source footprint).
         /// </summary>
-        internal void UpdateOverlay()
+        internal void AssignSelection(Selection selection)
         {
-            if (Owner < 0 || Owner >= Main.maxPlayers)
-                return;
-            Player owner = Main.player[Owner];
-            if (owner is not { active: true })
-                return;
-            ModContent.GetInstance<ProjectionSystem>().UpdateProjectionOverlay(owner);
+            ArgumentNullException.ThrowIfNull(selection);
+            _selection = selection.Clone();
+            Define(_selection.Area);
+            // Define seeds every cell as included; copy the selection snapshot mask onto target tiles.
+            SyncInclusion();
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
+                    $"Projection.AssignSelection (init): id={Id} owner={Owner} area=({Area.X},{Area.Y}) {Area.Width}x{Area.Height}",
+                    "Projection");
         }
 
         /// <summary>
-        /// Border color for the projection overlay: amethyst purple when copying, ruby red when
-        /// <see cref="CutSource"/> is enabled.
+        /// Applies a prepared payload for paste execution without redefining the frozen source selection footprint.
         /// </summary>
-        public Color GetOverlayBorderColor()
+        internal void ApplyPayloadForPasteExecution(Payload source, IReadOnlyList<string>? metadataModsLoaded = null)
         {
-            return CutSource ? ArchitectVisualPalette.ProjectionCutColor : ArchitectVisualPalette.ProjectionCopyColor;
+            ArgumentNullException.ThrowIfNull(source);
+
+            if (!source.IsDefined)
+            {
+                _payload = Payload.Empty;
+                CutSource = false;
+                RefreshTargetTiles();
+                return;
+            }
+
+            Payload prepared = PayloadCompatibility.Prepare(
+                source,
+                PayloadPrepareMode.SkipIncompatible,
+                metadataModsLoaded,
+                out PayloadCompatibilityReport report);
+
+            if (report.IncompatibleCells > 0 && Main.netMode != NetmodeID.Server)
+            {
+                string msg = $"Payload: {report.IncompatibleCells} of {report.TotalNonEmptyCells} cells skipped (unresolvable tile/wall).";
+                if (report.MissingModsFromMetadata.Count > 0)
+                    msg += $" Missing mods: {string.Join(", ", report.MissingModsFromMetadata)}.";
+                Main.NewText(msg, Microsoft.Xna.Framework.Color.Orange);
+            }
+
+            _payload = Payload.FromClone(prepared);
+            CutSource = CutSource && HasPayload;
+
+            var newBounds = new Rectangle(Area.X, Area.Y, _payload.Width, _payload.Height);
+            Define(newBounds);
+            RefreshTargetTiles();
+        }
+
+        /// <summary>
+        /// Replaces the payload grid from a prepared <see cref="Core.Payload"/> (stores an independent copy).
+        /// When <paramref name="source"/> is defined, resizes the projection target and the selection snapshot to the payload
+        /// size at the current top-left anchor so source and target footprints stay aligned.
+        /// </summary>
+        internal void SetPayload(Payload source, IReadOnlyList<string>? metadataModsLoaded = null)
+        {
+            ArgumentNullException.ThrowIfNull(source);
+
+            if (!source.IsDefined)
+            {
+                _payload = Payload.Empty;
+                CutSource = false;
+                RefreshTargetTiles();
+                UpdateOverlay();
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug(
+                        $"Projection payload cleared [SetPayload: empty source] id={Id} owner={Owner}",
+                        "Projection");
+                return;
+            }
+
+            Payload prepared = PayloadCompatibility.Prepare(
+                source,
+                PayloadPrepareMode.SkipIncompatible,
+                metadataModsLoaded,
+                out PayloadCompatibilityReport report);
+
+            if (report.IncompatibleCells > 0 && Main.netMode != NetmodeID.Server)
+            {
+                string msg = $"Payload: {report.IncompatibleCells} of {report.TotalNonEmptyCells} cells skipped (unresolvable tile/wall).";
+                if (report.MissingModsFromMetadata.Count > 0)
+                    msg += $" Missing mods: {string.Join(", ", report.MissingModsFromMetadata)}.";
+                Main.NewText(msg, Microsoft.Xna.Framework.Color.Orange);
+            }
+
+            _payload = Payload.FromClone(prepared);
+            CutSource = CutSource && HasPayload;
+
+            var newBounds = new Rectangle(Area.X, Area.Y, _payload.Width, _payload.Height);
+
+            Selection resized = _selection.Clone();
+            resized.Define(newBounds);
+            _selection = resized;
+
+            Define(newBounds);
+            RefreshTargetTiles();
+            UpdateOverlay();
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
+                    $"Projection.SetPayload: applied id={Id} owner={Owner} payload={_payload.Width}x{_payload.Height} " +
+                    $"targetOrigin=({Area.X},{Area.Y}) cutSource={CutSource}",
+                    "Projection");
         }
 
         /// <summary>
@@ -192,88 +300,14 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         public void LoadPayloadFromWorld()
         {
-            if (SourceArea.IsEmpty)
-            {
-                _payload = Payload.Empty;
-                CutSource = false;
-                RefreshTargetTiles();
-                UpdateOverlay();
-                if (ASMLog.IsDebugEnabled)
-                    ASMLog.Debug(
-                        $"Projection payload cleared [LoadPayloadFromWorld: empty SourceArea] id={Id} owner={Owner}",
-                        "Projection");
-                return;
-            }
-
             _payload = Payload.FromWorld(SourceArea);
             RefreshTargetTiles();
             UpdateOverlay();
-        }
-
-        /// <summary>
-        /// Replaces the payload grid from a prepared <see cref="Core.Payload"/> (stores an independent copy).
-        /// Does not change <see cref="SourceArea"/> or the 2D snapshot walk.
-        /// </summary>
-        internal void SetPayload(Payload source)
-        {
-            ArgumentNullException.ThrowIfNull(source);
-
-            if (!source.IsDefined)
-            {
-                _payload = Payload.Empty;
-                CutSource = false;
-                RefreshTargetTiles();
-                UpdateOverlay();
-                if (ASMLog.IsDebugEnabled)
-                    ASMLog.Debug(
-                        $"Projection payload cleared [SetPayload: empty source] id={Id} owner={Owner}",
-                        "Projection");
-                return;
-            }
-
-            _payload = Payload.FromClone(source);
-            CutSource = CutSource && !SourceArea.IsEmpty && HasPayload;
-            RefreshTargetTiles();
-            UpdateOverlay();
-        }
-
-        /// <summary>
-        /// Applies an imported payload and resizes this projection at its current top-left tile.
-        /// </summary>
-        internal void ApplyImportedPayload(Payload source)
-        {
-            // --- Replace the payload, resize target bounds, reset inclusion, and refresh overlays.
-
-            ArgumentNullException.ThrowIfNull(source);
-            if (!source.IsDefined)
-            {
-                _payload = Payload.Empty;
-                CutSource = false;
-                RefreshTargetTiles();
-                RefreshInventories();
-                UpdateOverlay();
-                return;
-            }
-
-            _payload = Payload.FromClone(source);
-            CutSource = false;
-            Area = new Rectangle(Area.X, Area.Y, source.Width, source.Height);
-            RefreshTargetTiles();
-
-            if (Tiles is not null)
-            {
-                for (int y = 0; y < Area.Height; y++)
-                {
-                    for (int x = 0; x < Area.Width; x++)
-                    {
-                        if (Tiles[x, y] is not null)
-                            Tiles[x, y].Included = true;
-                    }
-                }
-            }
-
-            RefreshInventories();
-            UpdateOverlay();
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
+                    $"Projection.LoadPayloadFromWorld: id={Id} owner={Owner} source=({SourceArea.X},{SourceArea.Y}) " +
+                    $"{SourceArea.Width}x{SourceArea.Height} payloadDefined={_payload.IsDefined} payload={_payload.Width}x{_payload.Height}",
+                    "Projection");
         }
 
         /// <summary>
@@ -300,11 +334,11 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Live <c>Main.tile</c> under <see cref="SourceArea"/> at <paramref name="relative"/> (original capture region).
+        /// Live <c>Main.tile</c> under <see cref="SourceArea"/> at <paramref name="relative"/> (source snapshot region).
         /// </summary>
         public bool TryGetSourceTile(Point relative, out Tile sourceTile)
         {
-            if (SourceArea.IsEmpty || SourceTiles is null
+            if (SourceTiles is null
                 || (uint)relative.X >= (uint)SourceArea.Width
                 || (uint)relative.Y >= (uint)SourceArea.Height)
             {
@@ -377,49 +411,53 @@ namespace ArchitectsStencilMod.Core
         }
 
         /// <summary>
-        /// Scans <see cref="Main.chest"/> for entries whose full tile footprint lies within
-        /// <see cref="TargetArea"/> plus two tiles outward.
+        /// Scans <see cref="Main.chest"/> for entries whose full tile footprint lies in the
+        /// <see cref="Inventory.ReachTiles"/> ring around <see cref="TargetArea"/>, not inside it.
         /// </summary>
         public void RefreshInventories()
         {
-            Inventories.Clear();
-            Rectangle searchArea = TargetArea;
-            searchArea.Inflate(2, 2);
+            // --- Rebuild nearby chest footprints from authoritative world chest state.
 
-            for (int ci = 0; ci < Main.maxChests; ci++)
-            {
-                Chest chest = Main.chest[ci];
-                if (chest is null || chest.x < 0)
-                {
-                    continue;
-                }
-
-                Tile tile = Main.tile[chest.x, chest.y];
-                TileObjectData tileData = TileObjectData.GetTileData(tile);
-                int w = tileData?.Width ?? 2;
-                int h = tileData?.Height ?? 2;
-                Rectangle footprint = new(chest.x, chest.y, w, h);
-
-                if (searchArea.Contains(footprint))
-                {
-                    Inventories.Add(footprint);
-                }
-            }
+            Inventories = PasteInventoryReach.CollectChestFootprints(TargetArea);
         }
 
-        /// <summary>Moves the ghost so <see cref="TargetArea"/> top-left is <paramref name="targetAreaOrigin"/>.</summary>
-        public void MoveTo(Point targetAreaOrigin)
+        /// <summary>
+        /// Synchronizes inclusion from the selection snapshot to the projection tiles.
+        /// </summary>
+        public void SyncInclusion()
         {
-            if (!IsDefined)
+            if (_selection.Tiles is null || Tiles is null)
             {
                 return;
             }
 
-            var delta = new Point(targetAreaOrigin.X - Area.X, targetAreaOrigin.Y - Area.Y);
-            Translate(delta);
-            RefreshTargetTiles();
-            RefreshInventories();
-            UpdateOverlay();
+            foreach (var tile in Tiles)
+            {
+                tile.Included = _selection.Tiles[tile.Relative.X, tile.Relative.Y].Included;
+            }
+
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug($"Projection.SyncInclusion: id={Id} owner={Owner} grid={Area.Width}x{Area.Height}", "Projection");
+        }
+
+        /// <summary>
+        /// Rebuilds this owner's projection overlay family on the client (no-op on dedicated server / invalid owner).
+        /// </summary>
+        internal void UpdateOverlay()
+        {
+            // --- Server paste rebuilds Projection via MoveTo; overlays are client-only.
+
+            if (Main.dedServ)
+                return;
+
+            if (Owner < 0 || Owner >= Main.maxPlayers)
+                return;
+
+            Player owner = Main.player[Owner];
+            if (owner is not { active: true })
+                return;
+
+            ModContent.GetInstance<ProjectionSystem>().UpdateProjectionOverlay(owner);
         }
     }
 }

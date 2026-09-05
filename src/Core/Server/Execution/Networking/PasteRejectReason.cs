@@ -1,4 +1,4 @@
-namespace ArchitectsStencilMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     internal enum PasteRejectReason : byte
     {
@@ -6,11 +6,13 @@ namespace ArchitectsStencilMod.Core
         InvalidProjection = 1,
         InvalidPayload = 2,
         InvalidPacket = 3,
-        NotHost = 4,
-        AreaLimit = 5,
-        VolumeLimit = 6,
-        PlayerOperationLimit = 7,
-        ServerOperationLimit = 8,
-        AlreadyActive = 9,
+        AreaLimit = 4,
+        VolumeLimit = 5,
+        PlayerOperationLimit = 6,
+        ServerOperationLimit = 7,
+        AlreadyActive = 8,
+        OutOfWorldTiles = 9,
+        UnrevealedTiles = 10,
+        OutOfRange = 11,
     }
 }

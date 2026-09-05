@@ -1,0 +1,1610 @@
+UI: {
+	SearchEntries: Search...
+	NoPayloadEntries: No payload entries found.
+	NoProjectionSelected: No projection selected
+	AuthorBy: By {0}
+	RefreshEntries: Refresh entries
+	EditProjectName: Edit project name
+	ExportReadableJsonHoverOff: Export compact .tab
+	ExportReadableJsonHoverOn: Export readable .json
+	OpenPayloadBrowser: Open payload browser
+	PrintManifest: Print item manifest
+	ToggleCut: Toggle cut from source
+
+	ArchitectMode: {
+		Header: Architect Mode — {0}
+		EntryOpen: Architect Mode
+		EntryClose: Close Architect Mode
+		UnlockChat: Architect's Blueprint GUI permanently unlocked.
+		AlreadyUnlocked: Architect Mode is already unlocked.
+		PanicNeedsWorld: Enter a world before clearing permanent Architect Mode unlock.
+		PanicCleared: Permanent Architect Mode unlock cleared for this character.
+		PanicAlreadyCleared: This character did not have a permanent Architect Mode unlock.
+
+		Toolbar: {
+			Pin: Pin selection (PIN)
+			Set: Edit selection (SET)
+			Include: Include tiles (INC)
+			Exclude: Exclude tiles (EXC)
+			Copy: Copy projection (CPY)
+			Paste: Paste projection (PST)
+			Cut: Toggle cut from source (CUT)
+			Exit: Exit Architect Mode
+		}
+	}
+
+	Manifest: {
+		Header: --- Payload Manifest ---
+		Empty: No placeable materials in this payload.
+		NoProjection: No projection selected.
+		NoPayload: Projection has no payload.
+		ColItems: Items
+		ColQty: Qty
+		ColMissing: Missing
+		ColMain: Main
+		ColSources: Sources
+		EntryQty: "{0}/{1}"
+		EntryMissing: (-{0})
+		EntryMissingPaired: (-{0}) (-{1})
+		Unresolved: "{0} unresolved mapping(s):"
+		Satisfied: All remaining materials are available.
+	}
+
+	Metadata: {
+		dimensions: Dimensions
+		createdUtc: Created
+		modified: Modified
+		modVersion: Mod version
+		terrariaVersion: Terraria version
+		modsLoaded: Mods loaded
+	}
+
+	Sort: {
+		ModifiedDesc: Modified ↓
+		ModifiedAsc: Modified ↑
+		NameAsc: Name A–Z
+		NameDesc: Name Z–A
+		SizeDesc: Size ↓
+	}
+
+	Filter: {
+		All: All
+		ValidOnly: Valid
+		InvalidOnly: Invalid
+		MissingMods: Missing mods
+		LegacyOnly: Legacy
+	}
+
+	Paste: {
+		None: No error (internal).
+		InvalidProjection: Invalid projection (missing payload or not ready to paste).
+		InvalidPayload: Invalid payload for paste.
+		InvalidPacket: Invalid paste request packet or send failed.
+		AreaLimit: Projection exceeds area limits.
+		VolumeLimit: Projection exceeds tile volume limit.
+		PlayerOperationLimit: Player operation limit reached.
+		ServerOperationLimit: Server operation limit reached.
+		AlreadyActive: Paste operation already active.
+		Unsupported: Invalid or unsupported paste request.
+		AckTimeout: Paste request timed out waiting for the server.
+		RejectedPrefix: Paste rejected: {0}
+		BlockedArea: Paste blocked: projection exceeds area limits.
+		BlockedVolume: Paste blocked: projection exceeds tile volume limit.
+		OutOfWorldTiles: Paste blocked: projection targets tiles outside the world.
+		UnrevealedTiles: Paste blocked: projection targets unexplored map tiles.
+		OutOfRange: Paste blocked: projection is beyond player reach.
+	}
+
+	Capture: {
+		BlockedOutOfWorld: Capture blocked: selection includes tiles outside the world.
+		BlockedUnrevealed: Capture blocked: selection includes unexplored map tiles.
+		BlockedOutOfRange: Capture blocked: selection is beyond player reach.
+	}
+}
+
+Items: {
+	IncludeStick: {
+		DisplayName: Include Stick
+		Tooltip:
+			'''
+			Include tiles in the selection or projection.
+			Left: drag a rectangle to include tiles
+			Right: cancel the rectangle preview
+			'''
+	}
+
+	ArchitectsHand: {
+		DisplayName: Architect's Hand
+		Tooltip:
+			'''
+			Enables Architect Mode while equipped.
+			Crafting is disabled until Architect Mode is more stable (cheat-spawn for testing).
+			'''
+	}
+
+	ArchitectsBlueprint: {
+		DisplayName: Architect's Blueprint
+		Tooltip:
+			'''
+			Permanently unlocks Architect Mode.
+			Crafting and shimmer upgrade are disabled until Architect Mode is more stable (cheat-spawn for testing).
+			'''
+	}
+
+	ArchitectsStencil: {
+		DisplayName: Architect's Stencil
+		Tooltip:
+			'''
+			All blueprint actions in one tool.
+			Right: action wheel — PIN, SET, INC, EXC, COPY, PASTE, RESET
+			Left: use the selected mode (RESET clears what is under the cursor)
+			While including or excluding tiles, right also cancels the rectangle preview.
+			'''
+	}
+
+	BlueprintCore: {
+		DisplayName: Blueprint Core
+		Tooltip: Core material for advanced blueprint tools.
+	}
+
+	SelectionWand: {
+		DisplayName: Selection Wand
+		Tooltip:
+			'''
+			Edit selection bounds.
+			Right: action wheel — PIN, SET, RESET
+			Left: use the selected mode (RESET clears what is under the cursor)
+			'''
+	}
+
+	CopyStick: {
+		DisplayName: Copy Stick
+		Tooltip:
+			'''
+			Create and move a projection.
+			Left: drag to place or move
+			Right: remove the projection under the cursor
+			'''
+	}
+
+	ExecutionWand: {
+		DisplayName: Execution Wand
+		Tooltip:
+			'''
+			Run pastes against projections.
+			Right: action wheel — PASTE, RESET
+			Left: start paste or RESET hit (cursor must be on target)
+			While pasting, hold left + right to cancel like the paste stick.
+			'''
+	}
+
+	DebugStick: {
+		DisplayName: Debug Stick
+		Tooltip:
+			'''
+			Debug and step-through helpers.
+			Right: action wheel — CUT, STP
+			Left: apply selected mode, or advance a step session
+			Right-click cancels an active step session.
+			'''
+	}
+
+	PasteStick: {
+		DisplayName: Paste Stick
+		Tooltip:
+			'''
+			Paste a projection.
+			Left: start pasting on the projection under the cursor
+			Hold left + right: cancel an active paste
+			'''
+	}
+
+	PinStick: {
+		DisplayName: Pin Stick
+		Tooltip:
+			'''
+			Start a new selection with two pins.
+			Left: place pin B, drag bounds, release to finalize
+			Right: RESET the selection
+			While dragging: hold left + right to cancel
+			'''
+	}
+
+	ProjectionWand: {
+		DisplayName: Projection Wand
+		Tooltip:
+			'''
+			Manage projections.
+			Right: action wheel — COPY, PASTE, RESET
+			Left: use the selected mode (RESET clears what is under the cursor)
+			CUT is toggled on the projection overlay, not this wand.
+			'''
+	}
+
+	ExcludeStick: {
+		DisplayName: Exclude Stick
+		Tooltip:
+			'''
+			Exclude tiles from the selection or projection.
+			Left: drag a rectangle to exclude tiles
+			Right: cancel the rectangle preview
+			'''
+	}
+
+	InclusionWand: {
+		DisplayName: Inclusion Wand
+		Tooltip:
+			'''
+			Refine the tile mask in a selection.
+			Right: action wheel — INCLUDE, EXCLUDE
+			Left: drag a rectangle with the selected mode
+			Hold left + right: cancel the rectangle preview
+			'''
+	}
+}
+
+Configs: {
+	ClientLogConfig: {
+		DisplayName: Client Diagnostics
+		Tooltip: These options apply only on your machine. They are not sent to the server and do not change host paste rules or map compilation.
+
+		Headers: {
+			Logging: Logging
+			LogTags: Log tag families
+		}
+
+		MinimumLogLevel: {
+			Label: Minimum log level
+			Tooltip:
+				'''
+				Only records at this severity or higher are written to the mod log (and to chat when enabled).
+				Debug is the most verbose; Error is the least.
+				'''
+		}
+
+		TagGeneric: {
+			Label: Generic
+			Tooltip: Concise paste phase progress and task results ([Generic]). Shown only to the paste operation owner.
+		}
+
+		TagPaste: {
+			Label: Paste
+			Tooltip: Paste planning, phases, task execution, and paste lifecycle ([Paste]).
+		}
+
+		TagTileExecutor: {
+			Label: TileExecutor
+			Tooltip: Tile mutation queue, projectile launch/impact, and apply results ([TileExecutor]).
+		}
+
+		TagInventory: {
+			Label: Inventory
+			Tooltip: Inventory lookup, reserve/consume, store destination, and store attempts ([Inventory]).
+		}
+
+		TagProjection: {
+			Label: Projection
+			Tooltip: Projection and ProjectionSystem client state ([Projection], [ProjectionSystem]).
+		}
+
+		TagSelection: {
+			Label: Selection
+			Tooltip: Selection, SelectionSystem, and Blueprint client state ([Selection], [SelectionSystem], [Blueprint]).
+		}
+
+		TagLayers: {
+			Label: Layers
+			Tooltip: Layer registration, ordering, and custom sub-layer warnings ([Layers]).
+		}
+
+		TagTileMapping: {
+			Label: Tile mapping
+			Tooltip: Tile mapping compile and discovery actions ([TileMapping]).
+		}
+
+		TagInteractionMap: {
+			Label: Interaction map
+			Tooltip: Interaction map load and entry validation ([InteractionMap]).
+		}
+
+		TagNetworking: {
+			Label: Networking
+			Tooltip: Paste networking packet handling ([PasteNet]).
+		}
+
+		TagToolAction: {
+			Label: Tool action
+			Tooltip: Tool action manager errors ([ToolAction]).
+		}
+
+		TagTemplate: {
+			Label: Template
+			Tooltip: Template copy warnings ([Template]).
+		}
+
+		TagManifest: {
+			Label: Manifest
+			Tooltip: Paste item manifest output ([Manifest]).
+		}
+
+		TagOther: {
+			Label: Other / uncategorized
+			Tooltip: Log lines with no category tag or unknown tags (excluding Generic paste progress).
+		}
+
+		PrintDebugLogsToChat: {
+			Label: Print debug logs to chat
+			Tooltip:
+				'''
+				Also echo debug entries into chat when they meet the minimum log level.
+				Owner-scoped paste diagnostics only appear for the local paste owner.
+				Client only — other players are unaffected.
+				'''
+		}
+
+		PrintInfoLogsToChat: {
+			Label: Print info logs to chat
+			Tooltip:
+				'''
+				Also echo info entries into chat when they meet the minimum log level.
+				Concise paste phase results ([Generic]) appear only for the paste operation owner.
+				Client only — other players are unaffected.
+				'''
+		}
+
+		TagFrameLayer: {
+			Label: Frame layer
+			Tooltip: Frame identify/place/clear candidate tracing ([FrameLayer]).
+		}
+	}
+
+	TabLogLevel: {
+		Tooltip: ""
+
+		Debug: {
+			Label: Debug
+			Tooltip: Verbose diagnostic detail.
+		}
+
+		Info: {
+			Label: Info
+			Tooltip: Concise operational progress.
+		}
+
+		Warn: {
+			Label: Warn
+			Tooltip: Recoverable problems and configuration issues.
+		}
+
+		Error: {
+			Label: Error
+			Tooltip: Failures that need attention.
+		}
+	}
+
+	ClientPasteConfig: {
+		DisplayName: Client Paste Preferences
+		Tooltip:
+			'''
+			Local paste preferences sent with your paste request.
+			The server decides which preferences are honored via Allow client preferences in Paste policy (server / host).
+			'''
+
+		Headers: {
+			Preferences: Preferences
+			Arrow: Arrow
+			Debug: Debug Header
+		}
+
+		Plan: {
+			Label: Plan
+			Tooltip: Plan-phase strategy preference.
+
+			Strategy: {
+				Label: Strategy
+				Tooltip:
+					'''
+					All — clear the full target footprint.
+					Transparent — clear only where payload overlaps the destination.
+					Negative — clear only where payload does not overlap.
+					'''
+			}
+		}
+
+		Clear: {
+			Label: Clear
+			Tooltip: Clear-phase item handling while destroying tiles.
+
+			Strategy: {
+				Label: Strategy
+				Tooltip: ""
+
+				ItemDrop: {
+					Label: Item drop
+					Tooltip:
+						'''
+						Void — destroy tiles without dropping items.
+						Drop — spawn normal tile drops in the world.
+						Store — route drops into adjacent inventories, dropping overflow when full or when no inventory is linked.
+						'''
+				}
+			}
+		}
+
+		Place: {
+			Label: Place
+			Tooltip: Place-phase tolerance preferences.
+
+			RetryOnMissingItems: {
+				Label: Retry on missing items
+				Tooltip: When enabled, place tasks that fail for lack of items are requeued. When disabled (default), those tiles are skipped during planning and at execution.
+			}
+
+			RetryOnInvalidPlacement: {
+				Label: Retry on invalid placement
+				Tooltip:
+					'''
+					When enabled, object-layer tiles retry until their support exists; other layers requeue failed placements.
+					When disabled (default), tiles that cannot be placed are skipped so the paste can finish.
+					Single-player and listen-host pastes use this client preference when the server allows client preferences.
+					'''
+			}
+		}
+
+		Arrow: {
+			Label: Arrow
+			Tooltip: Flight timing and velocity for paste arrows.
+
+			Speed: {
+				Label: Arrow speed
+				Tooltip: How long each arrow takes to complete its flight, in ticks. Lower values are faster.
+			}
+
+			MinSpeed: {
+				Label: Arrow min velocity
+				Tooltip: Minimum travel speed for paste arrows.
+			}
+
+			MaxSpeed: {
+				Label: Arrow max velocity
+				Tooltip: Maximum travel speed for paste arrows.
+			}
+		}
+
+		Overlay: {
+			Label: Overlay
+			Tooltip: ""
+		}
+	}
+
+	PastingConfig: {
+		DisplayName: Paste Policy
+		Tooltip:
+			'''
+			In multiplayer, the host or dedicated server owns these values; joining clients see them but usually cannot change them.
+			Limits and phase pacing are authoritative. Strategy defaults can optionally allow client preferences.
+			'''
+
+		Headers: {
+			GlobalLimits: Global limits
+			PhasePolicy: Phase policy
+			LayerPolicy: Layer policy
+			ProjectilePolicy: Projectile Policy Header
+		}
+
+		Limits: {
+			Label: Global limits
+			Tooltip: Global caps enforced for all paste phases and operations.
+
+			Client: {
+				Label: Client limits
+				Tooltip: Per-client caps enforced on paste requests and during server validation.
+
+				MaxPasteWidth: {
+					Label: Max paste width
+					Tooltip: Maximum projection width in tiles.
+				}
+
+				MaxPasteHeight: {
+					Label: Max paste height
+					Tooltip: Maximum projection height in tiles.
+				}
+
+				VolumeLimit: {
+					Label: Volume limit
+					Tooltip: Maximum number of cells in a single paste.
+				}
+
+				PlayerOperationLimit: {
+					Label: Player operation limit
+					Tooltip: Maximum concurrent paste operations per player.
+				}
+			}
+
+			Server: {
+				Label: Server limits
+				Tooltip: Server-wide execution caps.
+
+				ServerOperationLimit: {
+					Label: Server operation limit
+					Tooltip: Maximum concurrent paste operations on the server.
+				}
+
+				MaxPhaseTickSize: {
+					Label: Max phase tick size
+					Tooltip: Upper bound for tasks or planning units processed per tick in any phase.
+				}
+
+				MaxTilesPerCategory: {
+					Label: Max tiles per category
+					Tooltip: Maximum tiles processed per layer category in a single step.
+				}
+
+				MaxConcurrentArrows: {
+					Label: Max concurrent arrows
+					Tooltip: Maximum paste arrows in flight per operation at once.
+				}
+			}
+		}
+
+		Phases: {
+			Label: Phase policy
+			Tooltip: Per-phase execution, strategy defaults, and client preference policy.
+
+			Plan: {
+				Label: Plan
+				Tooltip: Builds clear, cut, and place task queues before execution.
+
+				Active: {
+					Label: Active
+					Tooltip: When off, queues are built without planning optimizations.
+				}
+
+				TickSize: {
+					Label: Planning units per tick
+					Tooltip: How many planning units to process per tick while building queues.
+				}
+
+				TickDelayMs: {
+					Label: Tick delay (ms)
+					Tooltip: Delay between planning ticks. Use 0 for no wait.
+				}
+			}
+
+			Clear: {
+				Label: Clear
+				Tooltip: Clears destination tiles before placement.
+
+				Strategy: {
+					Label: Clear strategy default
+					Tooltip: Server default used when client preferences are disabled.
+				}
+
+				AllowClientPreferences: {
+					Label: Allow client preferences
+					Tooltip: Allow clients to override clear strategy. When disabled, server default is used.
+				}
+
+				Active: {
+					Label: Active
+					Tooltip: ""
+				}
+
+				TickSize: {
+					Label: Tasks per tick
+					Tooltip: Maximum clear tasks executed per tick.
+				}
+
+				TickDelayMs: {
+					Label: Tick delay (ms)
+					Tooltip: Delay after each clear tick.
+				}
+			}
+
+			Cut: {
+				Label: Cut
+				Tooltip: Clears tiles at the source area for cut-paste.
+
+				Active: {
+					Label: Active
+					Tooltip: ""
+				}
+
+				TickSize: {
+					Label: Tasks per tick
+					Tooltip: Maximum cut tasks executed per tick.
+				}
+
+				TickDelayMs: {
+					Label: Tick delay (ms)
+					Tooltip: Delay after each cut tick.
+				}
+			}
+
+			Place: {
+				Label: Place
+				Tooltip: Places payload tiles at the destination.
+
+				Strategy: {
+					Label: Place strategy
+					Tooltip: Place uses normal placement; Replace clears conflicting tiles before placing.
+				}
+
+				RequireItems: {
+					Label: Require items
+					Tooltip: Consume required items from inventory while placing.
+				}
+
+				RetryOnMissingItems: {
+					Label: Retry on missing items default
+					Tooltip: Server default used when client preferences are disabled.
+				}
+
+				RetryOnInvalidPlacement: {
+					Label: Retry on invalid placement default
+					Tooltip:
+						'''
+						Server default when client preferences are disabled.
+						When enabled, invalid placements are retried; when disabled, they are skipped.
+						'''
+				}
+
+				AllowClientPreferences: {
+					Label: Allow client preferences
+					Tooltip: Allow clients to override place-phase preferences. When disabled, server defaults are used.
+				}
+
+				Active: {
+					Label: Active
+					Tooltip: ""
+				}
+
+				TickSize: {
+					Label: Tasks per tick
+					Tooltip: Maximum place tasks executed per tick.
+				}
+
+				TickDelayMs: {
+					Label: Tick delay (ms)
+					Tooltip: Delay after each place tick.
+				}
+
+				EnableCutPasteProcess: {
+					Label: Force source clear during paste
+					Tooltip:
+						'''
+						When enabled, paste always plans source-area clear tasks even if the projection source-clear flag is off.
+						Server / host only in multiplayer — clients cannot force this from their own config.
+						'''
+				}
+			}
+
+			Sweep: {
+				Label: Sweep
+				Tooltip:
+					'''
+					Host-only footprint blit that copies payload tiles directly and skips Place.
+					Off by default. When active, tick delay 0 runs the full queue in one tick.
+					'''
+
+				Active: {
+					Label: Active
+					Tooltip:
+						'''
+						When enabled, paste ends with a sweep blit over the included footprint instead of layer Place.
+						Server / host only in multiplayer.
+						'''
+				}
+
+				TickSize: {
+					Label: Batch size
+					Tooltip: Reserved for future batching; full queue runs in one tick when delay is 0.
+				}
+
+				TickDelayMs: {
+					Label: Tick delay (ms)
+					Tooltip: Use 0 to apply the entire sweep queue in a single tick.
+				}
+			}
+		}
+
+		LayerPolicy: {
+			DisplayName: Layer policy
+			Tooltip: Enable or disable task identification per layer. Disabled layers queue no clear or place tasks.
+
+			MainLayers: {
+				DisplayName: Main Layers
+				Tooltip: Pipeline layers that run directly in the paste queue.
+
+				Wall: {
+					Label: Wall
+					Tooltip: Wall placement and removal.
+				}
+
+				Block: {
+					Label: Block
+					Tooltip: Standard placed tiles that are not falling, anchored, tree, or unknown tiles.
+				}
+
+				Falling: {
+					Label: Falling Block
+					Tooltip: Falling tiles such as sand, silt, slush, and similar blocks.
+				}
+
+				Frame: {
+					Label: Frame
+					Tooltip: Tiles that require nearby support such as anchors, walls, or mapped base tiles.
+				}
+
+				Entity: {
+					Label: Entity
+					Tooltip:
+						'''
+						Off by default. After Frame places host tiles, overwrite matching chest, sign, and TileEntity contents from the blueprint entity sidecar without consuming inventory for those contents.
+						Replaces the old entity data cheat. Inventory-backed insert/extract via paste arrows is planned separately.
+						'''
+				}
+
+				Custom: {
+					Label: Custom
+					Tooltip: Master switch for attributed custom handlers. Individual handler toggles are in Custom Layers.
+				}
+
+				Paint: {
+					Label: Paint
+					Tooltip: Tile and wall paint state.
+				}
+
+				Wiring: {
+					Label: Wiring
+					Tooltip: Wires and actuators.
+				}
+
+				Detail: {
+					Label: Detail
+					Tooltip: Slopes, half-blocks, and actuation state.
+				}
+
+				Fluid: {
+					Label: Fluid
+					Tooltip: Water, lava, honey, and shimmer.
+				}
+
+				Unknown: {
+					Label: Unknown
+					Tooltip: Unknown tile ids, usually from missing or unloaded content.
+				}
+
+				Label: Main Layers
+			}
+
+			CustomLayers: {
+				DisplayName: Custom Layers
+				Tooltip: Enable or disable identification for individual attributed custom handlers.
+
+				Plant: {
+					Label: Plant
+					Tooltip: Surface plants and regrowth tiles (non-grass).
+				}
+
+				Vine: {
+					Label: Vine
+					Tooltip: Hanging and reverse vine columns.
+				}
+
+				Tree: {
+					Label: Tree
+					Tooltip: Trees, gem trees, and cactus.
+				}
+
+				Label: Custom Layers
+			}
+
+			Label: Layer policy
+		}
+	}
+
+	ArrowPastePreference: {
+		Speed: {
+			Label: Arrow speed
+			Tooltip: How long each arrow takes to complete its flight, in ticks. Lower values are faster.
+		}
+
+		MinSpeed: {
+			Label: Arrow min velocity
+			Tooltip: Minimum travel speed for paste arrows.
+		}
+
+		MaxSpeed: {
+			Label: Arrow max velocity
+			Tooltip: Maximum travel speed for paste arrows.
+		}
+
+		Tooltip: ""
+	}
+
+	ArchitectModeConfig: {
+		DisplayName: Architect Mode
+		Tooltip:
+			'''
+			Client utilities for Architect Mode.
+			Use the panic toggle if you unlocked the unstable Mode by mistake.
+			'''
+		Headers.Panic: Panic
+
+		ClearPermanentArchitectModeUnlock: {
+			Label: Clear permanent Architect Mode unlock
+			Tooltip:
+				'''
+				One-shot action. Save this config while in a world to remove the permanent unlock from the current character.
+				Closes Architect Mode if it is open. Architect's Hand still grants temporary access while equipped.
+				'''
+		}
+	}
+
+	ArchitectBlueprintConfig: {
+		DisplayName: Blueprint safeguards
+		Tooltip:
+			'''
+			Server/host rules for COPY capture and PASTE.
+			Out-of-world tiles are always blocked. Reveal and reach limits can be toggled below.
+			Reveal checks use each player's explored map (strongest in single-player / listen-server).
+			'''
+
+		Headers: {
+			MapExploration: Map exploration
+			PlayerReach: Player reach
+		}
+
+		RestrictCaptureAndPasteToRevealedTiles: {
+			Label: Require explored map tiles
+			Tooltip: When enabled, capture and paste fail if any included cell is on an unexplored map tile.
+		}
+
+		LimitCaptureAndPasteToPlayerReach: {
+			Label: Limit to player reach
+			Tooltip: When enabled, capture and paste fail if any included cell is farther than Max reach distance from the player.
+		}
+
+		MaxReachDistanceTiles: {
+			Label: Max reach distance (tiles)
+			Tooltip: Chebyshev tile distance from the player center. Used when player reach limit is enabled.
+		}
+	}
+
+	TileMappingConfig: {
+		DisplayName: Tile Mapping
+		Tooltip:
+			'''
+			Server/host control panel for mapping discovery and compile.
+			Layer toggles control which SourceMaps are included during compile.
+			Action toggles are one-shot: set to true and save config to enqueue that action.
+			'''
+
+		Headers: {
+			TileMapping: Source map layers
+			Actions: Actions
+		}
+
+		EnablePlacementDiscovery: {
+			Label: Placement
+			Tooltip: When enabled, Placement.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnableCustomInteractionMap: {
+			Label: Custom
+			Tooltip: When enabled, Custom.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnableWandDiscovery: {
+			Label: Wand
+			Tooltip: When enabled, Wands.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnableRubbleDiscovery: {
+			Label: Rubble
+			Tooltip: When enabled, Rubble.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnablePaintDiscovery: {
+			Label: Paint
+			Tooltip: When enabled, Paints.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnablePlantDiscovery: {
+			Label: Plant
+			Tooltip: When enabled, Plants.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnableConversionDiscovery: {
+			Label: Conversion
+			Tooltip: When enabled, Conversion.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnableBiomeConversions: {
+			Label: Biome
+			Tooltip: When enabled, Biome.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		EnableShimmerTransforms: {
+			Label: Shimmer
+			Tooltip: When enabled, Shimmer.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
+		}
+
+		RunPlacementDiscovery: {
+			Label: Run placement discovery
+			Tooltip: One-shot action. Save config with this enabled to run placement discovery.
+		}
+
+		RunWandDiscovery: {
+			Label: Run wand discovery
+			Tooltip: One-shot action. Save config with this enabled to run wand discovery.
+		}
+
+		RunRubbleDiscovery: {
+			Label: Run rubble discovery
+			Tooltip: One-shot action. Save config with this enabled to run rubble discovery.
+		}
+
+		RunPaintDiscovery: {
+			Label: Run paint discovery
+			Tooltip: One-shot action. Save config with this enabled to run paint discovery.
+		}
+
+		RunPlantDiscovery: {
+			Label: Run plant discovery
+			Tooltip: One-shot action. Save config with this enabled to run plant discovery.
+		}
+
+		RunConversionDiscovery: {
+			Label: Run conversion discovery
+			Tooltip: One-shot action. Save config with this enabled to run conversion discovery.
+		}
+
+		RunBiomeDiscovery: {
+			Label: Run biome discovery
+			Tooltip: One-shot action. Save config with this enabled to run biome discovery.
+		}
+
+		RunShimmerDiscovery: {
+			Label: Run shimmer discovery
+			Tooltip: One-shot action. Save config with this enabled to run shimmer discovery.
+		}
+
+		RunCompileNow: {
+			Label: Compile mapping now
+			Tooltip: One-shot action. Save config with this enabled to compile interaction maps now.
+		}
+
+		RunFullDiscoveryAndCompile: {
+			Label: Run full discovery + compile
+			Tooltip: One-shot action. Save config with this enabled to run placement, wand, plant, conversion, biome, shimmer discovery, then compile.
+		}
+	}
+
+	LayerPolicySettings: {
+		Tooltip: ""
+
+		Wall: {
+			Label: Wall
+			Tooltip: ""
+		}
+
+		Block: {
+			Label: Block
+			Tooltip: ""
+		}
+
+		Falling: {
+			Label: Falling
+			Tooltip: ""
+		}
+
+		Frame: {
+			Label: Frame
+			Tooltip: ""
+		}
+
+		Entity: {
+			Label: Entity
+			Tooltip: Off by default. Overwrite chest, sign, and TileEntity contents from the blueprint without consuming contained items.
+		}
+
+		Custom: {
+			Label: Custom
+			Tooltip: Master switch for attributed custom handlers. Individual handler toggles are in Custom Layers.
+		}
+
+		Paint: {
+			Label: Paint
+			Tooltip: ""
+		}
+
+		Wiring: {
+			Label: Wiring
+			Tooltip: ""
+		}
+
+		Detail: {
+			Label: Detail
+			Tooltip: ""
+		}
+
+		Sweep: {
+			Label: Sweep
+			Tooltip: ""
+		}
+
+		Fluid: {
+			Label: Fluid
+			Tooltip: ""
+		}
+
+		Unknown: {
+			Label: Unknown
+			Tooltip: ""
+		}
+	}
+
+	LayerPolicyConfig: {
+		Tooltip: ""
+
+		MainLayers: {
+			Label: Main Layers
+			Tooltip: ""
+		}
+
+		CustomLayers: {
+			Label: Custom Layers
+			Tooltip: ""
+		}
+	}
+
+	CustomLayerPolicySettings: {
+		Tooltip: ""
+
+		Plant: {
+			Label: Plant
+			Tooltip: ""
+		}
+
+		Vine: {
+			Label: Vine
+			Tooltip: ""
+		}
+
+		Tree: {
+			Label: Tree
+			Tooltip: ""
+		}
+	}
+
+	ClearPhaseStrategy: {
+		Tooltip: ""
+
+		All: {
+			Label: All
+			Tooltip: ""
+		}
+
+		Transparent: {
+			Label: Transparent
+			Tooltip: ""
+		}
+
+		Negative: {
+			Label: Negative
+			Tooltip: ""
+		}
+	}
+
+	PlacementStyle: {
+		Tooltip: ""
+
+		Place: {
+			Label: Place
+			Tooltip: ""
+		}
+
+		Replace: {
+			Label: Replace
+			Tooltip: ""
+		}
+	}
+
+	PlanPhaseStrategies: {
+		Style: {
+			Label: Style
+			Tooltip: ""
+		}
+
+		Tooltip: ""
+	}
+
+	ClearPhaseStrategies: {
+		ItemDrop: {
+			Label: Item drop
+			Tooltip: ""
+		}
+
+		Tooltip: ""
+	}
+
+	PlacePhaseStrategies: {
+		Tooltip: ""
+
+		RequireItems: {
+			Label: Require Items
+			Tooltip: ""
+		}
+
+		RetryOnMissingItems: {
+			Label: Retry On Missing Items
+			Tooltip: ""
+		}
+
+		RetryOnInvalidPlacement: {
+			Label: Retry On Invalid Placement
+			Tooltip: ""
+		}
+
+		PlacementStyle: {
+			Label: Placement Style
+			Tooltip: ""
+		}
+
+		Style: {
+			Label: Style
+			Tooltip: ""
+		}
+	}
+
+	PastePhaseTuning: {
+		Tooltip: ""
+
+		Active: {
+			Label: Active
+			Tooltip: ""
+		}
+
+		StepSize: {
+			Label: Step Size
+			Tooltip: ""
+		}
+
+		DelayMs: {
+			Label: Delay Ms
+			Tooltip: ""
+		}
+
+		SingleTick: {
+			Label: Single Tick
+			Tooltip: ""
+		}
+	}
+
+	PastePhaseSettings: {
+		Tooltip: ""
+
+		Active: {
+			Label: Active
+			Tooltip: ""
+		}
+
+		TickSize: {
+			Label: Tick Size
+			Tooltip: ""
+		}
+
+		TickDelayMs: {
+			Label: Tick Delay Ms
+			Tooltip: ""
+		}
+	}
+
+	GlobalLimitsConfig: {
+		Tooltip: ""
+
+		Client: {
+			Label: Client
+			Tooltip: ""
+		}
+
+		Server: {
+			Label: Server
+			Tooltip: ""
+		}
+	}
+
+	ClientPasteLimitsConfig: {
+		Tooltip: ""
+
+		MaxPasteWidth: {
+			Label: Max paste width
+			Tooltip: ""
+		}
+
+		MaxPasteHeight: {
+			Label: Max paste height
+			Tooltip: ""
+		}
+
+		VolumeLimit: {
+			Label: Volume limit
+			Tooltip: ""
+		}
+
+		PlayerOperationLimit: {
+			Label: Player operation limit
+			Tooltip: ""
+		}
+	}
+
+	ServerPasteLimitsConfig: {
+		Tooltip: ""
+
+		ServerOperationLimit: {
+			Label: Server operation limit
+			Tooltip: ""
+		}
+
+		MaxPhaseTickSize: {
+			Label: Max phase tick size
+			Tooltip: ""
+		}
+
+		MaxTilesPerCategory: {
+			Label: Max tiles per category
+			Tooltip: ""
+		}
+
+		MaxConcurrentArrows: {
+			Label: Max concurrent arrows
+			Tooltip: Maximum paste arrows in flight per operation at once.
+		}
+	}
+
+	PhasePolicyConfig: {
+		Tooltip: ""
+
+		Plan: {
+			Label: Plan
+			Tooltip: ""
+		}
+
+		Clear: {
+			Label: Clear
+			Tooltip: ""
+		}
+
+		Cut: {
+			Label: Cut
+			Tooltip: ""
+		}
+
+		Place: {
+			Label: Place
+			Tooltip: ""
+		}
+
+		Sweep: {
+			Label: Sweep
+			Tooltip: ""
+		}
+	}
+
+	PlacePhaseConfig: {
+		Tooltip: ""
+
+		Strategies: {
+			Label: Strategies
+			Tooltip: ""
+		}
+
+		AllowClientPreferences: {
+			Label: Client Control Enabled
+			Tooltip: ""
+		}
+
+		Active: {
+			Label: Active
+			Tooltip: ""
+		}
+
+		TickSize: {
+			Label: Tick Size
+			Tooltip: ""
+		}
+
+		TickDelayMs: {
+			Label: Tick Delay Ms
+			Tooltip: ""
+		}
+
+		EnableCutPasteProcess: {
+			Label: Force source clear during paste
+			Tooltip: ""
+		}
+
+		TickSpeed: {
+			Label: Tick Speed
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	ClearPhaseConfig: {
+		Tooltip: ""
+
+		AllowClientPreferences: {
+			Label: Client Control Enabled
+			Tooltip: ""
+		}
+
+		Active: {
+			Label: Active
+			Tooltip: ""
+		}
+
+		TickSize: {
+			Label: Tick Size
+			Tooltip: ""
+		}
+
+		TickDelayMs: {
+			Label: Tick Delay Ms
+			Tooltip: ""
+		}
+
+		TickSpeed: {
+			Label: Tick Speed
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	SweepPhaseConfig: {
+		Tooltip: ""
+
+		Active: {
+			Label: Active
+			Tooltip: ""
+		}
+
+		TickSize: {
+			Label: Tick Size
+			Tooltip: ""
+		}
+
+		TickDelayMs: {
+			Label: Tick Delay Ms
+			Tooltip: ""
+		}
+
+		TickSpeed: {
+			Label: Tick Speed
+			Tooltip: ""
+		}
+	}
+
+	PlanPasteStrategies: {
+		Tooltip: ""
+
+		Style: {
+			Label: Style
+			Tooltip: ""
+		}
+	}
+
+	ClearPasteStrategies: {
+		Tooltip: ""
+
+		ItemDrop: {
+			Label: Item drop
+			Tooltip: ""
+		}
+	}
+
+	PlacePasteStrategies: {
+		Tooltip: ""
+
+		RetryOnMissingItems: {
+			Label: Retry On Missing Items
+			Tooltip: ""
+		}
+
+		RetryOnInvalidPlacement: {
+			Label: Retry On Invalid Placement
+			Tooltip: ""
+		}
+	}
+
+	PlanPastePreference: {
+		Tooltip: ""
+
+		Strategies: {
+			Label: Strategies
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	ClearPastePreference: {
+		Tooltip: ""
+
+		Strategies: {
+			Label: Strategies
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	PlacePastePreference: {
+		Tooltip: ""
+
+		Strategies: {
+			Label: Strategies
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	PasteOverlayDebugConfig: {
+		Tooltip: ""
+
+		RectBorders: {
+			Label: Rect Borders
+			Tooltip: ""
+		}
+	}
+
+	ClearStyle: {
+		Tooltip: ""
+
+		All: {
+			Label: All
+			Tooltip: ""
+		}
+
+		Transparent: {
+			Label: Transparent
+			Tooltip: ""
+		}
+
+		Negative: {
+			Label: Negative
+			Tooltip: ""
+		}
+	}
+
+	ClearItemDropStyle: {
+		Tooltip: ""
+
+		Void: {
+			Label: Void
+			Tooltip: ""
+		}
+
+		Drop: {
+			Label: Drop
+			Tooltip: ""
+		}
+
+		Store: {
+			Label: Store
+			Tooltip: ""
+		}
+	}
+
+	PlanPhaseConfig: {
+		Tooltip: ""
+
+		AllowClientPreferences: {
+			Label: Client Control Enabled
+			Tooltip: ""
+		}
+
+		Active: {
+			Label: Active
+			Tooltip: ""
+		}
+
+		TickSize: {
+			Label: Tick Size
+			Tooltip: ""
+		}
+
+		TickSpeed: {
+			Label: Tick Speed
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	CutPhaseConfig: {
+		Tooltip: ""
+
+		Active: {
+			Label: Active
+			Tooltip: ""
+		}
+
+		TickSize: {
+			Label: Tick Size
+			Tooltip: ""
+		}
+
+		TickSpeed: {
+			Label: Tick Speed
+			Tooltip: ""
+		}
+
+		Strategy: {
+			Label: Strategy
+			Tooltip: ""
+		}
+	}
+
+	CutPhaseStrategies: {
+		Tooltip: ""
+
+		EnableCutPasteProcess: {
+			Label: Enable Cut Paste Process
+			Tooltip: ""
+		}
+	}
+
+	PlaceStyle: {
+		Tooltip: ""
+
+		Place: {
+			Label: Place
+			Tooltip: ""
+		}
+
+		Replace: {
+			Label: Replace
+			Tooltip: ""
+		}
+	}
+
+	LogCategoryFilter: {
+		Tooltip: ""
+
+		All: {
+			Label: All
+			Tooltip: ""
+		}
+
+		TileExecutorOnly: {
+			Label: Tile Executor Only
+			Tooltip: ""
+		}
+	}
+}
+
+Projectiles.PasteArrow.DisplayName: Paste Arrow

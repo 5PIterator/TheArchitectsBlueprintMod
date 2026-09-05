@@ -1,23 +1,21 @@
 #if DEBUG
 #nullable enable
 
-using ArchitectsStencilMod.Tests;
+using TheArchitectsBlueprintMod.Core.ScenarioTests;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
-    /// <summary>
-    /// Debug-only chat trigger for <see cref="PayloadIoTestScript"/>.
-    /// </summary>
+    /// <summary>Debug-only chat trigger for payload IO scenarios.</summary>
     public sealed class PayloadIoTestCommand : ModCommand
     {
-        public override string Command => "asm.test.payload";
+        public override string Command => "tab.test.payload";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/asm.test.payload clear|fill";
-        public override string Description => "[Debug] Runs payload fixture tests (implementation in tests/PayloadIoTestScript.cs).";
+        public override string Usage => "/tab.test.payload clear|fill";
+        public override string Description => "[Debug] Runs payload IO scenarios (sc9/sc10).";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
@@ -42,11 +40,12 @@ namespace ArchitectsStencilMod.Core
 
             if (args.Length < 1 || (args[0] != "clear" && args[0] != "fill"))
             {
-                caller.Reply("Usage: /asm.test.payload clear|fill", Color.Orange);
+                caller.Reply("Usage: /tab.test.payload clear|fill", Color.Orange);
                 return;
             }
 
-            PayloadIoTestScript.Run(caller, pl, args[0]);
+            string scenarioId = args[0] == "clear" ? "sc9" : "sc10";
+            ScenarioTestRunner.RunScenario(new CommandScenarioTestReporter(caller), pl, scenarioId);
         }
     }
 }

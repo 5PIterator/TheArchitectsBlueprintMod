@@ -1,12 +1,14 @@
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.UI;
-using ArchitectsStencilMod.ModUtils;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using static TheArchitectsBlueprintMod.Core.ToolActionManager;
+using TheArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// INCLUDE STICK: includes tiles back into the current Selection.
@@ -17,7 +19,8 @@ namespace ArchitectsStencilMod.Content.Items
 	/// </summary>
 	public class IncludeStick : ModItem
 	{
-		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.ArchitectsStencilMod.hjson' file.
+		private bool _leftDragSeenDown;
+		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.TheArchitectsBlueprintMod.hjson' file.
 		/// <summary>Configures size, use timing, and rarity for the include-selection stick.</summary>
 		public override void SetDefaults()
 		{
@@ -37,25 +40,31 @@ namespace ArchitectsStencilMod.Content.Items
 		public override bool AltFunctionUse(Player player) => true;
 
 		/// <summary>Forwards a discrete click to INCLUDE (left) or rectangle cancel (right alt-use).</summary>
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			// --- Ignore remote players; resolve tile under mouse; dispatch INCLUDE click vs right-cancel.
 
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return null;
+
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return true;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			// If the player is using the item normally (left-click), trigger an INCLUDE action.
 			if (player.altFunctionUse == 0)
 			{
-				InterfaceSystem.DispatchToolInput(ToolAction.INCLUDE, ToolActionKey.LeftClick, player, cursorTile);
+				actionManager.Handle(ToolAction.INCLUDE, ToolActionKey.LeftClick, player, cursorTile);
 			}
 			// If the player is using the alternate function (right-click), trigger a cancel action.
 			// Note: if the left button is still held, ignore the right-click to prevent interference with the hold/drag gesture.
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
 			{
-				InterfaceSystem.DispatchToolInput(ToolAction.INCLUDE, ToolActionKey.RightClick, player, cursorTile);
+				actionManager.Handle(ToolAction.INCLUDE, ToolActionKey.RightClick, player, cursorTile);
 			}
 
 			return true;
@@ -69,17 +78,28 @@ namespace ArchitectsStencilMod.Content.Items
 			if (player.whoAmI != Main.myPlayer)
 				return;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return;
+
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			// If both left and right buttons are down, emit a right-click cancel event (for rectangle cancellation).
 			if (Main.mouseLeft && Main.mouseRight)
-				InterfaceSystem.DispatchToolInput(ToolAction.INCLUDE, ToolActionKey.RightClick, player, cursorTile);
+				actionManager.Handle(ToolAction.INCLUDE, ToolActionKey.RightClick, player, cursorTile);
 			// If the left button is held and was also down in the previous tick, emit a hold event.
 			else if (Main.mouseLeft && !Main.mouseLeftRelease)
-				InterfaceSystem.DispatchToolInput(ToolAction.INCLUDE, ToolActionKey.LeftHold, player, cursorTile);
-			// If the left button was released (transitioned from down to up), emit a release event.
-			else if (!Main.mouseLeft && Main.mouseLeftRelease)
-				InterfaceSystem.DispatchToolInput(ToolAction.INCLUDE, ToolActionKey.LeftRelease, player, cursorTile);
+				actionManager.Handle(ToolAction.INCLUDE, ToolActionKey.LeftHold, player, cursorTile);
+			else if (_leftDragSeenDown && !Main.mouseLeft)
+			{
+				actionManager.Handle(ToolAction.INCLUDE, ToolActionKey.LeftRelease, player, cursorTile);
+				_leftDragSeenDown = false;
+			}
+
+			if (Main.mouseLeft)
+				_leftDragSeenDown = true;
 		}
 
 		public override void AddRecipes()

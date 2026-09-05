@@ -1,18 +1,20 @@
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.UI;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using static TheArchitectsBlueprintMod.Core.ToolActionManager;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// PASTE STICK: left-click starts paste on a projection; right-click (alt-use) runs the same reset/stop path as RST (stops pastes, removes ghost, may clear in-bounds selection).
 	/// </summary>
 	public class PasteStick : ModItem
 	{
-		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.ArchitectsStencilMod.hjson' file.
+		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.TheArchitectsBlueprintMod.hjson' file.
 		/// <summary>Configures size, use timing, and rarity for the paste stick.</summary>
 		public override void SetDefaults()
 		{
@@ -32,19 +34,25 @@ namespace ArchitectsStencilMod.Content.Items
 		public override bool AltFunctionUse(Player player) => true;
 
 		/// <summary>Left: start/retry paste. Right: PASTE action reset (stops in-flight pastes, then RST hit-test.</summary>
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			// --- Ignore remote players; resolve tile under mouse; dispatch PASTE left vs right.
 
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return null;
+
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return true;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			if (player.altFunctionUse == 0)
-				InterfaceSystem.DispatchToolInput(ToolAction.PASTE, ToolActionKey.LeftClick, player, cursorTile);
+				actionManager.Handle(ToolAction.PASTE, ToolActionKey.LeftClick, player, cursorTile);
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
-				InterfaceSystem.DispatchToolInput(ToolAction.PASTE, ToolActionKey.RightClick, player, cursorTile);
+				actionManager.Handle(ToolAction.PASTE, ToolActionKey.RightClick, player, cursorTile);
 
 			return true;
 		}

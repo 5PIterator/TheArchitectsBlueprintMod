@@ -1,41 +1,91 @@
 using System.ComponentModel;
 using Terraria.ModLoader.Config;
+using TheArchitectsBlueprintMod.Core.Phases;
 
-namespace ArchitectsStencilMod.Config
+namespace TheArchitectsBlueprintMod.Config
 {
-    /// <summary>
-    /// Client-side paste planning preferences. Step size is additionally capped by <see cref="PastingConfig.MaxPasteStepSize"/> on the server.
-    /// </summary>
+    /// <summary>Client clear-phase strategy preferences sent with paste requests when the server allows them.</summary>
+    public sealed class ClearPasteStrategies
+    {
+        [DefaultValue(ClearItemDropStyle.Void)]
+        public ClearItemDropStyle ItemDrop = ClearItemDropStyle.Void;
+    }
+
+    /// <summary>Client plan-phase strategy preferences sent with paste requests when the server allows them.</summary>
+    public sealed class PlanPasteStrategies
+    {
+        [DefaultValue(ClearStyle.Transparent)]
+        public ClearStyle Style = ClearStyle.Transparent;
+    }
+
+    /// <summary>Client place-phase strategy preferences sent with paste requests when the server allows them.</summary>
+    public sealed class PlacePasteStrategies
+    {
+        [DefaultValue(false)]
+        public bool RetryOnMissingItems;
+
+        [DefaultValue(false)]
+        public bool RetryOnInvalidPlacement;
+    }
+
+    /// <summary>Client clear-phase preference sent with paste requests when the server allows it.</summary>
+    public sealed class ClearPastePreference
+    {
+        [Expand(true)]
+        public ClearPasteStrategies Strategy = new();
+    }
+
+    /// <summary>Client plan-phase preference sent with paste requests when the server allows it.</summary>
+    public sealed class PlanPastePreference
+    {
+        [Expand(true)]
+        public PlanPasteStrategies Strategy = new();
+    }
+
+    /// <summary>Client place-phase tolerance preferences sent with paste requests when the server allows them.</summary>
+    public sealed class PlacePastePreference
+    {
+        [Expand(true)]
+        public PlacePasteStrategies Strategy = new();
+    }
+
+    /// <summary>Client arrow flight preferences for paste projectiles.</summary>
+    public sealed class ArrowPastePreference
+    {
+        [DefaultValue(48)]
+        [Range(10, 600)]
+        public int Speed = 48;
+
+        [DefaultValue(2.5f)]
+        [Range(0.5f, 48f)]
+        public float MinSpeed = 2.5f;
+
+        [DefaultValue(24f)]
+        [Range(1f, 96f)]
+        public float MaxSpeed = 24f;
+    }
+
+    /// <summary>Client-only paste overlay debug visuals.</summary>
+    public sealed class PasteOverlayDebugConfig
+    {
+        [DefaultValue(false)]
+        public bool RectBorders;
+    }
+
+    /// <summary>Client-side paste preferences carried with each paste request. Server policy decides which are honored.</summary>
     public sealed class ClientPasteConfig : ModConfig
     {
         public override ConfigScope Mode => ConfigScope.ClientSide;
 
-        [Header("PastePlanning")]
+        [Header("Preferences")]
+        public PlanPastePreference Plan = new();
+        public ClearPastePreference Clear = new();
+        public PlacePastePreference Place = new();
 
-        /// <summary>
-        /// When enabled (default), do not queue placement where required items are missing, and treat item failures during placement as task-complete.
-        /// </summary>
-        [DefaultValue(true)]
-        public bool IgnoreItems = true;
+        [Header("Arrow")]
+        public ArrowPastePreference Arrow = new();
 
-        /// <summary>
-        /// When enabled (default), do not queue placement where the tile cannot be placed by world/rules, and treat invalid-placement failures as task-complete.
-        /// </summary>
-        [DefaultValue(true)]
-        public bool IgnoreInvalid = true;
-
-        /// <summary>
-        /// When enabled (default), clears align with planned placement (selected source cells); deselected source cells do not clear the target.
-        /// When disabled, clears are planned for the full projection footprint (opaque paste).
-        /// </summary>
-        [DefaultValue(true)]
-        public bool TransparentPaste = true;
-
-        /// <summary>
-        /// Target tiles processed per paste step. The effective value is at most the server's maximum.
-        /// </summary>
-        [DefaultValue(5)]
-        [Range(1, 512)]
-        public int PasteStepSize = 5;
+        [Header("Debug")]
+        public PasteOverlayDebugConfig Overlay = new();
     }
 }

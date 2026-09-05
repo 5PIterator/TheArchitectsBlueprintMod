@@ -1,10 +1,10 @@
 using System;
 using System.IO;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Debug;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Debug;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Copies template files from Content/Templates to the mod output directories at launch.
@@ -22,7 +22,37 @@ namespace ArchitectsStencilMod.Core.TileMapping
             if (!TileMappingAuthority.UsesLocalMappingFilesystem())
                 return;
 
+            MigrateSourceMapExtensions();
             CopyTemplates(Mod);
+        }
+
+        /// <summary>Renames leftover SourceMaps <c>*.itr</c> files to <c>*.itr.json</c>.</summary>
+        private static void MigrateSourceMapExtensions()
+        {
+            // --- Append .json so Conversion.itr becomes Conversion.itr.json without overwriting.
+
+            string directory = TileMappingSystem.GetSourceMapsDirectory();
+            if (!Directory.Exists(directory))
+                return;
+
+            foreach (string path in Directory.EnumerateFiles(directory, "*.itr"))
+            {
+                if (path.EndsWith(TileMappingSystem.SourceMapExtension, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                string destPath = path + ".json";
+                if (File.Exists(destPath))
+                    continue;
+
+                try
+                {
+                    File.Move(path, destPath);
+                }
+                catch (Exception ex)
+                {
+                    TABLog.Warn($"Failed to rename {path} to {destPath}: {ex.Message}", "Template");
+                }
+            }
         }
 
         private static void CopyTemplates(Mod mod)
@@ -70,7 +100,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 }
                 catch (Exception ex)
                 {
-                    ASMLog.Warn($"Failed to copy template {name}: {ex.Message}", "Template");
+                    TABLog.Warn($"Failed to copy template {name}: {ex.Message}", "Template");
                 }
             }
         }

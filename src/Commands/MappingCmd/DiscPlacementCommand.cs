@@ -1,22 +1,22 @@
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 
-namespace ArchitectsStencilMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Chat/console command to run placement discovery.
     /// Scans items with createTile/createWall and writes Placement.itr.
-    /// Usage: /asm.discPlace
+    /// Usage: /tab.discPlace
     /// </summary>
     public sealed class DiscPlacementCommand : ModCommand
     {
-        public override string Command => "asm.discPlace";
+        public override string Command => "tab.discPlace";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/asm.discPlace";
-        public override string Description => "Runs placement discovery and writes Placement.itr.";
+        public override string Usage => "/tab.discPlace";
+        public override string Description => "Runs placement discovery and writes Placement.itr.json.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
@@ -27,7 +27,7 @@ namespace ArchitectsStencilMod.Core
             }
 
             int plr = caller.Player?.whoAmI ?? Main.myPlayer;
-            PlacementDiscovery.Run(Mod, Main.player[plr], msg => caller.Reply(msg));
+            PlacementDiscovery.Run(Mod, Main.player[plr]);
         }
     }
 }

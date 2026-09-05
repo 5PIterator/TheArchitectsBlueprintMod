@@ -6,9 +6,9 @@ using Terraria.UI;
 using System.Collections.Generic;
 using ReLogic.Graphics;
 using Terraria.GameContent;
-using ArchitectsStencilMod.ModUtils;
+using TheArchitectsBlueprintMod.Utils;
 using Terraria.ID;
-namespace ArchitectsStencilMod.Debug;
+namespace TheArchitectsBlueprintMod.Debug;
 
 public class CursorCoordinates : ModSystem
 {

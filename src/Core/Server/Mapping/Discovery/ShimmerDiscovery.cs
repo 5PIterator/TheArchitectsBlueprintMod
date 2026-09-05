@@ -3,16 +3,15 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Debug;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Debug;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Discovers shimmer transformation results via ItemID.Sets.ShimmerTransformToItem and recipe decrafting.
@@ -29,34 +28,27 @@ namespace ArchitectsStencilMod.Core.TileMapping
         /// Runs shimmer discovery (both parts). Part 1: ShimmerMap.itr. Part 2: Shimmer.itr.
         /// When player is provided and holding DebugStick, steps on left-click; right-click cancels.
         /// </summary>
-        public static void Run(Mod mod, Action<string> msg, Player? player = null, bool allowStepping = true)
+        public static void Run(Mod mod, Player? player = null, bool allowStepping = true)
         {
             ArgumentNullException.ThrowIfNull(mod);
-            ArgumentNullException.ThrowIfNull(msg);
 
-            var enumerator = CreateSteppedRun(mod, msg);
-            if (allowStepping && player is not null && DebugStepper.IsHoldingDebugStick(player))
-            {
-                DebugStepper.StartSession(player, enumerator, onComplete: null, onCancel: null, log: msg);
-                return;
-            }
-
-            while (enumerator.MoveNext()) { }
+            var enumerator = CreateSteppedRun(mod);
+            DebugStepper.RunEnumerator(enumerator, player, allowStepping, log: LogDebug);
         }
 
-        private static IEnumerator CreateSteppedRun(Mod mod, Action<string> msg)
+        /// <summary>Yields shimmer discovery work for composition into a larger stepped run.</summary>
+        internal static IEnumerator CreateEnumerator(Mod mod)
         {
-            var debugPath = GetDebugPath("ShimmerDiscovery_Debug.txt");
-            using var debugWriter = new StreamWriter(debugPath, append: false);
+            // --- Same body as Run, exposed for FullDiscovery composition.
 
-            void Log(string s)
-            {
-                var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {s}";
-                debugWriter.WriteLine(line);
-                debugWriter.Flush();
-                msg(s);
-            }
+            ArgumentNullException.ThrowIfNull(mod);
+            IEnumerator inner = CreateSteppedRun(mod);
+            while (inner.MoveNext())
+                yield return inner.Current;
+        }
 
+        private static IEnumerator CreateSteppedRun(Mod mod)
+        {
             var map = new ShimmerMapInternal();
             int discovered = 0;
 
@@ -80,13 +72,13 @@ namespace ArchitectsStencilMod.Core.TileMapping
             }
 
             Log($"Discovered {discovered} items with shimmer transforms.");
-            SaveShimmerMap(mod, map, Log);
-            Log($"Part 1 complete. Output: {GetOutputPath("ShimmerMap.itr")}");
+            SaveShimmerMap(mod, map);
+            Log($"Part 1 complete. Output: {GetOutputPath("ShimmerMap")}");
             yield return null;
 
             Log("Part 2: Pairing with Placement.itr and exporting Shimmer.itr...");
-            BuildAndSaveShimmerItr(mod, map, Log);
-            Log($"Shimmer discovery complete. Output: {GetOutputPath("Shimmer.itr")}");
+            BuildAndSaveShimmerItr(mod, map);
+            Log($"Shimmer discovery complete. Output: {GetOutputPath("Shimmer")}");
         }
 
         /// <summary>
@@ -137,7 +129,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
             return -1;
         }
 
-        private static void SaveShimmerMap(Mod mod, ShimmerMapInternal map, Action<string> log)
+        private static void SaveShimmerMap(Mod mod, ShimmerMapInternal map)
         {
             var output = ToNameBasedShimmerMap(map);
             var doc = new InteractionMapDocument<Dictionary<string, List<ShimmerResultOutput>>>
@@ -145,7 +137,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "shimmerMap"),
                 Data = output,
             };
-            SaveJson(GetOutputPath("ShimmerMap.itr"), doc, log, "ShimmerMap");
+            SaveJson(GetOutputPath("ShimmerMap"), doc, "ShimmerMap");
         }
 
         private static Dictionary<string, List<ShimmerResultOutput>> ToNameBasedShimmerMap(ShimmerMapInternal map)
@@ -167,9 +159,9 @@ namespace ArchitectsStencilMod.Core.TileMapping
         /// Part 2: Loads ShimmerMap (from in-memory map), builds item->placements from Placement.itr,
         /// pairs result items with tiles, and saves Shimmer.itr in item-first format (same layout as Custom.itr).
         /// </summary>
-        private static void BuildAndSaveShimmerItr(Mod mod, ShimmerMapInternal shimmerMap, Action<string> log)
+        private static void BuildAndSaveShimmerItr(Mod mod, ShimmerMapInternal shimmerMap)
         {
-            var itemToPlacements = BuildItemToPlacementsLookup(log);
+            var itemToPlacements = BuildItemToPlacementsLookup();
             var output = new Dictionary<string, ShimmerItemInteractions>(StringComparer.OrdinalIgnoreCase);
 
             foreach (var (sourceId, entries) in shimmerMap.Transforms)
@@ -212,21 +204,21 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "shimmer"),
                 Data = output,
             };
-            SaveJson(GetOutputPath("Shimmer.itr"), doc, log, "Shimmer");
+            SaveJson(GetOutputPath("Shimmer"), doc, "Shimmer");
         }
 
         /// <summary>
         /// Builds item name -> list of placement interactions from Placement.itr (tile-first).
         /// Inverts tile->items to item->(layer, main, style, base, yield, ammo).
         /// </summary>
-        private static Dictionary<string, List<ShimmerInteractionOutput>> BuildItemToPlacementsLookup(Action<string> log)
+        private static Dictionary<string, List<ShimmerInteractionOutput>> BuildItemToPlacementsLookup()
         {
             var result = new Dictionary<string, List<ShimmerInteractionOutput>>(StringComparer.OrdinalIgnoreCase);
             var directory = TileMappingSystem.GetSourceMapsDirectory();
             var path = TileMappingSystem.FindFileByMetadata(directory, "tile-first", "placement");
             if (path is null)
             {
-                log("Placement.itr not found; Shimmer.itr will have no tile pairings.");
+                LogWarn("Placement.itr not found; Shimmer.itr will have no tile pairings.");
                 return result;
             }
 
@@ -311,7 +303,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
             }
             catch (Exception ex)
             {
-                log($"Placement.itr load failed: {ex.Message}");
+                LogWarn($"Placement.itr load failed: {ex.Message}");
             }
 
             return result;

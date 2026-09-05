@@ -4,11 +4,11 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.UI;
-using ArchitectsStencilMod.UIKit;
-using ArchitectsStencilMod.Core;
+using TheArchitectsBlueprintMod.UI;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 
-namespace ArchitectsStencilMod.Core.Client
+namespace TheArchitectsBlueprintMod.Core.Client
 {
     /// <summary>
     /// Client-only: registers paste progress overlays from local <see cref="PastingSystem"/> (single player / host)
@@ -16,8 +16,14 @@ namespace ArchitectsStencilMod.Core.Client
     /// </summary>
     public sealed class PasteOverlayMonitor : ModSystem
     {
+        private const string LocalFamilyPrefix = "pasteLocal";
+        private const string RemoteFamilyPrefix = "pasteRemote";
+
         private readonly List<PasteOverlaySnapshot> _localScratch = [];
         private readonly List<PasteOverlaySnapshot> _remoteFromServer = [];
+        private readonly HashSet<int> _lastLocalOverlayIds = [];
+        private readonly HashSet<int> _lastRemoteOverlayIds = [];
+
         public override void PostUpdateEverything()
         {
             if (Main.dedServ)
@@ -42,56 +48,76 @@ namespace ArchitectsStencilMod.Core.Client
 
         private void Refresh()
         {
-            InterfaceSystem.ClearLayer(InterfaceLayer.PasteProgress);
+            UnregisterTrackedFamilies(_lastLocalOverlayIds, LocalFamilyPrefix);
+            UnregisterTrackedFamilies(_lastRemoteOverlayIds, RemoteFamilyPrefix);
 
             switch (Main.netMode)
             {
                 case NetmodeID.SinglePlayer:
-                    // Single player or listen-server host: read active operations for the local player.
-                    _localScratch.Clear();
-                    var pasting = ModContent.GetInstance<PastingSystem>();
-                    foreach (var op in pasting.ActiveOperations)
-                    {
-                        if (op.Projection.Owner != Main.myPlayer)
-                            continue;
-                        if (op.TryBuildOverlaySnapshot(out PasteOverlaySnapshot snap))
-                            _localScratch.Add(snap);
-                    }
-                    RegisterSnapshots(_localScratch);
+                    RegisterLocalActiveOperations();
                     break;
                 case NetmodeID.MultiplayerClient:
-                    RegisterSnapshots(_remoteFromServer);
+                    // Host & Play host executes paste locally; remote clients use server overlay snapshots.
+                    if (TileMappingAuthority.IsLocalHostClient())
+                        RegisterLocalActiveOperations();
+                    else
+                        RegisterSnapshots(_remoteFromServer, RemoteFamilyPrefix, _lastRemoteOverlayIds);
                     break;
                 case NetmodeID.Server:
                     return;
             }
         }
 
-        private static void RegisterSnapshots(List<PasteOverlaySnapshot> snapshots)
+        private void RegisterLocalActiveOperations()
         {
-            UIView layer = InterfaceSystem.GetLayer(InterfaceLayer.PasteProgress);
+            _localScratch.Clear();
+            var pasting = ModContent.GetInstance<PastingSystem>();
+            foreach (var op in pasting.ActiveOperations)
+            {
+                if (op.Execution.Owner != Main.myPlayer)
+                    continue;
+                if (op.TryBuildOverlaySnapshot(out PasteOverlaySnapshot snap))
+                    _localScratch.Add(snap);
+            }
+            RegisterSnapshots(_localScratch, LocalFamilyPrefix, _lastLocalOverlayIds);
+        }
+
+        private static void UnregisterTrackedFamilies(HashSet<int> ids, string prefix)
+        {
+            foreach (int id in ids)
+                OverlaySystem.UnregisterFamily(MakeFamily(prefix, id));
+            ids.Clear();
+        }
+
+        private static void RegisterSnapshots(List<PasteOverlaySnapshot> snapshots, string prefix, HashSet<int> trackIds)
+        {
             for (int i = 0; i < snapshots.Count; i++)
             {
                 PasteOverlaySnapshot s = snapshots[i];
+                string family = MakeFamily(prefix, s.OverlayId);
+                trackIds.Add(s.OverlayId);
 
                 Color placeHue = ArchitectVisualPalette.PlacePhaseColor;
                 Color clearHue = ArchitectVisualPalette.ClearPhaseColor;
                 Color baseHue = s.IsPlacePhase ? placeHue : clearHue;
 
                 if (s.Pending.Length > 0)
-                    layer.AddChild(new UITileFill(s.Pending, baseHue * 0.35f));
+                    OverlaySystem.RegPasteTileFill("pending", s.Pending, baseHue * 0.35f, family);
                 if (s.Clear.Length > 0)
-                    layer.AddChild(new UITileFill(s.Clear, clearHue * 0.6f));
+                    OverlaySystem.RegPasteTileFill("clear", s.Clear, clearHue * 0.6f, family);
                 if (s.Place.Length > 0)
-                    layer.AddChild(new UITileFill(s.Place, placeHue * 0.6f));
+                    OverlaySystem.RegPasteTileFill("place", s.Place, placeHue * 0.6f, family);
                 if (s.Done.Length > 0)
-                    layer.AddChild(new UITileFill(s.Done, baseHue * 0.1f));
+                    OverlaySystem.RegPasteTileFill("done", s.Done, baseHue * 0.1f, family);
             }
         }
 
+        private static string MakeFamily(string prefix, int overlayId) => $"{prefix}:{overlayId}";
+
         private void ClearAllPasteFamilies()
         {
-            InterfaceSystem.ClearLayer(InterfaceLayer.PasteProgress);
+            UnregisterTrackedFamilies(_lastLocalOverlayIds, LocalFamilyPrefix);
+            UnregisterTrackedFamilies(_lastRemoteOverlayIds, RemoteFamilyPrefix);
         }
     }
 }

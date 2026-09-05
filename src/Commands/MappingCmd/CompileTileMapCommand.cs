@@ -1,21 +1,20 @@
-using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Chat/console command to compile the tile map.
-    /// Usage: /asm.compile
+    /// Usage: /tab.compile
     /// </summary>
     public sealed class CompileTileMapCommand : ModCommand
     {
-        public override string Command => "asm.compile";
+        public override string Command => "tab.compile";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => "/asm.compile";
-        public override string Description => "Compiles the tile map to a JSON file.";
+        public override string Usage => "/tab.compile";
+        public override string Description => "Compiles the interaction map from enabled SourceMaps.";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
@@ -25,7 +24,7 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            TileMappingSystem.Compile(Mod, msg => caller.Reply(msg));
+            TileMappingSystem.Compile(Mod);
         }
     }
 }

@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
-using ArchitectsStencilMod.UI;
-using ArchitectsStencilMod.UIKit;
+using TheArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.UI;
+using TheArchitectsBlueprintMod.Core.Preview;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ObjectData;
 
-namespace ArchitectsStencilMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
     /// Owns each player's projection list and <see cref="ActiveProjection"/>.
@@ -16,81 +17,8 @@ namespace ArchitectsStencilMod.Core
     public sealed class ProjectionSystem : ModSystem
     {
 
-        private sealed class PlayerProjectionState
-        {
-            public readonly List<Projection> Projections = [];
-            public Projection ActiveProjection;
-        }
-
-        private readonly PlayerProjectionState[] _playerStates = new PlayerProjectionState[Main.maxPlayers];
-
-        public Projection GetActiveProjection(Player player)
-        {
-            return GetState(player).ActiveProjection;
-        }
-
-        public IReadOnlyList<Projection> GetProjections(Player player)
-        {
-            return GetState(player).Projections;
-        }
-
-        /// <summary>Returns the front-most defined projection for a player, if one exists.</summary>
-        public bool TryGetFrontmostProjection(Player player, out Projection projection)
-        {
-            // --- Walk the projection list from topmost to backmost and return the first defined projection.
-
-            var state = GetState(player);
-            for (int i = state.Projections.Count - 1; i >= 0; i--)
-            {
-                Projection candidate = state.Projections[i];
-                if (candidate.IsDefined)
-                {
-                    projection = candidate;
-                    return true;
-                }
-            }
-
-            projection = null;
-            return false;
-        }
-
-        /// <summary>Topmost projection whose bounds contain <paramref name="cursorTile"/>, if any.</summary>
-        public bool TryGetProjectionAt(Player player, Point cursorTile, out Projection? projection)
-        {
-            var state = GetState(player);
-            int index = FindTopmostIndexAt(state, cursorTile);
-            if (index < 0)
-            {
-                projection = null;
-                return false;
-            }
-
-            projection = state.Projections[index];
-            return true;
-        }
-
-        /// <summary>
-        /// Sets which projection is considered active for paste and toggles (topmost under cursor is typical).
-        /// </summary>
-        public void SetActiveProjection(Player player, Projection projection)
-        {
-            GetState(player).ActiveProjection = projection;
-        }
-
-        /// <summary>
-        /// Moves <paramref name="projection"/> to the end of the player's list (topmost for hit-test and draw).
-        /// </summary>
-        public void BringProjectionToFront(Player player, Projection projection)
-        {
-            var list = GetState(player).Projections;
-            if (!list.Remove(projection))
-            {
-                return;
-            }
-
-            list.Add(projection);
-            projection.UpdateOverlay();
-        }
+        private BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
+        private ProjectionControl ProjectionControl => ModContent.GetInstance<ProjectionControl>();
 
         /// <summary>
         /// Creates a projection from the player's selection when the cursor lies inside it; returns null on failure.
@@ -99,76 +27,134 @@ namespace ArchitectsStencilMod.Core
         public Projection NewProjection(Player player, Point cursorTile)
         {
             // Get the selection from the selection system
-            var selectionSystem = ModContent.GetInstance<SelectionSystem>();
-            Selection selection = selectionSystem.GetSelection(player);
-
-            if (!selection.IsDefined || !selection.Area.Contains(cursorTile))
+            if (!BlueprintSystem.GetTopmostSelectionAt(cursorTile, out Selection selection))
             {
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug(
+                        $"ProjectionSystem.NewProjection(cursor): no selection under cursor owner={player.whoAmI} tile=({cursorTile.X},{cursorTile.Y})",
+                        "ProjectionSystem");
                 return null;
             }
 
-            var projection = new Projection(selection, cutSource: false);
+            if (!selection.IsDefined || !selection.Area.Contains(cursorTile))
+            {
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug(
+                        $"ProjectionSystem.NewProjection(cursor): selection invalid or cursor outside owner={player.whoAmI} " +
+                        $"defined={selection.IsDefined} cursor=({cursorTile.X},{cursorTile.Y}) area={selection.Area}",
+                        "ProjectionSystem");
+                return null;
+            }
+
+            if (!BlueprintGuard.TryValidateIncludedTiles(player, selection, out _))
+                return null;
+
+            var projection = new Projection(player.whoAmI, selection, cutSource: false);
 
             // Load the payload from the world
             projection.LoadPayloadFromWorld();
-
-            // Add the projection to the player's list and set the active projection
-            var state = GetState(player);
-            state.Projections.Add(projection);
-            state.ActiveProjection = projection;
+            BlueprintSystem.RegisterBlueprint(projection);
             projection.UpdateOverlay();
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
+                    $"ProjectionSystem.NewProjection(cursor): created id={projection.Id} owner={player.whoAmI} " +
+                    $"area=({projection.Area.X},{projection.Area.Y}) {projection.Area.Width}x{projection.Area.Height}",
+                    "ProjectionSystem");
+            return projection;
+        }
+        /// <summary>
+        /// Creates a projection from a selection; returns null on failure.
+        /// Adds the projection to the player's list and sets <see cref="ActiveProjection"/>.
+        /// </summary>
+        public Projection NewProjection(Player player, Selection selection, bool captureWorldPayload = true)
+        {
+            ArgumentNullException.ThrowIfNull(selection);
+
+            if (captureWorldPayload && !BlueprintGuard.TryValidateIncludedTiles(player, selection, out _))
+                return null;
+
+            var projection = new Projection(player.whoAmI, selection, cutSource: false);
+
+            if (captureWorldPayload)
+                projection.LoadPayloadFromWorld();
+            BlueprintSystem.RegisterBlueprint(projection);
+            projection.UpdateOverlay();
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
+                    $"ProjectionSystem.NewProjection(selection): created id={projection.Id} owner={player.whoAmI} " +
+                    $"area=({projection.Area.X},{projection.Area.Y}) {projection.Area.Width}x{projection.Area.Height}",
+                    "ProjectionSystem");
             return projection;
         }
 
         /// <summary>
-        /// Rebuilds projection overlay entries for this player (client only).
+        /// Removes a projection from the player's list and clears the overlay.
         /// </summary>
-        internal void UpdateProjectionOverlay(Player player)
+        public bool RemoveProjection(Projection projection)
         {
-            int who = player.whoAmI;
-            UIView host = InterfaceSystem.GetPerPlayerHost(InterfaceLayer.ProjectionWorld, who);
-            host.RemoveAllChildren();
-
-            IReadOnlyList<Projection> list = GetProjections(player);
-            for (int i = 0; i < list.Count; i++)
+            if (projection == null)
             {
-                Projection proj = list[i];
-                if (!proj.Area.IsEmpty)
-                {
-                    // CUT vs COPY: border color. Locked: outline only (transparent interior); unlocked: border + tinted fill.
-                    Color c = proj.CutSource ? ArchitectVisualPalette.ProjectionCutColor : ArchitectVisualPalette.ProjectionCopyColor;
-                    if (proj.IsLocked)
-                        host.AddChild(new UIBorderTile(proj.Area, c, 2));
-                    else
-                        host.AddChild(new UIWorldRectFill(proj.Area, c * 0.3f));
-
-                    if (proj.CutSource)
-                    {
-                        if (proj.IsLocked)
-                            host.AddChild(new UIBorderTile(proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2));
-                        else
-                            host.AddChild(new UIBoundsTile(proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2));
-                    }
-                }
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug("ProjectionSystem.RemoveProjection: null projection", "ProjectionSystem");
+                return false;
             }
 
-            if (PayloadSerialization.TryGetPayloadIoHighlight(player, out Projection? payloadIo) &&
-                payloadIo is not null &&
-                payloadIo.IsDefined &&
-                !payloadIo.Area.IsEmpty)
+            if (projection.IsLocked)
             {
-                for (int i = 0; i < list.Count; i++)
-                {
-                    if (ReferenceEquals(list[i], payloadIo))
-                    {
-                        OverlaySystem.RegTileBorder("payloadIo", payloadIo.Area, ArchitectVisualPalette.PayloadIoHighlightColor, 3, family);
-                        break;
-                    }
-                }
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug(
+                        $"ProjectionSystem.RemoveProjection: refused (locked) id={projection.Id} owner={projection.Owner}",
+                        "ProjectionSystem");
+                return false;
             }
 
-            ModContent.GetInstance<InclusionControl>().UpdateExcludedTileOverlays(player);
-            UpdateInventoryOverlay(player);
+            BlueprintSystem.UnregisterBlueprint(projection);
+            ProjectionControl.InvalidateGestureIfDragging(projection);
+            UpdateProjectionOverlay(Main.player[projection.Owner]);
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
+                    $"ProjectionSystem.RemoveProjection: unregistered id={projection.Id} owner={projection.Owner}",
+                    "ProjectionSystem");
+            return true;
+        }
+
+        public bool GetProjectionByCorrelationId(int correlationId, out Projection projection)
+        {
+            foreach (Projection proj in BlueprintSystem.GetProjections())
+            {
+                if (proj.Id == correlationId)
+                {
+                    projection = proj;
+                    return true;
+                }
+            }
+            projection = null;
+            return false;
+        }
+
+        public int CountPendingOperations()
+        {
+            int count = 0;
+            foreach (Projection proj in BlueprintSystem.GetProjections())
+            {
+                if (proj.Id > 0)
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Toggles the cut source for the projection at the cursor tile. Returns true if the cut source was toggled, false otherwise.
+        /// </summary>
+        public bool ToggleCutSource(Point cursorTile)
+        {
+            if (!BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection projection))
+            {
+                return false;
+            }
+            return projection.ToggleCut();
         }
 
         /// <summary>
@@ -177,164 +163,115 @@ namespace ArchitectsStencilMod.Core
         private void UpdateInventoryOverlay(Player player)
         {
             int who = player.whoAmI;
-            UIView host = InterfaceSystem.GetPerPlayerHost(InterfaceLayer.InventoryOutline, who);
-            host.RemoveAllChildren();
+            string family = $"inventory:{who}";
+            OverlaySystem.UnregisterFamily(family);
 
-            IReadOnlyList<Projection> list = GetProjections(player);
-            for (int i = 0; i < list.Count; i++)
+            foreach (Projection proj in BlueprintSystem.GetProjections())
             {
-                bool locked = list[i].IsLocked;
-                IReadOnlyList<Rectangle> inventories = list[i].Inventories;
-                Color c = ArchitectVisualPalette.InventoryOutlineColor;
-                for (int j = 0; j < inventories.Count; j++)
+                bool locked = proj.IsLocked;
+                IEnumerable<Rectangle> inventories = proj.Inventories;
+                int invIndex = 0;
+                foreach (Rectangle inventory in inventories)
                 {
+                    Color c = ArchitectVisualPalette.InventoryOutlineColor;
+                    string invKey = $"c:{proj.OverlayInstanceKey}:{invIndex}";
                     if (locked)
-                        host.AddChild(new UIBorderTile(inventories[j], c, 2));
+                        OverlaySystem.RegTileBorder(invKey, inventory, c, 2, family);
                     else
-                        host.AddChild(new UIBoundsTile(inventories[j], c, 2));
+                        OverlaySystem.RegTileBounds(invKey, inventory, c, 2, family);
+                    invIndex++;
                 }
             }
         }
 
-        public void ClearActiveProjection(Player player)
+        /// <summary>
+        /// Rebuilds projection overlay entries for this player (client only).
+        /// </summary>
+        internal void UpdateProjectionOverlay(Player player)
         {
-            var state = GetState(player);
-            if (state.ActiveProjection is null)
-            {
+            // --- Dedicated server has no overlay catalog; paste reconstruction must not touch it.
+
+            if (Main.dedServ)
                 return;
-            }
 
-            var toRemove = state.ActiveProjection;
-            state.Projections.Remove(state.ActiveProjection);
-            state.ActiveProjection = null;
-            ModContent.GetInstance<ProjectionControl>().InvalidateGestureIfDragging(player, toRemove);
-            UpdateProjectionOverlay(player);
-        }
+            int who = player.whoAmI;
+            string family = $"projection:{who}";
 
-        private static int FindTopmostIndexAt(PlayerProjectionState state, Point cursorTile)
-        {
-            for (int i = state.Projections.Count - 1; i >= 0; i--)
+            // Clear the previous overlay
+            OverlaySystem.UnregisterFamily(family);
+
+            // For each projection, draw the bounds and the unselected tiles
+            foreach (Projection proj in BlueprintSystem.GetProjections())
             {
-                Projection p = state.Projections[i];
-                if (p.IsDefined && p.Area.Contains(cursorTile))
+                // If projection is defined, draw the bounds
+                if (!proj.Area.IsEmpty)
                 {
-                    return i;
+                    string k = proj.OverlayInstanceKey.ToString();
+
+                    // Sprites first so projection tint/borders (registered after) stay visible on top.
+                    bool skipSpritePreview = ModContent.GetInstance<ProjectionControl>().IsActivelyDragging(player)
+                        && proj.HasPayload
+                        && proj.Payload.Width * proj.Payload.Height > 50_000;
+                    if (!proj.IsLocked && proj.HasPayload && !skipSpritePreview)
+                    {
+                        Projection capture = proj;
+                        OverlaySystem.RegScreen($"{k}:sprites", () => PayloadPreview.Draw(capture), family);
+                        OverlaySystem.RegMapPayloadPreview($"{k}:mapPixels", proj, family);
+                    }
+
+                    // CUT vs COPY: border color. Locked: outline only (transparent interior); unlocked: border + tinted fill.
+                    Color c = proj.CutSource ? ArchitectVisualPalette.ProjectionCutColor : ArchitectVisualPalette.ProjectionCopyColor;
+                    if (proj.IsLocked)
+                        OverlaySystem.RegTileBorder($"{k}:b", proj.Area, c, 2, family);
+                    else
+                        OverlaySystem.RegTileBounds($"{k}:b", proj.Area, c, 2, family);
+
+                    if (proj.CutSource)
+                    {
+                        if (proj.IsLocked)
+                            OverlaySystem.RegTileBorder($"{k}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
+                        else
+                            OverlaySystem.RegTileBounds($"{k}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
+                    }
+
+                    BlueprintGuard.RegisterGuardMask(player, proj, $"{k}:guarded", family);
                 }
             }
 
-            return -1;
-        }
-
-        private static void RemoveProjectionAtIndex(Player player, PlayerProjectionState state, int index)
-        {
-            Projection p = state.Projections[index];
-
-            if (ReferenceEquals(state.ActiveProjection, p))
+            if (PayloadSerialization.TryGetPayloadIoHighlight(player, out Projection? payloadIo) &&
+                payloadIo is not null &&
+                payloadIo.IsDefined &&
+                !payloadIo.Area.IsEmpty)
             {
-                state.ActiveProjection = null;
-            }
-
-            state.Projections.RemoveAt(index);
-            ModContent.GetInstance<ProjectionControl>().InvalidateGestureIfDragging(player, p);
-            ModContent.GetInstance<ProjectionSystem>().UpdateProjectionOverlay(player);
-        }
-
-        public bool RemoveProjectionAt(Player player, Point cursorTile)
-        {
-            var state = GetState(player);
-            int index = FindTopmostIndexAt(state, cursorTile);
-            if (index < 0)
-            {
-                return false;
-            }
-
-            if (state.Projections[index].IsLocked)
-            {
-                return false;
-            }
-
-            RemoveProjectionAtIndex(player, state, index);
-            return true;
-        }
-
-
-        public bool TryGetProjectionByCorrelationId(Player player, int correlationId, out Projection projection)
-        {
-            var state = GetState(player);
-            for (int i = state.Projections.Count - 1; i >= 0; i--)
-            {
-                var p = state.Projections[i];
-                if (p.Id == correlationId)
+                foreach (Projection proj in BlueprintSystem.GetProjections())
                 {
-                    projection = p;
-                    return true;
+                    if (ReferenceEquals(proj, payloadIo))
+                    {
+                        OverlaySystem.RegTileBorder("payloadIo", payloadIo.Area, ArchitectVisualPalette.PayloadIoHighlightColor, 3, family);
+                        break;
+                    }
                 }
             }
 
-            projection = null;
-            return false;
-        }
-
-        public int CountPendingOperations(Player player)
-        {
-            var state = GetState(player);
-            int count = 0;
-            for (int i = 0; i < state.Projections.Count; i++)
-            {
-                if (state.Projections[i].Id > 0)
-                {
-                    count++;
-                }
-            }
-            return count;
-        }
-
-        public bool ToggleCutSource(Player player, Point cursorTile, out Projection projection)
-        {
-            var state = GetState(player);
-            int index = FindTopmostIndexAt(state, cursorTile);
-            if (index >= 0)
-            {
-                projection = state.Projections[index];
-                if (projection.IsLocked)
-                {
-                    return false;
-                }
-
-                projection.ToggleCut();
-                state.ActiveProjection = projection;
-                return true;
-            }
-
-            projection = null;
-            return false;
+            ModContent.GetInstance<ProjectionToolboxControl>().RegisterToolbox(player);
+            ModContent.GetInstance<InclusionControl>().UpdateExcludedTileOverlays(player);
+            UpdateInventoryOverlay(player);
         }
 
         public override void OnWorldUnload()
         {
-            for (int i = 0; i < _playerStates.Length; i++)
+            int n = 0;
+            foreach (Projection proj in BlueprintSystem.GetProjections())
             {
-                if (_playerStates[i] is not { } state)
-                    continue;
-
-                state.Projections.Clear();
-                state.ActiveProjection = null;
+                BlueprintSystem.UnregisterBlueprint(proj);
+                proj.Clear();
+                n++;
             }
+
+            if (TABLog.IsDebugEnabled && n > 0)
+                TABLog.Debug($"ProjectionSystem.OnWorldUnload: cleared {n} projection(s)", "ProjectionSystem");
 
             ModContent.GetInstance<ProjectionControl>().ClearAllGestureSlots();
-        }
-
-        private PlayerProjectionState GetState(Player player)
-        {
-            ArgumentNullException.ThrowIfNull(player);
-
-            int index = player.whoAmI;
-            if (index < 0 || index >= _playerStates.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(player), $"Invalid player index: {index}");
-            }
-
-            return _playerStates[index] ??= new PlayerProjectionState();
         }
     }
 }

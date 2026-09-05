@@ -1,14 +1,16 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.UI;
-using ArchitectsStencilMod.ModUtils;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using static TheArchitectsBlueprintMod.Core.ToolActionManager;
+using TheArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// EXECUTION WAND: PASTE / RESET only (tier-2 paste branch; projection wand keeps COPY). Default is RESET so alt-use can open the mode wheel; pick PASTE to paste, then right-click is RST-equivalent.
@@ -51,18 +53,26 @@ namespace ArchitectsStencilMod.Content.Items
 
 		public override bool AltFunctionUse(Player player) => true;
 
-		public override bool CanUseItem(Player player) => !ActionWheel.IsActive && !ActionWheel.IsPendingOpen;
+		public override bool CanUseItem(Player player) =>
+			!ArchitectModeGuards.SuppressHeldToolInput(player)
+			&& !ActionWheel.IsActive
+			&& !ActionWheel.IsPendingOpen;
 
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return null;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return true;
 
 			if (player.altFunctionUse == 0)
 			{
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftClick, player, cursorTile);
+				actionManager.Handle(_mode, ToolActionKey.LeftClick, player, cursorTile);
 			}
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
 			{
@@ -72,9 +82,9 @@ namespace ArchitectsStencilMod.Content.Items
 				{
 					var entries = new List<ActionWheelEntry>(2)
 					{
-						new(ToolActionDefinitions.GetActionId(ToolAction.PASTE), ToolActionDefinitions.GetActionLabel(ToolAction.PASTE), onSelect: () => _mode = ToolAction.PASTE,
+						new(GetActionId(ToolAction.PASTE), GetActionLabel(ToolAction.PASTE), onSelect: () => _mode = ToolAction.PASTE,
 							isSelected: () => _mode == ToolAction.PASTE),
-						new(ToolActionDefinitions.GetActionId(ToolAction.RESET), ToolActionDefinitions.GetActionLabel(ToolAction.RESET), onSelect: () => _mode = ToolAction.RESET,
+						new(GetActionId(ToolAction.RESET), GetActionLabel(ToolAction.RESET), onSelect: () => _mode = ToolAction.RESET,
 							isSelected: () => _mode == ToolAction.RESET)
 					};
 					ActionWheel.OpenNew(Main.myPlayer, Item.type, entries);

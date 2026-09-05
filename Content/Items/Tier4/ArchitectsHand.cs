@@ -1,8 +1,9 @@
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// ARCHITECT'S HAND: late-game accessory; Shimmer transforms into <see cref="ArchitectsBlueprint"/>.
@@ -11,7 +12,8 @@ namespace ArchitectsStencilMod.Content.Items
 	{
 		public override void SetStaticDefaults()
 		{
-			ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<ArchitectsBlueprint>();
+			// TEMP: Architect Mode disabled — re-enable shimmer when Mode ships.
+			// ItemID.Sets.ShimmerTransformToItem[Type] = ModContent.ItemType<ArchitectsBlueprint>();
 		}
 
 		public override void SetDefaults()
@@ -23,8 +25,15 @@ namespace ArchitectsStencilMod.Content.Items
 			Item.value = Item.buyPrice(gold: 15);
 		}
 
+		public override void UpdateAccessory(Player player, bool hideVisual)
+		{
+			player.GetModPlayer<ArchitectModePlayer>().NotifyHandEquipped();
+		}
+
 		public override void AddRecipes()
 		{
+			// TEMP: Architect Mode disabled — Hand/Blueprint progression gated off.
+			/*
 			CreateRecipe()
 				.AddIngredient<ArchitectsStencil>(1)
 				.AddIngredient(ItemID.HandOfCreation, 1)
@@ -33,6 +42,7 @@ namespace ArchitectsStencilMod.Content.Items
 				.AddIngredient(ItemID.ShimmerBlock, 100) // Aetherium Block (1.4.9+: replace with mod block when available)
 				.AddTile(TileID.Hellforge)
 				.Register();
+			*/
 		}
 	}
 }

@@ -3,50 +3,53 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.Json;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Debug;
-using ArchitectsStencilMod.ModUtils;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Utils;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core.TileMapping
+namespace TheArchitectsBlueprintMod.Core.TileMapping
 {
     /// <summary>
     /// Discovers biome conversion interactions by:
     /// 1. Loading conversion items from BiomeConfig.itr
-    /// 2. Finding tiles/walls that can be converted via TileID/WallID.Sets.Conversion
-    /// 3. Testing WorldGen.Convert on each (sourceTile, conversionType) pair and recording results
+    /// 2. Collecting candidates from compile-time TileID/WallID.Sets.Conversion unions (+ mod ids)
+    /// 3. Testing WorldGen.Convert + TileLoader/WallLoader.Convert and recording results
     /// </summary>
     internal sealed class BiomeDiscovery : DiscoveryBase
     {
-        public static void Run(Mod mod, Player player, Action<string> msg, bool allowStepping = true)
+        public static void Run(Mod mod, Player player, bool allowStepping = true)
         {
             ArgumentNullException.ThrowIfNull(mod);
             ArgumentNullException.ThrowIfNull(player);
-            ArgumentNullException.ThrowIfNull(msg);
+
+            (IEnumerator enumerator, Action onCancel) = CreateEnumeratorWithCancel(mod, player);
+            DebugStepper.RunEnumerator(enumerator, player, allowStepping, onCancel: onCancel, log: LogDebug);
+        }
+
+        /// <summary>Builds the biome enumerator and an onCancel that restores the test chamber ring.</summary>
+        internal static (IEnumerator Enumerator, Action OnCancel) CreateEnumeratorWithCancel(Mod mod, Player player)
+        {
+            // --- Pair the stepped run with a cancel hook that tears down an in-flight demonite ring.
+
+            ArgumentNullException.ThrowIfNull(mod);
+            ArgumentNullException.ThrowIfNull(player);
 
             var chamberContext = new ChamberContext();
-            var enumerator = CreateSteppedRun(mod, player, msg, chamberContext);
-            if (allowStepping && DebugStepper.IsHoldingDebugStick(player))
+            void OnCancel()
             {
-                void OnCancel()
+                if (chamberContext.State is not null)
                 {
-                    if (chamberContext.State is not null)
-                    {
-                        TestChamberSystem.Instance.TeardownRing(chamberContext.X, chamberContext.Y, chamberContext.State);
-                        chamberContext.State = null;
-                    }
+                    TestChamberSystem.Instance.TeardownRing(chamberContext.X, chamberContext.Y, chamberContext.State);
+                    chamberContext.State = null;
                 }
-                DebugStepper.StartSession(player, enumerator, onComplete: null, onCancel: OnCancel, log: msg);
-                return;
             }
 
-            while (enumerator.MoveNext()) { }
+            return (CreateSteppedRun(mod, player, chamberContext), OnCancel);
         }
 
         private sealed class ChamberContext
@@ -56,30 +59,19 @@ namespace ArchitectsStencilMod.Core.TileMapping
             public TestChamberSystem.RingSavedState? State { get; set; }
         }
 
-        private static IEnumerator CreateSteppedRun(Mod mod, Player player, Action<string> msg, ChamberContext chamberContext)
+        private static IEnumerator CreateSteppedRun(Mod mod, Player player, ChamberContext chamberContext)
         {
             int testX = (int)(player.Center.X / 16f);
             int testY = (int)(player.Center.Y / 16f) - 5;
 
-            var debugPath = GetDebugPath("BiomeDiscovery_Debug.txt");
-            var outputPath = GetOutputPath("Biome.itr");
-            using var debugWriter = new StreamWriter(debugPath, append: false);
-
-            void Log(string s)
-            {
-                var line = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {s}";
-                debugWriter.WriteLine(line);
-                debugWriter.Flush();
-                msg(s);
-            }
+            var outputPath = GetOutputPath("Biome");
 
             Log($"Biome discovery started. Output: {outputPath}");
-            Log($"Debug log: {debugPath}");
             yield return null;
 
-            var itemsByType = LoadConversionItemsFromConfig(mod, Log);
-            var convertibleTiles = CollectConvertibleTiles(Log);
-            var convertibleWalls = CollectConvertibleWalls(Log);
+            var itemsByType = LoadConversionItemsFromConfig(mod);
+            var convertibleTiles = CollectConvertibleTiles();
+            var convertibleWalls = CollectConvertibleWalls();
 
             var map = new BiomeInteractionMap();
             foreach (var kvp in itemsByType)
@@ -94,7 +86,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
 
             var resultsByConversionType = new Dictionary<int, List<BiomeInteraction>>();
             int numConversionTypes = itemsByType.Values.Select(v => v.ConversionType).Distinct().Count();
-            var placementBaseLookup = LoadPlacementBaseTileLookup(mod, Log);
+            var placementBaseLookup = LoadPlacementBaseTileLookup(mod);
             Log($"Testing {convertibleTiles.Count} tiles × {numConversionTypes} conversion types at ({testX},{testY})...");
             yield return null;
 
@@ -125,7 +117,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
 
                     if (!WorldGen.InWorld(testX, testY))
                     {
-                        Log($"    {itemPrefix}{baseName} ({tileId}) + {conversionTypeName} = SKIP: not in world");
+                        LogDebug($"    {itemPrefix}{baseName} ({tileId}) + {conversionTypeName} = SKIP: not in world");
                         yield return null;
                         continue;
                     }
@@ -140,19 +132,20 @@ namespace ArchitectsStencilMod.Core.TileMapping
                     if (!placed || !placedTile.HasTile || placedTile.TileType != tileId)
                     {
                         string got = placedTile.HasTile ? ContentNameResolver.GetTileName(placedTile.TileType) : "empty";
-                        Log($"    {itemPrefix}{baseName} ({tileId}) + {conversionTypeName} = SKIP: placement failed");
+                        LogDebug($"    {itemPrefix}{baseName} ({tileId}) + {conversionTypeName} = SKIP: placement failed");
                         yield return null;
                         continue;
                     }
 
-                    Log($"    {itemPrefix}{baseName} ({tileId})");
+                    LogDebug($"    {itemPrefix}{baseName} ({tileId})");
                     yield return null;
                     WorldGen.Convert(testX, testY, conversionType, size: 3, tiles: true, walls: false);
+                    TileLoader.Convert(testX, testY, conversionType);
 
                     var tile = Main.tile[testX, testY];
                     if (!tile.HasTile)
                     {
-                        Log($"    {itemPrefix}{baseName} ({tileId}) + {conversionTypeName} = SKIP: removed by conversion");
+                        LogDebug($"    {itemPrefix}{baseName} ({tileId}) + {conversionTypeName} = SKIP: removed by conversion");
                         yield return null;
                         continue;
                     }
@@ -162,7 +155,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                     if (changed)
                     {
                         string mainName = ContentNameResolver.GetTileName(resultTileId);
-                        Log($"    {itemPrefix}{baseName} ({tileId}) + {conversionTypeName} = {mainName} ({resultTileId})");
+                        LogDebug($"    {itemPrefix}{baseName} ({tileId}) + {conversionTypeName} = {mainName} ({resultTileId})");
                         tileResults.Add(new BiomeInteraction
                         {
                             Layer = "Tile",
@@ -173,7 +166,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                     }
                     else
                     {
-                        Log($"    {itemPrefix}{baseName} ({tileId}) + {conversionTypeName} - not changed");
+                        LogDebug($"    {itemPrefix}{baseName} ({tileId}) + {conversionTypeName} - not changed");
                     }
                     yield return null;
                 }
@@ -185,16 +178,17 @@ namespace ArchitectsStencilMod.Core.TileMapping
 
                     if (!WorldGen.InWorld(testX, testY))
                     {
-                        Log($"    {itemPrefix}{baseName} ({wallId}) + {conversionTypeName} = SKIP: not in world");
+                        LogDebug($"    {itemPrefix}{baseName} ({wallId}) + {conversionTypeName} = SKIP: not in world");
                         yield return null;
                         continue;
                     }
 
-                    Log($"    {itemPrefix}{baseName} ({wallId})");
+                    LogDebug($"    {itemPrefix}{baseName} ({wallId})");
                     WorldGen.PlaceWall(testX, testY, (ushort)wallId, mute: true);
 
                     yield return null;
                     WorldGen.Convert(testX, testY, conversionType, size: 1, tiles: false, walls: true);
+                    WallLoader.Convert(testX, testY, conversionType);
 
                     var wall = Main.tile[testX, testY];
                     int resultWallId = wall.WallType;
@@ -203,7 +197,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                     if (changed)
                     {
                         string mainName = ContentNameResolver.GetWallName(resultWallId);
-                        Log($"    {itemPrefix}{baseName} ({wallId}) + {conversionTypeName} = {mainName} ({resultWallId})" );
+                        LogDebug($"    {itemPrefix}{baseName} ({wallId}) + {conversionTypeName} = {mainName} ({resultWallId})" );
                         wallResults.Add(new BiomeInteraction
                         {
                             Layer = "Wall",
@@ -214,11 +208,11 @@ namespace ArchitectsStencilMod.Core.TileMapping
                     }
                     else
                     {
-                        Log($"    {itemPrefix}{baseName} ({wallId}) + {conversionTypeName} - not changed");
+                        LogDebug($"    {itemPrefix}{baseName} ({wallId}) + {conversionTypeName} - not changed");
                     }
                     yield return null;
                 }
-                WorldGen.KillWall(testX, testY, fail: false);
+                SuppressTileDrop.KillWall(testX, testY);
 
                 var interactions = tileResults.Concat(wallResults).ToList();
                 resultsByConversionType[conversionType] = interactions;
@@ -253,15 +247,15 @@ namespace ArchitectsStencilMod.Core.TileMapping
             chamberContext.State = null;
             yield return null;
 
-            Save(mod, map, Log);
-            Log($"Biome discovery complete. Output: {GetOutputPath("Biome.itr")}");
+            Save(mod, map);
+            Log($"Biome discovery complete. Output: {GetOutputPath("Biome")}");
         }
 
         /// <summary>
         /// Loads tile -> required base tile lookup from placement map and custom item interactions.
         /// Used to place base tiles before conversion targets.
         /// </summary>
-        private static Dictionary<int, int> LoadPlacementBaseTileLookup(Mod mod, Action<string> log)
+        private static Dictionary<int, int> LoadPlacementBaseTileLookup(Mod mod)
         {
             var result = new Dictionary<int, int>();
 
@@ -304,12 +298,12 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 }
                 catch (Exception ex)
                 {
-                    log($"Placement map (base lookup): {ex.Message}");
+                    LogWarn($"Placement map (base lookup): {ex.Message}");
                 }
             }
             else
             {
-                log("Placement map not found; base tile lookup from placement only.");
+                Log("Placement map not found; base tile lookup from placement only.");
             }
 
             var customPath = TileMappingSystem.FindFileByMetadata(TileMappingSystem.GetSourceMapsDirectory(), null, "custom");
@@ -339,11 +333,11 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 }
                 catch (Exception ex)
                 {
-                    log($"Custom map (base lookup): {ex.Message}");
+                    LogWarn($"Custom map (base lookup): {ex.Message}");
                 }
             }
 
-            log($"  Placement base lookup: {result.Count} tiles require a base.");
+            Log($"  Placement base lookup: {result.Count} tiles require a base.");
             return result;
         }
 
@@ -351,13 +345,13 @@ namespace ArchitectsStencilMod.Core.TileMapping
         /// Loads biome conversion items from BiomeConfig.itr (mapType=biomeConfig).
         /// Returns itemId -> (conversionType, yield). Unresolved items are skipped.
         /// </summary>
-        private static Dictionary<int, (int ConversionType, int? Yield)> LoadConversionItemsFromConfig(Mod mod, Action<string> log)
+        private static Dictionary<int, (int ConversionType, int? Yield)> LoadConversionItemsFromConfig(Mod mod)
         {
             var result = new Dictionary<int, (int, int?)>();
             var path = TileMappingSystem.FindFileByMetadata(TileMappingSystem.GetSourceMapsDirectory(), null, "biomeConfig");
             if (path is null)
             {
-                log("BiomeConfig.itr not found; BiomeDiscovery has no conversion items.");
+                LogWarn("BiomeConfig.itr not found; BiomeDiscovery has no conversion items.");
                 return result;
             }
 
@@ -367,7 +361,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 {
                     if (dataEl.ValueKind != JsonValueKind.Object)
                     {
-                        log("BiomeConfig.itr data is not an object.");
+                        LogWarn("BiomeConfig.itr data is not an object.");
                         return;
                     }
 
@@ -377,7 +371,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                         var entry = prop.Value;
                         if (!entry.TryGetProperty("type", out var ctEl) || !ctEl.TryGetInt32(out int conversionType))
                         {
-                            log($"  Skipped '{item}': missing or invalid type.");
+                            LogDebug($"  Skipped '{item}': missing or invalid type.");
                             continue;
                         }
                         int? yield = null;
@@ -387,85 +381,104 @@ namespace ArchitectsStencilMod.Core.TileMapping
                         var itemId = ContentNameResolver.ResolveItem(item);
                         if (!itemId.HasValue || itemId.Value <= 0)
                         {
-                            log($"  Skipped '{item}': could not resolve to item ID.");
+                            LogDebug($"  Skipped '{item}': could not resolve to item ID.");
                             continue;
                         }
 
                         if (!result.ContainsKey(itemId.Value))
                         {
                             result[itemId.Value] = (conversionType, yield);
-                            log($"  Biome conversion: {item} (ItemId={itemId}) -> type {conversionType}, yield {yield?.ToString() ?? "null"}");
+                            LogDebug($"  Biome conversion: {item} (ItemId={itemId}) -> type {conversionType}, yield {yield?.ToString() ?? "null"}");
                         }
                     }
                 });
             }
             catch (Exception ex)
             {
-                log($"Failed to load BiomeConfig.itr: {ex.Message}");
+                LogWarn($"Failed to load BiomeConfig.itr: {ex.Message}");
             }
 
             return result;
         }
 
-        private static HashSet<int> CollectConvertibleTiles(Action<string> log)
+        /// <summary>Unions compile-time TileID.Sets.Conversion members, then adds mod tile ids.</summary>
+        private static HashSet<int> CollectConvertibleTiles()
         {
-            var tiles = new HashSet<int>();
-            var conversionType = typeof(TileID.Sets.Conversion);
-            foreach (var field in conversionType.GetFields(BindingFlags.Public | BindingFlags.Static))
-            {
-                if (field.FieldType != typeof(bool[])) continue;
-                var arr = field.GetValue(null) as bool[];
-                if (arr is null) continue;
-                for (int i = 0; i < arr.Length && i < TileLoader.TileCount; i++)
-                {
-                    if (arr[i]) tiles.Add(i);
-                }
-            }
-            foreach (var prop in conversionType.GetProperties(BindingFlags.Public | BindingFlags.Static))
-            {
-                if (prop.PropertyType != typeof(bool[])) continue;
-                var arr = prop.GetValue(null) as bool[];
-                if (arr is null) continue;
-                for (int i = 0; i < arr.Length && i < TileLoader.TileCount; i++)
-                {
-                    if (arr[i]) tiles.Add(i);
-                }
-            }
-            log($"  Convertible tiles: {tiles.Count}");
+            // --- Explicit Sets.Conversion arrays (no reflection); append mod tile ids for RegisterConversion coverage.
+
+            var tiles = UnionConvertibleIds(
+                TileLoader.TileCount,
+                TileID.Sets.Conversion.Dirt,
+                TileID.Sets.Conversion.GolfGrass,
+                TileID.Sets.Conversion.Grass,
+                TileID.Sets.Conversion.HardenedSand,
+                TileID.Sets.Conversion.Ice,
+                TileID.Sets.Conversion.JungleGrass,
+                TileID.Sets.Conversion.MergesWithDirtInASpecialWay,
+                TileID.Sets.Conversion.Moss,
+                TileID.Sets.Conversion.MossBrick,
+                TileID.Sets.Conversion.MushroomGrass,
+                TileID.Sets.Conversion.Sand,
+                TileID.Sets.Conversion.Sandstone,
+                TileID.Sets.Conversion.Snow,
+                TileID.Sets.Conversion.Stone,
+                TileID.Sets.Conversion.Thorn);
+
+            for (int tileId = TileID.Count; tileId < TileLoader.TileCount; tileId++)
+                tiles.Add(tileId);
+
+            Log($"  Convertible tiles: {tiles.Count}");
             return tiles;
         }
 
-        private static HashSet<int> CollectConvertibleWalls(Action<string> log)
+        /// <summary>Unions compile-time WallID.Sets.Conversion members, then adds mod wall ids.</summary>
+        private static HashSet<int> CollectConvertibleWalls()
         {
-            var walls = new HashSet<int>();
-            bool Check(bool[]? arr, int wallId) => arr is not null && wallId < arr.Length && arr[wallId];
+            // --- Explicit Sets.Conversion arrays (no reflection); append mod wall ids for RegisterConversion coverage.
 
-            string[] wallSetNames = ["Grass", "Stone", "Dirt", "Snow", "Ice", "Sandstone", "HardenedSand", "PureSand"];
-            for (int w = 0; w < WallLoader.WallCount; w++)
-            {
-                bool inAny = false;
-                foreach (var name in wallSetNames)
-                {
-                    if (Check(GetWallConversionArray(name), w)) { inAny = true; break; }
-                }
-                if (!inAny)
-                    for (int i = 1; i <= 4; i++)
-                    {
-                        if (Check(GetWallConversionArray($"NewWall{i}"), w)) { inAny = true; break; }
-                    }
-                if (inAny) walls.Add(w);
-            }
+            var walls = UnionConvertibleIds(
+                WallLoader.WallCount,
+                WallID.Sets.Conversion.Dirt,
+                WallID.Sets.Conversion.Grass,
+                WallID.Sets.Conversion.HardenedSand,
+                WallID.Sets.Conversion.Ice,
+                WallID.Sets.Conversion.NewWall1,
+                WallID.Sets.Conversion.NewWall2,
+                WallID.Sets.Conversion.NewWall3,
+                WallID.Sets.Conversion.NewWall4,
+                WallID.Sets.Conversion.PureSand,
+                WallID.Sets.Conversion.Sandstone,
+                WallID.Sets.Conversion.Snow,
+                WallID.Sets.Conversion.Stone);
 
-            log($"  Convertible walls: {walls.Count}");
+            for (int wallId = WallID.Count; wallId < WallLoader.WallCount; wallId++)
+                walls.Add(wallId);
+
+            Log($"  Convertible walls: {walls.Count}");
             return walls;
         }
 
-        private static bool[]? GetWallConversionArray(string name)
+        /// <summary>Collects every true index across the given conversion bool arrays up to <paramref name="limit"/>.</summary>
+        private static HashSet<int> UnionConvertibleIds(int limit, params bool[][] sets)
         {
-            var pi = typeof(WallID.Sets.Conversion).GetProperty(name, BindingFlags.Public | BindingFlags.Static);
-            if (pi is not null) return pi.GetValue(null) as bool[];
-            var fi = typeof(WallID.Sets.Conversion).GetField(name, BindingFlags.Public | BindingFlags.Static);
-            return fi?.GetValue(null) as bool[];
+            // --- Walk each public Conversion set and keep ids marked convertible.
+
+            var ids = new HashSet<int>();
+            for (int s = 0; s < sets.Length; s++)
+            {
+                bool[] arr = sets[s];
+                if (arr is null)
+                    continue;
+
+                int end = Math.Min(arr.Length, limit);
+                for (int i = 0; i < end; i++)
+                {
+                    if (arr[i])
+                        ids.Add(i);
+                }
+            }
+
+            return ids;
         }
 
         private static string GetConversionTypeName(int type)
@@ -486,7 +499,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
             };
         }
 
-        private static void Save(Mod mod, BiomeInteractionMap map, Action<string> log)
+        private static void Save(Mod mod, BiomeInteractionMap map)
         {
             var output = ToNameBasedOutput(map);
             var doc = new InteractionMapDocument<Dictionary<string, ConversionEntryOutput>>
@@ -494,7 +507,7 @@ namespace ArchitectsStencilMod.Core.TileMapping
                 Metadata = InteractionMapMetadata.Create(mod, "item-first", "biome"),
                 Data = output,
             };
-            SaveJson(GetOutputPath("Biome.itr"), doc, log, "BiomeInteractionMap");
+            SaveJson(GetOutputPath("Biome"), doc, "BiomeInteractionMap");
         }
 
         private static Dictionary<string, ConversionEntryOutput> ToNameBasedOutput(BiomeInteractionMap map)

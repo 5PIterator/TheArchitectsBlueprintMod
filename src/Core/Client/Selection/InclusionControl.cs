@@ -1,17 +1,15 @@
 using System;
-using System.Collections.Generic;
-using ArchitectsStencilMod.Config;
-using ArchitectsStencilMod.UI;
-using ArchitectsStencilMod.UIKit;
+using TheArchitectsBlueprintMod.Config;
+using TheArchitectsBlueprintMod.UI;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace ArchitectsStencilMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Gesture handler for INCLUDE/EXCLUDE rectangle edits on a player's Selection or Projection.
-    /// Driven by <see cref="ArchitectsStencilMod.UI.InterfaceSystem.DispatchToolInput"/> via <see cref="BeginInc"/>/<see cref="BeginExc"/>;
+    /// Gesture handler for INCLUDE/EXCLUDE rectangle edits on the client <see cref="Selection"/> or <see cref="Projection"/>.
+    /// Driven by <see cref="ToolActionManager"/> via <see cref="BeginInc"/>/<see cref="BeginExc"/>;
     /// hold/release/cancel routing matches <see cref="SelectionControl"/> and <see cref="ProjectionControl"/>.
     /// <para/>
     /// In-progress gestures can be canceled via <see cref="CancelGesture"/> (e.g. tool right-click).
@@ -21,7 +19,10 @@ namespace ArchitectsStencilMod.Core
         private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
         private enum Mode { None, Include, Exclude }
 
-        private sealed class PlayerState
+        private const string InclusionGestureFamily = "inclusion:gesture";
+        private const string ProjectionExcludedTilesFamily = "projection:excluded-tiles";
+
+        private sealed class GestureState
         {
             public Mode Mode;
             public Point Anchor;
@@ -29,7 +30,18 @@ namespace ArchitectsStencilMod.Core
             public Blueprint Target;
         }
 
-        private readonly PlayerState[] _states = new PlayerState[Main.maxPlayers];
+        private readonly GestureState _gesture = new();
+
+        /// <summary>True while the local player is mid-INCLUDE or EXCLUDE rectangle gesture.</summary>
+        public bool IsActivelyGesturing(Player player)
+        {
+            // --- Reject remote or menu players, then treat include/exclude modes as active.
+
+            if (player is null || player.whoAmI != Main.myPlayer || Main.gameMenu)
+                return false;
+
+            return _gesture.Mode != Mode.None;
+        }
 
         /// <summary>Begins an INCLUDE rectangle gesture (left click).</summary>
         public void BeginInc(Player player, Point cursorTile) => BeginGesture(player, Mode.Include, cursorTile);
@@ -39,13 +51,18 @@ namespace ArchitectsStencilMod.Core
 
         private void BeginGesture(Player player, Mode mode, Point cursorTile)
         {
-            if (!BlueprintSystem.TryGetTopmostBlueprintAt(player, cursorTile, out Blueprint? target))
+            // Prefer the blueprint under the cursor; otherwise allow starting outside bounds on the topmost defined blueprint.
+            Blueprint? target = BlueprintSystem.GetTopmostBlueprintAt(cursorTile, out Blueprint atCursor)
+                ? atCursor
+                : BlueprintSystem.GetTopmostBlueprint();
+            if (target is null || !target.IsDefined)
                 return;
+
+            BlueprintSystem.BringBlueprintToFront(target);
 
             var state = GetState(player);
             state.Mode = mode;
             state.Target = target;
-            // Anchor/Current stored in tile coordinates; converted to a rectangle on demand.
             state.Anchor = cursorTile;
             state.Current = cursorTile;
             RefreshGestureOverlay(player);
@@ -76,7 +93,7 @@ namespace ArchitectsStencilMod.Core
             {
                 state.Mode = Mode.None;
                 state.Target = null;
-                ClearGestureOverlay(player);
+                ClearGestureOverlay();
                 return;
             }
 
@@ -89,7 +106,7 @@ namespace ArchitectsStencilMod.Core
 
             state.Mode = Mode.None;
             state.Target = null;
-            ClearGestureOverlay(player);
+            ClearGestureOverlay();
             UpdateTargetOverlay(player, target);
         }
 
@@ -102,21 +119,15 @@ namespace ArchitectsStencilMod.Core
 
             state.Mode = Mode.None;
             state.Target = null;
-            ClearGestureOverlay(player);
+            ClearGestureOverlay();
         }
 
         public override void OnWorldUnload()
         {
-            for (int i = 0; i < _states.Length; i++)
-            {
-                if (_states[i] is not { } state)
-                    continue;
-
-                state.Mode = Mode.None;
-                state.Anchor = default;
-                state.Current = default;
-                state.Target = null;
-            }
+            _gesture.Mode = Mode.None;
+            _gesture.Anchor = default;
+            _gesture.Current = default;
+            _gesture.Target = null;
         }
 
         /// <summary>
@@ -124,31 +135,27 @@ namespace ArchitectsStencilMod.Core
         /// </summary>
         internal void UpdateExcludedTileOverlays(Player player)
         {
-            int who = player.whoAmI;
-            UIView host = InterfaceSystem.GetPerPlayerHost(InterfaceLayer.ProjectionDeselect, who);
-            host.RemoveAllChildren();
+            _ = player;
+            OverlaySystem.UnregisterFamily(ProjectionExcludedTilesFamily);
 
-            var projectionSystem = ModContent.GetInstance<ProjectionSystem>();
-            IReadOnlyList<Projection> list = projectionSystem.GetProjections(player);
-            for (int i = 0; i < list.Count; i++)
+            foreach (Projection proj in BlueprintSystem.GetProjections())
             {
-                Point[] excluded = list[i].BuildExcludedTilePoints();
+                Point[] excluded = proj.BuildExcludedTilePoints();
                 if (excluded.Length > 0)
-                    host.AddChild(new UITileFill(excluded, Color.Black * 0.25f));
+                    OverlaySystem.RegTileFill($"{proj.OverlayInstanceKey}:u", excluded, Color.Black * 0.25f, ProjectionExcludedTilesFamily);
             }
         }
 
-        private PlayerState GetState(Player player)
+        private GestureState GetState(Player player)
         {
             ArgumentNullException.ThrowIfNull(player);
 
-            int index = player.whoAmI;
-            if (index < 0 || index >= _states.Length)
+            if (player.whoAmI != Main.myPlayer || Main.gameMenu)
             {
-                throw new ArgumentOutOfRangeException(nameof(player), $"Invalid player index: {index}");
+                throw new InvalidOperationException("Player is not valid");
             }
 
-            return _states[index] ??= new PlayerState();
+            return _gesture;
         }
 
         private void RefreshGestureOverlay(Player player)
@@ -156,31 +163,34 @@ namespace ArchitectsStencilMod.Core
             var state = GetState(player);
             if (state.Mode == Mode.None || state.Target is null || !state.Target.IsDefined)
             {
-                ClearGestureOverlay(player);
+                ClearGestureOverlay();
                 return;
             }
 
             Rectangle rect = Blueprint.FromPoints(state.Anchor, state.Current);
             Rectangle targetBounds = state.Target.Area;
+            Rectangle clamped = Rectangle.Intersect(targetBounds, rect);
+            if (clamped.IsEmpty)
+            {
+                ClearGestureOverlay();
+                return;
+            }
+
             Color c = state.Mode == Mode.Include
                 ? ArchitectVisualPalette.IncludePreviewColor
                 : ArchitectVisualPalette.ExcludePreviewColor;
-            Rectangle clamped = Rectangle.Intersect(targetBounds, rect);
-            int who = player.whoAmI;
-            UIView host = InterfaceSystem.GetPerPlayerHost(InterfaceLayer.InclusionPreview, who);
-            host.RemoveAllChildren();
-            host.AddChild(new UIBoundsTile(clamped, c, 2));
+            OverlaySystem.RegTileBounds("preview", clamped, c, 2, InclusionGestureFamily);
         }
 
-        private static void ClearGestureOverlay(Player player)
+        private static void ClearGestureOverlay()
         {
-            InterfaceSystem.GetPerPlayerHost(InterfaceLayer.InclusionPreview, player.whoAmI).RemoveAllChildren();
+            OverlaySystem.UnregisterFamily(InclusionGestureFamily);
         }
 
         private static void UpdateTargetOverlay(Player player, Blueprint target)
         {
             var selectionSystem = ModContent.GetInstance<SelectionSystem>();
-            if (ReferenceEquals(target, selectionSystem.GetSelection(player)))
+            if (ReferenceEquals(target, BlueprintSystem.GetTopmostSelection()))
                 selectionSystem.UpdateSelectionOverlay(player);
             else
                 ModContent.GetInstance<ProjectionSystem>().UpdateProjectionOverlay(player);
@@ -189,11 +199,11 @@ namespace ArchitectsStencilMod.Core
         private static void ApplyIncludeWithVolumeLimit(Blueprint target, Rectangle tileRect)
         {
             var config = ModContent.GetInstance<PastingConfig>();
-            int volumeLimit = config.VolumeLimit;
+            int volumeLimit = config.Limits.Client.VolumeLimit;
             if (volumeLimit <= 0 || target.Area.IsEmpty)
                 return;
 
-            int count = CountIncludedTiles(target);
+            int count = PasteLimits.CountIncludedVolume(target);
             if (count >= volumeLimit)
                 return;
 
@@ -216,15 +226,6 @@ namespace ArchitectsStencilMod.Core
             }
         }
 
-        private static int CountIncludedTiles(Blueprint target)
-        {
-            int count = 0;
-            foreach (var t in target.Tiles)
-            {
-                if (t.Included)
-                    count++;
-            }
-            return count;
-        }
+        private static int CountIncludedTiles(Blueprint target) => PasteLimits.CountIncludedVolume(target);
     }
 }

@@ -1,1 +1,10 @@
-Modify this file with a description of your mod.
+Capture a region of your world, refine which tiles belong in the build, and paste a ghost copy elsewhere using materials from your inventory and nearby chests.
+
+- Select, include/exclude, copy, and paste structures with tiered sticks and wands
+- All-in-one Architect's Stencil for the full workflow
+- Save and load local .tab payloads with the in-game browser
+- Optional cut/paste: clear the source and reuse those materials first
+- Works on the fullscreen map and in multiplayer (host runs pastes)
+
+Pre-release 0.0.2 — see README and docs/ for full guides. Rotate/mirror, remote sharing, and the Architect's Blueprint endgame item are on the roadmap.
+EXPERIMENTAL: This mod is in early development and may have bugs, incomplete features and performance issues. Please report any problems on the GitHub issues page.

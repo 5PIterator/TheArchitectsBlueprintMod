@@ -2,12 +2,13 @@ using System;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
+using TheArchitectsBlueprintMod.UI;
 
-namespace ArchitectsStencilMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Camera-mode-like interactive gesture handler for a player's Selection bounds.
-    /// Driven by <see cref="ArchitectsStencilMod.UI.InterfaceSystem.DispatchToolInput"/> for PIN/SET left-click/hold/release; right-click cancel is handled there.
+    /// Camera-mode-like interactive gesture handler for the client <see cref="Selection"/> bounds.
+    /// Driven by <see cref="ToolActionManager"/> for PIN/SET left-click/hold/release; right-click cancel is handled there.
     /// <para/>
     /// In-progress gestures can be canceled via <see cref="CancelGesture"/> (e.g. tool right-click).
     /// </summary>
@@ -57,7 +58,7 @@ namespace ArchitectsStencilMod.Core
             Inside,
         }
 
-        private sealed class PlayerState
+        private sealed class GestureState
         {
             public Mode Mode;
             public DragKind DragKind;
@@ -70,9 +71,20 @@ namespace ArchitectsStencilMod.Core
             public Point DragStartPointB;
         }
 
-        private readonly PlayerState[] _states = new PlayerState[Main.maxPlayers];
+        private readonly GestureState _gesture = new();
 
         public static SelectionSystem SelectionSystem => ModContent.GetInstance<SelectionSystem>();
+
+        /// <summary>True while the local player is mid-PIN edge define or SET drag.</summary>
+        public bool IsActivelyGesturing(Player player)
+        {
+            // --- Reject remote or menu players, then treat any non-idle gesture mode as active.
+
+            if (player is null || player.whoAmI != Main.myPlayer || Main.gameMenu)
+                return false;
+
+            return _gesture.Mode != Mode.None;
+        }
 
         /// <summary>Begins a PIN gesture (left click).</summary>
         public void BeginPin(Player player, Point cursorTile)
@@ -88,26 +100,37 @@ namespace ArchitectsStencilMod.Core
             state.FixedPoint = cursorTile; // point A
         }
 
-        /// <summary>Begins a SET gesture (left click).</summary>
-        public void BeginSet(Player player, Point cursorTile)
+        /// <summary>Begins a SET gesture on the current selection when the cursor hits it (handles or tiles).</summary>
+        public bool BeginSet(Player player, Point cursorTile)
         {
+            // --- Hit-test handles first, then treat a tile overlap as a move so SET keeps the selection over a projection.
+
             var state = GetState(player);
 
-            Selection selection = SelectionSystem.GetSelection(player);
+            Selection selection = SelectionSystem.GetSelection();
+            if (selection is not { IsDefined: true })
+                return false;
 
-            if (selection.IsDefined)
-            {
-                Rectangle screenBounds = selection.GetScreenPixelBounds(Main.screenPosition, TilePixelSize);
-                Point mouse = new(Main.mouseX, Main.mouseY);
+            Rectangle screenBounds = ArchitectMapTransform.IsMapViewActive
+                ? OverlaySystem.GetTileRectangleScreenPixels(selection.Area)
+                : selection.GetScreenPixelBounds(Main.screenPosition, TilePixelSize);
+            Point mouse = new(Main.mouseX, Main.mouseY);
 
-                HitRegion region = HitTest(player, screenBounds, mouse);
-                DragKind dragKind = DragKindFromHit(region);
-                if (dragKind != DragKind.None)
-                {
-                    BeginDrag(state, dragKind, player, selection, cursorTile);
-                    return;
-                }
-            }
+            HitRegion region = HitTest(player, screenBounds, mouse);
+            DragKind dragKind = DragKindFromHit(region);
+
+            // Cursor tile sits inside the selection even when the pixel test missed the deflated interior.
+            if (dragKind == DragKind.None && selection.Area.Contains(cursorTile))
+                dragKind = DragKind.Move;
+
+            if (dragKind == DragKind.None)
+                return false;
+
+            // Focus the selection so the toolbox follows it instead of a later projection.
+            ModContent.GetInstance<BlueprintSystem>().BringBlueprintToFront(selection);
+            SelectionSystem.UpdateSelectionOverlay(player);
+            BeginDrag(state, dragKind, player, selection, cursorTile);
+            return true;
         }
 
         /// <summary>Updates an in-progress PIN or SET gesture while the left button is held.</summary>
@@ -115,7 +138,7 @@ namespace ArchitectsStencilMod.Core
         {
             var state = GetState(player);
 
-            Selection selection = SelectionSystem.GetSelection(player);
+            Selection selection = SelectionSystem.GetSelection();
             UpdateDrag(state, selection, player, cursorTile);
         }
 
@@ -139,7 +162,7 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            var selection = SelectionSystem.GetSelection(player);
+            var selection = SelectionSystem.GetSelection();
 
             if (state.Mode == Mode.EdgeSelection)
             {
@@ -149,7 +172,7 @@ namespace ArchitectsStencilMod.Core
                 return;
             }
 
-            if (state.Mode == Mode.Drag && selection.IsDefined)
+            if (state.Mode == Mode.Drag && selection is { IsDefined: true })
             {
                 SelectionSystem.SetBounds(player, state.DragStartBounds);
                 SelectionSystem.SetPoints(player, state.DragStartPointA, state.DragStartPointB);
@@ -161,7 +184,7 @@ namespace ArchitectsStencilMod.Core
             state.DragKind = DragKind.None;
         }
 
-        private static void BeginDrag(PlayerState state, DragKind kind, Player player, Selection selection, Point cursorTile)
+        private static void BeginDrag(GestureState state, DragKind kind, Player player, Selection selection, Point cursorTile)
         {
             state.Mode = Mode.Drag;
             state.DragKind = kind;
@@ -181,7 +204,7 @@ namespace ArchitectsStencilMod.Core
             }
         }
 
-        private static void UpdateDrag(PlayerState state, Selection selection, Player player, Point cursorTile)
+        private static void UpdateDrag(GestureState state, Selection selection, Player player, Point cursorTile)
         {
 
             if (state.Mode == Mode.EdgeSelection)
@@ -208,9 +231,12 @@ namespace ArchitectsStencilMod.Core
                 case DragKind.Move:
                 {
                     Point delta = new(cursorTile.X - state.DragStartCursorTile.X, cursorTile.Y - state.DragStartCursorTile.Y);
-                    Rectangle b = state.DragStartBounds;
-                    var moved = new Rectangle(b.X + delta.X, b.Y + delta.Y, b.Width, b.Height);
-                    SelectionSystem.SetBounds(player, moved);
+                    if (delta.X != 0 || delta.Y != 0)
+                    {
+                        SelectionSystem.TranslateSelection(player, delta);
+                        state.DragStartCursorTile = cursorTile;
+                    }
+
                     return;
                 }
 
@@ -294,12 +320,8 @@ namespace ArchitectsStencilMod.Core
             return HitRegion.None;
         }
 
-        private static Rectangle GetPointHandleRect(Point tile)
-        {
-            int centerX = tile.X * TilePixelSize + TilePixelSize / 2 - (int)Main.screenPosition.X;
-            int centerY = tile.Y * TilePixelSize + TilePixelSize / 2 - (int)Main.screenPosition.Y;
-            return new Rectangle(centerX - PointHandleSizePx / 2, centerY - PointHandleSizePx / 2, PointHandleSizePx, PointHandleSizePx);
-        }
+        private static Rectangle GetPointHandleRect(Point tile) =>
+            OverlaySystem.GetPointHandleRect(tile, PointHandleSizePx);
 
         private static Rectangle ResizeFromCursor(Rectangle start, DragKind kind, Point cursorTile)
         {
@@ -350,7 +372,7 @@ namespace ArchitectsStencilMod.Core
             return new Rectangle(left, top, right - left + 1, bottom - top + 1);
         }
 
-        private PlayerState GetState(Player player)
+        private GestureState GetState(Player player)
         {
             ArgumentNullException.ThrowIfNull(player);
 
@@ -359,13 +381,7 @@ namespace ArchitectsStencilMod.Core
                 throw new InvalidOperationException("Player is not valid");
             }
 
-            int index = player.whoAmI;
-            if (index < 0 || index >= _states.Length)
-            {
-                throw new ArgumentOutOfRangeException(nameof(player), $"Invalid player index: {index}");
-            }
-
-            return _states[index] ??= new PlayerState();
+            return _gesture;
         }
     }
 }

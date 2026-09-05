@@ -5,21 +5,28 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.Debug;
-using ArchitectsStencilMod.ModUtils;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using TheArchitectsBlueprintMod.Debug;
+using TheArchitectsBlueprintMod.Utils;
+#if DEBUG
+using TheArchitectsBlueprintMod.Core.ScenarioTests;
+#endif
 
-namespace ArchitectsStencilMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// DEBUG STICK: action wheel plus stepped sessions via <see cref="DebugStepper"/> (discovery, stepped paste).
 	/// </summary>
 	public class DebugStick : ModItem
 	{
+		private static ProjectionSystem ProjectionSystem => ModContent.GetInstance<ProjectionSystem>();
+		private static BlueprintSystem BlueprintSystem => ModContent.GetInstance<BlueprintSystem>();
 		private enum DebugStickAction
 		{
 			ToggleProjectionCutSource = 0,
 			StepPaste = 1,
+			RunBlueprintTests = 2,
 		}
 
 		private DebugStickAction _mode = DebugStickAction.ToggleProjectionCutSource;
@@ -56,14 +63,21 @@ namespace ArchitectsStencilMod.Content.Items
 
 		public override bool AltFunctionUse(Player player) => true;
 
-		public override bool CanUseItem(Player player) => !ActionWheel.IsActive && !ActionWheel.IsPendingOpen;
+		public override bool CanUseItem(Player player) =>
+			!ArchitectModeGuards.SuppressHeldToolInput(player)
+			&& !ActionWheel.IsActive
+			&& !ActionWheel.IsPendingOpen;
 
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return null;
+
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return true;
 
 			if (player.altFunctionUse == 0)
 			{
@@ -97,6 +111,13 @@ namespace ArchitectsStencilMod.Content.Items
 					"STP",
 					onSelect: () => _mode = DebugStickAction.StepPaste,
 					isSelected: () => _mode == DebugStickAction.StepPaste),
+#if DEBUG
+				new ActionWheelEntry(
+					"run_tests",
+					"TST",
+					onSelect: () => _mode = DebugStickAction.RunBlueprintTests,
+					isSelected: () => _mode == DebugStickAction.RunBlueprintTests),
+#endif
 			];
 		}
 
@@ -105,35 +126,24 @@ namespace ArchitectsStencilMod.Content.Items
 			switch (_mode)
 			{
 				case DebugStickAction.ToggleProjectionCutSource:
-					TryToggleCutSource(player, cursorTile);
+
+					ProjectionSystem.ToggleCutSource(cursorTile);
 					return;
 				case DebugStickAction.StepPaste:
-					TryBeginPasteStepSession(player, cursorTile);
+					BeginPasteStepSession(player, cursorTile);
 					return;
+#if DEBUG
+				case DebugStickAction.RunBlueprintTests:
+					ScenarioTestRunner.RunAll(new DelegateScenarioTestReporter((msg, color) => Main.NewText(msg, color)), player);
+					return;
+#endif
 				default:
 					throw new ArgumentOutOfRangeException(nameof(_mode), _mode, "Unknown debug stick action.");
 			}
 		}
-
-		private static void TryToggleCutSource(Player player, Point cursorTile)
+		private void BeginPasteStepSession(Player player, Point cursorTile)
 		{
-			var projections = ModContent.GetInstance<ProjectionSystem>();
-			if (!projections.ToggleCutSource(player, cursorTile, out Projection projection))
-			{
-				Main.NewText("Debug: no projection at cursor, or it is locked by an active paste.", Color.OrangeRed);
-				return;
-			}
-
-			Main.NewText(
-				projection.CutSource
-					? "Debug: CutSource ON for projection (paste will clear source area)."
-					: "Debug: CutSource OFF for projection.",
-				Color.Cyan);
-		}
-
-		private static void TryBeginPasteStepSession(Player player, Point cursorTile)
-		{
-			if (!ModContent.GetInstance<ProjectionSystem>().TryGetProjectionAt(player, cursorTile, out Projection projection) ||
+			if (!BlueprintSystem.GetTopmostProjectionAt(cursorTile, out Projection projection) ||
 			    projection is null ||
 			    !projection.IsDefined)
 			{

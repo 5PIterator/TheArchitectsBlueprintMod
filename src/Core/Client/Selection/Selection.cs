@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using TheArchitectsBlueprintMod.Debug;
 using Microsoft.Xna.Framework;
 using Terraria;
 
-namespace ArchitectsStencilMod.Core
+namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Represents the primary region in the world that The Architect's Stencil operates on.
+    /// Represents the primary region in the world that The Architect's Blueprint operates on.
     /// </summary>
     public class Selection(int owner) : Blueprint(owner)
     {
@@ -20,6 +21,8 @@ namespace ArchitectsStencilMod.Core
             if (Area.IsEmpty || Tiles is null)
             {
                 copy.Tiles = new BlueprintCell[0, 0];
+                if (TABLog.IsDebugEnabled)
+                    TABLog.Debug($"Selection.Clone: owner={Owner} -> empty copy (no grid)", "Selection");
                 return copy;
             }
 
@@ -36,6 +39,10 @@ namespace ArchitectsStencilMod.Core
             }
 
             copy.Tiles = grid;
+            if (TABLog.IsDebugEnabled)
+                TABLog.Debug(
+                    $"Selection.Clone: owner={Owner} -> copy area=({copy.Area.X},{copy.Area.Y}) {copy.Area.Width}x{copy.Area.Height}",
+                    "Selection");
             return copy;
         }
 

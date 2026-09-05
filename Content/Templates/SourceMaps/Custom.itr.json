@@ -1,0 +1,376 @@
+{
+  "metadata": {
+    "format": "item-first",
+    "mapType": "custom"
+  },
+  "data": {
+    "WaterBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Water",
+          "yield": 1
+        }
+      ]
+    },
+    "LavaBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Lava",
+          "yield": 1
+        }
+      ]
+    },
+    "StaffofRegrowth": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "base": "Dirt",
+          "main": "Grass",
+          "yield": -1
+        },
+        {
+          "layer": "Tile",
+          "base": "Mud",
+          "main": "JungleGrass",
+          "yield": -1
+        }
+      ]
+    },
+    "Wrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Red",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "LivingWoodWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "LivingWood",
+          "yield": 1,
+          "ammo": "Wood"
+        }
+      ]
+    },
+    "Actuator": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Actuator",
+          "yield": 1,
+          "ammo": "Actuator"
+        }
+      ]
+    },
+    "BlueWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Blue",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "GreenWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Green",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "YellowWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Yellow",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "CombatWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Red",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Green",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Blue",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Yellow",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "MulticolorWrench": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Red",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Green",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Blue",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Yellow",
+          "yield": 1,
+          "ammo": "Wire"
+        }
+      ]
+    },
+    "WireKite": {
+      "interactions": [
+        {
+          "layer": "Wire",
+          "main": "Red",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Green",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Blue",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Yellow",
+          "yield": 1,
+          "ammo": "Wire"
+        },
+        {
+          "layer": "Wire",
+          "main": "Actuator",
+          "yield": 1,
+          "ammo": "Actuator"
+        }
+      ]
+    },
+    "BoneWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "BoneBlock",
+          "yield": 1,
+          "ammo": "Bone"
+        }
+      ]
+    },
+    "LeafWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "LeafBlock",
+          "yield": 1,
+          "ammo": "Wood"
+        }
+      ]
+    },
+    "HoneyBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Honey",
+          "yield": 1
+        }
+      ]
+    },
+    "HiveWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "Hive",
+          "yield": 1,
+          "ammo": "Hive"
+        }
+      ]
+    },
+    "CorruptSeeds": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "base": "Dirt",
+          "main": "CorruptGrass",
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "base": "Grass",
+          "main": "CorruptGrass",
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "base": "Mud",
+          "main": "CorruptJungleGrass",
+          "yield": 1
+        }
+      ]
+    },
+    "CrimsonSeeds": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "base": "Dirt",
+          "main": "CrimsonGrass",
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "base": "Grass",
+          "main": "CrimsonGrass",
+          "yield": 1
+        },
+        {
+          "layer": "Tile",
+          "base": "Mud",
+          "main": "CrimsonJungleGrass",
+          "yield": 1
+        }
+      ]
+    },
+    "BottomlessBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Water",
+          "yield": -1
+        }
+      ]
+    },
+    "LivingMahoganyWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "LivingMahogany",
+          "yield": 1,
+          "ammo": "RichMahogany"
+        }
+      ]
+    },
+    "LivingMahoganyLeafWand": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "MahoganyLeaf",
+          "yield": 1,
+          "ammo": "RichMahogany"
+        }
+      ]
+    },
+    "BottomlessLavaBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Lava",
+          "yield": -1
+        }
+      ]
+    },
+    "WetBomb": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Water",
+          "yield": 15
+        }
+      ]
+    },
+    "LavaBomb": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Lava",
+          "yield": 15
+        }
+      ]
+    },
+    "HoneyBomb": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Honey",
+          "yield": 15
+        }
+      ]
+    },
+    "DirtBomb": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "Dirt",
+          "yield": 25
+        }
+      ]
+    },
+    "DirtStickyBomb": {
+      "interactions": [
+        {
+          "layer": "Tile",
+          "main": "Dirt",
+          "yield": 25
+        }
+      ]
+    },
+    "BottomlessHoneyBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Honey",
+          "yield": -1
+        }
+      ]
+    },
+    "BottomlessShimmerBucket": {
+      "interactions": [
+        {
+          "layer": "Liquid",
+          "main": "Shimmer",
+          "yield": -1
+        }
+      ]
+    }
+  }
+}

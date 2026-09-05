@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
@@ -5,11 +6,12 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.UI;
-using ArchitectsStencilMod.ModUtils;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using static TheArchitectsBlueprintMod.Core.ToolActionManager;
+using TheArchitectsBlueprintMod.Utils;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// PROJECTION WAND: COPY / PASTE / RESET via action wheel. Hold/release only for COPY.
@@ -17,6 +19,7 @@ namespace ArchitectsStencilMod.Content.Items
 	public class ProjectionWand : ModItem
 	{
 		private ToolAction _mode = ToolAction.COPY;
+		private bool _leftDragSeenDown;
 
 
 		/// <summary>Sets channeling wand defaults suited to dragging copy projections.</summary>
@@ -66,21 +69,29 @@ namespace ArchitectsStencilMod.Content.Items
 		public override bool AltFunctionUse(Player player) => true;
 
 		/// <summary>Blocks use while the shared action wheel is open or opening.</summary>
-		public override bool CanUseItem(Player player) => !ActionWheel.IsActive && !ActionWheel.IsPendingOpen;
+		public override bool CanUseItem(Player player) =>
+			!ArchitectModeGuards.SuppressHeldToolInput(player)
+			&& !ActionWheel.IsActive
+			&& !ActionWheel.IsPendingOpen;
 
 		/// <summary>Opens the mode wheel on alt-use, or dispatches the chosen COPY/PASTE/RESET action on primary use.</summary>
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			// --- Alt-use toggles wheel or cancels owned wheel; primary use runs current mode.
 
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return null;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return true;
 
 			if (player.altFunctionUse == 0)
 			{
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftClick, player, cursorTile);
+				actionManager.Handle(_mode, ToolActionKey.LeftClick, player, cursorTile);
 			}
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
 			{
@@ -90,11 +101,11 @@ namespace ArchitectsStencilMod.Content.Items
 				{
 					var entries = new List<ActionWheelEntry>(3)
 					{
-						new(ToolActionDefinitions.GetActionId(ToolAction.COPY), ToolActionDefinitions.GetActionLabel(ToolAction.COPY), onSelect: () => _mode = ToolAction.COPY,
+						new(GetActionId(ToolAction.COPY), GetActionLabel(ToolAction.COPY), onSelect: () => _mode = ToolAction.COPY,
 							isSelected: () => _mode == ToolAction.COPY),
-						new(ToolActionDefinitions.GetActionId(ToolAction.PASTE), ToolActionDefinitions.GetActionLabel(ToolAction.PASTE), onSelect: () => _mode = ToolAction.PASTE,
+						new(GetActionId(ToolAction.PASTE), GetActionLabel(ToolAction.PASTE), onSelect: () => _mode = ToolAction.PASTE,
 							isSelected: () => _mode == ToolAction.PASTE),
-						new(ToolActionDefinitions.GetActionId(ToolAction.RESET), ToolActionDefinitions.GetActionLabel(ToolAction.RESET), onSelect: () => _mode = ToolAction.RESET,
+						new(GetActionId(ToolAction.RESET), GetActionLabel(ToolAction.RESET), onSelect: () => _mode = ToolAction.RESET,
 							isSelected: () => _mode == ToolAction.RESET)
 					};
 					ActionWheel.OpenNew(Main.myPlayer, Item.type, entries);
@@ -112,14 +123,26 @@ namespace ArchitectsStencilMod.Content.Items
 			if (player.whoAmI != Main.myPlayer || ActionWheel.IsActive || ActionWheel.IsPendingOpen)
 				return;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return;
+
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			if (Main.mouseLeft && Main.mouseRight)
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.RightClick, player, cursorTile);
-			if (Main.mouseLeft && !Main.mouseLeftRelease)
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftHold, player, cursorTile);
-			else if (!Main.mouseLeft && Main.mouseLeftRelease)
-				InterfaceSystem.DispatchToolInput(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+				actionManager.Handle(_mode, ToolActionKey.RightClick, player, cursorTile);
+			else if (Main.mouseLeft && !Main.mouseLeftRelease)
+				actionManager.Handle(_mode, ToolActionKey.LeftHold, player, cursorTile);
+			else if (_leftDragSeenDown && !Main.mouseLeft)
+			{
+				actionManager.Handle(_mode, ToolActionKey.LeftRelease, player, cursorTile);
+				_leftDragSeenDown = false;
+			}
+
+			if (Main.mouseLeft)
+				_leftDragSeenDown = true;
 		}
 
 		public override void AddRecipes()

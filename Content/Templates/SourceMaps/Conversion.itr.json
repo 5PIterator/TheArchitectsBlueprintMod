@@ -1,0 +1,2078 @@
+{
+  "metadata": {
+    "format": "item-first",
+    "mapType": "conversion",
+    "modVersion": "0.2.0",
+    "terrariaVersion": "v1.4.4.9",
+    "modsLoaded": [
+      "ModLoader",
+      "CheatSheet",
+      "TheArchitectsBlueprintMod"
+    ],
+    "generatedAt": "2026-08-26T12:43:29.0416899Z"
+  },
+  "data": {
+    "SpectrePaintRoller": {
+      "interactions": [
+        {
+          "layer": "Wall",
+          "main": "Stone",
+          "yield": 1,
+          "ammo": "StoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Dirt",
+          "yield": 1,
+          "ammo": "DirtWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Wood",
+          "yield": 1,
+          "ammo": "WoodWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "GrayBrick",
+          "yield": 1,
+          "ammo": "GrayBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "RedBrick",
+          "yield": 1,
+          "ammo": "RedBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "BlueDungeon",
+          "yield": 1,
+          "ammo": "BlueBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "GreenDungeon",
+          "yield": 1,
+          "ammo": "GreenBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "PinkDungeon",
+          "yield": 1,
+          "ammo": "PinkBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "GoldBrick",
+          "yield": 1,
+          "ammo": "GoldBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SilverBrick",
+          "yield": 1,
+          "ammo": "SilverBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CopperBrick",
+          "yield": 1,
+          "ammo": "CopperBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "ObsidianBrick",
+          "yield": 1,
+          "ammo": "ObsidianBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Glass",
+          "yield": 1,
+          "ammo": "GlassWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "PearlstoneBrick",
+          "yield": 1,
+          "ammo": "PearlstoneBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "IridescentBrick",
+          "yield": 1,
+          "ammo": "IridescentBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "MudstoneBrick",
+          "yield": 1,
+          "ammo": "MudstoneBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CobaltBrick",
+          "yield": 1,
+          "ammo": "CobaltBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "MythrilBrick",
+          "yield": 1,
+          "ammo": "MythrilBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Planked",
+          "yield": 1,
+          "ammo": "PlankedWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CandyCane",
+          "yield": 1,
+          "ammo": "CandyCaneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "GreenCandyCane",
+          "yield": 1,
+          "ammo": "GreenCandyCaneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SnowBrick",
+          "yield": 1,
+          "ammo": "SnowBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AdamantiteBeam",
+          "yield": 1,
+          "ammo": "AdamantiteBeamWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "DemoniteBrick",
+          "yield": 1,
+          "ammo": "DemoniteBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SandstoneBrick",
+          "yield": 1,
+          "ammo": "SandstoneBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "EbonstoneBrick",
+          "yield": 1,
+          "ammo": "EbonstoneBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "RedStucco",
+          "yield": 1,
+          "ammo": "RedStuccoWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "YellowStucco",
+          "yield": 1,
+          "ammo": "YellowStuccoWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "GreenStucco",
+          "yield": 1,
+          "ammo": "GreenStuccoWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Gray",
+          "yield": 1,
+          "ammo": "GrayStuccoWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Ebonwood",
+          "yield": 1,
+          "ammo": "EbonwoodWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "RichMaogany",
+          "yield": 1,
+          "ammo": "RichMahoganyWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Pearlwood",
+          "yield": 1,
+          "ammo": "PearlwoodWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "RainbowBrick",
+          "yield": 1,
+          "ammo": "RainbowBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "TinBrick",
+          "yield": 1,
+          "ammo": "TinBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "TungstenBrick",
+          "yield": 1,
+          "ammo": "TungstenBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "PlatinumBrick",
+          "yield": 1,
+          "ammo": "PlatinumBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Grass",
+          "yield": 1,
+          "ammo": "GrassWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Jungle",
+          "yield": 1,
+          "ammo": "JungleWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Flower",
+          "yield": 1,
+          "ammo": "FlowerWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cactus",
+          "yield": 1,
+          "ammo": "CactusWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cloud",
+          "yield": 1,
+          "ammo": "CloudWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Mushroom",
+          "yield": 1,
+          "ammo": "MushroomWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Bone",
+          "yield": 1,
+          "ammo": "BoneBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Slime",
+          "yield": 1,
+          "ammo": "SlimeBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Flesh",
+          "yield": 1,
+          "ammo": "FleshBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "DiscWall",
+          "yield": 1,
+          "ammo": "DiscWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "IceBrick",
+          "yield": 1,
+          "ammo": "IceBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Shadewood",
+          "yield": 1,
+          "ammo": "ShadewoodWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "LihzahrdBrick",
+          "yield": 1,
+          "ammo": "LihzahrdBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Hive",
+          "yield": 1,
+          "ammo": "HiveWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "PurpleStainedGlass",
+          "yield": 1,
+          "ammo": "PurpleStainedGlass"
+        },
+        {
+          "layer": "Wall",
+          "main": "YellowStainedGlass",
+          "yield": 1,
+          "ammo": "YellowStainedGlass"
+        },
+        {
+          "layer": "Wall",
+          "main": "BlueStainedGlass",
+          "yield": 1,
+          "ammo": "BlueStainedGlass"
+        },
+        {
+          "layer": "Wall",
+          "main": "GreenStainedGlass",
+          "yield": 1,
+          "ammo": "GreenStainedGlass"
+        },
+        {
+          "layer": "Wall",
+          "main": "RedStainedGlass",
+          "yield": 1,
+          "ammo": "RedStainedGlass"
+        },
+        {
+          "layer": "Wall",
+          "main": "RainbowStainedGlass",
+          "yield": 1,
+          "ammo": "MulticoloredStainedGlass"
+        },
+        {
+          "layer": "Wall",
+          "main": "BlueDungeonSlab",
+          "yield": 1,
+          "ammo": "BlueSlabWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "BlueDungeonTile",
+          "yield": 1,
+          "ammo": "BlueTiledWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "PinkDungeonSlab",
+          "yield": 1,
+          "ammo": "PinkSlabWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "PinkDungeonTile",
+          "yield": 1,
+          "ammo": "PinkTiledWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "GreenDungeonSlab",
+          "yield": 1,
+          "ammo": "GreenSlabWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "GreenDungeonTile",
+          "yield": 1,
+          "ammo": "GreenTiledWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "WoodenFence",
+          "yield": 1,
+          "ammo": "WoodenFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "MetalFence",
+          "yield": 1,
+          "ammo": "LeadFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "PalladiumColumn",
+          "yield": 1,
+          "ammo": "PalladiumColumnWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "BubblegumBlock",
+          "yield": 1,
+          "ammo": "BubblegumBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "TitanstoneBlock",
+          "yield": 1,
+          "ammo": "TitanstoneBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "LivingWood",
+          "yield": 1,
+          "ammo": "LivingWoodWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Pumpkin",
+          "yield": 1,
+          "ammo": "PumpkinWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Hay",
+          "yield": 1,
+          "ammo": "HayWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SpookyWood",
+          "yield": 1,
+          "ammo": "SpookyWoodWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "ChristmasTreeWallpaper",
+          "yield": 1,
+          "ammo": "ChristmasTreeWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "OrnamentWallpaper",
+          "yield": 1,
+          "ammo": "OrnamentWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "CandyCaneWallpaper",
+          "yield": 1,
+          "ammo": "CandyCaneWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "FestiveWallpaper",
+          "yield": 1,
+          "ammo": "FestiveWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "StarsWallpaper",
+          "yield": 1,
+          "ammo": "StarsWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "SquigglesWallpaper",
+          "yield": 1,
+          "ammo": "SquigglesWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "SnowflakeWallpaper",
+          "yield": 1,
+          "ammo": "SnowflakeWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "KrampusHornWallpaper",
+          "yield": 1,
+          "ammo": "KrampusHornWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "BluegreenWallpaper",
+          "yield": 1,
+          "ammo": "BluegreenWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "GrinchFingerWallpaper",
+          "yield": 1,
+          "ammo": "GrinchFingerWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "FancyGrayWallpaper",
+          "yield": 1,
+          "ammo": "FancyGreyWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "IceFloeWallpaper",
+          "yield": 1,
+          "ammo": "IceFloeWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "MusicWallpaper",
+          "yield": 1,
+          "ammo": "MusicWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "PurpleRainWallpaper",
+          "yield": 1,
+          "ammo": "PurpleRainWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "RainbowWallpaper",
+          "yield": 1,
+          "ammo": "RainbowWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "SparkleStoneWallpaper",
+          "yield": 1,
+          "ammo": "SparkleStoneWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "StarlitHeavenWallpaper",
+          "yield": 1,
+          "ammo": "StarlitHeavenWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "BubbleWallpaper",
+          "yield": 1,
+          "ammo": "BubbleWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "CopperPipeWallpaper",
+          "yield": 1,
+          "ammo": "CopperPipeWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "DuckyWallpaper",
+          "yield": 1,
+          "ammo": "DuckyWallpaper"
+        },
+        {
+          "layer": "Wall",
+          "main": "Waterfall",
+          "yield": 1,
+          "ammo": "WaterfallWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Lavafall",
+          "yield": 1,
+          "ammo": "LavafallWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "EbonwoodFence",
+          "yield": 1,
+          "ammo": "EbonwoodFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "RichMahoganyFence",
+          "yield": 1,
+          "ammo": "RichMahoganyFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "PearlwoodFence",
+          "yield": 1,
+          "ammo": "PearlwoodFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "ShadewoodFence",
+          "yield": 1,
+          "ammo": "ShadewoodFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "WhiteDynasty",
+          "yield": 1,
+          "ammo": "WhiteDynastyWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "BlueDynasty",
+          "yield": 1,
+          "ammo": "BlueDynastyWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "ArcaneRunes",
+          "yield": 1,
+          "ammo": "ArcaneRuneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "IronFence",
+          "yield": 1,
+          "ammo": "IronFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "CopperPlating",
+          "yield": 1,
+          "ammo": "CopperPlatingWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "StoneSlab",
+          "yield": 1,
+          "ammo": "StoneSlabWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Sail",
+          "yield": 1,
+          "ammo": "Sail"
+        },
+        {
+          "layer": "Wall",
+          "main": "BorealWood",
+          "yield": 1,
+          "ammo": "BorealWoodWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "PalmWood",
+          "yield": 1,
+          "ammo": "PalmWoodWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "BorealWoodFence",
+          "yield": 1,
+          "ammo": "BorealWoodFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "PalmWoodFence",
+          "yield": 1,
+          "ammo": "PalmWoodFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "AmberGemspark",
+          "yield": 1,
+          "ammo": "AmberGemsparkWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AmberGemsparkOff",
+          "yield": 1,
+          "ammo": "AmberGemsparkWallOff"
+        },
+        {
+          "layer": "Wall",
+          "main": "AmethystGemspark",
+          "yield": 1,
+          "ammo": "AmethystGemsparkWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AmethystGemsparkOff",
+          "yield": 1,
+          "ammo": "AmethystGemsparkWallOff"
+        },
+        {
+          "layer": "Wall",
+          "main": "DiamondGemspark",
+          "yield": 1,
+          "ammo": "DiamondGemsparkWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "DiamondGemsparkOff",
+          "yield": 1,
+          "ammo": "DiamondGemsparkWallOff"
+        },
+        {
+          "layer": "Wall",
+          "main": "EmeraldGemspark",
+          "yield": 1,
+          "ammo": "EmeraldGemsparkWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "EmeraldGemsparkOff",
+          "yield": 1,
+          "ammo": "EmeraldGemsparkWallOff"
+        },
+        {
+          "layer": "Wall",
+          "main": "RubyGemspark",
+          "yield": 1,
+          "ammo": "RubyGemsparkWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "RubyGemsparkOff",
+          "yield": 1,
+          "ammo": "RubyGemsparkWallOff"
+        },
+        {
+          "layer": "Wall",
+          "main": "SapphireGemspark",
+          "yield": 1,
+          "ammo": "SapphireGemsparkWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SapphireGemsparkOff",
+          "yield": 1,
+          "ammo": "SapphireGemsparkWallOff"
+        },
+        {
+          "layer": "Wall",
+          "main": "TopazGemspark",
+          "yield": 1,
+          "ammo": "TopazGemsparkWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "TopazGemsparkOff",
+          "yield": 1,
+          "ammo": "TopazGemsparkWallOff"
+        },
+        {
+          "layer": "Wall",
+          "main": "TinPlating",
+          "yield": 1,
+          "ammo": "TinPlatingWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Confetti",
+          "yield": 1,
+          "ammo": "ConfettiWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "ConfettiBlack",
+          "yield": 1,
+          "ammo": "ConfettiWallBlack"
+        },
+        {
+          "layer": "Wall",
+          "main": "Honeyfall",
+          "yield": 1,
+          "ammo": "HoneyfallWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "ChlorophyteBrick",
+          "yield": 1,
+          "ammo": "ChlorophyteBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimtaneBrick",
+          "yield": 1,
+          "ammo": "CrimtaneBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "ShroomitePlating",
+          "yield": 1,
+          "ammo": "ShroomitePlatingWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "MartianConduit",
+          "yield": 1,
+          "ammo": "MartianConduitWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "HellstoneBrick",
+          "yield": 1,
+          "ammo": "HellstoneBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Marble",
+          "yield": 1,
+          "ammo": "MarbleWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "MarbleBlock",
+          "yield": 1,
+          "ammo": "MarbleBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Granite",
+          "yield": 1,
+          "ammo": "GraniteWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "GraniteBlock",
+          "yield": 1,
+          "ammo": "GraniteBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "MeteoriteBrick",
+          "yield": 1,
+          "ammo": "MeteoriteBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Crystal",
+          "yield": 1,
+          "ammo": "CrystalBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SandstoneEcho",
+          "yield": 1,
+          "ammo": "SandstoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "HardenedSandEcho",
+          "yield": 1,
+          "ammo": "HardenedSandWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CorruptHardenedSandEcho",
+          "yield": 1,
+          "ammo": "CorruptHardenedSandWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimsonHardenedSandEcho",
+          "yield": 1,
+          "ammo": "CrimsonHardenedSandWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "HallowHardenedSandEcho",
+          "yield": 1,
+          "ammo": "HallowHardenedSandWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CorruptSandstoneEcho",
+          "yield": 1,
+          "ammo": "CorruptSandstoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimsonSandstoneEcho",
+          "yield": 1,
+          "ammo": "CrimsonSandstoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "HallowSandstoneEcho",
+          "yield": 1,
+          "ammo": "HallowSandstoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "DesertFossilEcho",
+          "yield": 1,
+          "ammo": "DesertFossilWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "LunarBrickWall",
+          "yield": 1,
+          "ammo": "LunarBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "LivingLeaf",
+          "yield": 1,
+          "ammo": "LivingLeafWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CogWall",
+          "yield": 1,
+          "ammo": "CogWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SandFall",
+          "yield": 1,
+          "ammo": "SandFallWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SnowFall",
+          "yield": 1,
+          "ammo": "SnowFallWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SillyBalloonPinkWall",
+          "yield": 1,
+          "ammo": "SillyBalloonPinkWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SillyBalloonPurpleWall",
+          "yield": 1,
+          "ammo": "SillyBalloonPurpleWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SillyBalloonGreenWall",
+          "yield": 1,
+          "ammo": "SillyBalloonGreenWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "IronBrick",
+          "yield": 1,
+          "ammo": "IronBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "LeadBrick",
+          "yield": 1,
+          "ammo": "LeadBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "LesionBlock",
+          "yield": 1,
+          "ammo": "LesionBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimstoneBrick",
+          "yield": 1,
+          "ammo": "CrimstoneBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SmoothSandstone",
+          "yield": 1,
+          "ammo": "SmoothSandstoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Spider",
+          "yield": 1,
+          "ammo": "SpiderWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SolarBrick",
+          "yield": 1,
+          "ammo": "SolarBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "VortexBrick",
+          "yield": 1,
+          "ammo": "VortexBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "NebulaBrick",
+          "yield": 1,
+          "ammo": "NebulaBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "StardustBrick",
+          "yield": 1,
+          "ammo": "StardustBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "OrangeStainedGlass",
+          "yield": 1,
+          "ammo": "OrangeStainedGlass"
+        },
+        {
+          "layer": "Wall",
+          "main": "GoldStarryGlassWall",
+          "yield": 1,
+          "ammo": "GoldStarryGlassWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "BlueStarryGlassWall",
+          "yield": 1,
+          "ammo": "BlueStarryGlassWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "WroughtIronFence",
+          "yield": 1,
+          "ammo": "WroughtIronFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "EbonstoneEcho",
+          "yield": 1,
+          "ammo": "EbonstoneEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "MudWallEcho",
+          "yield": 1,
+          "ammo": "MudWallEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "PearlstoneEcho",
+          "yield": 1,
+          "ammo": "PearlstoneEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "SnowWallEcho",
+          "yield": 1,
+          "ammo": "SnowWallEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "AmethystEcho",
+          "yield": 1,
+          "ammo": "AmethystEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "TopazEcho",
+          "yield": 1,
+          "ammo": "TopazEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "SapphireEcho",
+          "yield": 1,
+          "ammo": "SapphireEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "EmeraldEcho",
+          "yield": 1,
+          "ammo": "EmeraldEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "RubyEcho",
+          "yield": 1,
+          "ammo": "RubyEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "DiamondEcho",
+          "yield": 1,
+          "ammo": "DiamondEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave1Echo",
+          "yield": 1,
+          "ammo": "Cave1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave2Echo",
+          "yield": 1,
+          "ammo": "Cave2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave3Echo",
+          "yield": 1,
+          "ammo": "Cave3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave4Echo",
+          "yield": 1,
+          "ammo": "Cave4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave5Echo",
+          "yield": 1,
+          "ammo": "Cave5Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave6Echo",
+          "yield": 1,
+          "ammo": "Cave6Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave7Echo",
+          "yield": 1,
+          "ammo": "Cave7Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "SpiderEcho",
+          "yield": 1,
+          "ammo": "SpiderEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "CorruptGrassEcho",
+          "yield": 1,
+          "ammo": "CorruptGrassEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "HallowedGrassEcho",
+          "yield": 1,
+          "ammo": "HallowedGrassEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "IceEcho",
+          "yield": 1,
+          "ammo": "IceEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "ObsidianBackEcho",
+          "yield": 1,
+          "ammo": "ObsidianBackEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimsonGrassEcho",
+          "yield": 1,
+          "ammo": "CrimsonGrassEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimstoneEcho",
+          "yield": 1,
+          "ammo": "CrimstoneEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "CaveWall1Echo",
+          "yield": 1,
+          "ammo": "CaveWall1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "CaveWall2Echo",
+          "yield": 1,
+          "ammo": "CaveWall2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave8Echo",
+          "yield": 1,
+          "ammo": "Cave8Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Corruption1Echo",
+          "yield": 1,
+          "ammo": "Corruption1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Corruption2Echo",
+          "yield": 1,
+          "ammo": "Corruption2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Corruption3Echo",
+          "yield": 1,
+          "ammo": "Corruption3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Corruption4Echo",
+          "yield": 1,
+          "ammo": "Corruption4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Crimson1Echo",
+          "yield": 1,
+          "ammo": "Crimson1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Crimson2Echo",
+          "yield": 1,
+          "ammo": "Crimson2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Crimson3Echo",
+          "yield": 1,
+          "ammo": "Crimson3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Crimson4Echo",
+          "yield": 1,
+          "ammo": "Crimson4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Dirt1Echo",
+          "yield": 1,
+          "ammo": "Dirt1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Dirt2Echo",
+          "yield": 1,
+          "ammo": "Dirt2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Dirt3Echo",
+          "yield": 1,
+          "ammo": "Dirt3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Dirt4Echo",
+          "yield": 1,
+          "ammo": "Dirt4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Hallow1Echo",
+          "yield": 1,
+          "ammo": "Hallow1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Hallow2Echo",
+          "yield": 1,
+          "ammo": "Hallow2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Hallow3Echo",
+          "yield": 1,
+          "ammo": "Hallow3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Hallow4Echo",
+          "yield": 1,
+          "ammo": "Hallow4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Jungle1Echo",
+          "yield": 1,
+          "ammo": "Jungle1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Jungle2Echo",
+          "yield": 1,
+          "ammo": "Jungle2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Jungle3Echo",
+          "yield": 1,
+          "ammo": "Jungle3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Jungle4Echo",
+          "yield": 1,
+          "ammo": "Jungle4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Lava1Echo",
+          "yield": 1,
+          "ammo": "Lava1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Lava2Echo",
+          "yield": 1,
+          "ammo": "Lava2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Lava3Echo",
+          "yield": 1,
+          "ammo": "Lava3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Lava4Echo",
+          "yield": 1,
+          "ammo": "Lava4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Rocks1Echo",
+          "yield": 1,
+          "ammo": "Rocks1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Rocks2Echo",
+          "yield": 1,
+          "ammo": "Rocks2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Rocks3Echo",
+          "yield": 1,
+          "ammo": "Rocks3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Rocks4Echo",
+          "yield": 1,
+          "ammo": "Rocks4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "LargeBambooBlockWall",
+          "yield": 1,
+          "ammo": "LargeBambooBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "BambooBlockWall",
+          "yield": 1,
+          "ammo": "BambooBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AmberStoneWallEcho",
+          "yield": 1,
+          "ammo": "AmberStoneWallEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "BambooFence",
+          "yield": 1,
+          "ammo": "BambooFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "AshWood",
+          "yield": 1,
+          "ammo": "AshWoodWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AshWoodFence",
+          "yield": 1,
+          "ammo": "AshWoodFence"
+        },
+        {
+          "layer": "Wall",
+          "main": "EchoWall",
+          "yield": 1,
+          "ammo": "EchoWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "ReefWall",
+          "yield": 1,
+          "ammo": "ReefWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SpiderUnsafe",
+          "yield": 1,
+          "ammo": "SpiderWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "BlueDungeonUnsafe",
+          "yield": 1,
+          "ammo": "BlueBrickWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "BlueDungeonSlabUnsafe",
+          "yield": 1,
+          "ammo": "BlueSlabWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "BlueDungeonTileUnsafe",
+          "yield": 1,
+          "ammo": "BlueTiledWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "PinkDungeonUnsafe",
+          "yield": 1,
+          "ammo": "PinkBrickWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "PinkDungeonSlabUnsafe",
+          "yield": 1,
+          "ammo": "PinkSlabWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "PinkDungeonTileUnsafe",
+          "yield": 1,
+          "ammo": "PinkTiledWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "GreenDungeonUnsafe",
+          "yield": 1,
+          "ammo": "GreenBrickWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "GreenDungeonSlabUnsafe",
+          "yield": 1,
+          "ammo": "GreenSlabWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "GreenDungeonTileUnsafe",
+          "yield": 1,
+          "ammo": "GreenTiledWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "Sandstone",
+          "yield": 1,
+          "ammo": "SandstoneWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "HardenedSand",
+          "yield": 1,
+          "ammo": "HardenedSandWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "LihzahrdBrickUnsafe",
+          "yield": 1,
+          "ammo": "LihzahrdWallUnsafe"
+        },
+        {
+          "layer": "Wall",
+          "main": "PoopWall",
+          "yield": 1,
+          "ammo": "PoopWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "ShimmerBlockWall",
+          "yield": 1,
+          "ammo": "ShimmerWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "ShimmerBrickWall",
+          "yield": 1,
+          "ammo": "ShimmerBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "LunarRustBrickWall",
+          "yield": 1,
+          "ammo": "LunarRustBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "DarkCelestialBrickWall",
+          "yield": 1,
+          "ammo": "DarkCelestialBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AstraBrickWall",
+          "yield": 1,
+          "ammo": "AstraBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CosmicEmberBrickWall",
+          "yield": 1,
+          "ammo": "CosmicEmberBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CryocoreBrickWall",
+          "yield": 1,
+          "ammo": "CryocoreBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "MercuryBrickWall",
+          "yield": 1,
+          "ammo": "MercuryBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "StarRoyaleBrickWall",
+          "yield": 1,
+          "ammo": "StarRoyaleBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "HeavenforgeBrickWall",
+          "yield": 1,
+          "ammo": "HeavenforgeBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AncientBlueBrickWall",
+          "yield": 1,
+          "ammo": "AncientBlueDungeonBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AncientGreenBrickWall",
+          "yield": 1,
+          "ammo": "AncientGreenDungeonBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AncientPinkBrickWall",
+          "yield": 1,
+          "ammo": "AncientPinkDungeonBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AncientGoldBrickWall",
+          "yield": 1,
+          "ammo": "AncientGoldBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AncientSilverBrickWall",
+          "yield": 1,
+          "ammo": "AncientSilverBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AncientCopperBrickWall",
+          "yield": 1,
+          "ammo": "AncientCopperBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AncientCobaltBrickWall",
+          "yield": 1,
+          "ammo": "AncientCobaltBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AncientMythrilBrickWall",
+          "yield": 1,
+          "ammo": "AncientMythrilBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AncientObsidianBrickWall",
+          "yield": 1,
+          "ammo": "AncientObsidianBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "AncientHellstoneBrickWall",
+          "yield": 1,
+          "ammo": "AncientHellstoneBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "LavaMossBlockWall",
+          "yield": 1,
+          "ammo": "LavaMossBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "ArgonMossBlockWall",
+          "yield": 1,
+          "ammo": "ArgonMossBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "KryptonMossBlockWall",
+          "yield": 1,
+          "ammo": "KryptonMossBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "XenonMossBlockWall",
+          "yield": 1,
+          "ammo": "XenonMossBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "VioletMossBlockWall",
+          "yield": 1,
+          "ammo": "VioletMossBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "RainbowMossBlockWall",
+          "yield": 1,
+          "ammo": "RainbowMossBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "DirtUnsafe",
+          "yield": 1,
+          "ammo": "DirtWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "EbonstoneUnsafe",
+          "yield": 1,
+          "ammo": "EbonstoneEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "HellstoneBrickUnsafe",
+          "yield": 1,
+          "ammo": "HellstoneBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "ObsidianBrickUnsafe",
+          "yield": 1,
+          "ammo": "ObsidianBrickWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "MudUnsafe",
+          "yield": 1,
+          "ammo": "MudWallEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "PearlstoneBrickUnsafe",
+          "yield": 1,
+          "ammo": "PearlstoneEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "SnowWallUnsafe",
+          "yield": 1,
+          "ammo": "SnowWallEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "AmethystUnsafe",
+          "yield": 1,
+          "ammo": "StoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "TopazUnsafe",
+          "yield": 1,
+          "ammo": "StoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "SapphireUnsafe",
+          "yield": 1,
+          "ammo": "StoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "EmeraldUnsafe",
+          "yield": 1,
+          "ammo": "StoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "RubyUnsafe",
+          "yield": 1,
+          "ammo": "StoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "DiamondUnsafe",
+          "yield": 1,
+          "ammo": "StoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CaveUnsafe",
+          "yield": 1,
+          "ammo": "Cave1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave2Unsafe",
+          "yield": 1,
+          "ammo": "Cave2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave3Unsafe",
+          "yield": 1,
+          "ammo": "Cave3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave4Unsafe",
+          "yield": 1,
+          "ammo": "Cave4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave5Unsafe",
+          "yield": 1,
+          "ammo": "Cave5Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave6Unsafe",
+          "yield": 1,
+          "ammo": "Cave6Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave7Unsafe",
+          "yield": 1,
+          "ammo": "Cave7Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "GrassUnsafe",
+          "yield": 1,
+          "ammo": "GrassWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "JungleUnsafe",
+          "yield": 1,
+          "ammo": "JungleWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "FlowerUnsafe",
+          "yield": 1,
+          "ammo": "FlowerWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CorruptGrassUnsafe",
+          "yield": 1,
+          "ammo": "CorruptGrassEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "HallowedGrassUnsafe",
+          "yield": 1,
+          "ammo": "HallowedGrassEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "IceUnsafe",
+          "yield": 1,
+          "ammo": "IceEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "ObsidianBackUnsafe",
+          "yield": 1,
+          "ammo": "ObsidianBackEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "MushroomUnsafe",
+          "yield": 1,
+          "ammo": "MushroomWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimsonGrassUnsafe",
+          "yield": 1,
+          "ammo": "FleshBlockWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimstoneUnsafe",
+          "yield": 1,
+          "ammo": "CrimstoneEcho"
+        },
+        {
+          "layer": "Wall",
+          "main": "HiveUnsafe",
+          "yield": 1,
+          "ammo": "HiveWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CaveWall",
+          "yield": 1,
+          "ammo": "CaveWall1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "CaveWall2",
+          "yield": 1,
+          "ammo": "CaveWall2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "MarbleUnsafe",
+          "yield": 1,
+          "ammo": "MarbleWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "GraniteUnsafe",
+          "yield": 1,
+          "ammo": "GraniteWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "Cave8Unsafe",
+          "yield": 1,
+          "ammo": "Cave8Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "CorruptionUnsafe1",
+          "yield": 1,
+          "ammo": "Corruption1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "CorruptionUnsafe2",
+          "yield": 1,
+          "ammo": "Corruption2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "CorruptionUnsafe3",
+          "yield": 1,
+          "ammo": "Corruption3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "CorruptionUnsafe4",
+          "yield": 1,
+          "ammo": "Corruption4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimsonUnsafe1",
+          "yield": 1,
+          "ammo": "Crimson1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimsonUnsafe2",
+          "yield": 1,
+          "ammo": "Crimson2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimsonUnsafe3",
+          "yield": 1,
+          "ammo": "Crimson3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimsonUnsafe4",
+          "yield": 1,
+          "ammo": "Crimson4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "DirtUnsafe1",
+          "yield": 1,
+          "ammo": "Dirt1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "DirtUnsafe2",
+          "yield": 1,
+          "ammo": "Dirt2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "DirtUnsafe3",
+          "yield": 1,
+          "ammo": "Dirt3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "DirtUnsafe4",
+          "yield": 1,
+          "ammo": "Dirt4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "HallowUnsafe1",
+          "yield": 1,
+          "ammo": "Hallow1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "HallowUnsafe2",
+          "yield": 1,
+          "ammo": "Hallow2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "HallowUnsafe3",
+          "yield": 1,
+          "ammo": "Hallow3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "HallowUnsafe4",
+          "yield": 1,
+          "ammo": "Hallow4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "JungleUnsafe1",
+          "yield": 1,
+          "ammo": "Jungle1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "JungleUnsafe2",
+          "yield": 1,
+          "ammo": "Jungle2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "JungleUnsafe3",
+          "yield": 1,
+          "ammo": "Jungle3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "JungleUnsafe4",
+          "yield": 1,
+          "ammo": "Jungle4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "LavaUnsafe1",
+          "yield": 1,
+          "ammo": "Lava1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "LavaUnsafe2",
+          "yield": 1,
+          "ammo": "Lava2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "LavaUnsafe3",
+          "yield": 1,
+          "ammo": "Lava3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "LavaUnsafe4",
+          "yield": 1,
+          "ammo": "Lava4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "RocksUnsafe1",
+          "yield": 1,
+          "ammo": "Rocks1Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "RocksUnsafe2",
+          "yield": 1,
+          "ammo": "Rocks2Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "RocksUnsafe3",
+          "yield": 1,
+          "ammo": "Rocks3Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "RocksUnsafe4",
+          "yield": 1,
+          "ammo": "Rocks4Echo"
+        },
+        {
+          "layer": "Wall",
+          "main": "CorruptHardenedSand",
+          "yield": 1,
+          "ammo": "CorruptHardenedSandWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimsonHardenedSand",
+          "yield": 1,
+          "ammo": "CrimsonHardenedSandWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "HallowHardenedSand",
+          "yield": 1,
+          "ammo": "HallowHardenedSandWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CorruptSandstone",
+          "yield": 1,
+          "ammo": "CorruptSandstoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "CrimsonSandstone",
+          "yield": 1,
+          "ammo": "CrimsonSandstoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "HallowSandstone",
+          "yield": 1,
+          "ammo": "HallowSandstoneWall"
+        },
+        {
+          "layer": "Wall",
+          "main": "LivingWoodUnsafe",
+          "yield": 1,
+          "ammo": "LivingWoodWall"
+        }
+      ]
+    }
+  }
+}

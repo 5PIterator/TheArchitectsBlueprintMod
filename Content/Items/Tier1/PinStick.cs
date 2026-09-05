@@ -1,11 +1,13 @@
 using Microsoft.Xna.Framework;
+using System;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using ArchitectsStencilMod.Core;
-using ArchitectsStencilMod.UI;
+using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using static TheArchitectsBlueprintMod.Core.ToolActionManager;
 
-namespace ArchitectsStencilMod.Content.Items
+namespace TheArchitectsBlueprintMod.Content.Items
 {
 	/// <summary>
 	/// PIN STICK: pins a new Selection bounds.
@@ -19,8 +21,9 @@ namespace ArchitectsStencilMod.Content.Items
 	/// </summary>
 	public class PinStick : ModItem
 	{
+		private bool _leftDragSeenDown;
 
-		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.ArchitectsStencilMod.hjson' file.
+		// The Display Name and Tooltip of this item can be edited in the 'Localization/en-US_Mods.TheArchitectsBlueprintMod.hjson' file.
 		/// <summary>Configures size, use timing, sound, and rarity for the pin stick.</summary>
 		public override void SetDefaults()
 		{
@@ -45,25 +48,31 @@ namespace ArchitectsStencilMod.Content.Items
 		public override bool CanRightClick() => false;
 
 		/// <summary>Forwards PIN click/hold start (left) or cancel and remove the blueprint (right alt-use).</summary>
-		public override bool? UseItem(Player player)
+		public override Nullable<bool> UseItem(Player player)/* tModPorter Suggestion: Return null instead of false */
 		{
 			// --- Ignore remote players; map left to PIN click and right-alt to cancel and remove the blueprint.
 
 			if (player.whoAmI != Main.myPlayer)
 				return null;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return null;
+
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return true;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			// If the player is using the primary function (left-click), trigger a pin action.
 			if (player.altFunctionUse == 0)
 			{
-				InterfaceSystem.DispatchToolInput(ToolAction.PIN, ToolActionKey.LeftClick, player, cursorTile);
+				actionManager.Handle(ToolAction.PIN, ToolActionKey.LeftClick, player, cursorTile);
 			}
 			// If the player is using the alternate function (right-click), trigger a cancel action.
 			// Note: if the left button is still held, ignore the right-click to prevent interference with the hold/drag gesture.
 			else if (player.altFunctionUse == 2 && !Main.mouseLeft)
 			{
-				InterfaceSystem.DispatchToolInput(ToolAction.PIN, ToolActionKey.RightClick, player, cursorTile);
+				actionManager.Handle(ToolAction.PIN, ToolActionKey.RightClick, player, cursorTile);
 			}
 
 			return true;
@@ -77,17 +86,28 @@ namespace ArchitectsStencilMod.Content.Items
 			if (player.whoAmI != Main.myPlayer)
 				return;
 
-			Point cursorTile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+			if (ArchitectModeGuards.SuppressHeldToolInput(player))
+				return;
+
+			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+				return;
+
+			var actionManager = ModContent.GetInstance<ToolActionManager>();
 
 			// If both left and right buttons are down, emit a right-click cancel event (for rectangle cancellation).
 			if (Main.mouseLeft && Main.mouseRight)
-				InterfaceSystem.DispatchToolInput(ToolAction.PIN, ToolActionKey.RightClick, player, cursorTile);
+				actionManager.Handle(ToolAction.PIN, ToolActionKey.RightClick, player, cursorTile);
 			// If the left button is held and was also down in the previous tick, emit a hold event.
 			else if (Main.mouseLeft && !Main.mouseLeftRelease)
-				InterfaceSystem.DispatchToolInput(ToolAction.PIN, ToolActionKey.LeftHold, player, cursorTile);
-			// If the left button was released (transitioned from down to up), emit a release event.
-			else if (!Main.mouseLeft && Main.mouseLeftRelease)
-				InterfaceSystem.DispatchToolInput(ToolAction.PIN, ToolActionKey.LeftRelease, player, cursorTile);
+				actionManager.Handle(ToolAction.PIN, ToolActionKey.LeftHold, player, cursorTile);
+			else if (_leftDragSeenDown && !Main.mouseLeft)
+			{
+				actionManager.Handle(ToolAction.PIN, ToolActionKey.LeftRelease, player, cursorTile);
+				_leftDragSeenDown = false;
+			}
+
+			if (Main.mouseLeft)
+				_leftDragSeenDown = true;
 		}
 
 		public override void AddRecipes()

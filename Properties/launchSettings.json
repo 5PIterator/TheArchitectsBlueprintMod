@@ -1,6 +1,12 @@
 {
 	"profiles": {
-		"Terraria": {
+		"TerrariaMenu": {
+			"commandName": "Executable",
+			"executablePath": "$(DotNetName)",
+			"commandLineArgs": "$(tMLPath)",
+			"workingDirectory": "$(tMLSteamPath)"
+		},
+		"TerrariaWorld": {
 			"commandName": "Executable",
 			"executablePath": "$(DotNetName)",
 			"commandLineArgs": "$(tMLPath) -skipselect \"TASTest:TASTest\"",
@@ -9,7 +15,7 @@
 		"TerrariaServer": {
 			"commandName": "Executable",
 			"executablePath": "$(DotNetName)",
-			"commandLineArgs": "$(tMLServerPath)",
+			"commandLineArgs": "$(tMLServerPath) -world \"R:\\Documents\\My Games\\Terraria\\tModLoader\\Worlds\\BE_CREATIVE.wld\"",
 			"workingDirectory": "$(tMLSteamPath)"
 		}
 	}
