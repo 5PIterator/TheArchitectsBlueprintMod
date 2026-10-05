@@ -5,6 +5,7 @@ using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -31,7 +32,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
             IReadOnlyList<(int optionIndex, LocalizedText label)> options,
             int currentIndex,
             Action<int> onSelected,
-            float anchorLeftPixels = TmodTheme.BrowserOptionsPopupAnchorLeft)
+            float anchorLeftPixels = Theme.BrowserOptionsPopupAnchorLeft)
         {
             _onSelected = onSelected;
             _currentIndex = currentIndex;
@@ -53,8 +54,8 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
                 Left = new StyleDimension(anchorLeftPixels, 0f),
                 Top = new StyleDimension(0f, 0f)
             };
-            container.BorderColor = TmodTheme.PanelBorder * 0.9f;
-            container.BackgroundColor = TmodTheme.PanelBackground * 0.9f;
+            container.BorderColor = Theme.PanelBorder * 0.9f;
+            container.BackgroundColor = Theme.PanelBackground * 0.9f;
             container.SetPadding(0f);
 
             for (int i = 0; i < options.Count; i++)

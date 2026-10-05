@@ -1,11 +1,10 @@
 using System;
 using Microsoft.Xna.Framework;
-using TheArchitectsBlueprintMod.Core;
 
-namespace TheArchitectsBlueprintMod.UI.TmodGUI
+namespace TheArchitectsBlueprintMod.UI.Style
 {
     /// <summary>Shared dimensions and colors for TmodGUI elements and widgets.</summary>
-    public static class TmodTheme
+    public static class Theme
     {
         public const float DialogWidth = 520f;
         public const float ExportDialogHeight = 190f;
@@ -87,7 +86,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI
         public static readonly Color WindowPanelBorder = new(55, 68, 120, 230);
         public static readonly Color PrimaryText = Color.White;
         public static readonly Color SecondaryText = new(200, 200, 220, 255);
-        public static readonly Color PrimaryAccent = ArchitectVisualPalette.PayloadIoHighlightColor;
+        public static readonly Color PrimaryAccent = Palette.PayloadIoHighlightColor;
         public static readonly Color ButtonBackground = new(63, 82, 151, 255);
         public static readonly Color ButtonHover = new(90, 110, 190, 255);
         public static readonly Color DisabledText = new(140, 140, 150, 255);

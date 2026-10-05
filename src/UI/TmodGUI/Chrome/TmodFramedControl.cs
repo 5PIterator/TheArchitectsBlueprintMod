@@ -6,6 +6,7 @@ using Terraria.Audio;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
 using Terraria.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -27,7 +28,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         public string? SlotBackPath { get; init; }
         public string? FrontPath { get; init; }
         public string? GlowPath { get; init; }
-        public Color OverlayColor { get; init; } = TmodTheme.BestiarySlotOverlay;
+        public Color OverlayColor { get; init; } = Theme.BestiarySlotOverlay;
         public float ActiveAlpha { get; init; } = 1f;
         public float InactiveAlpha { get; init; } = 0.72f;
 

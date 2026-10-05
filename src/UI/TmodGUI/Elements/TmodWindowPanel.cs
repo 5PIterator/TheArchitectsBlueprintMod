@@ -6,6 +6,7 @@ using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
 using Terraria.ModLoader.UI.Elements;
 using Terraria.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -21,8 +22,8 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 
         public TmodWindowPanel()
         {
-            BackgroundColor = TmodTheme.WindowPanelBackground;
-            BorderColor = TmodTheme.WindowPanelBorder;
+            BackgroundColor = Theme.WindowPanelBackground;
+            BorderColor = Theme.WindowPanelBorder;
         }
 
         private bool _dragging;
@@ -30,7 +31,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         private Vector2 _dragOffset;
         /// <summary>Width of the non-client margin that starts a window drag on click.</summary>
 
-        public float EdgeDragPadding { get; set; } = TmodTheme.Padding;
+        public float EdgeDragPadding { get; set; } = Theme.Padding;
         public bool IsDragging => _dragging;
 
         /// <summary>When set, returns whether a descendant text field is actively capturing keyboard input.</summary>

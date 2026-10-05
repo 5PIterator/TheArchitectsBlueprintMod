@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Terraria.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -17,16 +18,16 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         public float Spacing { get; set; }
         public bool CrossAxisCenter { get; set; } = true;
 
-        public TmodStackPanel(TmodStackOrientation orientation, float spacing = TmodTheme.Spacing)
+        public TmodStackPanel(TmodStackOrientation orientation, float spacing = Theme.Spacing)
         {
             Orientation = orientation;
             Spacing = spacing;
         }
 
-        public static TmodStackPanel Horizontal(float spacing = TmodTheme.Spacing, bool crossAxisCenter = true) =>
+        public static TmodStackPanel Horizontal(float spacing = Theme.Spacing, bool crossAxisCenter = true) =>
             new(TmodStackOrientation.Horizontal, spacing) { CrossAxisCenter = crossAxisCenter };
 
-        public static TmodStackPanel Vertical(float spacing = TmodTheme.Spacing, bool crossAxisCenter = false) =>
+        public static TmodStackPanel Vertical(float spacing = Theme.Spacing, bool crossAxisCenter = false) =>
             new(TmodStackOrientation.Vertical, spacing) { CrossAxisCenter = crossAxisCenter };
 
         public TmodStackGrow AppendGrow()

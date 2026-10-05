@@ -4,6 +4,7 @@ using Terraria.GameContent.UI.Elements;
 using Terraria.Localization;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -25,10 +26,10 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         public PayloadProjectNameRow(PayloadPreviewBuildContext ctx)
         {
             OverflowHidden = true;
-            Height.Set(TmodTheme.TextFieldHeight, 0f);
+            Height.Set(Theme.TextFieldHeight, 0f);
             Width.Set(0f, 1f);
 
-            float btn = TmodTheme.TextFieldHeight;
+            float btn = Theme.TextFieldHeight;
             var editButton = new TmodUIImageButton(
                 btn,
                 btn,
@@ -54,7 +55,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
             _labelPanel.SetPadding(6f);
             _label = new UIText(string.Empty, 0.9f)
             {
-                TextColor = TmodTheme.PrimaryText,
+                TextColor = Theme.PrimaryText,
                 HAlign = 0f,
                 VAlign = 0.5f,
                 TextOriginX = 0f,

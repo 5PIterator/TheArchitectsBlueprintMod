@@ -1,13 +1,13 @@
 using Microsoft.Xna.Framework;
 
-namespace TheArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.UI.Style
 {
     /// <summary>
     /// Single source of truth for overlay colors across all Architect's Blueprint systems.
-    /// Colors map to the gem/material theme defined in #notes.md (PIN=diamond, SET=sapphire,
+    /// Colors map to the gem/material theme (PIN=diamond, SET=sapphire,
     /// CPY=amethyst, INC=topaz, EXC=amber, CUT=ruby, PST=emerald, RST=obsidian).
     /// </summary>
-    public static class ArchitectVisualPalette
+    public static class Palette
     {
         /// <summary>Diamond white — selection bounds outline (PIN action).</summary>
         public static readonly Color SelectionBoundsColor = new(240, 245, 255);

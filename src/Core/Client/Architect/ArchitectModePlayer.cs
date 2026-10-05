@@ -3,7 +3,7 @@ using Terraria.GameInput;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
-namespace TheArchitectsBlueprintMod.Core.ArchitectMode
+namespace TheArchitectsBlueprintMod.Core.Architect
 {
     /// <summary>Tracks Architect Mode GUI unlock and whether Architect's Hand is currently equipped.</summary>
     public sealed class ArchitectModePlayer : ModPlayer
@@ -35,7 +35,7 @@ namespace TheArchitectsBlueprintMod.Core.ArchitectMode
             if (Player.whoAmI != Main.myPlayer)
                 return;
 
-            if (!ModContent.GetInstance<ArchitectModeSystem>().Active)
+            if (!ModContent.GetInstance<ArchitectSystem>().Active)
                 return;
 
             Main.playerInventory = false;
@@ -49,13 +49,13 @@ namespace TheArchitectsBlueprintMod.Core.ArchitectMode
             if (Player.whoAmI != Main.myPlayer)
                 return;
 
-            var architectMode = ModContent.GetInstance<ArchitectModeSystem>();
-            if (!architectMode.Active)
+            var architect = ModContent.GetInstance<ArchitectSystem>();
+            if (!architect.Active)
                 return;
 
             // Esc / inventory key closes Architect Mode (Camera Mode parity).
             if (triggersSet.Inventory)
-                architectMode.Toggle(false);
+                architect.Toggle(false);
 
             triggersSet.Inventory = false;
             triggersSet.Hotbar1 = false;

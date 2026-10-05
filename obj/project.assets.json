@@ -55,7 +55,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\theiterator\\.nuget\\packages\\": {}
+    "C:\\Users\\theiterator\\AppData\\Local\\Temp\\cursor-sandbox-cache\\d71c1a956775583e0dc7c6cf6fe42be1\\nuget": {}
   },
   "project": {
     "version": "1.0.0",
@@ -63,7 +63,7 @@
       "projectUniqueName": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\TheArchitectsBlueprintMod.csproj",
       "projectName": "TheArchitectsBlueprintMod",
       "projectPath": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\TheArchitectsBlueprintMod.csproj",
-      "packagesPath": "C:\\Users\\theiterator\\.nuget\\packages\\",
+      "packagesPath": "C:\\Users\\theiterator\\AppData\\Local\\Temp\\cursor-sandbox-cache\\d71c1a956775583e0dc7c6cf6fe42be1\\nuget",
       "outputPath": "R:\\Documents\\My Games\\Terraria\\tModLoader\\ModSources\\TheArchitectsBlueprintMod\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [

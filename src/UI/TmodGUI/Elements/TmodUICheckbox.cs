@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -26,8 +27,8 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
             _hoverTextWhenOn = hoverTextWhenOn;
             _selected = initialState;
 
-            Width.Set(TmodTheme.BrowserControlButtonSize, 0f);
-            Height.Set(TmodTheme.BrowserControlButtonSize, 0f);
+            Width.Set(Theme.BrowserControlButtonSize, 0f);
+            Height.Set(Theme.BrowserControlButtonSize, 0f);
 
             _toggle = new UIToggleImage(
                 TmodUIAssets.RequestTexture(TmodUIAssets.Shared.SettingsTogglePath),

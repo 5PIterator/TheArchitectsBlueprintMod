@@ -7,6 +7,7 @@ using Terraria.DataStructures;
 using Terraria.Map;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.Architect;
 using TheArchitectsBlueprintMod.Core.Layers;
 using TheArchitectsBlueprintMod.Utils;
 

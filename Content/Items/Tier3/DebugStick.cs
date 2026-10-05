@@ -6,7 +6,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using TheArchitectsBlueprintMod.Core;
-using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using TheArchitectsBlueprintMod.Core.Architect;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.Utils;
 #if DEBUG
@@ -76,7 +76,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			if (ArchitectModeGuards.SuppressHeldToolInput(player))
 				return null;
 
-			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+			if (!ModContent.GetInstance<ArchitectSystem>().TryGetCursorTile(player, out Point cursorTile))
 				return true;
 
 			if (player.altFunctionUse == 0)

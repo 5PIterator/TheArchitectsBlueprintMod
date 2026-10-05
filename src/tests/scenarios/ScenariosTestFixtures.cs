@@ -1,16 +1,18 @@
 #if DEBUG
 #nullable enable
 
+using TheArchitectsBlueprintMod.Core;
+
 namespace TheArchitectsBlueprintMod.Core.ScenarioTests
 {
     /// <summary>Shared JSON fixtures for in-game payload scenario tests.</summary>
     internal static class ScenariosTestFixtures
     {
-        internal const string MirrorDocumentJson =
-            """
+        internal static string MirrorDocumentJson =>
+            $$"""
             {
-              "format": "TheArchitectsBlueprintMod.Payload",
-              "schemaVersion": 4,
+              "format": "{{PayloadTagIO.FormatId}}",
+              "schemaVersion": {{PayloadTagIO.SchemaVersion}},
               "metadata": {
                 "projectName": "MirrorProject",
                 "playerName": "Tester",

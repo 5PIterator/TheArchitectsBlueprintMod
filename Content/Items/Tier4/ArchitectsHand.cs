@@ -1,7 +1,7 @@
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
-using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using TheArchitectsBlueprintMod.Core.Architect;
 
 namespace TheArchitectsBlueprintMod.Content.Items
 {

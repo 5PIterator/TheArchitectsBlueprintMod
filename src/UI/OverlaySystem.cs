@@ -9,6 +9,7 @@ using Terraria.ModLoader;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.Architect;
 using TheArchitectsBlueprintMod.Core.Preview;
 using TheArchitectsBlueprintMod.Utils;
 
@@ -210,9 +211,10 @@ namespace TheArchitectsBlueprintMod.UI
     }
 
     /// <summary>
-    /// Hooks the overlay <see cref="OverlayCatalog"/> into the game interface layer. Feature code registers drawables via the static catalog API.
+    /// Client-side overlay catalog and draw implementation. Feature code registers drawables via the static catalog API;
+    /// <see cref="ArchitectSystem"/> owns the interface-layer hooks.
     /// </summary>
-    public sealed class OverlaySystem : ModSystem
+    public sealed class OverlaySystem
     {
         private const int TilePixelSize = 16;
         private const int PointHandleSizePx = 12;
@@ -225,7 +227,16 @@ namespace TheArchitectsBlueprintMod.UI
 
         private static MapOverlayDrawContext _mapDrawContext;
 
-        private static OverlaySystem Instance => ModContent.GetInstance<OverlaySystem>();
+        private static OverlaySystem? _instance;
+        private static OverlaySystem Instance => _instance ??= new OverlaySystem();
+
+        /// <summary>Clears every registered overlay when leaving a world.</summary>
+        public static void ClearCatalog()
+        {
+            // --- Drop catalog entries so nothing leaks across world loads.
+
+            Instance._catalog.Clear();
+        }
 
         /// <summary>Throws if new registrations are not allowed in the current context or <paramref name="id"/> is invalid.</summary>
         private static void ValidateRegistration(string id)
@@ -378,34 +389,8 @@ namespace TheArchitectsBlueprintMod.UI
         /// </summary>
         public const int PointHandleHitTestSizePx = PointHandleSizePx;
 
-        public override void OnWorldUnload()
-        {
-            _catalog.Clear();
-        }
-
-        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
-        {
-            int insertIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Interface Logic 1"));
-            if (insertIndex == -1) insertIndex = 0;
-
-            layers.Insert(insertIndex, new LegacyGameInterfaceLayer(
-                "TheArchitectsBlueprint: Overlay",
-                () => { DrawOverlayEarly(); return true; },
-                InterfaceScaleType.Game)
-            );
-
-            int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
-            if (mouseTextIndex == -1)
-                mouseTextIndex = layers.Count;
-
-            layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
-                "TheArchitectsBlueprint: OverlayFills",
-                () => { DrawOverlayLate(); return true; },
-                InterfaceScaleType.Game)
-            );
-        }
-
-        private static void DrawOverlayEarly()
+        /// <summary>Draws non-late-fill overlays in the early interface layer.</summary>
+        internal static void DrawOverlayEarly()
         {
             if (!ShouldDrawWorldOverlay())
                 return;
@@ -413,7 +398,8 @@ namespace TheArchitectsBlueprintMod.UI
             Instance._catalog.Draw(excludeLateFills: true, familyVisible: IsOverlayFamilyVisible);
         }
 
-        private static void DrawOverlayLate()
+        /// <summary>Draws late-fill overlays near Mouse Text.</summary>
+        internal static void DrawOverlayLate()
         {
             if (!ShouldDrawWorldOverlay())
                 return;

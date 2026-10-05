@@ -35,7 +35,7 @@ TAB is a Terraria mod that allows players to copy and paste structures using the
 
 ## Action and accent colors
 
-Source of truth: `src/Core/Client/ArchitectVisualPalette.cs`.
+Source of truth: `src/UI/Style/Palette.cs`.
 
 | Affordance | Color | Gem / accent | Notes |
 |------------|-------|--------------|-------|
@@ -127,15 +127,15 @@ Source of truth: `src/Core/Client/ArchitectVisualPalette.cs`.
 
 ## Architect Mode
 
-Camera Mode–style session (`src/Core/Client/ArchitectMode/`): equip-page tab, HUD suppression, dedicated toolbar, and its own input pipeline. Held sticks/wands do not fire while the session is open.
+Camera Mode–style session owned by `ArchitectSystem` (`src/Core/Client/Architect/`): equip-page tab, HUD suppression, dedicated toolbar, fullscreen-map interaction, TmodGUI hosting, overlays, toolbox, and action wheel. Held sticks/wands do not fire while the session is open.
 
 **Entry:** Equip-page tab (inventory open) when `ArchitectModePlayer.CanAccessArchitectGui` is true (Hand equipped or Blueprint unlock). Esc / inventory key exits.
 
 **Toolbar:** payload browser, print manifest, PIN, SET, Include/Exclude toggle, COPY, PASTE, CUT toggle, exit. RESET is not a toolbar slot (right-click still cancels/resets per the selected action).
 
-**Map:** Fullscreen map tool interaction only works while Architect Mode is active. With Mode off, map overlays can still render, but held items cannot edit on the map.
+**Map:** Fullscreen map tool interaction only works while Architect Mode is active (`ArchitectSystem.TryGetCursorTile`). With Mode off, map overlays can still render, but held items cannot edit on the map.
 
-**World toolbox** (`ProjectionToolboxControl`): payload browser + print manifest + CUT toggle on the frontmost defined selection or projection. Hidden during Architect Mode and on the map.
+**World toolbox** (`ProjectionToolboxControl`, hosted by `ArchitectSystem`): payload browser + print manifest + CUT toggle on the frontmost defined selection or projection. Hidden during Architect Mode and on the map.
 
 ## Temporary implementation (current build)
 

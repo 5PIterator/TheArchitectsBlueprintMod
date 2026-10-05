@@ -1,4 +1,5 @@
 using Terraria.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -62,12 +63,12 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         }
 
         public static TmodStackPanel CreateHorizontalStack(
-            float spacing = TmodTheme.Spacing,
+            float spacing = Theme.Spacing,
             bool crossAxisCenter = true) =>
             TmodStackPanel.Horizontal(spacing, crossAxisCenter);
 
         public static TmodStackPanel CreateVerticalStack(
-            float spacing = TmodTheme.Spacing,
+            float spacing = Theme.Spacing,
             bool crossAxisCenter = false) =>
             TmodStackPanel.Vertical(spacing, crossAxisCenter);
     }

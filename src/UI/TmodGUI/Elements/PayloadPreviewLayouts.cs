@@ -8,6 +8,7 @@ using Terraria.GameContent.UI.Elements;
 using Terraria.Localization;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -47,13 +48,13 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         {
             var holder = new UIElement();
             holder.Width.Set(0f, 1f);
-            holder.Height.Set(TmodTheme.BrowserPayloadSectionHeight, 0f);
+            holder.Height.Set(Theme.BrowserPayloadSectionHeight, 0f);
 
             var label = new UIText(
                 Language.GetText("Mods.TheArchitectsBlueprintMod.UI.NoProjectionSelected"),
                 0.85f)
             {
-                TextColor = TmodTheme.SecondaryText,
+                TextColor = Theme.SecondaryText,
                 HAlign = 0.5f,
                 VAlign = 0.5f,
                 TextOriginX = 0.5f,
@@ -69,8 +70,8 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
             PayloadBrowserPanelState panel,
             PayloadPreviewBuildContext ctx)
         {
-            float thumb = TmodTheme.BrowserPayloadThumbnailSize;
-            float blockHeight = thumb + TmodTheme.Spacing + AuthorRowHeight;
+            float thumb = Theme.BrowserPayloadThumbnailSize;
+            float blockHeight = thumb + Theme.Spacing + AuthorRowHeight;
 
             var column = new UIElement { OverflowHidden = true };
             TmodLayout.StackFillWidth(column, blockHeight);
@@ -91,9 +92,9 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 
             var authorLabel = new UIText(authorLine, 0.72f)
             {
-                TextColor = TmodTheme.DisabledText,
+                TextColor = Theme.DisabledText,
                 HAlign = 0.5f,
-                Top = new StyleDimension(thumb + TmodTheme.Spacing, 0f),
+                Top = new StyleDimension(thumb + Theme.Spacing, 0f),
                 TextOriginX = 0.5f,
                 TextOriginY = 0f,
                 IgnoresMouseInteraction = true
@@ -107,7 +108,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         {
             string tooltip = ResolveMetadataTooltip(key);
             var row = new TmodUIMetadataDefaultRow(tooltip, value);
-            TmodLayout.StackFillWidth(row, TmodTheme.BrowserPayloadMetadataLineHeight);
+            TmodLayout.StackFillWidth(row, Theme.BrowserPayloadMetadataLineHeight);
             host.Append(row);
         }
 

@@ -2,43 +2,58 @@
 
 ## Purpose
 
-- `src/tests/cases/` — headless deterministic logic tests (run with .NET test runner). These cover metadata/JSON-shape logic that does not require the Terraria runtime.
-- `src/tests/scenarios/` — headful command-triggered tests that run in a loaded world. These cover payload TagIO, import, compatibility, and mod-system integration.
+In-game, command-triggered scenario tests under `src/tests/scenarios/`. They run in a loaded single-player world and cover payload TagIO/import/compatibility, selection and projection APIs, and paste diffs.
 
-## Run headless cases
+## Run scenarios in game
 
-From the mod root:
+Join a world (single-player for paste scenarios), then:
 
-```bash
-dotnet test src/tests/cases/TheArchitectsBlueprintMod.Cases.Tests.csproj
-```
-
-## Run headful scenarios in game
-
-Join a world, then run chat commands:
-
-- `/tab.test list` (alias for scenario list)
-- `/tab.test all` (run all scenarios)
+- `/tab.test list`
+- `/tab.test all`
 - `/tab.test run <scenarioId>`
-- `/tab.test scenarios list|all|run <scenarioId>`
 
-Example scenario ids:
+Debug Stick action **TST** also runs `/tab.test all` (auto-stepped across frames).
+
+## Folder layout
+
+| Folder | System under test |
+|--------|-------------------|
+| `scenarios/Payload/` | TagIO, JSON import, FromSparse, compatibility |
+| `scenarios/Selection/` | Bounds, include/exclude mask, translate |
+| `scenarios/Projection/` | Copy from selection, cut flag, MoveTo |
+| `scenarios/Paste/` | Stone/cut paste and fixture world diffs |
+
+Shared runner code stays in `scenarios/`. Scenario folders are `Payload/`, `Selection/`, `Projection/`, and `Paste/` (namespaces use a `*Tests` suffix so they do not collide with core type names).
+
+## Scenario ids
+
+Format: `{system}.{name}` (lowercase, one dot).
 
 | Id | Description |
 |----|-------------|
-| `sc1` | Verifies local player context |
-| `sc2` | Core mod systems loaded |
-| `sc3` | SelectionSystem reachable |
-| `sc4` | Payload TagIO document roundtrip |
-| `sc5` | Payload TagIO stream roundtrip |
-| `sc6` | Mirror and legacy JSON import |
-| `sc7` | FromSparse bounds filtering |
-| `sc8` | Payload compatibility validate-only |
-| `sc9` | Payload IO clear-mode preconditions (requires projection under cursor) |
-| `sc10` | Payload IO fill-mode API check (requires projection under cursor) |
-| `sc11` | Source payload vs post-paste target diff (requires projection under cursor) |
+| `payload.tag` | TagIO BuildDocument / TryReadDocument roundtrip |
+| `payload.stream` | Compressed TagIO stream roundtrip |
+| `payload.json` | Mirror and legacy JSON import |
+| `payload.sparse` | FromSparse bounds filtering |
+| `payload.compat` | Validate-only clean stone + unresolvable report |
+| `payload.skip` | SkipIncompatible remaps unresolvable tiles |
+| `payload.modded` | Loads `SS_MassiveModded.tab` (defined document only) |
+| `selection.bounds` | SetPoints defines size; ClearSelection clears |
+| `selection.mask` | IncludeTiles / ExcludeTiles |
+| `selection.move` | TranslateSelection keeps size |
+| `projection.copy` | NewProjection payload size matches selection |
+| `projection.cut` | SetCut toggle; empty payload forces off |
+| `projection.move` | MoveTo relocates target; relative cells stay |
+| `paste.stone` | 1x1 stone capture → paste → cell diff |
+| `paste.cut` | 1x1 cut paste; source cleared |
+| `paste.layer` | `TTP_LayerTestVanilla.tab` paste diff |
+| `paste.medium` | `TMM_MediumVanilla.tab` paste diff |
+
+Fixture pastes need the structure’s materials in inventory (Journey mode is the practical setup). A material miss shows up as a payload diff failure.
 
 ## Naming conventions
 
-- `cases/tests`: file names end with `CasesTests.cs`; each test focuses on deterministic logic.
-- `scenarios/tests`: class names end with `ScenarioTest`; each scenario has a stable `Id`.
+- Folder names match the system (`Payload`, `Selection`, `Projection`, `Paste`).
+- Class / file names are PascalCase feature + `Scenario` (e.g. `TagRoundtripScenario`).
+- Each scenario exposes a stable dotted `Id`.
+- New scenarios auto-register: any concrete `IScenarioTest` with a parameterless constructor is discovered by `ScenarioTestRegistry` (sorted by id). No hand-maintained list.

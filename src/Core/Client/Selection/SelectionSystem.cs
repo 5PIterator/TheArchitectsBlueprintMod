@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
+using TheArchitectsBlueprintMod.Core.Architect;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -110,12 +112,12 @@ namespace TheArchitectsBlueprintMod.Core
             if (selection is null || !selection.IsDefined)
             {
                 OverlaySystem.UnregisterFamily(family);
-                ModContent.GetInstance<ProjectionToolboxControl>().RegisterToolbox(player);
+                ModContent.GetInstance<ArchitectSystem>().Toolbox.RegisterToolbox(player);
                 return;
             }
 
             // Draw the bounds of the selection
-            OverlaySystem.RegTileBounds("bounds", selection.Area, ArchitectVisualPalette.SelectionBoundsColor, 2, family);
+            OverlaySystem.RegTileBounds("bounds", selection.Area, Palette.SelectionBoundsColor, 2, family);
             // Clear previous exclusion fill: RegTileFill does not run when the mask is all included, and the
             // catalog would otherwise keep the last non-empty "excluded" registration.
             OverlaySystem.Unregister("excluded", family);
@@ -125,13 +127,13 @@ namespace TheArchitectsBlueprintMod.Core
             // Draw the pin points of the selection
             if (TryGetPoints(player, out var a, out var b))
             {
-                OverlaySystem.RegPoints("a", [a], ArchitectVisualPalette.PinAColor, family);
-                OverlaySystem.RegPoints("b", [b], ArchitectVisualPalette.PinBColor, family);
+                OverlaySystem.RegPoints("a", [a], Palette.PinAColor, family);
+                OverlaySystem.RegPoints("b", [b], Palette.PinBColor, family);
             }
 
             BlueprintGuard.RegisterGuardMask(player, selection, "guarded", family);
 
-            ModContent.GetInstance<ProjectionToolboxControl>().RegisterToolbox(player);
+            ModContent.GetInstance<ArchitectSystem>().Toolbox.RegisterToolbox(player);
         }
 
         private static void UpdateSelection(PlayerSelectionState state)

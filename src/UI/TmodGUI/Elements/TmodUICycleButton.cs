@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Xna.Framework;
 using Terraria.GameContent.UI.Elements;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -14,13 +15,13 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
             string? hoverText,
             Action? onClick,
             float width,
-            float height = TmodTheme.BrowserToolbarButtonSize,
+            float height = Theme.BrowserToolbarButtonSize,
             string? secondaryTexturePath = null)
             : base(width, height, hoverText, onClick, wideBorder: true, secondaryTexturePath: secondaryTexturePath)
         {
             _label = new UITextPanel<string>(value, 0.78f, large: false)
             {
-                TextColor = TmodTheme.SecondaryText,
+                TextColor = Theme.SecondaryText,
                 BackgroundColor = Color.Transparent,
                 BorderColor = Color.Transparent,
                 IgnoresMouseInteraction = true,

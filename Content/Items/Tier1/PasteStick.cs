@@ -4,7 +4,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Core;
-using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using TheArchitectsBlueprintMod.Core.Architect;
 using static TheArchitectsBlueprintMod.Core.ToolActionManager;
 
 namespace TheArchitectsBlueprintMod.Content.Items
@@ -44,7 +44,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			if (ArchitectModeGuards.SuppressHeldToolInput(player))
 				return null;
 
-			if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+			if (!ModContent.GetInstance<ArchitectSystem>().TryGetCursorTile(player, out Point cursorTile))
 				return true;
 
 			var actionManager = ModContent.GetInstance<ToolActionManager>();

@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Terraria.GameContent.UI.Elements;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -9,7 +10,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         public TmodUILabel(string text, float textScale = 0.9f, bool secondary = false)
             : base(text, textScale, large: false)
         {
-            TextColor = secondary ? TmodTheme.SecondaryText : TmodTheme.PrimaryText;
+            TextColor = secondary ? Theme.SecondaryText : Theme.PrimaryText;
             BackgroundColor = Color.Transparent;
             BorderColor = Color.Transparent;
             IgnoresMouseInteraction = true;

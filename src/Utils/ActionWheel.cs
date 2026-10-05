@@ -10,8 +10,9 @@ using Terraria.ModLoader;
 using Terraria.GameContent.UI;
 using Terraria.GameInput;
 using TheArchitectsBlueprintMod.Core;
-using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using TheArchitectsBlueprintMod.Core.Architect;
 using TheArchitectsBlueprintMod.UI.TmodGUI;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.Utils
 {
@@ -124,7 +125,7 @@ namespace TheArchitectsBlueprintMod.Utils
         {
             ArgumentNullException.ThrowIfNull(entries);
 
-            if (ModContent.GetInstance<ArchitectModeSystem>().Active)
+            if (ModContent.GetInstance<ArchitectSystem>().Active)
                 return;
 
             // Ignore duplicate open requests from the current owner.
@@ -151,7 +152,7 @@ namespace TheArchitectsBlueprintMod.Utils
                 return;
             }
 
-            if (ModContent.GetInstance<ArchitectModeSystem>().Active)
+            if (ModContent.GetInstance<ArchitectSystem>().Active)
             {
                 _pendingOpen = null;
                 return;
@@ -480,36 +481,22 @@ namespace TheArchitectsBlueprintMod.Utils
         }
     }
 
-    public sealed class ActionWheelStyle
-    {
-        public float RadiusPx { get; set; } = 45f;
-        public float InnerDeadzoneRadiusPx { get; set; } = 20f;
-        public float MouseHoverRadiusPx { get; set; } = 19f;
-        public float CenterHoverRadiusPx { get; set; } = 22f;
-        public float GamepadCursorDistancePx { get; set; } = 40f;
-        public float SlotScale { get; set; } = 1f;
-        public float CenterSlotScale { get; set; } = 1f;
-        public bool CloseOnClickOutside { get; set; } = true;
-
-        public Color Background { get; set; } = Color.White;
-        public Color HoverBackground { get; set; } = Color.White;
-        public Color TextColor { get; set; } = Color.White;
-        public Color SelectedTextColor { get; set; } = new Color(255, 230, 120, 255);
-    }
-
     /// <summary>
     /// Runtime host for the active ActionWheel instance.
-    /// Kept in the same file as ActionWheel by design.
+    /// Driven by <see cref="ArchitectSystem"/>; kept in the same file as ActionWheel by design.
     /// </summary>
-    internal sealed class ActionWheelRuntime : ModSystem
+    internal static class ActionWheelRuntime
     {
         private static bool _prevLeftDown;
         private static bool _prevRightDown;
         private static int _heldItemMismatchTicks;
         private const int HeldItemMismatchGraceTicks = 1;
 
-        public override void UpdateUI(GameTime gameTime)
+        /// <summary>Updates the open action wheel and consumes pending open requests.</summary>
+        public static void UpdateUI(GameTime gameTime)
         {
+            // --- Consume pending opens, then edge-detect select/cancel for the active wheel.
+
             // Open requests originate from item logic (game update). Consume them here so the wheel
             // uses the UI-phase mouse coordinates (matching vanilla radial behavior).
             ActionWheel.ConsumePendingOpenIfAny();
@@ -569,23 +556,11 @@ namespace TheArchitectsBlueprintMod.Utils
             }
         }
 
-        public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
+        /// <summary>Draws the active action wheel into the ArchitectSystem interface layer.</summary>
+        public static bool DrawInterface()
         {
-            int mouseTextIndex = layers.FindIndex(l => l.Name.Equals("Vanilla: Mouse Text"));
-            if (mouseTextIndex == -1)
-            {
-                mouseTextIndex = layers.Count;
-            }
+            // --- Skip when no wheel is open; otherwise draw the active instance.
 
-            layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
-                "TheArchitectsBlueprintMod: ActionWheel",
-                DrawInterface,
-                InterfaceScaleType.UI
-            ));
-        }
-
-        private static bool DrawInterface()
-        {
             if (!ActionWheel.IsActive)
             {
                 return true;

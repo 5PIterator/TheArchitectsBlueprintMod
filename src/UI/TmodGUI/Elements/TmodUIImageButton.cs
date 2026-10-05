@@ -1,6 +1,7 @@
 using System;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -12,8 +13,8 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
             Asset<Texture2D> hoverTexture,
             string? hoverText = null,
             Action? onClick = null,
-            float width = TmodTheme.ButtonWidth,
-            float height = TmodTheme.ButtonHeight)
+            float width = Theme.ButtonWidth,
+            float height = Theme.ButtonHeight)
             : base(width, height, TmodFrameStyle.Image(baseTexture, hoverTexture), hoverText, onClick)
         {
         }

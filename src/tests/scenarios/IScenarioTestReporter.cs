@@ -3,7 +3,7 @@
 
 namespace TheArchitectsBlueprintMod.Core.ScenarioTests
 {
-    /// <summary>Reporter abstraction so scenario output can be redirected.</summary>
+    /// <summary>Reporter abstraction so scenario output can be redirected and tallied.</summary>
     internal interface IScenarioTestReporter
     {
         void Info(string message);

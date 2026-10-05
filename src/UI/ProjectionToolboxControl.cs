@@ -5,15 +5,15 @@ using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Core;
-using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using TheArchitectsBlueprintMod.Core.Architect;
 using TheArchitectsBlueprintMod.UI.TmodGUI.Elements;
 using TheArchitectsBlueprintMod.Utils;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI
 {
     /// <summary>Displays and handles the extensible toolbox attached to the frontmost defined selection or projection.</summary>
-    [Autoload(Side = ModSide.Client)]
-    public sealed class ProjectionToolboxControl : ModSystem
+    public sealed class ProjectionToolboxControl
     {
         private const int TilePixelSize = 16;
         private const int ButtonSizePx = 24;
@@ -36,7 +36,7 @@ namespace TheArchitectsBlueprintMod.UI
             ArgumentNullException.ThrowIfNull(player);
 
             string family = $"toolbox:{player.whoAmI}";
-            if (ModContent.GetInstance<ArchitectModeSystem>().Active
+            if (ModContent.GetInstance<ArchitectSystem>().Active
                 || ArchitectMapTransform.IsMapViewActive)
             {
                 OverlaySystem.UnregisterFamily(family);
@@ -58,7 +58,7 @@ namespace TheArchitectsBlueprintMod.UI
         }
 
         /// <summary>Updates toolbox hover and dispatches clicks to the selected tool.</summary>
-        public override void UpdateUI(GameTime gameTime)
+        internal void UpdateUI(GameTime gameTime)
         {
             // --- Validate blueprint UI state, hit-test each row button, then handle fresh clicks.
 
@@ -91,7 +91,7 @@ namespace TheArchitectsBlueprintMod.UI
         }
 
         /// <summary>Clears toolbox state when leaving the current world.</summary>
-        public override void OnWorldUnload()
+        internal void OnWorldUnload()
         {
             // --- Release the tracked blueprint and reset pointer edge state.
 
@@ -109,7 +109,7 @@ namespace TheArchitectsBlueprintMod.UI
             if (Main.dedServ || Main.gameMenu || _target is not { IsDefined: true })
                 return false;
 
-            if (ModContent.GetInstance<ArchitectModeSystem>().Active)
+            if (ModContent.GetInstance<ArchitectSystem>().Active)
                 return false;
 
             // Map view without Architect Mode is render-only; toolbox clicks must not drive tools.
@@ -140,13 +140,13 @@ namespace TheArchitectsBlueprintMod.UI
             switch (buttonIndex)
             {
                 case 0:
-                    ArchitectModeSystem.OpenPayloadBrowser();
+                    ArchitectSystem.OpenPayloadBrowser();
                     break;
                 case 1:
-                    ArchitectModeSystem.PrintManifest();
+                    ArchitectSystem.PrintManifest();
                     break;
                 case 2:
-                    ArchitectModeSystem.ToggleCut();
+                    ArchitectSystem.ToggleCut();
                     break;
             }
         }
@@ -173,12 +173,12 @@ namespace TheArchitectsBlueprintMod.UI
         {
             // --- Resolve the indexed icon and add vanilla hover chrome around it.
 
-            bool cutSelected = buttonIndex == 2 && ArchitectModeSystem.IsFrontmostCutEnabled();
+            bool cutSelected = buttonIndex == 2 && ArchitectSystem.IsFrontmostCutEnabled();
             if (hovered || cutSelected)
             {
                 Texture2D border = TmodUIAssets.RequestTexture(TmodUIAssets.Bestiary.ButtonBorderPath).Value;
                 Color borderTint = cutSelected && !hovered
-                    ? ArchitectVisualPalette.ProjectionCutColor
+                    ? Palette.ProjectionCutColor
                     : Color.White;
                 Main.spriteBatch.Draw(border, rect, borderTint);
             }
@@ -194,7 +194,7 @@ namespace TheArchitectsBlueprintMod.UI
                 return;
 
             Color iconTint = cutSelected
-                ? ArchitectVisualPalette.ProjectionCutColor
+                ? Palette.ProjectionCutColor
                 : Color.White;
             Main.spriteBatch.Draw(icon, iconRect, iconTint * (hovered ? 1f : 0.85f));
         }
@@ -204,15 +204,15 @@ namespace TheArchitectsBlueprintMod.UI
         {
             // --- Prefer Content/Icons; keep vanilla search as a fallback for the browser slot.
 
-            var architectMode = ModContent.GetInstance<ArchitectModeSystem>();
+            var architect = ModContent.GetInstance<ArchitectSystem>();
 
             // Search may fall back to the vanilla bestiary icon; Manifest and Cut are mod assets.
             return buttonIndex switch
             {
-                0 => architectMode.TryGetIconTexture(ArchitectModeSystem.SearchIconPath)
+                0 => architect.TryGetIconTexture(ArchitectSystem.SearchIconPath)
                     ?? TmodUIAssets.RequestTexture(TmodUIAssets.Bestiary.ButtonSearchPath).Value,
-                1 => architectMode.TryGetIconTexture(ArchitectModeSystem.ManifestIconPath),
-                2 => architectMode.TryGetIconTexture(ArchitectModeSystem.CutIconPath),
+                1 => architect.TryGetIconTexture(ArchitectSystem.ManifestIconPath),
+                2 => architect.TryGetIconTexture(ArchitectSystem.CutIconPath),
                 _ => null
             };
         }

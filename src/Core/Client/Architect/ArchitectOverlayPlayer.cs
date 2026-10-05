@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
-using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using TheArchitectsBlueprintMod.Core.Architect;
 
 namespace TheArchitectsBlueprintMod.Core
 {
@@ -25,7 +25,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (Player.whoAmI != Main.myPlayer)
                 return;
 
-            if (ModContent.GetInstance<ArchitectModeSystem>().Active)
+            if (ModContent.GetInstance<ArchitectSystem>().Active)
                 HeldOverlayScope = ArchitectOverlayScope.All;
             else if (ArchitectMapTransform.IsMapViewActive)
                 HeldOverlayScope = ArchitectOverlayScope.All;

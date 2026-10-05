@@ -4,7 +4,7 @@ using Terraria.Audio;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
-using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using TheArchitectsBlueprintMod.Core.Architect;
 
 namespace TheArchitectsBlueprintMod.Content.Items
 {
@@ -42,7 +42,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 				return true;
 			}
 
-			var architectMode = ModContent.GetInstance<ArchitectModeSystem>();
+			var architectMode = ModContent.GetInstance<ArchitectSystem>();
 			if (!architectMode.Active && architectMode.CanOpen(player))
 				architectMode.Toggle(true);
 			else

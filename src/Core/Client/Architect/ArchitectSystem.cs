@@ -13,17 +13,19 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Content.Items;
+using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.UI;
 using TheArchitectsBlueprintMod.UI.TmodGUI;
 using TheArchitectsBlueprintMod.UI.TmodGUI.Widgets;
 using TheArchitectsBlueprintMod.Utils;
 using static TheArchitectsBlueprintMod.Core.ToolActionManager;
+using TheArchitectsBlueprintMod.UI.Style;
 
-namespace TheArchitectsBlueprintMod.Core.ArchitectMode
+namespace TheArchitectsBlueprintMod.Core.Architect
 {
-    /// <summary>Camera Mode-style Architect Mode session: equip-page tab, toolbar, and dedicated input pipeline.</summary>
+    /// <summary>Client owner of Architect Mode, TmodGUI, overlays, toolbox, action wheel, and fullscreen-map interaction.</summary>
     [Autoload(Side = ModSide.Client)]
-    public sealed class ArchitectModeSystem : ModSystem
+    public sealed class ArchitectSystem : ModSystem
     {
         private const int ToolbarButtonCount = 9;
         private const int ToolbarButtonSize = 42;
@@ -75,6 +77,13 @@ namespace TheArchitectsBlueprintMod.Core.ArchitectMode
 
         private readonly Dictionary<string, Asset<Texture2D>> _iconAssets = new(StringComparer.OrdinalIgnoreCase);
 
+        private UserInterface? _ui;
+        private GameTime? _lastUpdateUiGameTime;
+        private bool _closeAllPending;
+
+        /// <summary>World toolbox attached to the frontmost defined selection or projection.</summary>
+        internal ProjectionToolboxControl Toolbox { get; } = new();
+
         internal bool PrevLeftDown;
         internal bool LeftDragSeenDown;
         internal bool PrevRightDown;
@@ -100,8 +109,93 @@ namespace TheArchitectsBlueprintMod.Core.ArchitectMode
 
         public override void Load()
         {
+            // --- Preload toolbar icons and create the TmodGUI UserInterface host.
+
             foreach (string path in PreloadIconPaths)
                 TryLoadIconAsset(path);
+
+            if (Main.dedServ)
+                return;
+
+            _ui = new UserInterface();
+        }
+
+        public override void Unload()
+        {
+            // --- Tear down widgets and release the UI host on mod unload.
+
+            _closeAllPending = false;
+            TmodGUI.CloseAll();
+            _ui = null;
+            _lastUpdateUiGameTime = null;
+        }
+
+        /// <summary>Sets the active TmodGUI widget state on the hosted UserInterface.</summary>
+        internal void SetActiveWidget(TmodWidgetBase? widget)
+        {
+            // --- Forward widget state to the Terraria UserInterface.
+
+            _ui?.SetState(widget);
+        }
+
+        /// <summary>Defer GUI teardown to <see cref="UpdateUI"/> so texture disposal stays on the main thread.</summary>
+        private void RequestCloseAllOnMainThread() => _closeAllPending = true;
+
+        /// <summary>
+        /// Switches mouse zoom so <see cref="Main.mouseX"/> / <see cref="Main.MouseWorld"/> match
+        /// screen hit-tests and tile picks for the current view (world vs map).
+        /// </summary>
+        public static void ApplyCursorZoom()
+        {
+            // --- Map overlays share UI mouse space; world tools need game zoom.
+
+            if (ArchitectMapTransform.IsMapViewActive)
+                PlayerInput.SetZoom_UI();
+            else
+                PlayerInput.SetZoom_World();
+        }
+
+        /// <summary>
+        /// Resolves the tile under the cursor for tool routing.
+        /// On the map, returns true only while Architect Mode is active.
+        /// </summary>
+        public bool TryGetCursorTile(Player player, out Point tile)
+        {
+            // --- Align mouse zoom, then map MouseWorld / map screen coords to a tile.
+
+            ApplyCursorZoom();
+
+            if (!ArchitectMapTransform.IsMapViewActive)
+            {
+                tile = Terraria.Utils.ToTileCoordinates(Main.MouseWorld);
+                return true;
+            }
+
+            // Map gestures are owned by Architect Mode; held items cannot interact on the map.
+            if (!Active)
+            {
+                tile = default;
+                return false;
+            }
+
+            return TryFullscreenMapMouseToTile(out tile);
+        }
+
+        /// <summary>
+        /// Converts screen mouse position to a tile on the pannable fullscreen map.
+        /// </summary>
+        public static bool TryFullscreenMapMouseToTile(out Point tile)
+        {
+            // --- Reject when not in a map view, then convert mouse pixels to tile coords.
+
+            if (!ArchitectMapTransform.IsMapViewActive)
+            {
+                tile = default;
+                return false;
+            }
+
+            ApplyCursorZoom();
+            return ArchitectMapTransform.TryScreenToTile(new Vector2(Main.mouseX, Main.mouseY), out tile);
         }
 
         /// <summary>Opens or closes Architect Mode when the player is allowed and Camera Mode is inactive.</summary>
@@ -147,11 +241,23 @@ namespace TheArchitectsBlueprintMod.Core.ArchitectMode
 
         public override void UpdateUI(GameTime gameTime)
         {
-            // --- Drive entry-tab clicks and the active session input pipeline each UI frame.
+            // --- Drive action wheel, Architect Mode, toolbox, then the active TmodGUI widget.
+
+            _lastUpdateUiGameTime = gameTime;
+
+            if (_closeAllPending)
+            {
+                _closeAllPending = false;
+                TmodGUI.CloseAll();
+            }
+
+            ActionWheelRuntime.UpdateUI(gameTime);
 
             if (Main.dedServ || Main.gameMenu)
             {
                 _uiPrevLeftDown = Main.mouseLeft;
+                if (Main.gameMenu)
+                    TmodGUI.CloseAll();
                 return;
             }
 
@@ -160,29 +266,32 @@ namespace TheArchitectsBlueprintMod.Core.ArchitectMode
 
             UpdateEntryTab(uiClicked);
 
-            if (!Active)
+            if (Active)
             {
-                _uiPrevLeftDown = Main.mouseLeft;
-                return;
+                Player player = Main.LocalPlayer;
+                if (player is not { active: true } || player.dead)
+                {
+                    _uiPrevLeftDown = Main.mouseLeft;
+                    Toggle(false);
+                }
+                else
+                {
+                    Main.blockMouse = true;
+
+                    if (JustActivated && Main.mouseLeftRelease && !Main.mouseLeft)
+                        JustActivated = false;
+
+                    UpdateSession(uiClicked);
+
+                    if (Main.mapFullscreen && IsMapGestureActive(player))
+                        Main.mapFullscreenPos = _mapPanLockPos;
+                }
             }
 
-            Player player = Main.LocalPlayer;
-            if (player is not { active: true } || player.dead)
-            {
-                _uiPrevLeftDown = Main.mouseLeft;
-                Toggle(false);
-                return;
-            }
+            Toolbox.UpdateUI(gameTime);
 
-            Main.blockMouse = true;
-
-            if (JustActivated && Main.mouseLeftRelease && !Main.mouseLeft)
-                JustActivated = false;
-
-            UpdateSession(uiClicked);
-
-            if (Main.mapFullscreen && IsMapGestureActive(player))
-                Main.mapFullscreenPos = _mapPanLockPos;
+            if (_ui?.CurrentState != null)
+                _ui.Update(gameTime);
 
             _uiPrevLeftDown = Main.mouseLeft;
         }
@@ -228,26 +337,78 @@ namespace TheArchitectsBlueprintMod.Core.ArchitectMode
 
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
-            // --- Suppress Camera-equivalent HUD layers and draw the Architect Mode UI at Mouse Text.
+            // --- Suppress HUD, then insert overlay, mode chrome, TmodGUI, and action wheel layers.
 
             ArchitectModeHud.ApplyLayerSuppression(layers, Active);
 
-            int insertIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
-            if (insertIndex == -1)
-                insertIndex = layers.Count;
+            int earlyIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Interface Logic 1"));
+            if (earlyIndex == -1)
+                earlyIndex = 0;
 
-            layers.Insert(insertIndex, new LegacyGameInterfaceLayer(
+            layers.Insert(earlyIndex, new LegacyGameInterfaceLayer(
+                "TheArchitectsBlueprint: Overlay",
+                () => { OverlaySystem.DrawOverlayEarly(); return true; },
+                InterfaceScaleType.Game));
+
+            int mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
+            if (mouseTextIndex == -1)
+                mouseTextIndex = layers.Count;
+
+            layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
+                "TheArchitectsBlueprint: OverlayFills",
+                () => { OverlaySystem.DrawOverlayLate(); return true; },
+                InterfaceScaleType.Game));
+
+            mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
+            if (mouseTextIndex == -1)
+                mouseTextIndex = layers.Count;
+
+            layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
                 "TheArchitectsBlueprintMod: Architect Mode",
                 DrawInterface,
                 InterfaceScaleType.UI));
+
+            mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
+            if (mouseTextIndex == -1)
+                mouseTextIndex = layers.Count;
+
+            layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
+                "TheArchitectsBlueprintMod: TmodGUI",
+                DrawTmodGuiInterface,
+                InterfaceScaleType.UI));
+
+            mouseTextIndex = layers.FindIndex(layer => layer.Name.Equals("Vanilla: Mouse Text"));
+            if (mouseTextIndex == -1)
+                mouseTextIndex = layers.Count;
+
+            layers.Insert(mouseTextIndex, new LegacyGameInterfaceLayer(
+                "TheArchitectsBlueprintMod: ActionWheel",
+                ActionWheelRuntime.DrawInterface,
+                InterfaceScaleType.UI));
+        }
+
+        private bool DrawTmodGuiInterface()
+        {
+            // --- Draw the active TmodGUI widget when one is open.
+
+            if (_ui?.CurrentState == null || _lastUpdateUiGameTime == null)
+                return true;
+
+            _ui.Draw(Main.spriteBatch, _lastUpdateUiGameTime);
+            return true;
         }
 
         public override void OnWorldUnload()
         {
+            // --- Close the session, widgets, overlays, and toolbox when leaving the world.
+
             Active = false;
             JustActivated = false;
             SelectedAction = ToolAction.PIN;
             ResetSessionState();
+            RequestCloseAllOnMainThread();
+            OverlaySystem.ClearCatalog();
+            Toolbox.OnWorldUnload();
         }
 
         /// <summary>Opens the payload browser for the frontmost blueprint, spawning a projection from selection when needed.</summary>
@@ -314,7 +475,7 @@ namespace TheArchitectsBlueprintMod.Core.ArchitectMode
                 return;
 
             // World/map tools and SelectionControl screen hit-tests need matching mouse zoom.
-            ArchitectMapInput.ApplyCursorZoom();
+            ApplyCursorZoom();
             UpdateWorldInput();
         }
 
@@ -636,7 +797,7 @@ namespace TheArchitectsBlueprintMod.Core.ArchitectMode
                 return;
 
             Color tint = index == 7 && IsFrontmostCutEnabled()
-                ? ArchitectVisualPalette.ProjectionCutColor
+                ? Palette.ProjectionCutColor
                 : Color.White;
             Main.spriteBatch.Draw(icon, iconRect, tint * alpha);
         }
@@ -653,10 +814,10 @@ namespace TheArchitectsBlueprintMod.Core.ArchitectMode
             }
 
             // Ensure MouseWorld / mouseX match world or map hit-test space before ToolActionManager.
-            ArchitectMapInput.ApplyCursorZoom();
+            ApplyCursorZoom();
 
             Player player = Main.LocalPlayer;
-            if (!ArchitectMapInput.TryGetCursorTile(player, out Point cursorTile))
+            if (!TryGetCursorTile(player, out Point cursorTile))
             {
                 PrevLeftDown = Main.mouseLeft;
                 PrevRightDown = Main.mouseRight;
@@ -792,7 +953,7 @@ namespace TheArchitectsBlueprintMod.Core.ArchitectMode
         /// </summary>
         public static bool SuppressHeldToolInput(Player player) =>
             player.whoAmI == Main.myPlayer
-            && (ModContent.GetInstance<ArchitectModeSystem>().Active
+            && (ModContent.GetInstance<ArchitectSystem>().Active
                 || ArchitectMapTransform.IsMapViewActive);
     }
 }

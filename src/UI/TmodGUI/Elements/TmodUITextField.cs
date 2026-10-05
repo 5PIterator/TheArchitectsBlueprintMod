@@ -1,5 +1,6 @@
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -12,7 +13,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 
         public new bool IsMouseHovering => _textBox.IsMouseHovering;
 
-        public TmodUITextField(string defaultText, int maxLength, float width, float height = TmodTheme.TextFieldHeight)
+        public TmodUITextField(string defaultText, int maxLength, float width, float height = Theme.TextFieldHeight)
         {
             Width.Set(width, 0f);
             Height.Set(height, 0f);

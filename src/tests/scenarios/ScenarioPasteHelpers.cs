@@ -1,8 +1,10 @@
 #if DEBUG
 #nullable enable
 
-using TheArchitectsBlueprintMod.Core;
+using System;
+using System.Collections;
 using Terraria.ModLoader;
+using TheArchitectsBlueprintMod.Core;
 
 namespace TheArchitectsBlueprintMod.Core.ScenarioTests
 {
@@ -11,21 +13,24 @@ namespace TheArchitectsBlueprintMod.Core.ScenarioTests
     {
         private const int MaxPasteSteps = 400_000;
 
+        /// <summary>Builds an empty defined payload used to clear a paste area.</summary>
         internal static Payload CreateEmptyPayload(int width, int height) =>
             Payload.FromSparse([], width, height);
 
-        internal static bool RunPasteAndAwait(
+        /// <summary>Starts a paste and yields one debug step at a time until it finishes or times out.</summary>
+        internal static IEnumerator RunPasteAndAwait(
             Projection projection,
             IScenarioTestReporter reporter,
             string scenarioId,
-            out string? error)
+            Action<bool, string?> onComplete)
         {
-            error = null;
+            // --- StartPaste, then DebugStepOperation each yield until idle or the step cap.
+
             PastingSystem pastingSystem = ModContent.GetInstance<PastingSystem>();
             if (!pastingSystem.StartPaste(projection, out PasteRejectReason rejectReason))
             {
-                error = $"Paste rejected: {rejectReason}.";
-                return false;
+                onComplete(false, $"Paste rejected: {rejectReason}.");
+                yield break;
             }
 
             int steps = 0;
@@ -34,39 +39,60 @@ namespace TheArchitectsBlueprintMod.Core.ScenarioTests
                 if (steps++ >= MaxPasteSteps)
                 {
                     pastingSystem.StopPaste(projection);
-                    error = $"Paste did not complete within {MaxPasteSteps} manual steps.";
-                    return false;
+                    onComplete(false, $"Paste did not complete within {MaxPasteSteps} steps.");
+                    yield break;
                 }
 
                 bool keep = pastingSystem.DebugStepOperation(projection);
                 if (!keep && pastingSystem.HasActiveOperationFor(projection))
                 {
                     pastingSystem.StopPaste(projection);
-                    error = "Paste stalled while operation was still active.";
-                    return false;
+                    onComplete(false, "Paste stalled while operation was still active.");
+                    yield break;
                 }
+
+                yield return null;
             }
 
             reporter.Info($"{scenarioId}: paste completed in {steps} step(s).");
-            return true;
+            onComplete(true, null);
         }
 
-        internal static void TeardownPasteArea(
+        /// <summary>Pastes an empty payload over the projection target to restore air after a scenario.</summary>
+        internal static IEnumerator TeardownPasteArea(
             Projection projection,
             int width,
             int height,
             IScenarioTestReporter reporter,
             string scenarioId)
         {
+            // --- Replace the payload with empty cells, then run the same stepped paste path.
+
             if (width <= 0 || height <= 0)
-                return;
+                yield break;
 
             Payload emptyPayload = CreateEmptyPayload(width, height);
             projection.SetPayload(emptyPayload);
-            if (RunPasteAndAwait(projection, reporter, scenarioId, out string? error))
+
+            bool ok = false;
+            string? error = null;
+            IEnumerator clear = RunPasteAndAwait(
+                projection,
+                reporter,
+                scenarioId,
+                (success, err) =>
+                {
+                    ok = success;
+                    error = err;
+                });
+
+            while (clear.MoveNext())
+                yield return clear.Current;
+
+            if (ok)
             {
                 reporter.Info($"{scenarioId}: teardown clear completed.");
-                return;
+                yield break;
             }
 
             reporter.Error(scenarioId, $"Teardown clear failed: {error}");

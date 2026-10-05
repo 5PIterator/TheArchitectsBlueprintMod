@@ -7,6 +7,7 @@ using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.UI;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.TileMapping;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.Core.Client
 {
@@ -97,8 +98,8 @@ namespace TheArchitectsBlueprintMod.Core.Client
                 string family = MakeFamily(prefix, s.OverlayId);
                 trackIds.Add(s.OverlayId);
 
-                Color placeHue = ArchitectVisualPalette.PlacePhaseColor;
-                Color clearHue = ArchitectVisualPalette.ClearPhaseColor;
+                Color placeHue = Palette.PlacePhaseColor;
+                Color clearHue = Palette.ClearPhaseColor;
                 Color baseHue = s.IsPlacePhase ? placeHue : clearHue;
 
                 if (s.Pending.Length > 0)

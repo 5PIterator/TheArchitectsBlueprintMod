@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using TheArchitectsBlueprintMod.Core.Architect;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.UI;
 using TheArchitectsBlueprintMod.Core.Preview;
+using TheArchitectsBlueprintMod.UI.Style;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -173,7 +175,7 @@ namespace TheArchitectsBlueprintMod.Core
                 int invIndex = 0;
                 foreach (Rectangle inventory in inventories)
                 {
-                    Color c = ArchitectVisualPalette.InventoryOutlineColor;
+                    Color c = Palette.InventoryOutlineColor;
                     string invKey = $"c:{proj.OverlayInstanceKey}:{invIndex}";
                     if (locked)
                         OverlaySystem.RegTileBorder(invKey, inventory, c, 2, family);
@@ -220,7 +222,7 @@ namespace TheArchitectsBlueprintMod.Core
                     }
 
                     // CUT vs COPY: border color. Locked: outline only (transparent interior); unlocked: border + tinted fill.
-                    Color c = proj.CutSource ? ArchitectVisualPalette.ProjectionCutColor : ArchitectVisualPalette.ProjectionCopyColor;
+                    Color c = proj.CutSource ? Palette.ProjectionCutColor : Palette.ProjectionCopyColor;
                     if (proj.IsLocked)
                         OverlaySystem.RegTileBorder($"{k}:b", proj.Area, c, 2, family);
                     else
@@ -229,9 +231,9 @@ namespace TheArchitectsBlueprintMod.Core
                     if (proj.CutSource)
                     {
                         if (proj.IsLocked)
-                            OverlaySystem.RegTileBorder($"{k}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
+                            OverlaySystem.RegTileBorder($"{k}:s", proj.SourceArea, Palette.ProjectionSourceCutColor, 2, family);
                         else
-                            OverlaySystem.RegTileBounds($"{k}:s", proj.SourceArea, ArchitectVisualPalette.ProjectionSourceCutColor, 2, family);
+                            OverlaySystem.RegTileBounds($"{k}:s", proj.SourceArea, Palette.ProjectionSourceCutColor, 2, family);
                     }
 
                     BlueprintGuard.RegisterGuardMask(player, proj, $"{k}:guarded", family);
@@ -247,13 +249,13 @@ namespace TheArchitectsBlueprintMod.Core
                 {
                     if (ReferenceEquals(proj, payloadIo))
                     {
-                        OverlaySystem.RegTileBorder("payloadIo", payloadIo.Area, ArchitectVisualPalette.PayloadIoHighlightColor, 3, family);
+                        OverlaySystem.RegTileBorder("payloadIo", payloadIo.Area, Palette.PayloadIoHighlightColor, 3, family);
                         break;
                     }
                 }
             }
 
-            ModContent.GetInstance<ProjectionToolboxControl>().RegisterToolbox(player);
+            ModContent.GetInstance<ArchitectSystem>().Toolbox.RegisterToolbox(player);
             ModContent.GetInstance<InclusionControl>().UpdateExcludedTileOverlays(player);
             UpdateInventoryOverlay(player);
         }

@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.Graphics.Capture;
 using Terraria.Map;
 
-namespace TheArchitectsBlueprintMod.Core
+namespace TheArchitectsBlueprintMod.Core.Architect
 {
     /// <summary>
     /// Tile ↔ screen conversion for the fullscreen map, mirroring vanilla DrawMap and MapOverlayDrawContext.

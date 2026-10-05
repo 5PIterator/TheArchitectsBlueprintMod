@@ -2,6 +2,7 @@ using Terraria;
 using Terraria.Map;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.Architect;
 
 namespace TheArchitectsBlueprintMod.UI
 {

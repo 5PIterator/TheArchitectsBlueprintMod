@@ -14,6 +14,7 @@ using Terraria.UI;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.Preview;
 using TheArchitectsBlueprintMod.UI.TmodGUI.Elements;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
 {
@@ -105,16 +106,16 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
         protected override void Build()
         {
             _window = new TmodWindowPanel();
-            TmodLayout.CenterInParent(_window, TmodTheme.BrowserWidth, TmodTheme.BrowserHeight);
+            TmodLayout.CenterInParent(_window, Theme.BrowserWidth, Theme.BrowserHeight);
             Append(_window);
 
             const float toolbarSortWidth = 118f;
             const float toolbarFilterWidth = 108f;
-            float btn = TmodTheme.BrowserToolbarButtonSize;
+            float btn = Theme.BrowserToolbarButtonSize;
 
             var toolbarPanel = TmodLayout.CreateHorizontalStack();
             toolbarPanel.OverflowHidden = true;
-            TmodLayout.FillWidth(toolbarPanel, TmodTheme.BrowserToolbarHeight, 0f);
+            TmodLayout.FillWidth(toolbarPanel, Theme.BrowserToolbarHeight, 0f);
             toolbarPanel.OnLeftMouseDown += OnToolbarMouseDown;
             _window.Append(toolbarPanel);
 
@@ -152,7 +153,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                 BorderColor = new Color(35, 40, 83),
             };
             _searchBoxPanel.SetPadding(0f);
-            TmodLayout.StackFixed(_searchBoxPanel, TmodTheme.BrowserSearchFieldWidth, TmodTheme.BrowserToolbarHeight);
+            TmodLayout.StackFixed(_searchBoxPanel, Theme.BrowserSearchFieldWidth, Theme.BrowserToolbarHeight);
 
             _searchPlaceholder = Language.GetText("Mods.TheArchitectsBlueprintMod.UI.SearchEntries");
             _searchBar = new UISearchBar(_searchPlaceholder, 0.8f)
@@ -187,11 +188,11 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                 RequestClose);
             toolbarPanel.Append(closeButton);
 
-            float contentTop = TmodTheme.BrowserToolbarHeight;
-            float contentHeight = TmodTheme.BrowserContentHeight;
+            float contentTop = Theme.BrowserToolbarHeight;
+            float contentHeight = Theme.BrowserContentHeight;
 
             _browserPanel = new UIElement { OverflowHidden = true };
-            TmodLayout.AnchorTopLeft(_browserPanel, 0f, contentTop, TmodTheme.BrowserEntryPanelWidth, contentHeight);
+            TmodLayout.AnchorTopLeft(_browserPanel, 0f, contentTop, Theme.BrowserEntryPanelWidth, contentHeight);
             _window.Append(_browserPanel);
 
             _entryScrollHost = new UIElement { OverflowHidden = true };
@@ -199,23 +200,23 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                 _entryScrollHost,
                 0f,
                 0f,
-                TmodTheme.BrowserGridInnerWidth,
+                Theme.BrowserGridInnerWidth,
                 contentHeight);
             _browserPanel.Append(_entryScrollHost);
 
             _entryGrid = new UIGrid
             {
                 OverflowHidden = true,
-                ListPadding = TmodTheme.Spacing
+                ListPadding = Theme.Spacing
             };
             _entryGrid.Width.Set(0f, 1f);
             _entryGrid.Height.Set(0f, 1f);
             _entryScrollHost.Append(_entryGrid);
 
             _scrollbar = new UIScrollbar();
-            _scrollbar.Width.Set(TmodTheme.BrowserScrollbarWidth, 0f);
-            _scrollbar.Top.Set(TmodTheme.BrowserScrollbarInset, 0f);
-            _scrollbar.Height.Set(-TmodTheme.BrowserScrollbarInset * 2f, 1f);
+            _scrollbar.Width.Set(Theme.BrowserScrollbarWidth, 0f);
+            _scrollbar.Top.Set(Theme.BrowserScrollbarInset, 0f);
+            _scrollbar.Height.Set(-Theme.BrowserScrollbarInset * 2f, 1f);
             _scrollbar.HAlign = 1f;
             _browserPanel.Append(_scrollbar);
             _entryGrid.SetScrollbar(_scrollbar);
@@ -224,38 +225,38 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                 Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.NoPayloadEntries"),
                 textScale: 0.85f,
                 secondary: true);
-            TmodLayout.AnchorTopLeft(_emptyEntriesLabel, 0f, 24f, TmodTheme.BrowserEntryPanelInnerWidth, 20f);
+            TmodLayout.AnchorTopLeft(_emptyEntriesLabel, 0f, 24f, Theme.BrowserEntryPanelInnerWidth, 20f);
             _emptyEntriesLabel.IgnoresMouseInteraction = true;
             _browserPanel.Append(_emptyEntriesLabel);
 
-            float controlLeft = TmodTheme.BrowserEntryPanelWidth;
-            float payloadLeft = controlLeft + TmodTheme.BrowserControlPanelWidth;
+            float controlLeft = Theme.BrowserEntryPanelWidth;
+            float payloadLeft = controlLeft + Theme.BrowserControlPanelWidth;
 
             var controlPanel = new UIElement { OverflowHidden = true };
-            TmodLayout.AnchorTopLeft(controlPanel, controlLeft, contentTop, TmodTheme.BrowserControlPanelWidth, contentHeight);
+            TmodLayout.AnchorTopLeft(controlPanel, controlLeft, contentTop, Theme.BrowserControlPanelWidth, contentHeight);
             _window.Append(controlPanel);
 
-            var controlStack = TmodLayout.CreateVerticalStack(spacing: TmodTheme.Spacing, crossAxisCenter: true);
+            var controlStack = TmodLayout.CreateVerticalStack(spacing: Theme.Spacing, crossAxisCenter: true);
             TmodLayout.FillParent(controlStack);
             controlPanel.Append(controlStack);
 
             controlStack.Append(new TmodUIImageButton(
-                TmodTheme.BrowserControlButtonSize,
-                TmodTheme.BrowserControlButtonSize,
+                Theme.BrowserControlButtonSize,
+                Theme.BrowserControlButtonSize,
                 TmodFrameStyle.Icon(TmodUIAssets.Bestiary.ButtonForwardPath, TmodUIAssets.Bestiary.ButtonBorderPath),
                 "Import",
                 OnImportCommit));
 
             controlStack.Append(new TmodUIImageButton(
-                TmodTheme.BrowserControlButtonSize,
-                TmodTheme.BrowserControlButtonSize,
+                Theme.BrowserControlButtonSize,
+                Theme.BrowserControlButtonSize,
                 TmodFrameStyle.Icon(TmodUIAssets.Bestiary.ButtonBackPath, TmodUIAssets.Bestiary.ButtonBorderPath),
                 "Export",
                 OnExport));
 
             controlStack.Append(new TmodUIImageButton(
-                TmodTheme.BrowserControlButtonSize,
-                TmodTheme.BrowserControlButtonSize,
+                Theme.BrowserControlButtonSize,
+                Theme.BrowserControlButtonSize,
                 TmodFrameStyle.Icon(TmodUIAssets.Shared.ButtonDeletePath, TmodUIAssets.Bestiary.ButtonBorderPath),
                 "Cancel",
                 OnCancelPreview));
@@ -268,10 +269,10 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
             controlStack.Append(_exportJsonCheckbox);
 
             var payloadPanel = new TmodPanel { OverflowHidden = true };
-            TmodLayout.AnchorTopLeft(payloadPanel, payloadLeft, contentTop, TmodTheme.BrowserPayloadPanelWidth, contentHeight);
+            TmodLayout.AnchorTopLeft(payloadPanel, payloadLeft, contentTop, Theme.BrowserPayloadPanelWidth, contentHeight);
             _window.Append(payloadPanel);
 
-            _previewStack = payloadPanel.AppendVerticalStack(TmodTheme.Spacing);
+            _previewStack = payloadPanel.AppendVerticalStack(Theme.Spacing);
             _committedProjectName = PayloadBrowser.BuildDefaultProjectName();
 
             _window.IsTextInputActive = () =>
@@ -337,7 +338,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                     _sortButton.SetValue(GetSortValue());
                     RebuildEntryElements();
                 },
-                anchorLeftPixels: TmodTheme.BrowserOptionsPopupAnchorLeft);
+                anchorLeftPixels: Theme.BrowserOptionsPopupAnchorLeft);
             _sortOptionsPopup.OnRequestClose += CloseOptionsPopups;
             _browserPanel.Append(_sortOptionsPopup);
         }
@@ -360,7 +361,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                     _filterButton.SetValue(GetFilterValue());
                     RebuildEntryElements();
                 },
-                anchorLeftPixels: TmodTheme.BrowserOptionsPopupAnchorLeft);
+                anchorLeftPixels: Theme.BrowserOptionsPopupAnchorLeft);
             _filterOptionsPopup.OnRequestClose += CloseOptionsPopups;
             _browserPanel.Append(_filterOptionsPopup);
         }
@@ -473,7 +474,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
             {
                 _payloadThumbnail = PayloadPreview.MakeThumbnail(
                     projection.Payload,
-                    (int)TmodTheme.BrowserPayloadThumbnailSize);
+                    (int)Theme.BrowserPayloadThumbnailSize);
                 if (_payloadThumbnail != null)
                     TrackDecodedThumbnail(_payloadThumbnail);
             }
@@ -581,8 +582,8 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                 _entry = entry;
                 OverflowHidden = true;
 
-                Width.Set(TmodTheme.BrowserCompactCellSize, 0f);
-                Height.Set(TmodTheme.BrowserCompactCellSize, 0f);
+                Width.Set(Theme.BrowserCompactCellSize, 0f);
+                Height.Set(Theme.BrowserCompactCellSize, 0f);
 
                 _cell = new PayloadEntryCell(
                     () => PayloadBrowser.BuildEntryHoverText(_entry),

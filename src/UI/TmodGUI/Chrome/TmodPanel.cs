@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -9,9 +10,9 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
     {
         public TmodPanel()
         {
-            BackgroundColor = TmodTheme.PanelBackground;
-            BorderColor = TmodTheme.PanelBorder;
-            SetPadding(TmodTheme.Padding);
+            BackgroundColor = Theme.PanelBackground;
+            BorderColor = Theme.PanelBorder;
+            SetPadding(Theme.Padding);
         }
 
         /// <summary>Transparent border overlay matching Bestiary info panels.</summary>
@@ -35,7 +36,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         }
 
         /// <summary>Vertical stack child that fills the panel content width.</summary>
-        public TmodStackPanel AppendVerticalStack(float spacing = TmodTheme.Spacing, bool crossAxisCenter = false)
+        public TmodStackPanel AppendVerticalStack(float spacing = Theme.Spacing, bool crossAxisCenter = false)
         {
             var stack = TmodLayout.CreateVerticalStack(spacing, crossAxisCenter);
             TmodLayout.FillParent(stack);
@@ -44,7 +45,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         }
 
         /// <summary>Horizontal stack child that fills the panel content width.</summary>
-        public TmodStackPanel AppendHorizontalStack(float spacing = TmodTheme.Spacing, bool crossAxisCenter = true)
+        public TmodStackPanel AppendHorizontalStack(float spacing = Theme.Spacing, bool crossAxisCenter = true)
         {
             var stack = TmodLayout.CreateHorizontalStack(spacing, crossAxisCenter);
             TmodLayout.FillParent(stack);

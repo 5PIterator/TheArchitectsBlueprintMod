@@ -1,6 +1,7 @@
 using System;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
@@ -177,8 +178,8 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             Color c = state.Mode == Mode.Include
-                ? ArchitectVisualPalette.IncludePreviewColor
-                : ArchitectVisualPalette.ExcludePreviewColor;
+                ? Palette.IncludePreviewColor
+                : Palette.ExcludePreviewColor;
             OverlaySystem.RegTileBounds("preview", clamped, c, 2, InclusionGestureFamily);
         }
 

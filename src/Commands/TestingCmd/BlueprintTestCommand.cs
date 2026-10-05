@@ -14,14 +14,15 @@ namespace TheArchitectsBlueprintMod.Core
         public override string Command => "tab.test";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage =>
-            "/tab.test list | /tab.test all | /tab.test run <scenarioId> | /tab.test scenarios list|all|run <scenarioId>";
+        public override string Usage => ScenarioTestRunner.Usage;
 
         public override string Description =>
-            "[Debug] Runs blueprint test scenarios (fixture chain setup + scenario-specific checks).";
+            "[Debug] Runs blueprint test scenarios (payload, selection, projection, paste).";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
+            // --- Reject dedicated-server / menu / non-local callers, then hand off to the runner.
+
             if (Main.dedServ)
             {
                 caller.Reply("Blueprint tests run on the client, not on a dedicated server.");
@@ -41,31 +42,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            if (args.Length < 1)
-            {
-                caller.Reply(Usage, Color.Orange);
-                return;
-            }
-
-            var reporter = new CommandScenarioTestReporter(caller);
-            switch (args[0])
-            {
-                case "scenarios":
-                    ScenarioTestRunner.HandleCommand(caller, pl, args);
-                    break;
-                case "list":
-                    ScenarioTestRunner.ListScenarios(reporter);
-                    break;
-                case "all":
-                    ScenarioTestRunner.RunAll(reporter, pl);
-                    break;
-                case "run" when args.Length >= 2:
-                    ScenarioTestRunner.RunScenario(reporter, pl, args[1]);
-                    break;
-                default:
-                    caller.Reply(Usage, Color.Orange);
-                    break;
-            }
+            ScenarioTestRunner.HandleCommand(caller, pl, args);
         }
     }
 }

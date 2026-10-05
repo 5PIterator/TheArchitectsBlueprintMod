@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -12,7 +13,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         private readonly UIImage _portraitFrame;
         private readonly UIImage _thumbnail;
 
-        public TmodUIPayloadPreview(float size = TmodTheme.BrowserPayloadThumbnailSize)
+        public TmodUIPayloadPreview(float size = Theme.BrowserPayloadThumbnailSize)
         {
             Width.Set(size, 0f);
             Height.Set(size, 0f);

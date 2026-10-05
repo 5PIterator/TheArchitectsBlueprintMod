@@ -1,3 +1,4 @@
+using TheArchitectsBlueprintMod.Core.Architect;
 using TheArchitectsBlueprintMod.UI.TmodGUI.Elements;
 using TheArchitectsBlueprintMod.UI.TmodGUI.Widgets;
 using Terraria;
@@ -17,7 +18,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI
             if (Main.dedServ || widget == null)
                 return;
 
-            TmodGUISystem system = ModContent.GetInstance<TmodGUISystem>();
+            ArchitectSystem system = ModContent.GetInstance<ArchitectSystem>();
             if (system == null)
                 return;
 
@@ -36,7 +37,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI
             _activeWidget = null;
             closed.OnClosed?.Invoke();
 
-            TmodGUISystem system = ModContent.GetInstance<TmodGUISystem>();
+            ArchitectSystem system = ModContent.GetInstance<ArchitectSystem>();
             if (system == null)
                 return;
 

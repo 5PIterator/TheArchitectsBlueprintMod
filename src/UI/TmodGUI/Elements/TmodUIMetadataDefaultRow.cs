@@ -2,6 +2,7 @@ using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -11,7 +12,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         private readonly string _tooltipLabel;
         private readonly UIText _valueLabel;
 
-        public TmodUIMetadataDefaultRow(string tooltipLabel, string value, float height = TmodTheme.BrowserPayloadMetadataLineHeight)
+        public TmodUIMetadataDefaultRow(string tooltipLabel, string value, float height = Theme.BrowserPayloadMetadataLineHeight)
         {
             _tooltipLabel = tooltipLabel;
             Height.Set(height, 0f);
@@ -19,8 +20,8 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 
             var panel = new UIPanel
             {
-                BackgroundColor = TmodTheme.PanelBackgroundDim,
-                BorderColor = TmodTheme.PanelBorder,
+                BackgroundColor = Theme.PanelBackgroundDim,
+                BorderColor = Theme.PanelBorder,
                 Width = new StyleDimension(0f, 1f),
                 Height = new StyleDimension(0f, 1f)
             };
@@ -29,7 +30,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 
             _valueLabel = new UIText(value, 0.78f)
             {
-                TextColor = TmodTheme.SecondaryText,
+                TextColor = Theme.SecondaryText,
                 HAlign = 0.5f,
                 VAlign = 0.5f,
                 TextOriginX = 0.5f,

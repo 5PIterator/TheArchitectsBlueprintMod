@@ -8,6 +8,8 @@ using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.UI;
 
+using TheArchitectsBlueprintMod.Core.Architect;
+
 namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>

@@ -5,7 +5,7 @@ using Terraria;
 using Terraria.GameInput;
 using Terraria.UI;
 
-namespace TheArchitectsBlueprintMod.Core.ArchitectMode
+namespace TheArchitectsBlueprintMod.Core.Architect
 {
     /// <summary>Suppresses vanilla HUD layers during Architect Mode and anchors the equip-page entry tab.</summary>
     internal static class ArchitectModeHud

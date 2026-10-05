@@ -4,6 +4,8 @@ using Terraria;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.UI;
 
+using TheArchitectsBlueprintMod.Core.Architect;
+
 namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>

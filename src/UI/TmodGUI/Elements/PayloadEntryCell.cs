@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
+using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
@@ -15,8 +16,8 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 
         public PayloadEntryCell(Func<string> getHoverText, Action? onClick = null)
             : base(
-                TmodTheme.BrowserCompactCellSize,
-                TmodTheme.BrowserCompactCellSize,
+                Theme.BrowserCompactCellSize,
+                Theme.BrowserCompactCellSize,
                 TmodFrameStyle.EntrySlot(),
                 getHoverText: getHoverText,
                 onClick: onClick)

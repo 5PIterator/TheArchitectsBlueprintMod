@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Config;
-using TheArchitectsBlueprintMod.Core.ArchitectMode;
+using TheArchitectsBlueprintMod.Core.Architect;
 
 namespace TheArchitectsBlueprintMod.Config
 {
@@ -55,7 +55,7 @@ namespace TheArchitectsBlueprintMod.Config
             bool wasUnlocked = architectPlayer.ArchitectGuiUnlocked;
             architectPlayer.ClearPermanentUnlock();
 
-            var architectMode = ModContent.GetInstance<ArchitectModeSystem>();
+            var architectMode = ModContent.GetInstance<ArchitectSystem>();
             if (architectMode.Active)
                 architectMode.Toggle(false);
 

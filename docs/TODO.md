@@ -20,7 +20,7 @@ Engineering tracker for the pre-release. Player-facing summary: [README](../READ
 - [ ] Large payload move/scale/export performance (untested at ~548×339)
 
 ### Testing
-- [ ] Expand pre-release coverage: run scenario suite in release builds; add CI for `dotnet test src/tests/cases/`
+- [ ] Expand pre-release coverage: run scenario suite (`/tab.test all`) in release-adjacent debug builds; smoke-check `paste.layer` / `paste.medium` with Journey materials
 - [ ] MP paste smoke-test checklist
 
 ## Roadmap / vNext
@@ -38,7 +38,7 @@ Engineering tracker for the pre-release. Player-facing summary: [README](../READ
 
 ## Done (archive)
 
-- Map overlays + map cursor input — [ArchitectOverlayMapLayer.cs](../src/UI/ArchitectOverlayMapLayer.cs), [ArchitectMapInput.cs](../src/Core/Client/ArchitectMapInput.cs)
+- Map overlays + map cursor input — [ArchitectOverlayMapLayer.cs](../src/UI/ArchitectOverlayMapLayer.cs), [ArchitectSystem.cs](../src/Core/Client/Architect/ArchitectSystem.cs)
 - Projection sprite preview overlay — `PayloadPreview`, `ProjectionSystem`
 - Blueprint data model — `Blueprint` / `Selection` / `Projection`, `BlueprintSystem`
 - Local import/export browser — `PayloadBrowser`, `TmodPayloadBrowserWidget`
@@ -47,4 +47,4 @@ Engineering tracker for the pre-release. Player-facing summary: [README](../READ
 - Discovery + interaction mapping + phased paste stack
 - Mod rename to The Architect's Blueprint
 - Tier 1–3 tools + Stencil; Tier 4 Hand (accessory), Tier 5 Blueprint (animation stub)
-- Headless + in-game test scaffolding — [TESTING.md](TESTING.md)
+- In-game scenario suite (payload / selection / projection / paste) — [TESTING.md](TESTING.md)

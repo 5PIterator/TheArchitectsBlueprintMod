@@ -28,8 +28,4 @@
 		<EmbeddedResource Include="Content\Config\LayerOrder.json" LogicalName="TheArchitectsBlueprintMod.LayerOrder.json" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<Compile Remove="src\tests\cases\**\*.cs" />
-	</ItemGroup>
-
 </Project>
