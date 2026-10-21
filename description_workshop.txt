@@ -34,7 +34,7 @@ Payloads live in your save folder under [b]TheArchitectsBlueprintMod/Payloads/[/
 [hr][/hr]
 
 [h2]Pre-release notes[/h2]
-Version [b]0.2.0[/b] is a pre-release. Core select → copy → paste, local save/load, map tools, and multiplayer paste authority are in. Rotate/mirror, remote sharing, and fuller endgame Blueprint behavior are still on the roadmap.
+Version [b]0.2.1[/b] is a pre-release. Core select → copy → paste, local save/load, map tools, and multiplayer paste authority are in. Rotate/mirror, remote sharing, and fuller endgame Blueprint behavior are still on the roadmap.
 
 Works with modded tiles via interaction maps and discovery. Most cases should work, and maps can be customized if needed.
 

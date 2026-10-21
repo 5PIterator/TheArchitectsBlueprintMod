@@ -1,6 +1,6 @@
 # The Architect's Blueprint
 
-**Version 0.2.0 (pre-release)**
+**Version 0.2.1 (pre-release)**
 
 Capture a region of your world, refine which tiles belong in the build, and paste a ghost copy elsewhere using materials from your inventory and nearby chests. Save structures locally and load them back later.
 
@@ -85,5 +85,6 @@ See [docs/TODO.md](docs/TODO.md) for the full tracker. Highlights:
 
 ## Version history
 
+- **0.2.1 (pre-release)** — Removed the on-screen cursor tile-coordinate overlay.
 - **0.2.0 (pre-release)** — Local import/export, payload browser, map tool support, multiplayer paste authority, Architect's Stencil, phased paste with inventory consumption, interaction maps.
 - **0.1.x** — Initial selection, inclusion, projection, and paste mechanics.
