@@ -5,6 +5,7 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ObjectData;
+using TheArchitectsBlueprintMod.Core.TileMapping;
 using TheArchitectsBlueprintMod.Debug;
 
 namespace TheArchitectsBlueprintMod.Core
@@ -71,11 +72,11 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Resolves the chest at the rectangle origin and wraps it as an inventory source.</summary>
         public static Inventory FromRectangle(Rectangle rectangle, int priority, int discoveryIndex = 0)
         {
-            // --- Locate the chest by footprint origin, then wrap with the supplied priority.
+            // --- Exact Main.chest origin match; Chest.FindChest misses CreateChest ghosts without live frames.
 
             // The chest is always at the top left of the rectangle.
-            int chestIndex = Chest.FindChest(rectangle.X, rectangle.Y);
-            if (chestIndex == -1)
+            if (!InventoryManager.TryFindChestIndexAtExact(rectangle.X, rectangle.Y, out int chestIndex)
+                || Main.chest[chestIndex] is null)
             {
                 throw new InvalidOperationException("No chest found at the given rectangle.");
             }
@@ -209,24 +210,50 @@ namespace TheArchitectsBlueprintMod.Core
             SyncPlayerSlot(inventory, slot, reason);
         }
 
-        /// <summary>Syncs a modified chest slot to connected clients when running as server.</summary>
+        /// <summary>Syncs a modified chest slot to connected clients when running as server or listen host.</summary>
         internal static void SyncChestSlot(Inventory inventory, int slot, string? reason = null)
         {
-            if (Main.netMode != NetmodeID.Server || inventory.Chest is not Chest chest)
+            // --- Dedicated server and Host & Play listen host both broadcast SyncChestItem.
+
+            if (inventory.Chest is not Chest chest)
                 return;
 
-            int chestIndex = Chest.FindChest(chest.x, chest.y);
-            if (chestIndex >= 0)
+            if (Main.netMode != NetmodeID.Server && !TileMappingAuthority.IsLocalHostClient())
+                return;
+
+            if (!TryFindChestIndexAtExact(chest.x, chest.y, out int chestIndex))
+                return;
+
+            NetMessage.SendData(MessageID.SyncChestItem, -1, -1, null, chestIndex, slot);
+            if (TABLog.IsDebugEnabled && reason is not null)
             {
-                NetMessage.SendData(MessageID.SyncChestItem, -1, -1, null, chestIndex, slot);
-                if (TABLog.IsDebugEnabled && reason is not null)
+                Item item = inventory.Contents[slot];
+                TABLog.Debug(
+                    $"SyncChestSlot reason={reason} chest=({chest.x},{chest.y}) slot={slot} item={item.type} stack={item.stack}",
+                    TABLog.InventoryCategory);
+            }
+        }
+
+        /// <summary>Finds the Main.chest index with exact x/y, including CreateChest ghosts without live tiles.</summary>
+        internal static bool TryFindChestIndexAtExact(int worldX, int worldY, out int chestIndex)
+        {
+            // --- Linear scan; do not use Chest.FindChest (skips records without container frames).
+
+            chestIndex = -1;
+            for (int i = 0; i < Main.maxChests; i++)
+            {
+                Chest? candidate = Main.chest[i];
+                if (candidate is null)
+                    continue;
+
+                if (candidate.x == worldX && candidate.y == worldY)
                 {
-                    Item item = inventory.Contents[slot];
-                    TABLog.Debug(
-                        $"SyncChestSlot reason={reason} chest=({chest.x},{chest.y}) slot={slot} item={item.type} stack={item.stack}",
-                        TABLog.InventoryCategory);
+                    chestIndex = i;
+                    return true;
                 }
             }
+
+            return false;
         }
 
         /// <summary>Syncs a modified player inventory slot to connected clients when running as server.</summary>

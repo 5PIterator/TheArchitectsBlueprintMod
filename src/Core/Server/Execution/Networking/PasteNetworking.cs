@@ -32,6 +32,63 @@ namespace TheArchitectsBlueprintMod.Core.Server
 
         private static readonly List<PendingClientAck> ClientPendingAcks = [];
 
+#if DEBUG
+        /// <summary>DEBUG client-side paste ACK observation for scenario assertions.</summary>
+        internal readonly struct PasteAckObservation(int requestId, PasteAckKind kind, PasteRejectReason reason)
+        {
+            public int RequestId { get; } = requestId;
+            public PasteAckKind Kind { get; } = kind;
+            public PasteRejectReason Reason { get; } = reason;
+        }
+
+        private static readonly List<PasteAckObservation> ClientAckObservations = [];
+
+        /// <summary>Clears the DEBUG client ACK observation log.</summary>
+        internal static void ClearClientAckObservations()
+        {
+            // --- Drop prior scenario observations so a new run starts clean.
+            ClientAckObservations.Clear();
+        }
+
+        /// <summary>Returns a snapshot of observed client paste ACKs since the last clear.</summary>
+        internal static IReadOnlyList<PasteAckObservation> GetClientAckObservations() => ClientAckObservations;
+
+        /// <summary>Finds the latest observed ACK for a correlation id and kind.</summary>
+        internal static bool TryGetLatestAck(int requestId, PasteAckKind kind, out PasteAckObservation observation)
+        {
+            // --- Scan newest-first so later lifecycle events win.
+            observation = default;
+            for (int i = ClientAckObservations.Count - 1; i >= 0; i--)
+            {
+                PasteAckObservation candidate = ClientAckObservations[i];
+                if (candidate.RequestId != requestId || candidate.Kind != kind)
+                    continue;
+
+                observation = candidate;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>Finds the latest observed ACK for a correlation id regardless of kind.</summary>
+        internal static bool TryGetLatestAck(int requestId, out PasteAckObservation observation)
+        {
+            // --- Scan newest-first for any terminal or accept observation.
+            observation = default;
+            for (int i = ClientAckObservations.Count - 1; i >= 0; i--)
+            {
+                if (ClientAckObservations[i].RequestId != requestId)
+                    continue;
+
+                observation = ClientAckObservations[i];
+                return true;
+            }
+
+            return false;
+        }
+#endif
+
         internal static void HandlePacket(Mod mod, BinaryReader reader, int whoAmI)
         {
             var packetType = (PasteNetPacketType)reader.ReadByte();
@@ -277,6 +334,11 @@ namespace TheArchitectsBlueprintMod.Core.Server
 
             var ack = PasteAckPacket.Read(reader);
             LogNet($"PasteAck kind={ack.Kind} id={ack.RequestId} reason={ack.Reason}");
+
+#if DEBUG
+            // Record the ACK for scenario assertions before projection state mutates.
+            ClientAckObservations.Add(new PasteAckObservation(ack.RequestId, ack.Kind, ack.Reason));
+#endif
 
             RemoveClientPendingAck(ack.RequestId);
 

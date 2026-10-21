@@ -39,10 +39,23 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
                 BasePath = wide
                     ? TmodUIAssets.Bestiary.ButtonWideBorderPath
                     : TmodUIAssets.Bestiary.ButtonBorderPath,
-                HoverPath = TmodUIAssets.Bestiary.SlotOverlayPath,
+                HoverPath = wide
+                    ? TmodUIAssets.Bestiary.ButtonWideBorderPath
+                    : TmodUIAssets.Bestiary.ButtonBorderPath,
                 SecondaryPath = secondaryPath,
                 ActiveAlpha = 1f,
                 InactiveAlpha = 0.72f
+            };
+
+        /// <summary>Bestiary sort/filter style: icon art as base, wide border as hover.</summary>
+        public static TmodFrameStyle BestiaryWideIconButton(string basePath) =>
+            new()
+            {
+                HoverMode = TmodFrameHoverMode.AlphaOverlay,
+                BasePath = basePath,
+                HoverPath = TmodUIAssets.Bestiary.ButtonWideBorderPath,
+                ActiveAlpha = 1f,
+                InactiveAlpha = 1f
             };
 
         public static TmodFrameStyle EntrySlot() =>
@@ -113,9 +126,12 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
         private UIImage? _frameFront;
         private UIImage? _frameGlow;
         private bool _hovered;
+        private bool _selected;
         private bool _hoverSoundPlayed;
 
         public UIElement ContentHost => _contentHost;
+
+        public bool IsSelected => _selected;
 
         protected TmodFramedControl(
             float width,
@@ -255,18 +271,53 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 
         private void SetLayerReorderHover(bool hovered)
         {
-            if (_overlay == null || _frameFront == null || _frameGlow == null || _hovered == hovered)
+            if (_hovered == hovered)
                 return;
 
             _hovered = hovered;
+            ApplyLayerReorderVisuals();
+        }
+
+        /// <summary>Keeps the Bestiary selection glow visible while this slot is selected.</summary>
+        public void SetSelected(bool selected)
+        {
+            // --- Update selection flag and refresh layer order / glow colors.
+            if (_style.HoverMode != TmodFrameHoverMode.LayerReorder || _selected == selected)
+            {
+                _selected = selected;
+                return;
+            }
+
+            _selected = selected;
+            ApplyLayerReorderVisuals();
+        }
+
+        /// <summary>Rebuilds overlay/front/glow layer order for hover and selection.</summary>
+        private void ApplyLayerReorderVisuals()
+        {
+            // --- Prefer hover chrome when hovered; otherwise show glow only when selected.
+
+            if (_overlay == null || _frameFront == null || _frameGlow == null)
+                return;
+
             RemoveChild(_overlay);
             RemoveChild(_frameFront);
             RemoveChild(_frameGlow);
 
-            if (hovered)
+            if (_hovered)
             {
                 Append(_frameFront);
                 Append(_frameGlow);
+                _frameGlow.Color = Color.White;
+                return;
+            }
+
+            if (_selected)
+            {
+                Append(_overlay);
+                Append(_frameFront);
+                Append(_frameGlow);
+                _overlay.Color = _style.OverlayColor;
                 _frameGlow.Color = Color.White;
                 return;
             }

@@ -5,10 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
-using Terraria.ID;
 using Terraria.Localization;
-using Terraria.ModLoader;
-using Terraria.ModLoader.UI;
 using Terraria.ModLoader.UI.Elements;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Core;
@@ -22,23 +19,26 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
     public sealed class TmodPayloadBrowserWidget : TmodWidgetBase
     {
         private readonly PayloadBrowser _browser;
-        private readonly List<Texture2D> _decodedThumbnails = [];
+        private readonly List<Texture2D> _gridThumbnails = [];
 
         private TmodWindowPanel _window = null!;
         private UIElement _entryScrollHost = null!;
         private UIGrid _entryGrid = null!;
         private UIScrollbar _scrollbar = null!;
         private TmodUILabel _emptyEntriesLabel = null!;
-        private TmodStackPanel _previewStack = null!;
-        private UIPanel _searchBoxPanel = null!;
-        private UISearchBar _searchBar = null!;
+        private UIList _previewList = null!;
+        private TmodUIBestiarySearchField _searchField = null!;
         private TmodUICycleButton _sortButton = null!;
         private TmodUICycleButton _filterButton = null!;
-        private TmodUIImageButton _refreshButton = null!;
-        private TmodUICheckbox _exportJsonCheckbox = null!;
+        private TmodUITextActionButton _refreshButton = null!;
         private UIElement _browserPanel = null!;
         private TmodUITextOptionsPopup? _sortOptionsPopup;
         private TmodUITextOptionsPopup? _filterOptionsPopup;
+        private TmodUITextActionButton _revertButton = null!;
+        private TmodUITextActionButton _applyButton = null!;
+        private TmodUITextActionButton _exportButton = null!;
+        private TmodUICycleButton _exportFormatButton = null!;
+        private TmodUILabel _statusLabel = null!;
 
         private Texture2D? _payloadThumbnail;
         private Projection? _activeProjection;
@@ -47,6 +47,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
         private string _committedProjectName = string.Empty;
         private PayloadProjectNameRow? _projectNameRow;
         private LocalizedText _searchPlaceholder = null!;
+        private readonly List<PayloadFileEntry> _entryElements = [];
 
         private TmodPayloadBrowserWidget(PayloadBrowser browser) => _browser = browser;
 
@@ -73,23 +74,30 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
             _projectNameEditing = false;
             _projectNameRow?.EndTextEntry();
             CloseOptionsPopups();
-            if (_searchBar != null && _searchBar.IsWritingText)
-                _searchBar.ToggleTakingText();
+            if (_searchField != null && _searchField.IsWritingText)
+                _searchField.ToggleTakingText();
             ReleaseThumbnailTextures();
             base.OnDeactivate();
         }
 
         private void ReleaseThumbnailTextures()
         {
-            for (int i = 0; i < _decodedThumbnails.Count; i++)
-                DisposeGpuTexture(_decodedThumbnails[i]);
-            _decodedThumbnails.Clear();
+            DisposeGridThumbnails();
 
             if (_payloadThumbnail != null)
             {
                 DisposeGpuTexture(_payloadThumbnail);
                 _payloadThumbnail = null;
             }
+        }
+
+        /// <summary>Disposes textures owned by the entry grid.</summary>
+        private void DisposeGridThumbnails()
+        {
+            // --- Release every tracked grid thumbnail, then clear the list.
+            for (int i = 0; i < _gridThumbnails.Count; i++)
+                DisposeGpuTexture(_gridThumbnails[i]);
+            _gridThumbnails.Clear();
         }
 
         private static void DisposeGpuTexture(Texture2D texture)
@@ -109,30 +117,16 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
             TmodLayout.CenterInParent(_window, Theme.BrowserWidth, Theme.BrowserHeight);
             Append(_window);
 
-            const float toolbarSortWidth = 118f;
-            const float toolbarFilterWidth = 108f;
-            float btn = Theme.BrowserToolbarButtonSize;
-
             var toolbarPanel = TmodLayout.CreateHorizontalStack();
             toolbarPanel.OverflowHidden = true;
             TmodLayout.FillWidth(toolbarPanel, Theme.BrowserToolbarHeight, 0f);
             toolbarPanel.OnLeftMouseDown += OnToolbarMouseDown;
             _window.Append(toolbarPanel);
 
-            _refreshButton = new TmodUIImageButton(
-                btn,
-                btn,
-                TmodFrameStyle.Icon(TmodUIAssets.Bestiary.ButtonSearchPath),
-                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.RefreshEntries"),
-                ReloadEntries);
-            toolbarPanel.Append(_refreshButton);
-
             _sortButton = new TmodUICycleButton(
                 GetSortValue(),
                 GetSortHover(),
                 ToggleSortOptions,
-                toolbarSortWidth,
-                btn,
                 TmodUIAssets.Bestiary.ButtonSortingPath);
             toolbarPanel.Append(_sortButton);
 
@@ -140,34 +134,30 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                 GetFilterValue(),
                 GetFilterHover(),
                 ToggleFilterOptions,
-                toolbarFilterWidth,
-                btn,
                 TmodUIAssets.Bestiary.ButtonFilteringPath);
             toolbarPanel.Append(_filterButton);
 
-            toolbarPanel.AppendGrow();
-
-            _searchBoxPanel = new UIPanel
-            {
-                BackgroundColor = new Color(35, 40, 83),
-                BorderColor = new Color(35, 40, 83),
-            };
-            _searchBoxPanel.SetPadding(0f);
-            TmodLayout.StackFixed(_searchBoxPanel, Theme.BrowserSearchFieldWidth, Theme.BrowserToolbarHeight);
+            float closeSize = MeasureTextureSize(TmodUIAssets.Shared.SearchCancelPath).Width;
+            float searchWidth = Math.Max(
+                120f,
+                Theme.BrowserWidth
+                    - Theme.Padding * 2f
+                    - _sortButton.Width.Pixels
+                    - _filterButton.Width.Pixels
+                    - closeSize
+                    - Theme.Spacing * 3f);
 
             _searchPlaceholder = Language.GetText("Mods.TheArchitectsBlueprintMod.UI.SearchEntries");
-            _searchBar = new UISearchBar(_searchPlaceholder, 0.8f)
+            _searchField = new TmodUIBestiarySearchField(
+                _searchPlaceholder,
+                searchWidth,
+                Theme.BrowserToolbarHeight);
+            _searchField.ContentsChanged += text =>
             {
-                Width = new StyleDimension(0f, 1f),
-                Height = new StyleDimension(0f, 1f),
-                IgnoresMouseInteraction = true,
-            };
-            _searchBar.OnContentsChanged += text =>
-            {
-                _browser.SetSearch(TmodSearchField.NormalizeContents(text, _searchPlaceholder));
+                _browser.SetSearch(text);
                 RebuildEntryElements();
             };
-            _searchBar.OnStartTakingInput += () =>
+            _searchField.StartTakingInput += () =>
             {
                 if (_projectNameEditing)
                 {
@@ -176,14 +166,15 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                     _committedProjectName = _projectNameRow?.GetCommittedName() ?? _committedProjectName;
                 }
             };
-            _searchBoxPanel.OnLeftClick += (_, _) => _searchBar.ToggleTakingText();
-            _searchBoxPanel.Append(_searchBar);
-            toolbarPanel.Append(_searchBoxPanel);
+            toolbarPanel.Append(_searchField);
 
             var closeButton = new TmodUIImageButton(
-                btn,
-                btn,
-                TmodFrameStyle.Icon(TmodUIAssets.Shared.SearchCancelPath, TmodUIAssets.Bestiary.ButtonBorderPath),
+                closeSize,
+                closeSize,
+                TmodFrameStyle.Icon(
+                    TmodUIAssets.Shared.SearchCancelPath,
+                    TmodUIAssets.Bestiary.ButtonBorderPath,
+                    inactiveAlpha: 1f),
                 "X",
                 RequestClose);
             toolbarPanel.Append(closeButton);
@@ -198,7 +189,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
             _entryScrollHost = new UIElement { OverflowHidden = true };
             TmodLayout.AnchorTopLeft(
                 _entryScrollHost,
-                0f,
+                Theme.BrowserScrollbarWidth,
                 0f,
                 Theme.BrowserGridInnerWidth,
                 contentHeight);
@@ -217,7 +208,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
             _scrollbar.Width.Set(Theme.BrowserScrollbarWidth, 0f);
             _scrollbar.Top.Set(Theme.BrowserScrollbarInset, 0f);
             _scrollbar.Height.Set(-Theme.BrowserScrollbarInset * 2f, 1f);
-            _scrollbar.HAlign = 1f;
+            _scrollbar.HAlign = 0f;
             _browserPanel.Append(_scrollbar);
             _entryGrid.SetScrollbar(_scrollbar);
 
@@ -225,61 +216,127 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                 Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.NoPayloadEntries"),
                 textScale: 0.85f,
                 secondary: true);
-            TmodLayout.AnchorTopLeft(_emptyEntriesLabel, 0f, 24f, Theme.BrowserEntryPanelInnerWidth, 20f);
+            TmodLayout.AnchorTopLeft(
+                _emptyEntriesLabel,
+                Theme.BrowserScrollbarWidth,
+                24f,
+                Theme.BrowserGridInnerWidth,
+                20f);
             _emptyEntriesLabel.IgnoresMouseInteraction = true;
             _browserPanel.Append(_emptyEntriesLabel);
 
-            float controlLeft = Theme.BrowserEntryPanelWidth;
-            float payloadLeft = controlLeft + Theme.BrowserControlPanelWidth;
-
-            var controlPanel = new UIElement { OverflowHidden = true };
-            TmodLayout.AnchorTopLeft(controlPanel, controlLeft, contentTop, Theme.BrowserControlPanelWidth, contentHeight);
-            _window.Append(controlPanel);
-
-            var controlStack = TmodLayout.CreateVerticalStack(spacing: Theme.Spacing, crossAxisCenter: true);
-            TmodLayout.FillParent(controlStack);
-            controlPanel.Append(controlStack);
-
-            controlStack.Append(new TmodUIImageButton(
-                Theme.BrowserControlButtonSize,
-                Theme.BrowserControlButtonSize,
-                TmodFrameStyle.Icon(TmodUIAssets.Bestiary.ButtonForwardPath, TmodUIAssets.Bestiary.ButtonBorderPath),
-                "Import",
-                OnImportCommit));
-
-            controlStack.Append(new TmodUIImageButton(
-                Theme.BrowserControlButtonSize,
-                Theme.BrowserControlButtonSize,
-                TmodFrameStyle.Icon(TmodUIAssets.Bestiary.ButtonBackPath, TmodUIAssets.Bestiary.ButtonBorderPath),
-                "Export",
-                OnExport));
-
-            controlStack.Append(new TmodUIImageButton(
-                Theme.BrowserControlButtonSize,
-                Theme.BrowserControlButtonSize,
-                TmodFrameStyle.Icon(TmodUIAssets.Shared.ButtonDeletePath, TmodUIAssets.Bestiary.ButtonBorderPath),
-                "Cancel",
-                OnCancelPreview));
-
-            _exportJsonCheckbox = new TmodUICheckbox(
-                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.ExportReadableJsonHoverOff"),
-                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.ExportReadableJsonHoverOn"),
-                false);
-            _exportJsonCheckbox.SelectedChanged += (_, _) => _browser.ExportAsReadableJson = _exportJsonCheckbox.Selected;
-            controlStack.Append(_exportJsonCheckbox);
-
-            var payloadPanel = new TmodPanel { OverflowHidden = true };
+            float payloadLeft = Theme.BrowserEntryPanelWidth;
+            var payloadPanel = new UIPanel
+            {
+                BackgroundColor = Theme.InfoPageBackground,
+                BorderColor = Theme.InfoPageBorder,
+                OverflowHidden = true
+            };
+            payloadPanel.SetPadding(0f);
             TmodLayout.AnchorTopLeft(payloadPanel, payloadLeft, contentTop, Theme.BrowserPayloadPanelWidth, contentHeight);
             _window.Append(payloadPanel);
 
-            _previewStack = payloadPanel.AppendVerticalStack(Theme.Spacing);
+            _previewList = new UIList
+            {
+                Width = StyleDimension.FromPixelsAndPercent(0f, 1f),
+                Height = StyleDimension.FromPixelsAndPercent(0f, 1f),
+                ListPadding = 4f,
+                PaddingBottom = 4f,
+                PaddingTop = 4f
+            };
+            _previewList.SetPadding(2f);
+            payloadPanel.Append(_previewList);
+
+            var infoScrollbar = new UIScrollbar();
+            infoScrollbar.SetView(100f, 1000f);
+            infoScrollbar.Height.Set(-20f, 1f);
+            infoScrollbar.HAlign = 1f;
+            infoScrollbar.VAlign = 0.5f;
+            infoScrollbar.Left.Set(-6f, 0f);
+            payloadPanel.Append(infoScrollbar);
+            _previewList.SetScrollbar(infoScrollbar);
+            _previewList.Width.Set(-20f, 1f);
+
+            var borderOverlay = new UIPanel
+            {
+                Width = new StyleDimension(0f, 1f),
+                Height = new StyleDimension(0f, 1f),
+                IgnoresMouseInteraction = true,
+                BackgroundColor = Color.Transparent,
+                BorderColor = Theme.InfoPageBorder
+            };
+            payloadPanel.Append(borderOverlay);
+
             _committedProjectName = PayloadBrowser.BuildDefaultProjectName();
 
+            float footerTop = contentTop + contentHeight + Theme.Spacing;
+            var footerPanel = TmodLayout.CreateHorizontalStack(crossAxisCenter: true);
+            footerPanel.OverflowHidden = true;
+            TmodLayout.AnchorTopLeft(
+                footerPanel,
+                0f,
+                footerTop,
+                Theme.BrowserWidth - Theme.Padding * 2f,
+                Theme.BrowserFooterHeight);
+            _window.Append(footerPanel);
+
+            _refreshButton = new TmodUITextActionButton(
+                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.RefreshEntries"),
+                ReloadEntries,
+                Theme.BrowserFooterButtonWidth,
+                Theme.BrowserFooterButtonHeight,
+                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.RefreshEntries"));
+            footerPanel.Append(_refreshButton);
+
+            _revertButton = new TmodUITextActionButton(
+                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserRevert"),
+                OnCancelPreview,
+                Theme.BrowserFooterButtonWidth,
+                Theme.BrowserFooterButtonHeight,
+                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserRevertHover"));
+            footerPanel.Append(_revertButton);
+
+            _applyButton = new TmodUITextActionButton(
+                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserApply"),
+                OnImportCommit,
+                Theme.BrowserFooterButtonWidth,
+                Theme.BrowserFooterButtonHeight,
+                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserApplyHover"));
+            footerPanel.Append(_applyButton);
+
+            footerPanel.AppendGrow();
+
+            _exportFormatButton = new TmodUICycleButton(
+                GetExportFormatValue(),
+                GetExportFormatHover(),
+                ToggleExportFormat,
+                Theme.BrowserFooterFormatWidth,
+                Theme.BrowserFooterButtonHeight);
+            footerPanel.Append(_exportFormatButton);
+
+            _exportButton = new TmodUITextActionButton(
+                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserExport"),
+                OnExport,
+                Theme.BrowserFooterButtonWidth,
+                Theme.BrowserFooterButtonHeight,
+                Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserExportHover"));
+            footerPanel.Append(_exportButton);
+
+            _statusLabel = new TmodUILabel(string.Empty, textScale: 0.75f, secondary: true);
+            TmodLayout.AnchorTopLeft(
+                _statusLabel,
+                0f,
+                footerTop + Theme.BrowserFooterHeight,
+                Theme.BrowserWidth - Theme.Padding * 2f,
+                Theme.BrowserStatusHeight);
+            _window.Append(_statusLabel);
+
             _window.IsTextInputActive = () =>
-                _searchBar.IsWritingText || (_projectNameRow?.IsCapturingTextInput ?? false);
+                _searchField.IsWritingText || (_projectNameRow?.IsCapturingTextInput ?? false);
 
             RebuildEntryElements();
             RefreshPayloadSection(force: true);
+            RefreshActionAvailability();
         }
 
         private void OnToolbarMouseDown(UIMouseEvent evt, UIElement listeningElement)
@@ -294,10 +351,12 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
         {
             for (UIElement? element = target; element != null; element = element.Parent)
             {
-                if (element == _searchBoxPanel
+                if (element == _searchField
                     || element is TmodFramedControl
+                    or TmodUIBestiarySearchField
                     or UISearchBar
-                    or UITextBox)
+                    or UITextBox
+                    or UIImageButton)
                 {
                     return true;
                 }
@@ -312,12 +371,39 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
 
             if (Main.keyState.IsKeyDown(Keys.Escape) && !Main.oldKeyState.IsKeyDown(Keys.Escape))
             {
+                if (_projectNameEditing)
+                {
+                    _projectNameEditing = false;
+                    _projectNameRow?.CancelEditing();
+                    RefreshPayloadSection(force: true);
+                    return;
+                }
+
                 RequestClose();
                 return;
             }
 
             _browser.SyncActiveProjectionFromTopmost();
             RefreshPayloadSection(force: false);
+            RefreshActionAvailability();
+            RefreshEntrySelectionVisuals();
+        }
+
+        /// <summary>Enables footer actions from the current browser capabilities.</summary>
+        private void RefreshActionAvailability()
+        {
+            // --- Mirror browser capability flags onto footer buttons.
+            _revertButton.Enabled = _browser.CanCancelPreview;
+            _applyButton.Enabled = _browser.CanCommitImport;
+            _exportButton.Enabled = _browser.CanExport;
+        }
+
+        /// <summary>Keeps grid selection glow in sync with the pending preview path.</summary>
+        private void RefreshEntrySelectionVisuals()
+        {
+            // --- Ask each entry cell whether its path is the active preview.
+            for (int i = 0; i < _entryElements.Count; i++)
+                _entryElements[i].RefreshSelection(_browser);
         }
 
         private void ToggleSortOptions()
@@ -366,6 +452,15 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
             _browserPanel.Append(_filterOptionsPopup);
         }
 
+        /// <summary>Cycles export format between compact .tab and readable .json.</summary>
+        private void ToggleExportFormat()
+        {
+            // --- Flip the browser flag and refresh the cycle button label/hover.
+            _browser.ExportAsReadableJson = !_browser.ExportAsReadableJson;
+            _exportFormatButton.SetValue(GetExportFormatValue());
+            _exportFormatButton.HoverText = GetExportFormatHover();
+        }
+
         private void CloseOptionsPopups()
         {
             if (_sortOptionsPopup != null)
@@ -409,19 +504,36 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
 
         private string GetFilterHover() => $"Filter: {GetFilterValue()}";
 
+        private string GetExportFormatValue() =>
+            Language.GetTextValue(
+                _browser.ExportAsReadableJson
+                    ? "Mods.TheArchitectsBlueprintMod.UI.ExportFormatReadableJson"
+                    : "Mods.TheArchitectsBlueprintMod.UI.ExportFormatCompactTab");
+
+        private string GetExportFormatHover() =>
+            Language.GetTextValue(
+                _browser.ExportAsReadableJson
+                    ? "Mods.TheArchitectsBlueprintMod.UI.ExportReadableJsonHoverOn"
+                    : "Mods.TheArchitectsBlueprintMod.UI.ExportReadableJsonHoverOff");
+
         private void ReloadEntries()
         {
             _browser.ReloadEntries();
             RebuildEntryElements();
+            SetStatus(Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserStatusRefreshed"));
         }
 
         private void RebuildEntryElements()
         {
+            DisposeGridThumbnails();
+            _entryElements.Clear();
             _entryGrid.Clear();
             for (int i = 0; i < _browser.EntryCount; i++)
             {
                 PayloadImportListEntry entry = _browser.Entries[i];
-                _entryGrid.Add(new PayloadFileEntry(owner: this, entry: entry));
+                var element = new PayloadFileEntry(owner: this, entry: entry);
+                _entryElements.Add(element);
+                _entryGrid.Add(element);
             }
 
             _entryGrid.Recalculate();
@@ -436,6 +548,8 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                     : string.Empty,
                 0.85f,
                 false);
+
+            RefreshEntrySelectionVisuals();
         }
 
         private void RefreshPayloadSection(bool force)
@@ -459,28 +573,29 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
 
         private void ApplyPayloadPanel(PayloadBrowserPanelState panel)
         {
-            if (!_projectNameEditing)
+            // Adopt catalog entry names when a preview is active; keep user export name otherwise.
+            if (!_projectNameEditing && _browser.HasPendingPreview)
                 _committedProjectName = panel.ProjectName;
 
-            _payloadThumbnail?.Dispose();
-            _payloadThumbnail = null;
+            if (_payloadThumbnail != null)
+            {
+                DisposeGpuTexture(_payloadThumbnail);
+                _payloadThumbnail = null;
+            }
+
             if (panel.EntryThumbnailPng is { Length: > 0 } previewThumb)
             {
                 _payloadThumbnail = PayloadTagIO.TryDecodeThumbnailPng(previewThumb);
-                if (_payloadThumbnail != null)
-                    TrackDecodedThumbnail(_payloadThumbnail);
             }
             else if (panel.MakeThumbnailFromPayload && _activeProjection is { HasPayload: true } projection)
             {
                 _payloadThumbnail = PayloadPreview.MakeThumbnail(
                     projection.Payload,
                     (int)Theme.BrowserPayloadThumbnailSize);
-                if (_payloadThumbnail != null)
-                    TrackDecodedThumbnail(_payloadThumbnail);
             }
 
             _projectNameRow = PayloadPreviewLayouts.Rebuild(
-                _previewStack,
+                _previewList,
                 panel,
                 CreatePreviewContext(),
                 _projectNameRow);
@@ -489,6 +604,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
         private PayloadPreviewBuildContext CreatePreviewContext() =>
             new()
             {
+                DisplayProjectName = _committedProjectName,
                 ProjectNameEditing = _projectNameEditing,
                 ThumbnailTexture = _payloadThumbnail,
                 ToggleProjectNameEdit = ToggleProjectNameEdit
@@ -498,15 +614,19 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
         {
             if (_projectNameEditing)
             {
+                // Commit typed text into the sticky export name, then restore the label.
                 _projectNameRow?.CommitEditing();
-                _committedProjectName = _projectNameRow?.GetCommittedName() ?? _committedProjectName;
+                string committed = _projectNameRow?.GetCommittedName() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(committed))
+                    _committedProjectName = committed;
                 _projectNameEditing = false;
+                RefreshPayloadSection(force: true);
+                return;
             }
-            else
-            {
-                _projectNameEditing = true;
-                _projectNameRow?.BeginEditing();
-            }
+
+            _projectNameEditing = true;
+            _projectNameRow?.BeginEditing();
+            RefreshPayloadSection(force: true);
         }
 
         private string GetExportProjectName()
@@ -519,33 +639,48 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
 
         private void OnCancelPreview()
         {
+            if (!_browser.CanCancelPreview)
+                return;
+
             _browser.CancelPreview();
             RefreshPayloadSection(force: true);
+            RefreshEntrySelectionVisuals();
+            SetStatus(Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserStatusReverted"));
         }
 
         private void OnEntrySelected(PayloadImportListEntry entry)
         {
             if (!_browser.TrySelectEntry(entry, out string? error))
             {
-                if (!string.IsNullOrWhiteSpace(error))
-                    Main.NewText($"Import preview failed: {error}", Color.OrangeRed);
+                string message = string.IsNullOrWhiteSpace(error)
+                    ? Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserStatusPreviewFailed")
+                    : error;
+                Main.NewText($"Import preview failed: {message}", Color.OrangeRed);
+                SetStatus(message);
                 return;
             }
 
             RefreshPayloadSection(force: true);
+            RefreshEntrySelectionVisuals();
+            SetStatus(Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserStatusPreviewReady"));
         }
 
         private void OnImportCommit()
         {
             if (!_browser.CommitImport(out string? error))
             {
-                if (!string.IsNullOrWhiteSpace(error))
-                    Main.NewText(error, Color.OrangeRed);
+                string message = string.IsNullOrWhiteSpace(error)
+                    ? Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserStatusApplyFailed")
+                    : error;
+                Main.NewText(message, Color.OrangeRed);
+                SetStatus(message);
                 return;
             }
 
             Main.NewText("Import applied to projection.", Color.LightGreen);
             RefreshPayloadSection(force: true);
+            RefreshEntrySelectionVisuals();
+            SetStatus(Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserStatusApplied"));
         }
 
         private void OnExport()
@@ -553,21 +688,45 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
             string projectName = GetExportProjectName();
             if (!_browser.Export(projectName, out string? error))
             {
-                if (!string.IsNullOrWhiteSpace(error))
-                    Main.NewText($"Export failed: {error}", Color.OrangeRed);
+                string message = string.IsNullOrWhiteSpace(error)
+                    ? Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserStatusExportFailed")
+                    : error;
+                Main.NewText($"Export failed: {message}", Color.OrangeRed);
+                SetStatus(message);
                 return;
             }
 
             _projectNameEditing = false;
             _projectNameRow?.EndTextEntry();
             _committedProjectName = PayloadBrowser.BuildDefaultProjectName();
-            if (_searchBar.IsWritingText)
-                _searchBar.ToggleTakingText();
+            if (_searchField.IsWritingText)
+                _searchField.ToggleTakingText();
             RebuildEntryElements();
             RefreshPayloadSection(force: true);
+            SetStatus(Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.BrowserStatusExported"));
         }
 
-        internal void TrackDecodedThumbnail(Texture2D texture) => _decodedThumbnails.Add(texture);
+        /// <summary>Updates the in-window status line.</summary>
+        private void SetStatus(string message)
+        {
+            // --- Replace the secondary status label text.
+            _statusLabel.SetText(message ?? string.Empty, 0.75f, false);
+        }
+
+        internal void TrackGridThumbnail(Texture2D texture) => _gridThumbnails.Add(texture);
+
+        private readonly record struct TextureSize(float Width, float Height);
+
+        /// <summary>Measures a UI texture asset, falling back to toolbar button size.</summary>
+        private static TextureSize MeasureTextureSize(string path)
+        {
+            // --- Read the loaded texture dimensions for layout math.
+            Texture2D? texture = TmodUIAssets.RequestTexture(path).Value;
+            if (texture == null)
+                return new TextureSize(Theme.BrowserToolbarButtonSize, Theme.BrowserToolbarButtonSize);
+
+            return new TextureSize(texture.Width, texture.Height);
+        }
 
         private sealed class PayloadFileEntry : UIElement
         {
@@ -588,7 +747,17 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                 _cell = new PayloadEntryCell(
                     () => PayloadBrowser.BuildEntryHoverText(_entry),
                     () => _owner.OnEntrySelected(_entry));
+                bool hasMissingMods = entry.ModsLoaded is { Count: > 0 }
+                    && PayloadCompatibility.ComputeMissingMods(entry.ModsLoaded).Count > 0;
+                _cell.SetStatus(entry.IsValid, entry.IsLegacy, hasMissingMods);
                 Append(_cell);
+            }
+
+            /// <summary>Refreshes the selection glow from the browser preview path.</summary>
+            public void RefreshSelection(PayloadBrowser browser)
+            {
+                // --- Mark this cell selected when its path matches the pending preview.
+                _cell.SetSelected(browser.IsEntryPreviewed(_entry.FullPath));
             }
 
             public override void Update(GameTime gameTime)
@@ -611,7 +780,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Widgets
                     return;
 
                 _cell.SetTexture(texture);
-                _owner.TrackDecodedThumbnail(texture);
+                _owner.TrackGridThumbnail(texture);
             }
         }
     }

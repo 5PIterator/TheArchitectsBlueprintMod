@@ -55,6 +55,7 @@ namespace TheArchitectsBlueprintMod.Core
         public const string ModVersion = "modVersion";
         public const string TerrariaVersion = "terrariaVersion";
         public const string ModsLoaded = "modsLoaded";
+        public const string MissingMods = "missingMods";
 
         public static readonly string[] DefaultDisplayOrder =
         [
@@ -63,7 +64,8 @@ namespace TheArchitectsBlueprintMod.Core
             Modified,
             ModVersion,
             TerrariaVersion,
-            ModsLoaded
+            ModsLoaded,
+            MissingMods
         ];
 
         public static bool IsReserved(string key) =>
@@ -138,7 +140,40 @@ namespace TheArchitectsBlueprintMod.Core
             return stem;
         }
 
-        public static string FormatModifiedLine(string fullPath) =>
-            $"Modified {System.IO.File.GetLastWriteTimeUtc(fullPath):yyyy-MM-dd HH:mm} UTC";
+        /// <summary>Formats a payload file's last-write time as a UTC display stamp.</summary>
+        public static string FormatModifiedLine(string fullPath)
+        {
+            // --- Read file mtime and format as yyyy-MM-dd HH:mm UTC.
+            return FormatUtcStamp(System.IO.File.GetLastWriteTimeUtc(fullPath));
+        }
+
+        /// <summary>Formats a DateTime as a short UTC display stamp.</summary>
+        public static string FormatUtcStamp(DateTime utc)
+        {
+            // --- Normalize to UTC then apply the shared stamp pattern.
+            DateTime value = utc.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(utc, DateTimeKind.Utc)
+                : utc.ToUniversalTime();
+            return $"{value:yyyy-MM-dd HH:mm} UTC";
+        }
+
+        /// <summary>Parses an ISO/raw UTC string into the shared stamp format when possible.</summary>
+        public static string FormatUtcDisplay(string? raw)
+        {
+            // --- Return empty for blanks; parse ISO when possible; else trim raw text.
+            if (string.IsNullOrWhiteSpace(raw))
+                return string.Empty;
+
+            if (DateTime.TryParse(
+                    raw,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.RoundtripKind,
+                    out DateTime parsed))
+            {
+                return FormatUtcStamp(parsed);
+            }
+
+            return raw.Trim();
+        }
     }
 }

@@ -1,23 +1,23 @@
 #if DEBUG
 #nullable enable
 
-using TheArchitectsBlueprintMod.Core.ScenarioTests;
+using TheArchitectsBlueprintMod.Core.TestCases;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ModLoader;
 
 namespace TheArchitectsBlueprintMod.Core
 {
-    /// <summary>Debug chat trigger for blueprint test scenarios.</summary>
+    /// <summary>Debug chat Test Trigger for blueprint Test Cases.</summary>
     public sealed class BlueprintTestCommand : ModCommand
     {
         public override string Command => "tab.test";
         public override CommandType Type => CommandType.Chat;
 
-        public override string Usage => ScenarioTestRunner.Usage;
+        public override string Usage => TestCaseRunner.Usage;
 
         public override string Description =>
-            "[Debug] Runs blueprint test scenarios (payload, selection, projection, paste).";
+            "[Debug] Runs blueprint Test Cases (payload, selection, projection, paste).";
 
         public override void Action(CommandCaller caller, string input, string[] args)
         {
@@ -42,7 +42,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            ScenarioTestRunner.HandleCommand(caller, pl, args);
+            TestCaseRunner.HandleCommand(caller, pl, args);
         }
     }
 }

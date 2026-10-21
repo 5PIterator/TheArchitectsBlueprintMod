@@ -12,18 +12,20 @@ using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
-    /// <summary>Builds modular payload preview rows from panel state (special + default layouts).</summary>
+    /// <summary>Builds modular payload preview rows from panel state (Bestiary info-page layout).</summary>
     internal static class PayloadPreviewLayouts
     {
-        private const float AuthorRowHeight = 18f;
+        private const float AuthorRowHeight = Theme.AuthorRowHeight;
 
+        /// <summary>Rebuilds the subject info list for the active payload panel state.</summary>
         public static PayloadProjectNameRow? Rebuild(
-            TmodStackPanel host,
+            UIList host,
             PayloadBrowserPanelState panel,
             PayloadPreviewBuildContext ctx,
             PayloadProjectNameRow? projectNameRow = null)
         {
-            host.ClearChildren();
+            // --- Clear list and append nameplate, portrait, metadata, and compatibility cards.
+            host.Clear();
 
             if (!panel.HasProjection)
             {
@@ -32,23 +34,40 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
             }
 
             projectNameRow ??= new PayloadProjectNameRow(ctx);
-            projectNameRow.ApplyState(panel.ProjectName, ctx);
-            host.Append(projectNameRow);
-            host.Append(new TmodUISeparator());
-            AppendThumbnailColumn(host, panel, ctx);
-            host.Append(new TmodUISeparator());
+            projectNameRow.ApplyState(ctx.DisplayProjectName, ctx);
+            host.Add(projectNameRow);
+            host.Add(CreateSeparator());
 
+            AppendThumbnailColumn(host, panel, ctx);
+            host.Add(CreateSeparator());
+
+            bool appendedMetadata = false;
             foreach (string key in OrderMetadataKeys(panel.Metadata))
+            {
+                if (string.Equals(key, PayloadMetadataKeys.MissingMods, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 AppendDefaultRow(host, key, panel.Metadata[key]);
+                appendedMetadata = true;
+            }
+
+            if (panel.Metadata.TryGetValue(PayloadMetadataKeys.MissingMods, out string? missing)
+                && !string.IsNullOrWhiteSpace(missing))
+            {
+                if (appendedMetadata)
+                    host.Add(CreateSeparator());
+
+                AppendDefaultRow(host, PayloadMetadataKeys.MissingMods, missing, wrapValue: true);
+            }
 
             return projectNameRow;
         }
 
-        private static void AppendEmptyState(TmodStackPanel host)
+        private static void AppendEmptyState(UIList host)
         {
             var holder = new UIElement();
             holder.Width.Set(0f, 1f);
-            holder.Height.Set(Theme.BrowserPayloadSectionHeight, 0f);
+            holder.Height.Set(Theme.BrowserPayloadSectionHeight * 0.5f, 0f);
 
             var label = new UIText(
                 Language.GetText("Mods.TheArchitectsBlueprintMod.UI.NoProjectionSelected"),
@@ -62,11 +81,11 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
                 IgnoresMouseInteraction = true
             };
             holder.Append(label);
-            host.Append(holder);
+            host.Add(holder);
         }
 
         private static void AppendThumbnailColumn(
-            TmodStackPanel host,
+            UIList host,
             PayloadBrowserPanelState panel,
             PayloadPreviewBuildContext ctx)
         {
@@ -74,15 +93,13 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
             float blockHeight = thumb + Theme.Spacing + AuthorRowHeight;
 
             var column = new UIElement { OverflowHidden = true };
-            TmodLayout.StackFillWidth(column, blockHeight);
+            column.Width.Set(0f, 1f);
+            column.Height.Set(blockHeight, 0f);
 
             var preview = new TmodUIPayloadPreview(thumb);
             preview.HAlign = 0.5f;
             preview.Top.Set(0f, 0f);
-            if (ctx.ThumbnailTexture != null)
-                preview.SetThumbnail(ctx.ThumbnailTexture);
-            else
-                preview.SetThumbnail(null);
+            preview.SetThumbnail(ctx.ThumbnailTexture);
             column.Append(preview);
 
             string author = panel.AuthorName;
@@ -101,16 +118,26 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
             };
             column.Append(authorLabel);
 
-            host.Append(column);
+            host.Add(column);
         }
 
-        private static void AppendDefaultRow(TmodStackPanel host, string key, string value)
+        private static void AppendDefaultRow(UIList host, string key, string value, bool wrapValue = false)
         {
-            string tooltip = ResolveMetadataTooltip(key);
-            var row = new TmodUIMetadataDefaultRow(tooltip, value);
-            TmodLayout.StackFillWidth(row, Theme.BrowserPayloadMetadataLineHeight);
-            host.Append(row);
+            // --- Resolve a localized label and append a Stat_Panel metadata card.
+            string label = ResolveMetadataTooltip(key);
+            bool shouldWrap = wrapValue
+                || string.Equals(key, PayloadMetadataKeys.ModsLoaded, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(key, PayloadMetadataKeys.MissingMods, StringComparison.OrdinalIgnoreCase);
+            var row = new TmodUIMetadataDefaultRow(label, value, shouldWrap);
+            host.Add(row);
         }
+
+        private static UIHorizontalSeparator CreateSeparator() =>
+            new()
+            {
+                Width = StyleDimension.FromPixelsAndPercent(0f, 1f),
+                Color = Theme.InfoPageBorder * 0.9f
+            };
 
         private static IEnumerable<string> OrderMetadataKeys(IReadOnlyDictionary<string, string> metadata)
         {
@@ -158,6 +185,7 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 
     internal sealed class PayloadPreviewBuildContext
     {
+        public required string DisplayProjectName { get; init; }
         public required bool ProjectNameEditing { get; init; }
         public required Texture2D? ThumbnailTexture { get; init; }
         public required Action ToggleProjectNameEdit { get; init; }

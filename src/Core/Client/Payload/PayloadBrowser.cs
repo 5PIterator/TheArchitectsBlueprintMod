@@ -101,6 +101,32 @@ namespace TheArchitectsBlueprintMod.Core
 
         public int PanelRevision => _panelRevision;
 
+        public string? PreviewedEntryPath => _previewedEntryPath;
+
+        public bool HasPendingPreview => !string.IsNullOrWhiteSpace(_previewedEntryPath);
+
+        public bool CanCancelPreview => HasPendingPreview;
+
+        public bool CanCommitImport => HasPendingPreview && _activeProjection is not null;
+
+        public bool CanExport =>
+            _activeProjection is Projection projection
+            && projection.IsDefined
+            && !projection.IsLocked
+            && projection.HasPayload
+            && !Main.dedServ
+            && !Main.gameMenu;
+
+        /// <summary>Returns true when the given path is the active import preview.</summary>
+        public bool IsEntryPreviewed(string? fullPath)
+        {
+            // --- Compare against the stored preview path with ordinal ignore-case.
+            if (string.IsNullOrWhiteSpace(fullPath) || string.IsNullOrWhiteSpace(_previewedEntryPath))
+                return false;
+
+            return string.Equals(_previewedEntryPath, fullPath, StringComparison.OrdinalIgnoreCase);
+        }
+
         internal static bool TryGetPayloadIoHighlight(Player player, out Projection? projection)
         {
             ArgumentNullException.ThrowIfNull(player);
@@ -245,17 +271,23 @@ namespace TheArchitectsBlueprintMod.Core
             MakeThumbnailFromPayload: false,
             Metadata: new Dictionary<string, string>());
 
+        /// <summary>Previews a catalog entry onto the active projection without committing.</summary>
         public bool TrySelectEntry(PayloadImportListEntry entry, out string? error)
         {
+            // --- Reject invalids, no-op if already previewed, else load payload onto the projection.
+
             error = null;
             if (!entry.IsValid)
-                return false;
-
-            if (string.Equals(_previewedEntryPath, entry.FullPath, StringComparison.OrdinalIgnoreCase))
             {
-                CancelPreview();
-                return true;
+                error = string.IsNullOrWhiteSpace(entry.ErrorSummary)
+                    ? "Payload entry is invalid."
+                    : entry.ErrorSummary;
+                return false;
             }
+
+            // Keep the same preview active when the user re-clicks the selected entry.
+            if (IsEntryPreviewed(entry.FullPath))
+                return true;
 
             if (_activeProjection is not Projection projection)
             {
@@ -282,9 +314,18 @@ namespace TheArchitectsBlueprintMod.Core
             BumpPanel();
         }
 
+        /// <summary>Commits the pending import preview into the projection snapshot.</summary>
         public bool CommitImport(out string? error)
         {
+            // --- Require a pending preview, then promote the live projection state into the snapshot.
+
             error = null;
+            if (!HasPendingPreview)
+            {
+                error = "No import preview to apply.";
+                return false;
+            }
+
             if (_activeProjection is not Projection projection)
             {
                 error = "No active projection selected.";
@@ -337,23 +378,28 @@ namespace TheArchitectsBlueprintMod.Core
 
         public static string BuildDefaultProjectName() => $"TABPayload{DateTime.Now:yyyyMMdd_HHmmss}";
 
+        /// <summary>Builds a short hover summary for a payload catalog entry.</summary>
         public static string BuildEntryHoverText(PayloadImportListEntry entry)
         {
+            // --- Assemble name/author/size/compat/filename; keep detail metadata out of the tooltip.
+
             var sb = new StringBuilder();
             sb.AppendLine(entry.DisplayName);
             sb.AppendLine($"Author: {entry.PlayerName}");
 
             if (entry.Width > 0 && entry.Height > 0)
                 sb.AppendLine($"Size: {entry.Width}x{entry.Height}");
-            if (!string.IsNullOrWhiteSpace(entry.CreatedUtc))
-                sb.AppendLine($"Created: {entry.CreatedUtc}");
-            if (!string.IsNullOrWhiteSpace(entry.ModifiedUtc))
-                sb.AppendLine(entry.ModifiedUtc);
+
+            if (entry.IsLegacy)
+                sb.AppendLine("Legacy format");
+
             if (entry.ModsLoaded is { Count: > 0 })
             {
                 IReadOnlyList<string> missing = PayloadCompatibility.ComputeMissingMods(entry.ModsLoaded);
                 if (missing.Count > 0)
                     sb.AppendLine($"Missing mods: {string.Join(", ", missing)}");
+                else
+                    sb.AppendLine("Dependencies: available");
             }
 
             sb.AppendLine(Path.GetFileName(entry.FullPath));
@@ -418,7 +464,23 @@ namespace TheArchitectsBlueprintMod.Core
 
         private static bool MatchesSearch(PayloadImportListEntry entry, string needle) =>
             Contains(entry.DisplayName, needle)
-            || Contains(entry.PlayerName, needle);
+            || Contains(entry.PlayerName, needle)
+            || Contains(Path.GetFileName(entry.FullPath), needle)
+            || MatchesMods(entry.ModsLoaded, needle);
+
+        private static bool MatchesMods(IReadOnlyList<string>? mods, string needle)
+        {
+            if (mods is not { Count: > 0 })
+                return false;
+
+            for (int i = 0; i < mods.Count; i++)
+            {
+                if (Contains(mods[i], needle))
+                    return true;
+            }
+
+            return false;
+        }
 
         private static bool Contains(string? haystack, string needle) =>
             haystack != null && haystack.Contains(needle, StringComparison.OrdinalIgnoreCase);
@@ -455,15 +517,18 @@ namespace TheArchitectsBlueprintMod.Core
             }
         }
 
+        /// <summary>Resolves the previewed catalog entry from the full catalog, ignoring filters.</summary>
         private PayloadImportListEntry? FindPreviewedEntry()
         {
+            // --- Scan all discovered entries so search/filter cannot drop preview metadata.
+
             if (string.IsNullOrWhiteSpace(_previewedEntryPath))
                 return null;
 
-            for (int i = 0; i < _filteredEntries.Count; i++)
+            for (int i = 0; i < _allEntries.Count; i++)
             {
-                if (string.Equals(_filteredEntries[i].FullPath, _previewedEntryPath, StringComparison.OrdinalIgnoreCase))
-                    return _filteredEntries[i];
+                if (string.Equals(_allEntries[i].FullPath, _previewedEntryPath, StringComparison.OrdinalIgnoreCase))
+                    return _allEntries[i];
             }
 
             return null;
@@ -477,14 +542,20 @@ namespace TheArchitectsBlueprintMod.Core
 
             if (previewEntry is PayloadImportListEntry entry)
             {
-                TryAdd(metadata, PayloadMetadataKeys.CreatedUtc, entry.CreatedUtc);
-                TryAdd(metadata, PayloadMetadataKeys.Modified, entry.ModifiedUtc);
+                TryAdd(metadata, PayloadMetadataKeys.CreatedUtc, PayloadMetadata.FormatUtcDisplay(entry.CreatedUtc));
+                TryAdd(metadata, PayloadMetadataKeys.Modified, PayloadMetadata.FormatUtcDisplay(entry.ModifiedUtc));
                 TryAdd(metadata, PayloadMetadataKeys.ModVersion, entry.ModVersion);
                 TryAdd(metadata, PayloadMetadataKeys.TerrariaVersion, entry.TerrariaVersion);
                 if (entry.Width > 0 && entry.Height > 0)
                     TryAdd(metadata, PayloadMetadataKeys.Dimensions, $"{entry.Width}x{entry.Height}");
                 if (entry.ModsLoaded is { Count: > 0 })
+                {
                     TryAdd(metadata, PayloadMetadataKeys.ModsLoaded, string.Join(", ", entry.ModsLoaded));
+                    IReadOnlyList<string> missing = PayloadCompatibility.ComputeMissingMods(entry.ModsLoaded);
+                    if (missing.Count > 0)
+                        TryAdd(metadata, PayloadMetadataKeys.MissingMods, string.Join(", ", missing));
+                }
+
                 return metadata;
             }
 

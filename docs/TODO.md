@@ -5,12 +5,12 @@ Engineering tracker for the pre-release. Player-facing summary: [README](../READ
 ## Remaining (pre-release / known issues)
 
 ### Correctness
-- [ ] Plants / tile-anchored objects (blue mushrooms, candles) mis-routed through the block layer instead of plant/frame — see [src/Core/#notes.md](../src/Core/%23notes.md)
-- [ ] Mod resistance: session-level `modsLoaded` + skip/Unloaded placeholders only; per-tile export tracking and pre-projection compatibility checks not complete
-- [ ] Paste planning lag on moderate payloads (identification / `BuildLookup`) — see [src/Core/#notes.md](../src/Core/%23notes.md)
+- [#] Plants / tile-anchored objects (blue mushrooms, candles) mis-routed through the block layer instead of plant/frame — see [src/Core/#notes.md](../src/Core/%23notes.md); gated by `layer_R01`
+- [#] Mod resistance: session-level `modsLoaded` + skip/Unloaded placeholders only; per-tile export tracking and pre-projection compatibility checks not complete — gated by `payload_R09` / `payload_N08`
+- [ ] Paste planning lag on moderate payloads (identification / `BuildLookup`) — see [src/Core/#notes.md](../src/Core/%23notes.md); gated by `paste_F05`
 
 ### Multiplayer
-- [ ] Playtest paste on dedicated server + remote client + host-and-play (architecture exists; needs verification)
+- [ ] Playtest paste on dedicated server + remote client + host-and-play — automated `paste-mp_*` matrix in [TESTING.md](TESTING.md)
 
 ### UX / polish
 - [ ] Architect Mode: re-enable Hand recipe + Hand→Blueprint shimmer when Mode is stable (currently gated off; cheat-spawn still works; map interaction requires Mode — see [PLAN.md](PLAN.md) Temporary implementation)
@@ -20,8 +20,8 @@ Engineering tracker for the pre-release. Player-facing summary: [README](../READ
 - [ ] Large payload move/scale/export performance (untested at ~548×339)
 
 ### Testing
-- [ ] Expand pre-release coverage: run scenario suite (`/tab.test all`) in release-adjacent debug builds; smoke-check `paste.layer` / `paste.medium` with Journey materials
-- [ ] MP paste smoke-test checklist
+- [ ] Expand pre-release coverage: run `/tab.test all` in release-adjacent debug builds; smoke-check `paste_P04` with Journey materials — plans in [test-plans/](test-plans/)
+- [ ] MP paste Cases — [test-plans/paste-mp.md](test-plans/paste-mp.md) + topologies A/B/C in [TESTING.md](TESTING.md)
 
 ## Roadmap / vNext
 
@@ -47,4 +47,4 @@ Engineering tracker for the pre-release. Player-facing summary: [README](../READ
 - Discovery + interaction mapping + phased paste stack
 - Mod rename to The Architect's Blueprint
 - Tier 1–3 tools + Stencil; Tier 4 Hand (accessory), Tier 5 Blueprint (animation stub)
-- In-game scenario suite (payload / selection / projection / paste) — [TESTING.md](TESTING.md)
+- In-game Test Case suite + Test Plans — [TESTING.md](TESTING.md), [test-plans/](test-plans/)

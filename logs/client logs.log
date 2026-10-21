@@ -1,10 +1,1011 @@
-[21:46:07.166] [.NET TP Worker/ERROR] [tML]: Compiling TheArchitectsBlueprintMod.dll failed with 67 errors and 1326 warnings
-Error: r:\Documents\My Games\Terraria\tModLoader\ModSources\TheArchitectsBlueprintMod\src\tests\cases\obj\Debug\net8.0\TheArchitectsBlueprintMod.Cases.Tests.GlobalUsings.g.cs(9,14): error CS0246: The type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?)
-Terraria.ModLoader.Exceptions.BuildException: Compiling TheArchitectsBlueprintMod.dll failed with 67 errors and 1326 warnings
-Error: r:\Documents\My Games\Terraria\tModLoader\ModSources\TheArchitectsBlueprintMod\src\tests\cases\obj\Debug\net8.0\TheArchitectsBlueprintMod.Cases.Tests.GlobalUsings.g.cs(9,14): error CS0246: The type or namespace name 'Xunit' could not be found (are you missing a using directive or an assembly reference?)
-   at Terraria.ModLoader.Core.ModCompile.CompileMod(BuildingMod mod, Byte[]& code, Byte[]& pdb) in tModLoader\Terraria\ModLoader\Core\ModCompile.cs:line 484
-   at Terraria.ModLoader.Core.ModCompile.BuildMod(BuildingMod mod, Byte[]& code, Byte[]& pdb) in tModLoader\Terraria\ModLoader\Core\ModCompile.cs:line 413
-   at Terraria.ModLoader.Core.ModCompile.Build(BuildingMod mod) in tModLoader\Terraria\ModLoader\Core\ModCompile.cs:line 251
-   at Terraria.ModLoader.Core.ModCompile.Build(String modFolder) in tModLoader\Terraria\ModLoader\Core\ModCompile.cs:line 225
-   at Terraria.ModLoader.UI.UIBuildMod.<>c__DisplayClass5_0.<Build>b__0(ModCompile mc) in tModLoader\Terraria\ModLoader\UI\UIBuildMod.cs:line 34
-   at Terraria.ModLoader.UI.UIBuildMod.BuildMod(Action`1 buildAction, Boolean reload) in tModLoader\Terraria\ModLoader\UI\UIBuildMod.cs:line 75
+------------------------------------------------------------------------------
+You may only use the Microsoft Visual Studio .NET/C/C++ Debugger (vsdbg) with
+Visual Studio Code, Visual Studio or Visual Studio for Mac software to help you
+develop and test your applications.
+------------------------------------------------------------------------------
+[21:54:10.465] [Main Thread/INFO] [tML]: Starting tModLoader client 1.4.4.9+2026.08.3.0|2026.08|stable|Stable|c9545cf27d56c456321e1896274c02adf67d0140|5250950117352386884 built 01.10.2026 2:04
+tML: [21:54:10.465] [Main Thread/INFO] [tML]: Starting tModLoader client 1.4.4.9+2026.08.3.0|2026.08|stable|Stable|c9545cf27d56c456321e1896274c02adf67d0140|5250950117352386884 built 01.10.2026 2:04
+[21:54:10.474] [Main Thread/INFO] [tML]: Log date: 05.10.2026
+tML: [21:54:10.474] [Main Thread/INFO] [tML]: Log date: 05.10.2026
+[21:54:10.474] [Main Thread/INFO] [tML]: Running on Windows (v10.0.26300.0) X64 NetCore 8.0.28
+tML: [21:54:10.474] [Main Thread/INFO] [tML]: Running on Windows (v10.0.26300.0) X64 NetCore 8.0.28
+[21:54:10.478] [Main Thread/INFO] [tML]: CPU: 12 processors. RAM: 63,9 GB
+tML: [21:54:10.478] [Main Thread/INFO] [tML]: CPU: 12 processors. RAM: 63,9 GB
+[21:54:10.479] [Main Thread/INFO] [tML]: FrameworkDescription: .NET 8.0.28
+tML: [21:54:10.479] [Main Thread/INFO] [tML]: FrameworkDescription: .NET 8.0.28
+[21:54:10.479] [Main Thread/INFO] [tML]: Executable: G:\SteamLibrary\steamapps\common\tModLoader\tModLoader.dll
+tML: [21:54:10.479] [Main Thread/INFO] [tML]: Executable: G:\SteamLibrary\steamapps\common\tModLoader\tModLoader.dll
+[21:54:10.479] [Main Thread/INFO] [tML]: Working Directory: G:\SteamLibrary\steamapps\common\tModLoader
+tML: [21:54:10.479] [Main Thread/INFO] [tML]: Working Directory: G:\SteamLibrary\steamapps\common\tModLoader
+[MonoMod.Utils] Info: Version 25.0.10
+[MonoMod.RuntimeDetour] Info: Version 25.3.2
+[MonoMod.Core] Info: Version 1.3.2
+[MonoMod.Utils] Info: Platform info: Windows x86_64
+[MonoMod.Utils] Trace: IsMono: False, IsCoreBcl: True
+[MonoMod.Utils] Trace: Returned system version: 8.0.28
+[MonoMod.Utils] Trace: FrameworkDescription: .NET 8.0.28
+[MonoMod.Utils] Info: Detected runtime: CoreCLR 8.0.28 using Core corelib
+[MonoMod.Core] Trace: Got jit path: C:\Program Files\dotnet\shared\Microsoft.NETCore.App\8.0.28\clrjit.dll
+[MonoMod.Utils] Trace: new DynamicMethod: System.Object MethodHandle_GetLoaderAllocator(System.IntPtr)
+[MonoMod.Utils] Trace: mdef: System.Object MethodHandle_GetLoaderAllocator(System.IntPtr)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Type GetDeclaringTypeOfMethodHandle(System.IntPtr)
+[MonoMod.Utils] Trace: mdef: System.Type GetDeclaringTypeOfMethodHandle(System.IntPtr)
+[MonoMod.Utils] Trace: new DynamicMethod: System.RuntimeMethodInfoStub new RuntimeMethodInfoStub(System.IntPtr,System.Object)
+[MonoMod.Utils] Trace: mdef: System.RuntimeMethodInfoStub new RuntimeMethodInfoStub(System.IntPtr,System.Object)
+[MonoMod.Utils] Trace: new DynamicMethod: System.RuntimeMethodHandle new RuntimeMethodHandle(System.Object)
+[MonoMod.Utils] Trace: mdef: System.RuntimeMethodHandle new RuntimeMethodHandle(System.Object)
+[MonoMod.Core] Trace: Allocated ICorJitInfo wrapper vtable at 0x000001c7029c4b40
+[MonoMod.Utils] Trace: new DynamicMethod: System.Int32 Trampoline<System.Int32 (System.IntPtr, System.ReadOnlySpan`1[System.Byte], System.Boolean)>(System.IntPtr,System.ReadOnlySpan`1[System.Byte],System.Boolean)
+[MonoMod.Utils] Trace: mdef: System.Int32 Trampoline<System.Int32 (System.IntPtr, System.ReadOnlySpan`1[System.Byte], System.Boolean)>(System.IntPtr,System.ReadOnlySpan`1<System.Byte>,System.Boolean)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Int32 Hook<System.Int32 Terraria.ModLoader.Engine.LoggingHooks/<>c::<FixBrokenConsolePipeError>b__4_0(Terraria.ModLoader.Engine.LoggingHooks+orig_WriteFileNative,System.IntPtr,System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]],System.Boolean)>(System.IntPtr,System.ReadOnlySpan`1[System.Byte],System.Boolean)
+[MonoMod.Utils] Trace: mdef: System.Int32 Hook<System.Int32 Terraria.ModLoader.Engine.LoggingHooks/<>c::<FixBrokenConsolePipeError>b__4_0(Terraria.ModLoader.Engine.LoggingHooks+orig_WriteFileNative,System.IntPtr,System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]],System.Boolean)>(System.IntPtr,System.ReadOnlySpan`1<System.Byte>,System.Boolean)
+[MonoMod.RuntimeDetour] Trace: Creating Hook from System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to System.Int32 Terraria.ModLoader.Engine.LoggingHooks+<>c:<FixBrokenConsolePipeError>b__4_0(Terraria.ModLoader.Engine.LoggingHooks+orig_WriteFileNative, System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Int32 Trampoline<System.Int32 (System.IntPtr, System.ReadOnlySpan`1[System.Byte], System.Boolean)>(System.IntPtr,System.ReadOnlySpan`1[System.Byte],System.Boolean)
+[MonoMod.Utils] Trace: mdef: System.Int32 Trampoline<System.Int32 (System.IntPtr, System.ReadOnlySpan`1[System.Byte], System.Boolean)>(System.IntPtr,System.ReadOnlySpan`1<System.Byte>,System.Boolean)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Int32 SyncProxy<System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)>(System.IntPtr,System.ReadOnlySpan`1[System.Byte],System.Boolean)
+[MonoMod.Utils] Trace: mdef: System.Int32 SyncProxy<System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)>(System.IntPtr,System.ReadOnlySpan`1<System.Byte>,System.Boolean)
+[MonoMod.RuntimeDetour] Trace: Applying Hook from System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to System.Int32 Terraria.ModLoader.Engine.LoggingHooks+<>c:<FixBrokenConsolePipeError>b__4_0(Terraria.ModLoader.Engine.LoggingHooks+orig_WriteFileNative, System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Int32 DMD<System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)>(System.IntPtr,System.ReadOnlySpan`1[System.Byte],System.Boolean)
+[MonoMod.Utils] Trace: orig: System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)
+[MonoMod.Utils] Trace: mdef: System.Int32 DMD<System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)>(System.IntPtr,System.ReadOnlySpan`1<System.Byte>,System.Boolean)
+[MonoMod.Utils] Trace: new DynamicMethod: System.RuntimeMethodHandle get DynamicMethod RuntimeMethodHandle(System.Reflection.Emit.DynamicMethod)
+[MonoMod.Utils] Trace: mdef: System.RuntimeMethodHandle get DynamicMethod RuntimeMethodHandle(System.Reflection.Emit.DynamicMethod)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Void invoke RuntimeHelpers.CompileMethod(System.RuntimeMethodHandle)
+[MonoMod.Utils] Trace: mdef: System.Void invoke RuntimeHelpers.CompileMethod(System.RuntimeMethodHandle)
+[MonoMod.Core] Trace: Applying managed detour from System.Int32 Trampoline<System.Int32 (System.IntPtr, System.ReadOnlySpan`1[System.Byte], System.Boolean)>(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to System.Int32 Hook<System.Int32 Terraria.ModLoader.Engine.LoggingHooks/<>c::<FixBrokenConsolePipeError>b__4_0(Terraria.ModLoader.Engine.LoggingHooks+orig_WriteFileNative,System.IntPtr,System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]],System.Boolean)>(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)
+[MonoMod.Core] Trace: Performing method body walk for System.Int32 Trampoline<System.Int32 (System.IntPtr, System.ReadOnlySpan`1[System.Byte], System.Boolean)>(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831a411a0
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff831a411a0 => 0x00007ff831a41240
+[MonoMod.Core] Trace: Applying managed detour from System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to System.Int32 SyncProxy<System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)>(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)
+[MonoMod.Core] Trace: Performing method body walk for System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831e6a160
+[MonoMod.Core] Trace: Matched thunk with AddressMeaning(Rel32Indirect, offset: 6, constant: 0) at 0x00007ff831e6a160 (addr: 0x00003ffa, offset: 0)
+[MonoMod.Core] Trace: Got next entry point 0x00007ff88e58ca30
+[MonoMod.Core] Trace: ThePreStub: 0xFFFFFFFFFFFFFFFF
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff88e58ca30 => 0x00007ff831a41300
+[MonoMod.Core] Trace: Applying managed detour from System.Int32 Trampoline<System.Int32 (System.IntPtr, System.ReadOnlySpan`1[System.Byte], System.Boolean)>(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to System.Int32 DMD<System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)>(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)
+[MonoMod.Core] Trace: Performing method body walk for System.Int32 Trampoline<System.Int32 (System.IntPtr, System.ReadOnlySpan`1[System.Byte], System.Boolean)>(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831a41470
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff831a41470 => 0x00007ff831a41510
+[MonoMod.Utils] Trace: new DynamicMethod: System.Void Trampoline<System.Void (System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)
+[MonoMod.Utils] Trace: mdef: System.Void Trampoline<System.Void (System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Void Hook<System.Void Terraria.ModLoader.Engine.LoggingHooks::Hook_StackTrace_CaptureStackTrace(Terraria.ModLoader.Engine.LoggingHooks+orig_StackTrace_CaptureStackTrace,System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)>(System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)
+[MonoMod.Utils] Trace: mdef: System.Void Hook<System.Void Terraria.ModLoader.Engine.LoggingHooks::Hook_StackTrace_CaptureStackTrace(Terraria.ModLoader.Engine.LoggingHooks+orig_StackTrace_CaptureStackTrace,System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)>(System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)
+[MonoMod.RuntimeDetour] Trace: Creating Hook from System.Void System.Diagnostics.StackTrace:CaptureStackTrace(System.Int32, System.Boolean, System.Exception) to System.Void Terraria.ModLoader.Engine.LoggingHooks:Hook_StackTrace_CaptureStackTrace(Terraria.ModLoader.Engine.LoggingHooks+orig_StackTrace_CaptureStackTrace, System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Void Trampoline<System.Void (System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)
+[MonoMod.Utils] Trace: mdef: System.Void Trampoline<System.Void (System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Void SyncProxy<System.Void System.Diagnostics.StackTrace:CaptureStackTrace(System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)
+[MonoMod.Utils] Trace: mdef: System.Void SyncProxy<System.Void System.Diagnostics.StackTrace:CaptureStackTrace(System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)
+[MonoMod.RuntimeDetour] Trace: Applying Hook from System.Void System.Diagnostics.StackTrace:CaptureStackTrace(System.Int32, System.Boolean, System.Exception) to System.Void Terraria.ModLoader.Engine.LoggingHooks:Hook_StackTrace_CaptureStackTrace(Terraria.ModLoader.Engine.LoggingHooks+orig_StackTrace_CaptureStackTrace, System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Void DMD<System.Void System.Diagnostics.StackTrace:CaptureStackTrace(System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)
+[MonoMod.Utils] Trace: orig: System.Void System.Diagnostics.StackTrace:CaptureStackTrace(System.Int32, System.Boolean, System.Exception)
+[MonoMod.Utils] Trace: mdef: System.Void DMD<System.Void System.Diagnostics.StackTrace:CaptureStackTrace(System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)
+[MonoMod.Core] Trace: Applying managed detour from System.Void Trampoline<System.Void (System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception) to System.Void Hook<System.Void Terraria.ModLoader.Engine.LoggingHooks::Hook_StackTrace_CaptureStackTrace(Terraria.ModLoader.Engine.LoggingHooks+orig_StackTrace_CaptureStackTrace,System.Diagnostics.StackTrace,System.Int32,System.Boolean,System.Exception)>(System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)
+[MonoMod.Core] Trace: Performing method body walk for System.Void Trampoline<System.Void (System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831a41760
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff831a41760 => 0x00007ff831a41800
+[MonoMod.Core] Trace: Applying managed detour from System.Void System.Diagnostics.StackTrace:CaptureStackTrace(System.Int32, System.Boolean, System.Exception) to System.Void SyncProxy<System.Void System.Diagnostics.StackTrace:CaptureStackTrace(System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)
+[MonoMod.Core] Trace: Performing method body walk for System.Void System.Diagnostics.StackTrace:CaptureStackTrace(System.Int32, System.Boolean, System.Exception)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff8321b9b00
+[MonoMod.Core] Trace: Matched thunk with AddressMeaning(Rel32Indirect, offset: 6, constant: 0) at 0x00007ff8321b9b00 (addr: 0x00003ffa, offset: 0)
+[MonoMod.Core] Trace: Got next entry point 0x00007ff890926b60
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff890926b60 => 0x00007ff831a41900
+[MonoMod.Core] Trace: Applying managed detour from System.Void Trampoline<System.Void (System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception) to System.Void DMD<System.Void System.Diagnostics.StackTrace:CaptureStackTrace(System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)
+[MonoMod.Core] Trace: Performing method body walk for System.Void Trampoline<System.Void (System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)>(System.Diagnostics.StackTrace, System.Int32, System.Boolean, System.Exception)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831a41a80
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff831a41a80 => 0x00007ff831a41b20
+[MonoMod.Utils] Trace: new DynamicMethod: System.Void Trampoline<System.Void (System.Object, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Object,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)
+[MonoMod.Utils] Trace: mdef: System.Void Trampoline<System.Void (System.Object, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Object,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Void Hook<System.Void Terraria.ModLoader.Engine.LoggingHooks::Hook_GetSourceLineInfo(Terraria.ModLoader.Engine.LoggingHooks+orig_GetSourceLineInfo,System.Object,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)>(System.Diagnostics.StackTraceSymbols,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)
+[MonoMod.Utils] Trace: mdef: System.Void Hook<System.Void Terraria.ModLoader.Engine.LoggingHooks::Hook_GetSourceLineInfo(Terraria.ModLoader.Engine.LoggingHooks+orig_GetSourceLineInfo,System.Object,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)>(System.Diagnostics.StackTraceSymbols,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)
+[MonoMod.RuntimeDetour] Trace: Creating Hook from System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&) to System.Void Terraria.ModLoader.Engine.LoggingHooks:Hook_GetSourceLineInfo(Terraria.ModLoader.Engine.LoggingHooks+orig_GetSourceLineInfo, System.Object, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Void Trampoline<System.Void (System.Diagnostics.StackTraceSymbols, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Diagnostics.StackTraceSymbols,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)
+[MonoMod.Utils] Trace: mdef: System.Void Trampoline<System.Void (System.Diagnostics.StackTraceSymbols, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Diagnostics.StackTraceSymbols,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Void SyncProxy<System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Diagnostics.StackTraceSymbols,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)
+[MonoMod.Utils] Trace: mdef: System.Void SyncProxy<System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Diagnostics.StackTraceSymbols,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)
+[MonoMod.RuntimeDetour] Trace: Applying Hook from System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&) to System.Void Terraria.ModLoader.Engine.LoggingHooks:Hook_GetSourceLineInfo(Terraria.ModLoader.Engine.LoggingHooks+orig_GetSourceLineInfo, System.Object, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Void DMD<System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Diagnostics.StackTraceSymbols,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)
+[MonoMod.Utils] Trace: orig: System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)
+[MonoMod.Utils] Trace: mdef: System.Void DMD<System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Diagnostics.StackTraceSymbols,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)
+[MonoMod.Core] Trace: Applying managed detour from System.Void Trampoline<System.Void (System.Diagnostics.StackTraceSymbols, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Diagnostics.StackTraceSymbols, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&) to System.Void Hook<System.Void Terraria.ModLoader.Engine.LoggingHooks::Hook_GetSourceLineInfo(Terraria.ModLoader.Engine.LoggingHooks+orig_GetSourceLineInfo,System.Object,System.Reflection.Assembly,System.String,System.IntPtr,System.Int32,System.Boolean,System.IntPtr,System.Int32,System.Int32,System.Int32,System.String&,System.Int32&,System.Int32&)>(System.Diagnostics.StackTraceSymbols, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)
+[MonoMod.Core] Trace: Performing method body walk for System.Void Trampoline<System.Void (System.Diagnostics.StackTraceSymbols, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Diagnostics.StackTraceSymbols, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831a41cb0
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff831a41cb0 => 0x00007ff831a41d50
+[MonoMod.Core] Trace: Applying managed detour from System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&) to System.Void SyncProxy<System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Diagnostics.StackTraceSymbols, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)
+[MonoMod.Core] Trace: Performing method body walk for System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff8321fa700
+[MonoMod.Core] Trace: Matched thunk with AddressMeaning(Rel32Indirect, offset: 6, constant: 0) at 0x00007ff8321fa700 (addr: 0x00003ffa, offset: 0)
+[MonoMod.Core] Trace: Got next entry point 0x00007ff8843f1e50
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff8843f1e50 => 0x00007ff831a41e80
+[MonoMod.Core] Trace: Applying managed detour from System.Void Trampoline<System.Void (System.Object, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Object, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&) to System.Void DMD<System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Diagnostics.StackTraceSymbols, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)
+[MonoMod.Core] Trace: Performing method body walk for System.Void Trampoline<System.Void (System.Object, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Object, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831a42060
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff831a42060 => 0x00007ff831a42100
+[MonoMod.Utils] Trace: new DynamicMethod: System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Trampoline<System.Threading.Tasks.ValueTask`1[System.Net.Http.HttpResponseMessage] (System.Object, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Object,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: mdef: System.Threading.Tasks.ValueTask`1<System.Net.Http.HttpResponseMessage> Trampoline<System.Threading.Tasks.ValueTask`1[System.Net.Http.HttpResponseMessage] (System.Object, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Object,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Hook<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Terraria.ModLoader.Engine.LoggingHooks/<>c::<HookWebRequests>b__19_0(Terraria.ModLoader.Engine.LoggingHooks+orig_SendAsyncCore,System.Object,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: mdef: System.Threading.Tasks.ValueTask`1<System.Net.Http.HttpResponseMessage> Hook<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Terraria.ModLoader.Engine.LoggingHooks/<>c::<HookWebRequests>b__19_0(Terraria.ModLoader.Engine.LoggingHooks+orig_SendAsyncCore,System.Object,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.RuntimeDetour] Trace: Creating Hook from System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken) to System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Terraria.ModLoader.Engine.LoggingHooks+<>c:<HookWebRequests>b__19_0(Terraria.ModLoader.Engine.LoggingHooks+orig_SendAsyncCore, System.Object, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Trampoline<System.Threading.Tasks.ValueTask`1[System.Net.Http.HttpResponseMessage] (System.Net.Http.HttpConnectionPoolManager, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: mdef: System.Threading.Tasks.ValueTask`1<System.Net.Http.HttpResponseMessage> Trampoline<System.Threading.Tasks.ValueTask`1[System.Net.Http.HttpResponseMessage] (System.Net.Http.HttpConnectionPoolManager, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] SyncProxy<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: mdef: System.Threading.Tasks.ValueTask`1<System.Net.Http.HttpResponseMessage> SyncProxy<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.RuntimeDetour] Trace: Applying Hook from System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken) to System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Terraria.ModLoader.Engine.LoggingHooks+<>c:<HookWebRequests>b__19_0(Terraria.ModLoader.Engine.LoggingHooks+orig_SendAsyncCore, System.Object, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]]& Glue:AbiFixup<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken),System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] SyncProxy<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager,System.Threading.Tasks.ValueTask`1[System.Net.Http.HttpResponseMessage]&,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: mdef: System.Threading.Tasks.ValueTask`1<System.Net.Http.HttpResponseMessage>& Glue:AbiFixup<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken),System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] SyncProxy<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager,System.Threading.Tasks.ValueTask`1<System.Net.Http.HttpResponseMessage>&,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] DMD<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: orig: System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)
+[MonoMod.Utils] Trace: mdef: System.Threading.Tasks.ValueTask`1<System.Net.Http.HttpResponseMessage> DMD<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)
+[MonoMod.Core] Trace: Applying managed detour from System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Trampoline<System.Threading.Tasks.ValueTask`1[System.Net.Http.HttpResponseMessage] (System.Net.Http.HttpConnectionPoolManager, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken) to System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Hook<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Terraria.ModLoader.Engine.LoggingHooks/<>c::<HookWebRequests>b__19_0(Terraria.ModLoader.Engine.LoggingHooks+orig_SendAsyncCore,System.Object,System.Net.Http.HttpRequestMessage,System.Uri,System.Boolean,System.Boolean,System.Boolean,System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)
+[MonoMod.Core] Trace: Performing method body walk for System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Trampoline<System.Threading.Tasks.ValueTask`1[System.Net.Http.HttpResponseMessage] (System.Net.Http.HttpConnectionPoolManager, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831a42490
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff831a42490 => 0x00007ff831a42530
+[MonoMod.Core] Trace: Applying managed detour from System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken) to System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]]& Glue:AbiFixup<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken),System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] SyncProxy<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager, System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]]&, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)
+[MonoMod.Core] Trace: Performing method body walk for System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff83225a9a0
+[MonoMod.Core] Trace: Matched thunk with AddressMeaning(Rel32Indirect, offset: 6, constant: 0) at 0x00007ff83225a9a0 (addr: 0x00003ffa, offset: 0)
+[MonoMod.Core] Trace: Got next entry point 0x00007ff87f9ac120
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff87f9ac120 => 0x00007ff831a42750
+[MonoMod.Core] Trace: Applying managed detour from System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Trampoline<System.Threading.Tasks.ValueTask`1[System.Net.Http.HttpResponseMessage] (System.Object, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Object, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken) to System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] DMD<System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] System.Net.Http.HttpConnectionPoolManager:SendAsyncCore(System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Net.Http.HttpConnectionPoolManager, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)
+[MonoMod.Core] Trace: Performing method body walk for System.Threading.Tasks.ValueTask`1[[System.Net.Http.HttpResponseMessage, System.Net.Http, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a]] Trampoline<System.Threading.Tasks.ValueTask`1[System.Net.Http.HttpResponseMessage] (System.Object, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)>(System.Object, System.Net.Http.HttpRequestMessage, System.Uri, System.Boolean, System.Boolean, System.Boolean, System.Threading.CancellationToken)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831a42800
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff831a42800 => 0x00007ff831a428a0
+[MonoMod.Utils] Trace: new DynamicMethod: System.Boolean Trampoline<System.Boolean (System.Diagnostics.Process)>(System.Diagnostics.Process)
+[MonoMod.Utils] Trace: mdef: System.Boolean Trampoline<System.Boolean (System.Diagnostics.Process)>(System.Diagnostics.Process)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Boolean Hook<System.Boolean Terraria.ModLoader.Engine.LoggingHooks/<>c::<HookProcessStart>b__6_0(System.Func`2[[System.Diagnostics.Process, System.Diagnostics.Process, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]],System.Diagnostics.Process)>(System.Diagnostics.Process)
+[MonoMod.Utils] Trace: mdef: System.Boolean Hook<System.Boolean Terraria.ModLoader.Engine.LoggingHooks/<>c::<HookProcessStart>b__6_0(System.Func`2[[System.Diagnostics.Process, System.Diagnostics.Process, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]],System.Diagnostics.Process)>(System.Diagnostics.Process)
+[MonoMod.RuntimeDetour] Trace: Creating Hook from System.Boolean System.Diagnostics.Process:Start() to System.Boolean Terraria.ModLoader.Engine.LoggingHooks+<>c:<HookProcessStart>b__6_0(System.Func`2[[System.Diagnostics.Process, System.Diagnostics.Process, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Diagnostics.Process)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Boolean Trampoline<System.Boolean (System.Diagnostics.Process)>(System.Diagnostics.Process)
+[MonoMod.Utils] Trace: mdef: System.Boolean Trampoline<System.Boolean (System.Diagnostics.Process)>(System.Diagnostics.Process)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Boolean SyncProxy<System.Boolean System.Diagnostics.Process:Start()>(System.Diagnostics.Process)
+[MonoMod.Utils] Trace: mdef: System.Boolean SyncProxy<System.Boolean System.Diagnostics.Process:Start()>(System.Diagnostics.Process)
+[MonoMod.RuntimeDetour] Trace: Applying Hook from System.Boolean System.Diagnostics.Process:Start() to System.Boolean Terraria.ModLoader.Engine.LoggingHooks+<>c:<HookProcessStart>b__6_0(System.Func`2[[System.Diagnostics.Process, System.Diagnostics.Process, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Diagnostics.Process)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Boolean DMD<System.Boolean System.Diagnostics.Process:Start()>(System.Diagnostics.Process)
+[MonoMod.Utils] Trace: orig: System.Boolean System.Diagnostics.Process:Start()
+[MonoMod.Utils] Trace: mdef: System.Boolean DMD<System.Boolean System.Diagnostics.Process:Start()>(System.Diagnostics.Process)
+[MonoMod.Core] Trace: Applying managed detour from System.Boolean Trampoline<System.Boolean (System.Diagnostics.Process)>(System.Diagnostics.Process) to System.Boolean Hook<System.Boolean Terraria.ModLoader.Engine.LoggingHooks/<>c::<HookProcessStart>b__6_0(System.Func`2[[System.Diagnostics.Process, System.Diagnostics.Process, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a],[System.Boolean, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]],System.Diagnostics.Process)>(System.Diagnostics.Process)
+[MonoMod.Core] Trace: Performing method body walk for System.Boolean Trampoline<System.Boolean (System.Diagnostics.Process)>(System.Diagnostics.Process)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831a42b60
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff831a42b60 => 0x00007ff831a42c00
+[MonoMod.Core] Trace: Applying managed detour from System.Boolean System.Diagnostics.Process:Start() to System.Boolean SyncProxy<System.Boolean System.Diagnostics.Process:Start()>(System.Diagnostics.Process)
+[MonoMod.Core] Trace: Performing method body walk for System.Boolean System.Diagnostics.Process:Start()
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831be8ff0
+[MonoMod.Core] Trace: Matched thunk with AddressMeaning(Rel32Indirect, offset: 6, constant: 0) at 0x00007ff831be8ff0 (addr: 0x00003ffa, offset: 0)
+[MonoMod.Core] Trace: Got next entry point 0x00007ff88e747180
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff88e747180 => 0x00007ff831a42ca0
+[MonoMod.Core] Trace: Applying managed detour from System.Boolean Trampoline<System.Boolean (System.Diagnostics.Process)>(System.Diagnostics.Process) to System.Boolean DMD<System.Boolean System.Diagnostics.Process:Start()>(System.Diagnostics.Process)
+[MonoMod.Core] Trace: Performing method body walk for System.Boolean Trampoline<System.Boolean (System.Diagnostics.Process)>(System.Diagnostics.Process)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831a42df0
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff831a42df0 => 0x00007ff831a42ea0
+[21:54:11.049] [Main Thread/INFO] [tML]: Attempt to Port from "R:\Documents\My Games\Terraria\tModLoader-preview" to "R:\Documents\My Games\Terraria\tModLoader" aborted, "2025.12.2.3" is a newer version.
+tML: [21:54:11.049] [Main Thread/INFO] [tML]: Attempt to Port from "R:\Documents\My Games\Terraria\tModLoader-preview" to "R:\Documents\My Games\Terraria\tModLoader" aborted, "2025.12.2.3" is a newer version.
+[21:54:11.050] [Main Thread/INFO] [tML]: Saves Are Located At: R:\Documents\My Games\Terraria\tModLoader
+tML: [21:54:11.050] [Main Thread/INFO] [tML]: Saves Are Located At: R:\Documents\My Games\Terraria\tModLoader
+[21:54:11.068] [Main Thread/INFO] [tML]: Display DPI: Diagonal DPI is 120. Vertical DPI is 120. Horizontal DPI is 120
+tML: [21:54:11.068] [Main Thread/INFO] [tML]: Display DPI: Diagonal DPI is 120. Vertical DPI is 120. Horizontal DPI is 120
+[21:54:11.068] [Main Thread/INFO] [tML]: High DPI Display detected: setting FNA to highdpi mode
+tML: [21:54:11.068] [Main Thread/INFO] [tML]: High DPI Display detected: setting FNA to highdpi mode
+[21:54:11.074] [Main Thread/DEBUG] [FNA]: Querying linked library versions...
+FNA: [21:54:11.074] [Main Thread/DEBUG] [FNA]: Querying linked library versions...
+[21:54:11.075] [Main Thread/DEBUG] [FNA]: SDL v2.28.2
+FNA: [21:54:11.075] [Main Thread/DEBUG] [FNA]: SDL v2.28.2
+[21:54:11.076] [Main Thread/DEBUG] [FNA]: FNA3D v23.10.0
+FNA: [21:54:11.076] [Main Thread/DEBUG] [FNA]: FNA3D v23.10.0
+[21:54:11.080] [Main Thread/DEBUG] [FNA]: FAudio v22.9.1
+FNA: [21:54:11.080] [Main Thread/DEBUG] [FNA]: FAudio v22.9.1
+[21:54:11.486] [Main Thread/INFO] [tML]: Distribution Platform: Steam. Detection method: CWD is /steamapps/
+tML: [21:54:11.486] [Main Thread/INFO] [tML]: Distribution Platform: Steam. Detection method: CWD is /steamapps/
+[21:54:11.495] [Main Thread/DEBUG] [TerrariaSteamClient]: Disabled. Launched outside steam client.
+TerrariaSteamClient: [21:54:11.495] [Main Thread/DEBUG] [TerrariaSteamClient]: Disabled. Launched outside steam client.
+[21:54:11.635] [Main Thread/INFO] [FNA]: SDL.SDL_Init(SDL.SDL_INIT_VIDEO)...
+FNA: [21:54:11.635] [Main Thread/INFO] [FNA]: SDL.SDL_Init(SDL.SDL_INIT_VIDEO)...
+[21:54:11.638] [Main Thread/INFO] [FNA]: Success
+FNA: [21:54:11.638] [Main Thread/INFO] [FNA]: Success
+[21:54:11.638] [Main Thread/INFO] [FNA]: SDL.SDL_InitSubSystem(SDL.SDL_INIT_GAMECONTROLLER)...
+FNA: [21:54:11.638] [Main Thread/INFO] [FNA]: SDL.SDL_InitSubSystem(SDL.SDL_INIT_GAMECONTROLLER)...
+[21:54:11.770] [Main Thread/INFO] [FNA]: Success
+FNA: [21:54:11.770] [Main Thread/INFO] [FNA]: Success
+[21:54:12.057] [Main Thread/DEBUG] [tML]: Native Resolve: Steamworks.NET, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null -> steam_api
+tML: [21:54:12.057] [Main Thread/DEBUG] [tML]: Native Resolve: Steamworks.NET, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null -> steam_api
+[21:54:12.058] [Main Thread/DEBUG] [tML]: 	delegating to Steamworks.NET.AnyCPU resolver
+tML: [21:54:12.058] [Main Thread/DEBUG] [tML]: 	delegating to Steamworks.NET.AnyCPU resolver
+Setting breakpad minidump AppID = 1281930
+SteamInternal_SetMinidumpSteamID:  Caching Steam ID:  76561198034409473 [API loaded no]
+[21:54:12.776] [Main Thread/INFO] [tML]: Attempt to Port from "C:\Program Files\Steam\userdata\74143745\105600\remote\tModLoader-preview" to "C:\Program Files\Steam\userdata\74143745\105600\remote\tModLoader" aborted, "2025.12.2.3" is a newer version.
+tML: [21:54:12.776] [Main Thread/INFO] [tML]: Attempt to Port from "C:\Program Files\Steam\userdata\74143745\105600\remote\tModLoader-preview" to "C:\Program Files\Steam\userdata\74143745\105600\remote\tModLoader" aborted, "2025.12.2.3" is a newer version.
+[21:54:12.852] [Main Thread/INFO] [Terraria]: Steam Cloud Quota: 922.9 MB available
+Terraria: [21:54:12.852] [Main Thread/INFO] [Terraria]: Steam Cloud Quota: 922.9 MB available
+[21:54:12.888] [Main Thread/INFO] [tML]: Steam beta branch: None
+tML: [21:54:12.888] [Main Thread/INFO] [tML]: Steam beta branch: None
+[21:54:12.889] [Main Thread/INFO] [tML]: SteamBackend: Running standard Steam Desktop Client API
+tML: [21:54:12.889] [Main Thread/INFO] [tML]: SteamBackend: Running standard Steam Desktop Client API
+[21:54:12.925] [Main Thread/INFO] [tML]: Current 1281930 Workshop Folder Directory: G:\SteamLibrary\steamapps\common\tModLoader\..\..\workshop
+tML: [21:54:12.925] [Main Thread/INFO] [tML]: Current 1281930 Workshop Folder Directory: G:\SteamLibrary\steamapps\common\tModLoader\..\..\workshop
+[21:54:13.445] [Main Thread/INFO] [FNA]: SDL Video Diver: windows
+FNA: [21:54:13.445] [Main Thread/INFO] [FNA]: SDL Video Diver: windows
+[21:54:13.446] [Main Thread/INFO] [FNA]: FNA3D Driver: D3D11
+FNA: [21:54:13.446] [Main Thread/INFO] [FNA]: FNA3D Driver: D3D11
+[21:54:13.446] [Main Thread/INFO] [FNA]: D3D11 Adapter: NVIDIA GeForce GTX 1660 SUPER
+FNA: [21:54:13.446] [Main Thread/INFO] [FNA]: D3D11 Adapter: NVIDIA GeForce GTX 1660 SUPER
+[21:54:13.484] [Main Thread/INFO] [tML]: Terraria Steam Install Location assumed to be: G:\SteamLibrary\steamapps\common\Terraria
+tML: [21:54:13.484] [Main Thread/INFO] [tML]: Terraria Steam Install Location assumed to be: G:\SteamLibrary\steamapps\common\Terraria
+[21:54:13.891] [Main Thread/INFO] [tML]: Maximum Resolution is 2560 x 1440
+tML: [21:54:13.891] [Main Thread/INFO] [tML]: Maximum Resolution is 2560 x 1440
+[21:54:13.901] [Main Thread/DEBUG] [Terraria]: Device Created, Adapter: HP 27xq, DisplayMode: {{Width:2560 Height:1440 Format:Color}}, Profile: HiDef, Width: 1067, Height: 876, Fullscreen: False, Display: \\.\DISPLAY1
+Terraria: [21:54:13.901] [Main Thread/DEBUG] [Terraria]: Device Created, Adapter: HP 27xq, DisplayMode: {{Width:2560 Height:1440 Format:Color}}, Profile: HiDef, Width: 1067, Height: 876, Fullscreen: False, Display: \\.\DISPLAY1
+Resolution changed to: 1067x876.
+[21:54:13.909] [Main Thread/INFO] [tML]: Language: en-US
+tML: [21:54:13.909] [Main Thread/INFO] [tML]: Language: en-US
+[21:54:14.034] [Main Thread/INFO] [FNA]: SDL Audio Driver:
+FNA: [21:54:14.034] [Main Thread/INFO] [FNA]: SDL Audio Driver:
+[21:54:14.238] [Main Thread/INFO] [tML]: Loading the following resource packs: Boss Colored Relics
+tML: [21:54:14.238] [Main Thread/INFO] [tML]: Loading the following resource packs: Boss Colored Relics
+[21:54:14.403] [Main Thread/DEBUG] [tML]: Native Resolve: tModLoader, Version=1.4.4.9, Culture=neutral, PublicKeyToken=null -> RzChromaSDK64.dll
+tML: [21:54:14.403] [Main Thread/DEBUG] [tML]: Native Resolve: tModLoader, Version=1.4.4.9, Culture=neutral, PublicKeyToken=null -> RzChromaSDK64.dll
+[21:54:14.404] [Main Thread/DEBUG] [tML]: 	not found
+tML: [21:54:14.404] [Main Thread/DEBUG] [tML]: 	not found
+Corsair RGB not supported. (Can be disabled via Config.json)
+Logitech RGB not supported. (Can be disabled via Config.json)
+[21:54:15.394] [9/DEBUG] [tML]: SSDP search line separator: CRLF
+tML: [21:54:15.394] [9/DEBUG] [tML]: SSDP search line separator: CRLF
+[MonoMod.Utils] Trace: new DynamicMethod: System.Reflection.Assembly Trampoline<System.Reflection.Assembly (System.Reflection.Assembly, System.String)>(System.Reflection.Assembly,System.String)
+[MonoMod.Utils] Trace: mdef: System.Reflection.Assembly Trampoline<System.Reflection.Assembly (System.Reflection.Assembly, System.String)>(System.Reflection.Assembly,System.String)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Reflection.Assembly Hook<System.Reflection.Assembly Terraria.ModLoader.Core.AssemblyManager/AssemblyRedirects::hook_ValidateAssemblyNameWithSimpleName(Terraria.ModLoader.Core.AssemblyManager+AssemblyRedirects+orig_ValidateAssemblyNameWithSimpleName,System.Reflection.Assembly,System.String)>(System.Reflection.Assembly,System.String)
+[MonoMod.Utils] Trace: mdef: System.Reflection.Assembly Hook<System.Reflection.Assembly Terraria.ModLoader.Core.AssemblyManager/AssemblyRedirects::hook_ValidateAssemblyNameWithSimpleName(Terraria.ModLoader.Core.AssemblyManager+AssemblyRedirects+orig_ValidateAssemblyNameWithSimpleName,System.Reflection.Assembly,System.String)>(System.Reflection.Assembly,System.String)
+[MonoMod.RuntimeDetour] Trace: Creating Hook from System.Reflection.Assembly System.Runtime.Loader.AssemblyLoadContext:ValidateAssemblyNameWithSimpleName(System.Reflection.Assembly, System.String) to System.Reflection.Assembly Terraria.ModLoader.Core.AssemblyManager+AssemblyRedirects:hook_ValidateAssemblyNameWithSimpleName(Terraria.ModLoader.Core.AssemblyManager+AssemblyRedirects+orig_ValidateAssemblyNameWithSimpleName, System.Reflection.Assembly, System.String)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Reflection.Assembly Trampoline<System.Reflection.Assembly (System.Reflection.Assembly, System.String)>(System.Reflection.Assembly,System.String)
+[MonoMod.Utils] Trace: mdef: System.Reflection.Assembly Trampoline<System.Reflection.Assembly (System.Reflection.Assembly, System.String)>(System.Reflection.Assembly,System.String)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Reflection.Assembly SyncProxy<System.Reflection.Assembly System.Runtime.Loader.AssemblyLoadContext:ValidateAssemblyNameWithSimpleName(System.Reflection.Assembly, System.String)>(System.Reflection.Assembly,System.String)
+[MonoMod.Utils] Trace: mdef: System.Reflection.Assembly SyncProxy<System.Reflection.Assembly System.Runtime.Loader.AssemblyLoadContext:ValidateAssemblyNameWithSimpleName(System.Reflection.Assembly, System.String)>(System.Reflection.Assembly,System.String)
+[MonoMod.RuntimeDetour] Trace: Applying Hook from System.Reflection.Assembly System.Runtime.Loader.AssemblyLoadContext:ValidateAssemblyNameWithSimpleName(System.Reflection.Assembly, System.String) to System.Reflection.Assembly Terraria.ModLoader.Core.AssemblyManager+AssemblyRedirects:hook_ValidateAssemblyNameWithSimpleName(Terraria.ModLoader.Core.AssemblyManager+AssemblyRedirects+orig_ValidateAssemblyNameWithSimpleName, System.Reflection.Assembly, System.String)
+[MonoMod.Utils] Trace: new DynamicMethod: System.Reflection.Assembly DMD<System.Reflection.Assembly System.Runtime.Loader.AssemblyLoadContext:ValidateAssemblyNameWithSimpleName(System.Reflection.Assembly, System.String)>(System.Reflection.Assembly,System.String)
+[MonoMod.Utils] Trace: orig: System.Reflection.Assembly System.Runtime.Loader.AssemblyLoadContext:ValidateAssemblyNameWithSimpleName(System.Reflection.Assembly, System.String)
+[MonoMod.Utils] Trace: mdef: System.Reflection.Assembly DMD<System.Reflection.Assembly System.Runtime.Loader.AssemblyLoadContext:ValidateAssemblyNameWithSimpleName(System.Reflection.Assembly, System.String)>(System.Reflection.Assembly,System.String)
+[MonoMod.Core] Trace: Applying managed detour from System.Reflection.Assembly Trampoline<System.Reflection.Assembly (System.Reflection.Assembly, System.String)>(System.Reflection.Assembly, System.String) to System.Reflection.Assembly Hook<System.Reflection.Assembly Terraria.ModLoader.Core.AssemblyManager/AssemblyRedirects::hook_ValidateAssemblyNameWithSimpleName(Terraria.ModLoader.Core.AssemblyManager+AssemblyRedirects+orig_ValidateAssemblyNameWithSimpleName,System.Reflection.Assembly,System.String)>(System.Reflection.Assembly, System.String)
+[MonoMod.Core] Trace: Performing method body walk for System.Reflection.Assembly Trampoline<System.Reflection.Assembly (System.Reflection.Assembly, System.String)>(System.Reflection.Assembly, System.String)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff83287ab70
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff83287ab70 => 0x00007ff83287ac10
+[MonoMod.Core] Trace: Applying managed detour from System.Reflection.Assembly System.Runtime.Loader.AssemblyLoadContext:ValidateAssemblyNameWithSimpleName(System.Reflection.Assembly, System.String) to System.Reflection.Assembly SyncProxy<System.Reflection.Assembly System.Runtime.Loader.AssemblyLoadContext:ValidateAssemblyNameWithSimpleName(System.Reflection.Assembly, System.String)>(System.Reflection.Assembly, System.String)
+[MonoMod.Core] Trace: Performing method body walk for System.Reflection.Assembly System.Runtime.Loader.AssemblyLoadContext:ValidateAssemblyNameWithSimpleName(System.Reflection.Assembly, System.String)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff831872370
+[MonoMod.Core] Trace: Matched thunk with AddressMeaning(Rel32Indirect, offset: 6, constant: 0) at 0x00007ff831872370 (addr: 0x00003ffa, offset: 0)
+[MonoMod.Core] Trace: Got next entry point 0x00007ff890876fa0
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff890876fa0 => 0x00007ff83287acc0
+[MonoMod.Core] Trace: Applying managed detour from System.Reflection.Assembly Trampoline<System.Reflection.Assembly (System.Reflection.Assembly, System.String)>(System.Reflection.Assembly, System.String) to System.Reflection.Assembly DMD<System.Reflection.Assembly System.Runtime.Loader.AssemblyLoadContext:ValidateAssemblyNameWithSimpleName(System.Reflection.Assembly, System.String)>(System.Reflection.Assembly, System.String)
+[MonoMod.Core] Trace: Performing method body walk for System.Reflection.Assembly Trampoline<System.Reflection.Assembly (System.Reflection.Assembly, System.String)>(System.Reflection.Assembly, System.String)
+[MonoMod.Core] Trace: Starting entry point = 0x00007ff83287ec70
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff83287ec70 => 0x00007ff83287ed10
+[21:54:16.159] [9/DEBUG] [tML]: Hook System.Runtime.Loader.AssemblyLoadContext::ValidateAssemblyNameWithSimpleName(Assembly, string) added by tModLoader
+tML: [21:54:16.159] [9/DEBUG] [tML]: Hook System.Runtime.Loader.AssemblyLoadContext::ValidateAssemblyNameWithSimpleName(Assembly, string) added by tModLoader
+[21:54:22.108] [Main Thread/INFO] [tML]: Finding Mods...
+tML: [21:54:22.108] [Main Thread/INFO] [tML]: Finding Mods...
+[21:54:22.341] [Main Thread/INFO] [tML]: 3 most recently changed workshop mods: ModLiquidLib v2026.10.0.0 10/2/2026, SpiritMod v1.5.0.48 9/21/2026, HPAware v1.0.6.1 9/16/2026
+tML: [21:54:22.341] [Main Thread/INFO] [tML]: 3 most recently changed workshop mods: ModLiquidLib v2026.10.0.0 10/2/2026, SpiritMod v1.5.0.48 9/21/2026, HPAware v1.0.6.1 9/16/2026
+[21:54:22.343] [Main Thread/INFO] [tML]: Finding Mods...
+tML: [21:54:22.343] [Main Thread/INFO] [tML]: Finding Mods...
+[21:54:23.198] [Main Thread/INFO] [tML]: Finding Mods...
+tML: [21:54:23.198] [Main Thread/INFO] [tML]: Finding Mods...
+[21:54:23.266] [Main Thread/INFO] [tML]: Finding Mods...
+tML: [21:54:23.266] [Main Thread/INFO] [tML]: Finding Mods...
+[21:54:24.495] [.NET TP Worker/INFO] [tML]: Finding Mods...
+tML: [21:54:24.495] [.NET TP Worker/INFO] [tML]: Finding Mods...
+[21:54:24.568] [.NET TP Worker/DEBUG] [tML]: Skipped AbslbEasy 0.6.1 for tML 2022.9.47.47 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.568] [.NET TP Worker/DEBUG] [tML]: Skipped AbslbEasy 0.6.1 for tML 2022.9.47.47 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.569] [.NET TP Worker/DEBUG] [tML]: Skipped AbslbEasy 0.7.4 for tML 2023.8.3.4 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.569] [.NET TP Worker/DEBUG] [tML]: Skipped AbslbEasy 0.7.4 for tML 2023.8.3.4 from Workshop. Reason: a newer version exists.
+[21:54:24.569] [.NET TP Worker/DEBUG] [tML]: Skipped AbslbEasy 0.7.2 for tML 2023.6.25.29 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.569] [.NET TP Worker/DEBUG] [tML]: Skipped AbslbEasy 0.7.2 for tML 2023.6.25.29 from Workshop. Reason: a newer version exists.
+[21:54:24.570] [.NET TP Worker/DEBUG] [tML]: Selected AbslbEasy 0.8.0 for tML 2023.10.3.0 from Workshop.
+tML: [21:54:24.570] [.NET TP Worker/DEBUG] [tML]: Selected AbslbEasy 0.8.0 for tML 2023.10.3.0 from Workshop.
+[21:54:24.570] [.NET TP Worker/DEBUG] [tML]: Skipped AlchemistNPCLite 1.8.20 for tML 2022.9.47.61 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.570] [.NET TP Worker/DEBUG] [tML]: Skipped AlchemistNPCLite 1.8.20 for tML 2022.9.47.61 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.571] [.NET TP Worker/DEBUG] [tML]: Skipped AlchemistNPCLite 1.9.8 for tML 2025.2.3.2 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.571] [.NET TP Worker/DEBUG] [tML]: Skipped AlchemistNPCLite 1.9.8 for tML 2025.2.3.2 from Workshop. Reason: a newer version exists.
+[21:54:24.571] [.NET TP Worker/DEBUG] [tML]: Skipped AlchemistNPCLite 1.9.7 for tML 2024.10.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.571] [.NET TP Worker/DEBUG] [tML]: Skipped AlchemistNPCLite 1.9.7 for tML 2024.10.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.572] [.NET TP Worker/DEBUG] [tML]: Selected AlchemistNPCLite 1.9.9 for tML 2025.10.3.1 from Workshop.
+tML: [21:54:24.572] [.NET TP Worker/DEBUG] [tML]: Selected AlchemistNPCLite 1.9.9 for tML 2025.10.3.1 from Workshop.
+[21:54:24.572] [.NET TP Worker/DEBUG] [tML]: Skipped ArmorReforge 1.3.8 for tML 2022.7.58.8 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.572] [.NET TP Worker/DEBUG] [tML]: Skipped ArmorReforge 1.3.8 for tML 2022.7.58.8 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.573] [.NET TP Worker/DEBUG] [tML]: Skipped ArmorReforge 1.3.9 for tML 2023.5.17.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.573] [.NET TP Worker/DEBUG] [tML]: Skipped ArmorReforge 1.3.9 for tML 2023.5.17.0 from Workshop. Reason: a newer version exists.
+[21:54:24.573] [.NET TP Worker/DEBUG] [tML]: Selected ArmorReforge 1.4.1 for tML 2023.6.25.31 from Workshop.
+tML: [21:54:24.573] [.NET TP Worker/DEBUG] [tML]: Selected ArmorReforge 1.4.1 for tML 2023.6.25.31 from Workshop.
+[21:54:24.574] [.NET TP Worker/DEBUG] [tML]: Skipped AutoTrash 0.6.1.3 for tML 2022.7.58.0 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.574] [.NET TP Worker/DEBUG] [tML]: Skipped AutoTrash 0.6.1.3 for tML 2022.7.58.0 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.574] [.NET TP Worker/DEBUG] [tML]: Skipped AutoTrash 0.8.1 for tML 2025.9.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.574] [.NET TP Worker/DEBUG] [tML]: Skipped AutoTrash 0.8.1 for tML 2025.9.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.575] [.NET TP Worker/DEBUG] [tML]: Skipped AutoTrash 0.8 for tML 2025.6.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.575] [.NET TP Worker/DEBUG] [tML]: Skipped AutoTrash 0.8 for tML 2025.6.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.576] [.NET TP Worker/DEBUG] [tML]: Selected AutoTrash 0.8.1.1 for tML 2026.7.3.0 from Workshop.
+tML: [21:54:24.576] [.NET TP Worker/DEBUG] [tML]: Selected AutoTrash 0.8.1.1 for tML 2026.7.3.0 from Workshop.
+[21:54:24.576] [.NET TP Worker/DEBUG] [tML]: Skipped BetterAutosave 1.2.0.1 for tML 2022.5.9.0 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.576] [.NET TP Worker/DEBUG] [tML]: Skipped BetterAutosave 1.2.0.1 for tML 2022.5.9.0 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.577] [.NET TP Worker/DEBUG] [tML]: Skipped BetterAutosave 1.3.0.3 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.577] [.NET TP Worker/DEBUG] [tML]: Skipped BetterAutosave 1.3.0.3 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.577] [.NET TP Worker/DEBUG] [tML]: Skipped BetterAutosave 1.3.0.4 for tML 2025.11.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.577] [.NET TP Worker/DEBUG] [tML]: Skipped BetterAutosave 1.3.0.4 for tML 2025.11.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.578] [.NET TP Worker/DEBUG] [tML]: Selected BetterAutosave 1.3.0.5 for tML 2026.5.3.0 from Workshop.
+tML: [21:54:24.578] [.NET TP Worker/DEBUG] [tML]: Selected BetterAutosave 1.3.0.5 for tML 2026.5.3.0 from Workshop.
+[21:54:24.578] [.NET TP Worker/DEBUG] [tML]: Skipped BossChecklist 1.5.1 for tML 2022.9.47.50 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.578] [.NET TP Worker/DEBUG] [tML]: Skipped BossChecklist 1.5.1 for tML 2022.9.47.50 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.579] [.NET TP Worker/DEBUG] [tML]: Skipped BossChecklist 2.2.3.1 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.579] [.NET TP Worker/DEBUG] [tML]: Skipped BossChecklist 2.2.3.1 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.579] [.NET TP Worker/DEBUG] [tML]: Skipped BossChecklist 2.2.3 for tML 2025.3.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.579] [.NET TP Worker/DEBUG] [tML]: Skipped BossChecklist 2.2.3 for tML 2025.3.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.580] [.NET TP Worker/DEBUG] [tML]: Selected BossChecklist 2.2.4 for tML 2026.3.3.0 from Workshop.
+tML: [21:54:24.580] [.NET TP Worker/DEBUG] [tML]: Selected BossChecklist 2.2.4 for tML 2026.3.3.0 from Workshop.
+[21:54:24.580] [.NET TP Worker/DEBUG] [tML]: Skipped BossCursor 2.0.0 for tML 2022.5.103.14 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.580] [.NET TP Worker/DEBUG] [tML]: Skipped BossCursor 2.0.0 for tML 2022.5.103.14 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.581] [.NET TP Worker/DEBUG] [tML]: Skipped BossCursor 3.0.0 for tML 2023.6.23.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.581] [.NET TP Worker/DEBUG] [tML]: Skipped BossCursor 3.0.0 for tML 2023.6.23.0 from Workshop. Reason: a newer version exists.
+[21:54:24.581] [.NET TP Worker/DEBUG] [tML]: Selected BossCursor 3.0.1 for tML 2025.6.3.0 from Workshop.
+tML: [21:54:24.581] [.NET TP Worker/DEBUG] [tML]: Selected BossCursor 3.0.1 for tML 2025.6.3.0 from Workshop.
+[21:54:24.582] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityLootSwap 2.0.4 for tML 2022.8.54.6 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.582] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityLootSwap 2.0.4 for tML 2022.8.54.6 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.582] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityLootSwap 2.4 for tML 2025.12.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.582] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityLootSwap 2.4 for tML 2025.12.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.583] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityLootSwap 2.3.5 for tML 2024.3.3.2 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.583] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityLootSwap 2.3.5 for tML 2024.3.3.2 from Workshop. Reason: a newer version exists.
+[21:54:24.583] [.NET TP Worker/DEBUG] [tML]: Selected CalamityLootSwap 2.4.1 for tML 2026.6.3.4 from Workshop.
+tML: [21:54:24.583] [.NET TP Worker/DEBUG] [tML]: Selected CalamityLootSwap 2.4.1 for tML 2026.6.3.4 from Workshop.
+[21:54:24.584] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityMod 2.0.2.3 for tML 2022.9.47.46 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.584] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityMod 2.0.2.3 for tML 2022.9.47.46 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.584] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityMod 2.2.1 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.584] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityMod 2.2.1 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.585] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityMod 2.1.2 for tML 2025.12.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.585] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityMod 2.1.2 for tML 2025.12.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.585] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityMod 2.2.2 for tML 2026.6.3.4 from Workshop. Reason: a local copy with the same version (but different hash) exists.
+tML: [21:54:24.585] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityMod 2.2.2 for tML 2026.6.3.4 from Workshop. Reason: a local copy with the same version (but different hash) exists.
+[21:54:24.586] [.NET TP Worker/DEBUG] [tML]: Selected CalamityMod 2.2.2 for tML 2026.6.3.4 from Local (2026.6CalamityMod.tmod).
+tML: [21:54:24.586] [.NET TP Worker/DEBUG] [tML]: Selected CalamityMod 2.2.2 for tML 2026.6.3.4 from Local (2026.6CalamityMod.tmod).
+[21:54:24.586] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityModMusic 2.0.2.2 for tML 2022.9.47.30 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.586] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityModMusic 2.0.2.2 for tML 2022.9.47.30 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.587] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityModMusic 2.0.5 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.587] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityModMusic 2.0.5 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.587] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityModMusic 2.0.4.3 for tML 2024.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.587] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityModMusic 2.0.4.3 for tML 2024.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.588] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityModMusic 2.1 for tML 2025.12.3.0 from Workshop. Reason: a local copy with the same version (but different hash) exists.
+tML: [21:54:24.588] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityModMusic 2.1 for tML 2025.12.3.0 from Workshop. Reason: a local copy with the same version (but different hash) exists.
+[21:54:24.588] [.NET TP Worker/DEBUG] [tML]: Selected CalamityModMusic 2.1 for tML 2025.12.3.0 from Local (2025.12CalamityModMusic.tmod).
+tML: [21:54:24.588] [.NET TP Worker/DEBUG] [tML]: Selected CalamityModMusic 2.1 for tML 2025.12.3.0 from Local (2025.12CalamityModMusic.tmod).
+[21:54:24.589] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityOverhaul 0.9025 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.589] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityOverhaul 0.9025 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.589] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityOverhaul 0.9015 for tML 2026.3.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.589] [.NET TP Worker/DEBUG] [tML]: Skipped CalamityOverhaul 0.9015 for tML 2026.3.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.590] [.NET TP Worker/DEBUG] [tML]: Selected CalamityOverhaul 0.9209 for tML 2026.7.3.0 from Workshop.
+tML: [21:54:24.590] [.NET TP Worker/DEBUG] [tML]: Selected CalamityOverhaul 0.9209 for tML 2026.7.3.0 from Workshop.
+[21:54:24.590] [.NET TP Worker/DEBUG] [tML]: Selected cases 1.0 for tML 2026.3.3.0 from Local.
+tML: [21:54:24.590] [.NET TP Worker/DEBUG] [tML]: Selected cases 1.0 for tML 2026.3.3.0 from Local.
+[21:54:24.591] [.NET TP Worker/DEBUG] [tML]: Skipped CheatExtensions 0.1.7.2 for tML 2022.9.47.16 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.591] [.NET TP Worker/DEBUG] [tML]: Skipped CheatExtensions 0.1.7.2 for tML 2022.9.47.16 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.591] [.NET TP Worker/DEBUG] [tML]: Skipped CheatExtensions 0.1.7.5 for tML 2023.6.25.29 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.591] [.NET TP Worker/DEBUG] [tML]: Skipped CheatExtensions 0.1.7.5 for tML 2023.6.25.29 from Workshop. Reason: a newer version exists.
+[21:54:24.592] [.NET TP Worker/DEBUG] [tML]: Skipped CheatExtensions 0.1.7.4 for tML 2023.5.40.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.592] [.NET TP Worker/DEBUG] [tML]: Skipped CheatExtensions 0.1.7.4 for tML 2023.5.40.0 from Workshop. Reason: a newer version exists.
+[21:54:24.593] [.NET TP Worker/DEBUG] [tML]: Selected CheatExtensions 0.1.7.6 for tML 2023.8.2.8 from Workshop.
+tML: [21:54:24.593] [.NET TP Worker/DEBUG] [tML]: Selected CheatExtensions 0.1.7.6 for tML 2023.8.2.8 from Workshop.
+[21:54:24.593] [.NET TP Worker/DEBUG] [tML]: Skipped CheatSheet 0.7.3.5 for tML 2022.9.47.30 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.593] [.NET TP Worker/DEBUG] [tML]: Skipped CheatSheet 0.7.3.5 for tML 2022.9.47.30 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.594] [.NET TP Worker/DEBUG] [tML]: Skipped CheatSheet 0.7.8 for tML 2026.5.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.594] [.NET TP Worker/DEBUG] [tML]: Skipped CheatSheet 0.7.8 for tML 2026.5.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.594] [.NET TP Worker/DEBUG] [tML]: Skipped CheatSheet 0.7.7.1 for tML 2025.9.2.17 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.594] [.NET TP Worker/DEBUG] [tML]: Skipped CheatSheet 0.7.7.1 for tML 2025.9.2.17 from Workshop. Reason: a newer version exists.
+[21:54:24.595] [.NET TP Worker/DEBUG] [tML]: Selected CheatSheet 0.7.8.1 for tML 2026.7.3.0 from Workshop.
+tML: [21:54:24.595] [.NET TP Worker/DEBUG] [tML]: Selected CheatSheet 0.7.8.1 for tML 2026.7.3.0 from Workshop.
+[21:54:24.595] [.NET TP Worker/DEBUG] [tML]: Skipped ClamExtraMusic 1.1.0 for tML 2022.6.96.4 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.595] [.NET TP Worker/DEBUG] [tML]: Skipped ClamExtraMusic 1.1.0 for tML 2022.6.96.4 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.596] [.NET TP Worker/DEBUG] [tML]: Selected ClamExtraMusic 2.0.0 for tML 2023.6.25.31 from Workshop.
+tML: [21:54:24.596] [.NET TP Worker/DEBUG] [tML]: Selected ClamExtraMusic 2.0.0 for tML 2023.6.25.31 from Workshop.
+[21:54:24.596] [.NET TP Worker/DEBUG] [tML]: Skipped ColoredCalRelics 1.0.4 for tML 2022.9.47.47 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.596] [.NET TP Worker/DEBUG] [tML]: Skipped ColoredCalRelics 1.0.4 for tML 2022.9.47.47 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.597] [.NET TP Worker/DEBUG] [tML]: Skipped ColoredCalRelics 1.0.7 for tML 2024.4.3.2 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.597] [.NET TP Worker/DEBUG] [tML]: Skipped ColoredCalRelics 1.0.7 for tML 2024.4.3.2 from Workshop. Reason: a newer version exists.
+[21:54:24.597] [.NET TP Worker/DEBUG] [tML]: Skipped ColoredCalRelics 1.0.6 for tML 2024.3.3.3 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.597] [.NET TP Worker/DEBUG] [tML]: Skipped ColoredCalRelics 1.0.6 for tML 2024.3.3.3 from Workshop. Reason: a newer version exists.
+[21:54:24.598] [.NET TP Worker/DEBUG] [tML]: Selected ColoredCalRelics 1.0.8 for tML 2025.9.3.3 from Workshop.
+tML: [21:54:24.598] [.NET TP Worker/DEBUG] [tML]: Selected ColoredCalRelics 1.0.8 for tML 2025.9.3.3 from Workshop.
+[21:54:24.598] [.NET TP Worker/DEBUG] [tML]: Skipped ColoredFargoRelics 0.21 for tML 2024.8.3.2 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.598] [.NET TP Worker/DEBUG] [tML]: Skipped ColoredFargoRelics 0.21 for tML 2024.8.3.2 from Workshop. Reason: a newer version exists.
+[21:54:24.599] [.NET TP Worker/DEBUG] [tML]: Skipped ColoredFargoRelics 0.2 for tML 2024.3.3.2 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.599] [.NET TP Worker/DEBUG] [tML]: Skipped ColoredFargoRelics 0.2 for tML 2024.3.3.2 from Workshop. Reason: a newer version exists.
+[21:54:24.600] [.NET TP Worker/DEBUG] [tML]: Selected ColoredFargoRelics 0.22 for tML 2025.3.3.1 from Workshop.
+tML: [21:54:24.600] [.NET TP Worker/DEBUG] [tML]: Selected ColoredFargoRelics 0.22 for tML 2025.3.3.1 from Workshop.
+[21:54:24.600] [.NET TP Worker/DEBUG] [tML]: Skipped CompareItemStats 0.1.3.2 for tML 2022.9.47.13 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.600] [.NET TP Worker/DEBUG] [tML]: Skipped CompareItemStats 0.1.3.2 for tML 2022.9.47.13 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.601] [.NET TP Worker/DEBUG] [tML]: Skipped CompareItemStats 0.2.1 for tML 2024.8.3.2 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.601] [.NET TP Worker/DEBUG] [tML]: Skipped CompareItemStats 0.2.1 for tML 2024.8.3.2 from Workshop. Reason: a newer version exists.
+[21:54:24.601] [.NET TP Worker/DEBUG] [tML]: Skipped CompareItemStats 0.2.0.6 for tML 2023.11.3.3 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.601] [.NET TP Worker/DEBUG] [tML]: Skipped CompareItemStats 0.2.0.6 for tML 2023.11.3.3 from Workshop. Reason: a newer version exists.
+[21:54:24.602] [.NET TP Worker/DEBUG] [tML]: Selected CompareItemStats 0.2.1.1 for tML 2024.10.3.0 from Workshop.
+tML: [21:54:24.602] [.NET TP Worker/DEBUG] [tML]: Selected CompareItemStats 0.2.1.1 for tML 2024.10.3.0 from Workshop.
+[21:54:24.602] [.NET TP Worker/DEBUG] [tML]: Skipped CrystiliumMod 12.0.1 for tML 2022.8.54.4 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.602] [.NET TP Worker/DEBUG] [tML]: Skipped CrystiliumMod 12.0.1 for tML 2022.8.54.4 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.607] [.NET TP Worker/DEBUG] [tML]: Skipped CrystiliumMod 12.0.0 for tML 2022.7.58.8 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.607] [.NET TP Worker/DEBUG] [tML]: Skipped CrystiliumMod 12.0.0 for tML 2022.7.58.8 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.615] [.NET TP Worker/DEBUG] [tML]: Selected CrystiliumMod 13.0 for tML 2025.5.3.0 from Workshop.
+tML: [21:54:24.615] [.NET TP Worker/DEBUG] [tML]: Selected CrystiliumMod 13.0 for tML 2025.5.3.0 from Workshop.
+[21:54:24.619] [.NET TP Worker/DEBUG] [tML]: Skipped CursorHP 1.4 for tML 2023.6.25.36 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.619] [.NET TP Worker/DEBUG] [tML]: Skipped CursorHP 1.4 for tML 2023.6.25.36 from Workshop. Reason: a newer version exists.
+[21:54:24.620] [.NET TP Worker/DEBUG] [tML]: Selected CursorHP 2.0 for tML 2024.5.3.0 from Workshop.
+tML: [21:54:24.620] [.NET TP Worker/DEBUG] [tML]: Selected CursorHP 2.0 for tML 2024.5.3.0 from Workshop.
+[21:54:24.621] [.NET TP Worker/DEBUG] [tML]: Skipped DiscordWorldLogs 1.3.3.4 for tML 2024.11.3.2 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.621] [.NET TP Worker/DEBUG] [tML]: Skipped DiscordWorldLogs 1.3.3.4 for tML 2024.11.3.2 from Workshop. Reason: a newer version exists.
+[21:54:24.622] [.NET TP Worker/DEBUG] [tML]: Skipped DiscordWorldLogs 1.3.3.3 for tML 2024.10.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.622] [.NET TP Worker/DEBUG] [tML]: Skipped DiscordWorldLogs 1.3.3.3 for tML 2024.10.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.622] [.NET TP Worker/DEBUG] [tML]: Selected DiscordWorldLogs 2.0.1 for tML 2026.2.3.0 from Workshop.
+tML: [21:54:24.622] [.NET TP Worker/DEBUG] [tML]: Selected DiscordWorldLogs 2.0.1 for tML 2026.2.3.0 from Workshop.
+[21:54:24.623] [.NET TP Worker/DEBUG] [tML]: Skipped DragonLens 1.3.2 for tML 2022.9.47.42 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.623] [.NET TP Worker/DEBUG] [tML]: Skipped DragonLens 1.3.2 for tML 2022.9.47.42 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.623] [.NET TP Worker/DEBUG] [tML]: Skipped DragonLens 1.10 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.623] [.NET TP Worker/DEBUG] [tML]: Skipped DragonLens 1.10 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.624] [.NET TP Worker/DEBUG] [tML]: Skipped DragonLens 1.11.1 for tML 2025.10.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.624] [.NET TP Worker/DEBUG] [tML]: Skipped DragonLens 1.11.1 for tML 2025.10.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.628] [.NET TP Worker/DEBUG] [tML]: Selected DragonLens 2.2 for tML 2026.6.3.6 from Workshop.
+tML: [21:54:24.628] [.NET TP Worker/DEBUG] [tML]: Selected DragonLens 2.2 for tML 2026.6.3.6 from Workshop.
+[21:54:24.629] [.NET TP Worker/DEBUG] [tML]: Skipped ExampleMod 2022.9.48.2 for tML 2022.9.48.2 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.629] [.NET TP Worker/DEBUG] [tML]: Skipped ExampleMod 2022.9.48.2 for tML 2022.9.48.2 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.633] [.NET TP Worker/DEBUG] [tML]: Skipped ExampleMod 2026.6.3.6 for tML 2026.6.3.6 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.633] [.NET TP Worker/DEBUG] [tML]: Skipped ExampleMod 2026.6.3.6 for tML 2026.6.3.6 from Workshop. Reason: a newer version exists.
+[21:54:24.637] [.NET TP Worker/DEBUG] [tML]: Skipped ExampleMod 2026.4.3.0 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.637] [.NET TP Worker/DEBUG] [tML]: Skipped ExampleMod 2026.4.3.0 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.639] [.NET TP Worker/DEBUG] [tML]: Selected ExampleMod 2026.7.3.0 for tML 2026.7.3.0 from Workshop.
+tML: [21:54:24.639] [.NET TP Worker/DEBUG] [tML]: Selected ExampleMod 2026.7.3.0 for tML 2026.7.3.0 from Workshop.
+[21:54:24.640] [.NET TP Worker/DEBUG] [tML]: Skipped Fargowiltas 2.8.8 for tML 2022.9.47.45 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.640] [.NET TP Worker/DEBUG] [tML]: Skipped Fargowiltas 2.8.8 for tML 2022.9.47.45 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.641] [.NET TP Worker/DEBUG] [tML]: Skipped Fargowiltas 3.3.6.5 for tML 2025.8.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.641] [.NET TP Worker/DEBUG] [tML]: Skipped Fargowiltas 3.3.6.5 for tML 2025.8.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.642] [.NET TP Worker/DEBUG] [tML]: Skipped Fargowiltas 3.3.6.4 for tML 2025.7.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.642] [.NET TP Worker/DEBUG] [tML]: Skipped Fargowiltas 3.3.6.4 for tML 2025.7.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.642] [.NET TP Worker/DEBUG] [tML]: Selected Fargowiltas 3.3.6.7 for tML 2026.2.3.0 from Workshop.
+tML: [21:54:24.642] [.NET TP Worker/DEBUG] [tML]: Selected Fargowiltas 3.3.6.7 for tML 2026.2.3.0 from Workshop.
+[21:54:24.643] [.NET TP Worker/DEBUG] [tML]: Skipped FargowiltasCrossmod 1.2.0.26 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.643] [.NET TP Worker/DEBUG] [tML]: Skipped FargowiltasCrossmod 1.2.0.26 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.643] [.NET TP Worker/DEBUG] [tML]: Skipped FargowiltasCrossmod 1.2.0.25 for tML 2026.3.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.643] [.NET TP Worker/DEBUG] [tML]: Skipped FargowiltasCrossmod 1.2.0.25 for tML 2026.3.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.644] [.NET TP Worker/DEBUG] [tML]: Selected FargowiltasCrossmod 1.2.0.28 for tML 2026.6.3.4 from Workshop.
+tML: [21:54:24.644] [.NET TP Worker/DEBUG] [tML]: Selected FargowiltasCrossmod 1.2.0.28 for tML 2026.6.3.4 from Workshop.
+[21:54:24.644] [.NET TP Worker/DEBUG] [tML]: Skipped FargowiltasSouls 1.4.2.5 for tML 2022.9.47.50 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.644] [.NET TP Worker/DEBUG] [tML]: Skipped FargowiltasSouls 1.4.2.5 for tML 2022.9.47.50 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.645] [.NET TP Worker/DEBUG] [tML]: Skipped FargowiltasSouls 1.7.3.8 for tML 2026.2.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.645] [.NET TP Worker/DEBUG] [tML]: Skipped FargowiltasSouls 1.7.3.8 for tML 2026.2.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.645] [.NET TP Worker/DEBUG] [tML]: Skipped FargowiltasSouls 1.7.3.7 for tML 2026.1.3.3 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.645] [.NET TP Worker/DEBUG] [tML]: Skipped FargowiltasSouls 1.7.3.7 for tML 2026.1.3.3 from Workshop. Reason: a newer version exists.
+[21:54:24.646] [.NET TP Worker/DEBUG] [tML]: Selected FargowiltasSouls 1.7.3.9 for tML 2026.3.3.0 from Workshop.
+tML: [21:54:24.646] [.NET TP Worker/DEBUG] [tML]: Selected FargowiltasSouls 1.7.3.9 for tML 2026.3.3.0 from Workshop.
+[21:54:24.646] [.NET TP Worker/DEBUG] [tML]: Skipped FixedAchievements 1.3 for tML 2023.6.25.31 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.646] [.NET TP Worker/DEBUG] [tML]: Skipped FixedAchievements 1.3 for tML 2023.6.25.31 from Workshop. Reason: a newer version exists.
+[21:54:24.647] [.NET TP Worker/DEBUG] [tML]: Selected FixedAchievements 1.5.2 for tML 2025.9.3.4 from Workshop.
+tML: [21:54:24.647] [.NET TP Worker/DEBUG] [tML]: Selected FixedAchievements 1.5.2 for tML 2025.9.3.4 from Workshop.
+[21:54:24.648] [.NET TP Worker/DEBUG] [tML]: Skipped FriendlyNpcsDontDie 0.2 for tML 2022.6.96.4 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.648] [.NET TP Worker/DEBUG] [tML]: Skipped FriendlyNpcsDontDie 0.2 for tML 2022.6.96.4 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.648] [.NET TP Worker/DEBUG] [tML]: Skipped FriendlyNpcsDontDie 0.1 for tML 0.12 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.648] [.NET TP Worker/DEBUG] [tML]: Skipped FriendlyNpcsDontDie 0.1 for tML 0.12 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.649] [.NET TP Worker/DEBUG] [tML]: Selected FriendlyNpcsDontDie 0.3 for tML 2023.6.25.27 from Workshop.
+tML: [21:54:24.649] [.NET TP Worker/DEBUG] [tML]: Selected FriendlyNpcsDontDie 0.3 for tML 2023.6.25.27 from Workshop.
+[21:54:24.649] [.NET TP Worker/DEBUG] [tML]: Skipped GadgetGalore 1.8.0.1 for tML 2022.9.47.42 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.649] [.NET TP Worker/DEBUG] [tML]: Skipped GadgetGalore 1.8.0.1 for tML 2022.9.47.42 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.650] [.NET TP Worker/DEBUG] [tML]: Skipped GadgetGalore 1.9.3.2 for tML 2025.6.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.650] [.NET TP Worker/DEBUG] [tML]: Skipped GadgetGalore 1.9.3.2 for tML 2025.6.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.650] [.NET TP Worker/DEBUG] [tML]: Skipped GadgetGalore 1.9.3.1 for tML 2025.2.3.3 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.650] [.NET TP Worker/DEBUG] [tML]: Skipped GadgetGalore 1.9.3.1 for tML 2025.2.3.3 from Workshop. Reason: a newer version exists.
+[21:54:24.651] [.NET TP Worker/DEBUG] [tML]: Selected GadgetGalore 1.9.3.3 for tML 2025.10.3.1 from Workshop.
+tML: [21:54:24.651] [.NET TP Worker/DEBUG] [tML]: Selected GadgetGalore 1.9.3.3 for tML 2025.10.3.1 from Workshop.
+[21:54:24.651] [.NET TP Worker/DEBUG] [tML]: Skipped HEROsMod 0.4.12 for tML 2022.9.47.30 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.651] [.NET TP Worker/DEBUG] [tML]: Skipped HEROsMod 0.4.12 for tML 2022.9.47.30 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.652] [.NET TP Worker/DEBUG] [tML]: Skipped HEROsMod 0.4.18 for tML 2025.9.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.652] [.NET TP Worker/DEBUG] [tML]: Skipped HEROsMod 0.4.18 for tML 2025.9.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.652] [.NET TP Worker/DEBUG] [tML]: Skipped HEROsMod 0.4.17.2 for tML 2025.7.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.652] [.NET TP Worker/DEBUG] [tML]: Skipped HEROsMod 0.4.17.2 for tML 2025.7.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.653] [.NET TP Worker/DEBUG] [tML]: Selected HEROsMod 0.4.18.1 for tML 2026.7.3.0 from Workshop.
+tML: [21:54:24.653] [.NET TP Worker/DEBUG] [tML]: Selected HEROsMod 0.4.18.1 for tML 2026.7.3.0 from Workshop.
+[21:54:24.653] [.NET TP Worker/DEBUG] [tML]: Skipped HPAware 1.0.3.1 for tML 2022.9.47.76 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.653] [.NET TP Worker/DEBUG] [tML]: Skipped HPAware 1.0.3.1 for tML 2022.9.47.76 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.654] [.NET TP Worker/DEBUG] [tML]: Skipped HPAware 1.0.6.0 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.654] [.NET TP Worker/DEBUG] [tML]: Skipped HPAware 1.0.6.0 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.654] [.NET TP Worker/DEBUG] [tML]: Skipped HPAware 1.0.5.1 for tML 2025.8.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.654] [.NET TP Worker/DEBUG] [tML]: Skipped HPAware 1.0.5.1 for tML 2025.8.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.655] [.NET TP Worker/DEBUG] [tML]: Selected HPAware 1.0.6.1 for tML 2026.7.3.0 from Workshop.
+tML: [21:54:24.655] [.NET TP Worker/DEBUG] [tML]: Selected HPAware 1.0.6.1 for tML 2026.7.3.0 from Workshop.
+[21:54:24.655] [.NET TP Worker/DEBUG] [tML]: Skipped imkSushisMod 5.0.1 for tML 2022.6.96.1 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.655] [.NET TP Worker/DEBUG] [tML]: Skipped imkSushisMod 5.0.1 for tML 2022.6.96.1 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.656] [.NET TP Worker/DEBUG] [tML]: Selected imkSushisMod 5.1.3 for tML 2023.6.25.31 from Workshop.
+tML: [21:54:24.656] [.NET TP Worker/DEBUG] [tML]: Selected imkSushisMod 5.1.3 for tML 2023.6.25.31 from Workshop.
+[21:54:24.656] [.NET TP Worker/DEBUG] [tML]: Skipped InnoVault 1.9.98 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.656] [.NET TP Worker/DEBUG] [tML]: Skipped InnoVault 1.9.98 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.657] [.NET TP Worker/DEBUG] [tML]: Skipped InnoVault 1.9.92 for tML 2026.3.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.657] [.NET TP Worker/DEBUG] [tML]: Skipped InnoVault 1.9.92 for tML 2026.3.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.658] [.NET TP Worker/DEBUG] [tML]: Selected InnoVault 1.9.101 for tML 2026.5.3.0 from Workshop.
+tML: [21:54:24.658] [.NET TP Worker/DEBUG] [tML]: Selected InnoVault 1.9.101 for tML 2026.5.3.0 from Workshop.
+[21:54:24.660] [.NET TP Worker/DEBUG] [tML]: Skipped JourneyModeFullResearch 1.5.2 for tML 2022.5.103.24 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.660] [.NET TP Worker/DEBUG] [tML]: Skipped JourneyModeFullResearch 1.5.2 for tML 2022.5.103.24 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.662] [.NET TP Worker/DEBUG] [tML]: Skipped JourneyModeFullResearch 1.5 for tML 0.12 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.662] [.NET TP Worker/DEBUG] [tML]: Skipped JourneyModeFullResearch 1.5 for tML 0.12 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.663] [.NET TP Worker/DEBUG] [tML]: Selected JourneyModeFullResearch 2.0.16 for tML 2023.6.25.5 from Workshop.
+tML: [21:54:24.663] [.NET TP Worker/DEBUG] [tML]: Selected JourneyModeFullResearch 2.0.16 for tML 2023.6.25.5 from Workshop.
+[21:54:24.664] [.NET TP Worker/DEBUG] [tML]: Skipped Luminance 1.0.13 for tML 2025.8.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.664] [.NET TP Worker/DEBUG] [tML]: Skipped Luminance 1.0.13 for tML 2025.8.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.664] [.NET TP Worker/DEBUG] [tML]: Skipped Luminance 1.0.12 for tML 2025.2.3.3 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.664] [.NET TP Worker/DEBUG] [tML]: Skipped Luminance 1.0.12 for tML 2025.2.3.3 from Workshop. Reason: a newer version exists.
+[21:54:24.665] [.NET TP Worker/DEBUG] [tML]: Selected Luminance 1.0.14 for tML 2026.4.3.0 from Workshop.
+tML: [21:54:24.665] [.NET TP Worker/DEBUG] [tML]: Selected Luminance 1.0.14 for tML 2026.4.3.0 from Workshop.
+[21:54:24.665] [.NET TP Worker/DEBUG] [tML]: Skipped MagicRecipeIntegrator 0.1 for tML 2025.1.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.665] [.NET TP Worker/DEBUG] [tML]: Skipped MagicRecipeIntegrator 0.1 for tML 2025.1.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.666] [.NET TP Worker/DEBUG] [tML]: Selected MagicRecipeIntegrator 0.2 for tML 2025.2.3.0 from Workshop.
+tML: [21:54:24.666] [.NET TP Worker/DEBUG] [tML]: Selected MagicRecipeIntegrator 0.2 for tML 2025.2.3.0 from Workshop.
+[21:54:24.667] [.NET TP Worker/DEBUG] [tML]: Skipped MagicStorage 0.6.0.3 for tML 2022.9.47.85 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.667] [.NET TP Worker/DEBUG] [tML]: Skipped MagicStorage 0.6.0.3 for tML 2022.9.47.85 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.667] [.NET TP Worker/DEBUG] [tML]: Skipped MagicStorage 0.7.0.9 for tML 2025.6.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.667] [.NET TP Worker/DEBUG] [tML]: Skipped MagicStorage 0.7.0.9 for tML 2025.6.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.668] [.NET TP Worker/DEBUG] [tML]: Skipped MagicStorage 0.7.0.8 for tML 2025.5.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.668] [.NET TP Worker/DEBUG] [tML]: Skipped MagicStorage 0.7.0.8 for tML 2025.5.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.668] [.NET TP Worker/DEBUG] [tML]: Selected MagicStorage 0.7.0.11 for tML 2025.7.3.0 from Workshop.
+tML: [21:54:24.668] [.NET TP Worker/DEBUG] [tML]: Selected MagicStorage 0.7.0.11 for tML 2025.7.3.0 from Workshop.
+[21:54:24.669] [.NET TP Worker/DEBUG] [tML]: Skipped ModLiquidLib 2025.12.202601 for tML 2026.1.2.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.669] [.NET TP Worker/DEBUG] [tML]: Skipped ModLiquidLib 2025.12.202601 for tML 2026.1.2.1 from Workshop. Reason: a newer version exists.
+[21:54:24.669] [.NET TP Worker/DEBUG] [tML]: Skipped ModLiquidLib 2025.12.0.0 for tML 2025.12.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.669] [.NET TP Worker/DEBUG] [tML]: Skipped ModLiquidLib 2025.12.0.0 for tML 2025.12.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.670] [.NET TP Worker/DEBUG] [tML]: Selected ModLiquidLib 2026.10.0.0 for tML 2026.8.3.0 from Workshop.
+tML: [21:54:24.670] [.NET TP Worker/DEBUG] [tML]: Selected ModLiquidLib 2026.10.0.0 for tML 2026.8.3.0 from Workshop.
+[21:54:24.671] [.NET TP Worker/DEBUG] [tML]: Skipped MoreBeams 0.6.1 for tML 2024.9.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.671] [.NET TP Worker/DEBUG] [tML]: Skipped MoreBeams 0.6.1 for tML 2024.9.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.671] [.NET TP Worker/DEBUG] [tML]: Skipped MoreBeams 0.5 for tML 2023.12.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.671] [.NET TP Worker/DEBUG] [tML]: Skipped MoreBeams 0.5 for tML 2023.12.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.672] [.NET TP Worker/DEBUG] [tML]: Selected MoreBeams 0.6.3 for tML 2025.5.3.0 from Workshop.
+tML: [21:54:24.672] [.NET TP Worker/DEBUG] [tML]: Selected MoreBeams 0.6.3 for tML 2025.5.3.0 from Workshop.
+[21:54:24.672] [.NET TP Worker/DEBUG] [tML]: Skipped NoFishingQuests 2.3.0.1 for tML 2022.9.47.30 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.672] [.NET TP Worker/DEBUG] [tML]: Skipped NoFishingQuests 2.3.0.1 for tML 2022.9.47.30 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.673] [.NET TP Worker/DEBUG] [tML]: Skipped NoFishingQuests 3.2.0.4 for tML 2024.5.3.3 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.673] [.NET TP Worker/DEBUG] [tML]: Skipped NoFishingQuests 3.2.0.4 for tML 2024.5.3.3 from Workshop. Reason: a newer version exists.
+[21:54:24.673] [.NET TP Worker/DEBUG] [tML]: Skipped NoFishingQuests 3.2.0.3 for tML 2024.2.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.673] [.NET TP Worker/DEBUG] [tML]: Skipped NoFishingQuests 3.2.0.3 for tML 2024.2.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.674] [.NET TP Worker/DEBUG] [tML]: Selected NoFishingQuests 3.2.0.5 for tML 2025.3.3.1 from Workshop.
+tML: [21:54:24.674] [.NET TP Worker/DEBUG] [tML]: Selected NoFishingQuests 3.2.0.5 for tML 2025.3.3.1 from Workshop.
+[21:54:24.674] [.NET TP Worker/DEBUG] [tML]: Skipped OreExcavator 0.8.4 for tML 2022.9.47.46 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.674] [.NET TP Worker/DEBUG] [tML]: Skipped OreExcavator 0.8.4 for tML 2022.9.47.46 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.675] [.NET TP Worker/DEBUG] [tML]: Skipped OreExcavator 0.8.8 for tML 2024.3.3.4 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.675] [.NET TP Worker/DEBUG] [tML]: Skipped OreExcavator 0.8.8 for tML 2024.3.3.4 from Workshop. Reason: a newer version exists.
+[21:54:24.675] [.NET TP Worker/DEBUG] [tML]: Skipped OreExcavator 0.8.7 for tML 2023.9.3.3 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.675] [.NET TP Worker/DEBUG] [tML]: Skipped OreExcavator 0.8.7 for tML 2023.9.3.3 from Workshop. Reason: a newer version exists.
+[21:54:24.676] [.NET TP Worker/DEBUG] [tML]: Selected OreExcavator 0.8.9 for tML 2024.6.3.1 from Workshop.
+tML: [21:54:24.676] [.NET TP Worker/DEBUG] [tML]: Selected OreExcavator 0.8.9 for tML 2024.6.3.1 from Workshop.
+[21:54:24.676] [.NET TP Worker/DEBUG] [tML]: Skipped OreExchange 1.2 for tML 2022.6.96.4 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.676] [.NET TP Worker/DEBUG] [tML]: Skipped OreExchange 1.2 for tML 2022.6.96.4 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.677] [.NET TP Worker/DEBUG] [tML]: Skipped OreExchange 1.1 for tML 0.12 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.677] [.NET TP Worker/DEBUG] [tML]: Skipped OreExchange 1.1 for tML 0.12 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.677] [.NET TP Worker/DEBUG] [tML]: Selected OreExchange 1.4 for tML 2024.2.3.0 from Workshop.
+tML: [21:54:24.677] [.NET TP Worker/DEBUG] [tML]: Selected OreExchange 1.4 for tML 2024.2.3.0 from Workshop.
+[21:54:24.678] [.NET TP Worker/DEBUG] [tML]: Skipped PersistentPlayerPosition 1.4.3 for tML 2025.5.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.678] [.NET TP Worker/DEBUG] [tML]: Skipped PersistentPlayerPosition 1.4.3 for tML 2025.5.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.679] [.NET TP Worker/DEBUG] [tML]: Skipped PersistentPlayerPosition 1.4 for tML 2024.9.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.679] [.NET TP Worker/DEBUG] [tML]: Skipped PersistentPlayerPosition 1.4 for tML 2024.9.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.679] [.NET TP Worker/DEBUG] [tML]: Selected PersistentPlayerPosition 1.4.5.0 for tML 2025.6.3.0 from Workshop.
+tML: [21:54:24.679] [.NET TP Worker/DEBUG] [tML]: Selected PersistentPlayerPosition 1.4.5.0 for tML 2025.6.3.0 from Workshop.
+[21:54:24.680] [.NET TP Worker/DEBUG] [tML]: Selected PingMod 1.0.1 for tML 2024.6.3.1 from Workshop.
+tML: [21:54:24.680] [.NET TP Worker/DEBUG] [tML]: Selected PingMod 1.0.1 for tML 2024.6.3.1 from Workshop.
+[21:54:24.680] [.NET TP Worker/DEBUG] [tML]: Skipped QuickSaveKey 2.0.1 for tML 2022.5.103.32 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.680] [.NET TP Worker/DEBUG] [tML]: Skipped QuickSaveKey 2.0.1 for tML 2022.5.103.32 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.681] [.NET TP Worker/DEBUG] [tML]: Skipped QuickSaveKey 2.0.2 for tML 2023.6.25.32 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.681] [.NET TP Worker/DEBUG] [tML]: Skipped QuickSaveKey 2.0.2 for tML 2023.6.25.32 from Workshop. Reason: a newer version exists.
+[21:54:24.681] [.NET TP Worker/DEBUG] [tML]: Selected QuickSaveKey 2.0.3 for tML 2023.9.3.2 from Workshop.
+tML: [21:54:24.681] [.NET TP Worker/DEBUG] [tML]: Selected QuickSaveKey 2.0.3 for tML 2023.9.3.2 from Workshop.
+[21:54:24.682] [.NET TP Worker/DEBUG] [tML]: Skipped RecipeBrowser 0.9.9 for tML 2022.9.47.50 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.682] [.NET TP Worker/DEBUG] [tML]: Skipped RecipeBrowser 0.9.9 for tML 2022.9.47.50 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.682] [.NET TP Worker/DEBUG] [tML]: Skipped RecipeBrowser 0.12 for tML 2025.9.3.3 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.682] [.NET TP Worker/DEBUG] [tML]: Skipped RecipeBrowser 0.12 for tML 2025.9.3.3 from Workshop. Reason: a newer version exists.
+[21:54:24.683] [.NET TP Worker/DEBUG] [tML]: Skipped RecipeBrowser 0.10.13 for tML 2025.6.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.683] [.NET TP Worker/DEBUG] [tML]: Skipped RecipeBrowser 0.10.13 for tML 2025.6.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.683] [.NET TP Worker/DEBUG] [tML]: Selected RecipeBrowser 0.12.0.1 for tML 2026.7.3.0 from Workshop.
+tML: [21:54:24.683] [.NET TP Worker/DEBUG] [tML]: Selected RecipeBrowser 0.12.0.1 for tML 2026.7.3.0 from Workshop.
+[21:54:24.684] [.NET TP Worker/DEBUG] [tML]: Skipped SellAll 1.2.2.3 for tML 2022.5.103.5 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.684] [.NET TP Worker/DEBUG] [tML]: Skipped SellAll 1.2.2.3 for tML 2022.5.103.5 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.684] [.NET TP Worker/DEBUG] [tML]: Skipped SellAll 1.2.2.0 for tML 0.12 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.684] [.NET TP Worker/DEBUG] [tML]: Skipped SellAll 1.2.2.0 for tML 0.12 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.685] [.NET TP Worker/DEBUG] [tML]: Selected SellAll 1.2.2.4 for tML 2023.10.3.0 from Workshop.
+tML: [21:54:24.685] [.NET TP Worker/DEBUG] [tML]: Selected SellAll 1.2.2.4 for tML 2023.10.3.0 from Workshop.
+[21:54:24.685] [.NET TP Worker/DEBUG] [tML]: Skipped SerousCommonLib 1.0.5 for tML 2022.9.47.87 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.685] [.NET TP Worker/DEBUG] [tML]: Skipped SerousCommonLib 1.0.5 for tML 2022.9.47.87 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.686] [.NET TP Worker/DEBUG] [tML]: Skipped SerousCommonLib 1.0.6.1 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.686] [.NET TP Worker/DEBUG] [tML]: Skipped SerousCommonLib 1.0.6.1 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.686] [.NET TP Worker/DEBUG] [tML]: Skipped SerousCommonLib 1.0.5.1 for tML 2023.11.3.3 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.686] [.NET TP Worker/DEBUG] [tML]: Skipped SerousCommonLib 1.0.5.1 for tML 2023.11.3.3 from Workshop. Reason: a newer version exists.
+[21:54:24.687] [.NET TP Worker/DEBUG] [tML]: Selected SerousCommonLib 1.0.6.2 for tML 2025.6.3.0 from Workshop.
+tML: [21:54:24.687] [.NET TP Worker/DEBUG] [tML]: Selected SerousCommonLib 1.0.6.2 for tML 2025.6.3.0 from Workshop.
+[21:54:24.687] [.NET TP Worker/DEBUG] [tML]: Skipped SharedMap 0.1.5.2 for tML 2022.9.48.1 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.687] [.NET TP Worker/DEBUG] [tML]: Skipped SharedMap 0.1.5.2 for tML 2022.9.48.1 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.688] [.NET TP Worker/DEBUG] [tML]: Skipped SharedMap 0.1.5 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.688] [.NET TP Worker/DEBUG] [tML]: Skipped SharedMap 0.1.5 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.688] [.NET TP Worker/DEBUG] [tML]: Skipped SharedMap 0.1.4.3 for tML 2024.5.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.688] [.NET TP Worker/DEBUG] [tML]: Skipped SharedMap 0.1.4.3 for tML 2024.5.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.689] [.NET TP Worker/DEBUG] [tML]: Selected SharedMap 0.1.5.1 for tML 2026.5.3.0 from Workshop.
+tML: [21:54:24.689] [.NET TP Worker/DEBUG] [tML]: Selected SharedMap 0.1.5.1 for tML 2026.5.3.0 from Workshop.
+[21:54:24.689] [.NET TP Worker/DEBUG] [tML]: Skipped ShopExpander 1.2.6 for tML 2022.7.58.8 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.689] [.NET TP Worker/DEBUG] [tML]: Skipped ShopExpander 1.2.6 for tML 2022.7.58.8 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.690] [.NET TP Worker/DEBUG] [tML]: Skipped ShopExpander 1.6.0 for tML 2025.1.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.690] [.NET TP Worker/DEBUG] [tML]: Skipped ShopExpander 1.6.0 for tML 2025.1.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.690] [.NET TP Worker/DEBUG] [tML]: Skipped ShopExpander 1.5.0 for tML 2023.12.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.690] [.NET TP Worker/DEBUG] [tML]: Skipped ShopExpander 1.5.0 for tML 2023.12.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.690] [.NET TP Worker/DEBUG] [tML]: Selected ShopExpander 1.8.1 for tML 2025.2.3.2 from Workshop.
+tML: [21:54:24.690] [.NET TP Worker/DEBUG] [tML]: Selected ShopExpander 1.8.1 for tML 2025.2.3.2 from Workshop.
+[21:54:24.691] [.NET TP Worker/DEBUG] [tML]: Skipped ShorterRespawn 1.0.1 for tML 0.12 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.691] [.NET TP Worker/DEBUG] [tML]: Skipped ShorterRespawn 1.0.1 for tML 0.12 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.691] [.NET TP Worker/DEBUG] [tML]: Skipped ShorterRespawn 1.2.1 for tML 2025.7.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.691] [.NET TP Worker/DEBUG] [tML]: Skipped ShorterRespawn 1.2.1 for tML 2025.7.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.692] [.NET TP Worker/DEBUG] [tML]: Skipped ShorterRespawn 1.2 for tML 2024.11.3.2 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.692] [.NET TP Worker/DEBUG] [tML]: Skipped ShorterRespawn 1.2 for tML 2024.11.3.2 from Workshop. Reason: a newer version exists.
+[21:54:24.692] [.NET TP Worker/DEBUG] [tML]: Selected ShorterRespawn 1.2.1.1 for tML 2026.7.3.0 from Workshop.
+tML: [21:54:24.692] [.NET TP Worker/DEBUG] [tML]: Selected ShorterRespawn 1.2.1.1 for tML 2026.7.3.0 from Workshop.
+[21:54:24.693] [.NET TP Worker/DEBUG] [tML]: Skipped SmarterCursor 1.3 for tML 2022.9.47.15 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.693] [.NET TP Worker/DEBUG] [tML]: Skipped SmarterCursor 1.3 for tML 2022.9.47.15 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.693] [.NET TP Worker/DEBUG] [tML]: Skipped SmarterCursor 1.3.1 for tML 2023.6.25.5 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.693] [.NET TP Worker/DEBUG] [tML]: Skipped SmarterCursor 1.3.1 for tML 2023.6.25.5 from Workshop. Reason: a newer version exists.
+[21:54:24.694] [.NET TP Worker/DEBUG] [tML]: Selected SmarterCursor 1.3.3 for tML 2024.1.3.0 from Workshop.
+tML: [21:54:24.694] [.NET TP Worker/DEBUG] [tML]: Selected SmarterCursor 1.3.3 for tML 2024.1.3.0 from Workshop.
+[21:54:24.695] [.NET TP Worker/DEBUG] [tML]: Skipped SortingFolders 1.6 for tML 2024.6.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.695] [.NET TP Worker/DEBUG] [tML]: Skipped SortingFolders 1.6 for tML 2024.6.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.695] [.NET TP Worker/DEBUG] [tML]: Skipped SortingFolders 1.5.3 for tML 2024.3.3.2 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.695] [.NET TP Worker/DEBUG] [tML]: Skipped SortingFolders 1.5.3 for tML 2024.3.3.2 from Workshop. Reason: a newer version exists.
+[21:54:24.696] [.NET TP Worker/DEBUG] [tML]: Selected SortingFolders 1.6.1 for tML 2025.1.3.1 from Workshop.
+tML: [21:54:24.696] [.NET TP Worker/DEBUG] [tML]: Selected SortingFolders 1.6.1 for tML 2025.1.3.1 from Workshop.
+[21:54:24.696] [.NET TP Worker/DEBUG] [tML]: Skipped SpiritMod 1.4.4.16 for tML 2022.9.47.61 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.696] [.NET TP Worker/DEBUG] [tML]: Skipped SpiritMod 1.4.4.16 for tML 2022.9.47.61 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.697] [.NET TP Worker/DEBUG] [tML]: Skipped SpiritMod 1.5.0.44 for tML 2026.5.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.697] [.NET TP Worker/DEBUG] [tML]: Skipped SpiritMod 1.5.0.44 for tML 2026.5.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.698] [.NET TP Worker/DEBUG] [tML]: Skipped SpiritMod 1.5.0.43 for tML 2026.2.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.698] [.NET TP Worker/DEBUG] [tML]: Skipped SpiritMod 1.5.0.43 for tML 2026.2.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.698] [.NET TP Worker/DEBUG] [tML]: Selected SpiritMod 1.5.0.48 for tML 2026.7.3.0 from Workshop.
+tML: [21:54:24.698] [.NET TP Worker/DEBUG] [tML]: Selected SpiritMod 1.5.0.48 for tML 2026.7.3.0 from Workshop.
+[21:54:24.699] [.NET TP Worker/DEBUG] [tML]: Skipped SubworldLibrary 2.2.1.3 for tML 2022.9.47.82 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.699] [.NET TP Worker/DEBUG] [tML]: Skipped SubworldLibrary 2.2.1.3 for tML 2022.9.47.82 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.699] [.NET TP Worker/DEBUG] [tML]: Skipped SubworldLibrary 2.2.3.3 for tML 2025.9.3.4 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.699] [.NET TP Worker/DEBUG] [tML]: Skipped SubworldLibrary 2.2.3.3 for tML 2025.9.3.4 from Workshop. Reason: a newer version exists.
+[21:54:24.700] [.NET TP Worker/DEBUG] [tML]: Skipped SubworldLibrary 2.2.3.2 for tML 2025.6.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.700] [.NET TP Worker/DEBUG] [tML]: Skipped SubworldLibrary 2.2.3.2 for tML 2025.6.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.700] [.NET TP Worker/DEBUG] [tML]: Selected SubworldLibrary 2.3.0.1 for tML 2026.6.3.6 from Workshop.
+tML: [21:54:24.700] [.NET TP Worker/DEBUG] [tML]: Selected SubworldLibrary 2.3.0.1 for tML 2026.6.3.6 from Workshop.
+[21:54:24.701] [.NET TP Worker/DEBUG] [tML]: Skipped TerrariaOverhaul 5.0.0.31 for tML 2022.9.47.82 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.701] [.NET TP Worker/DEBUG] [tML]: Skipped TerrariaOverhaul 5.0.0.31 for tML 2022.9.47.82 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.701] [.NET TP Worker/DEBUG] [tML]: Skipped TerrariaOverhaul 5.0.0.37 for tML 2024.1.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.701] [.NET TP Worker/DEBUG] [tML]: Skipped TerrariaOverhaul 5.0.0.37 for tML 2024.1.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.702] [.NET TP Worker/DEBUG] [tML]: Skipped TerrariaOverhaul 5.0.0.34 for tML 2023.9.3.2 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.702] [.NET TP Worker/DEBUG] [tML]: Skipped TerrariaOverhaul 5.0.0.34 for tML 2023.9.3.2 from Workshop. Reason: a newer version exists.
+[21:54:24.702] [.NET TP Worker/DEBUG] [tML]: Selected TerrariaOverhaul 5.0.0.38 for tML 2024.2.2.11 from Workshop.
+tML: [21:54:24.702] [.NET TP Worker/DEBUG] [tML]: Selected TerrariaOverhaul 5.0.0.38 for tML 2024.2.2.11 from Workshop.
+[21:54:24.703] [.NET TP Worker/DEBUG] [tML]: Skipped TheArchitectsBlueprintMod 0.2.0 for tML 2026.7.3.0 from Workshop. Reason: a matching version for a newer tModLoader exists.
+tML: [21:54:24.703] [.NET TP Worker/DEBUG] [tML]: Skipped TheArchitectsBlueprintMod 0.2.0 for tML 2026.7.3.0 from Workshop. Reason: a matching version for a newer tModLoader exists.
+[21:54:24.703] [.NET TP Worker/DEBUG] [tML]: Selected TheArchitectsBlueprintMod 0.2.0 for tML 2026.8.3.0 from Local.
+tML: [21:54:24.703] [.NET TP Worker/DEBUG] [tML]: Selected TheArchitectsBlueprintMod 0.2.0 for tML 2026.8.3.0 from Local.
+[21:54:24.704] [.NET TP Worker/DEBUG] [tML]: Skipped ThoriumMod 1.7.0.3 for tML 2022.9.47.47 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.704] [.NET TP Worker/DEBUG] [tML]: Skipped ThoriumMod 1.7.0.3 for tML 2022.9.47.47 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.705] [.NET TP Worker/DEBUG] [tML]: Skipped ThoriumMod 1.7.2.6 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.705] [.NET TP Worker/DEBUG] [tML]: Skipped ThoriumMod 1.7.2.6 for tML 2026.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.705] [.NET TP Worker/DEBUG] [tML]: Skipped ThoriumMod 1.7.2.5 for tML 2025.8.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.705] [.NET TP Worker/DEBUG] [tML]: Skipped ThoriumMod 1.7.2.5 for tML 2025.8.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.705] [.NET TP Worker/DEBUG] [tML]: Selected ThoriumMod 1.7.2.8 for tML 2026.6.3.3 from Workshop.
+tML: [21:54:24.705] [.NET TP Worker/DEBUG] [tML]: Selected ThoriumMod 1.7.2.8 for tML 2026.6.3.3 from Workshop.
+[21:54:24.706] [.NET TP Worker/DEBUG] [tML]: Skipped TMLAchievements 1.0.6 for tML 2022.9.47.30 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.706] [.NET TP Worker/DEBUG] [tML]: Skipped TMLAchievements 1.0.6 for tML 2022.9.47.30 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.707] [.NET TP Worker/DEBUG] [tML]: Skipped TMLAchievements 1.1 for tML 2023.5.36.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.707] [.NET TP Worker/DEBUG] [tML]: Skipped TMLAchievements 1.1 for tML 2023.5.36.0 from Workshop. Reason: a newer version exists.
+[21:54:24.707] [.NET TP Worker/DEBUG] [tML]: Selected TMLAchievements 1.2 for tML 2025.10.3.1 from Workshop.
+tML: [21:54:24.707] [.NET TP Worker/DEBUG] [tML]: Selected TMLAchievements 1.2 for tML 2025.10.3.1 from Workshop.
+[21:54:24.708] [.NET TP Worker/DEBUG] [tML]: Skipped UnCalamityModMusic 1.0.9 for tML 2022.9.47.28 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.708] [.NET TP Worker/DEBUG] [tML]: Skipped UnCalamityModMusic 1.0.9 for tML 2022.9.47.28 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.708] [.NET TP Worker/DEBUG] [tML]: Skipped UnCalamityModMusic 2.1 for tML 2025.8.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.708] [.NET TP Worker/DEBUG] [tML]: Skipped UnCalamityModMusic 2.1 for tML 2025.8.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.709] [.NET TP Worker/DEBUG] [tML]: Skipped UnCalamityModMusic 2.1.2 for tML 2025.12.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.709] [.NET TP Worker/DEBUG] [tML]: Skipped UnCalamityModMusic 2.1.2 for tML 2025.12.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.710] [.NET TP Worker/DEBUG] [tML]: Selected UnCalamityModMusic 2.1.3 for tML 2026.5.3.0 from Workshop.
+tML: [21:54:24.710] [.NET TP Worker/DEBUG] [tML]: Selected UnCalamityModMusic 2.1.3 for tML 2026.5.3.0 from Workshop.
+[21:54:24.710] [.NET TP Worker/DEBUG] [tML]: Skipped WeaponOutLite 2.0.1 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.710] [.NET TP Worker/DEBUG] [tML]: Skipped WeaponOutLite 2.0.1 for tML 2025.4.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.711] [.NET TP Worker/DEBUG] [tML]: Skipped WeaponOutLite 1.0.1 for tML 2025.2.3.2 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.711] [.NET TP Worker/DEBUG] [tML]: Skipped WeaponOutLite 1.0.1 for tML 2025.2.3.2 from Workshop. Reason: a newer version exists.
+[21:54:24.711] [.NET TP Worker/DEBUG] [tML]: Selected WeaponOutLite 2.0.2 for tML 2025.8.3.1 from Workshop.
+tML: [21:54:24.711] [.NET TP Worker/DEBUG] [tML]: Selected WeaponOutLite 2.0.2 for tML 2025.8.3.1 from Workshop.
+[21:54:24.712] [.NET TP Worker/DEBUG] [tML]: Skipped WebCom 1.0 for tML 2022.9.47.48 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.712] [.NET TP Worker/DEBUG] [tML]: Skipped WebCom 1.0 for tML 2022.9.47.48 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.712] [.NET TP Worker/DEBUG] [tML]: Skipped WebCom 1.1 for tML 2026.1.3.3 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.712] [.NET TP Worker/DEBUG] [tML]: Skipped WebCom 1.1 for tML 2026.1.3.3 from Workshop. Reason: a newer version exists.
+[21:54:24.713] [.NET TP Worker/DEBUG] [tML]: Skipped WebCom 1.0.2.1 for tML 2024.9.3.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.713] [.NET TP Worker/DEBUG] [tML]: Skipped WebCom 1.0.2.1 for tML 2024.9.3.0 from Workshop. Reason: a newer version exists.
+[21:54:24.713] [.NET TP Worker/DEBUG] [tML]: Selected WebCom 1.1.3 for tML 2026.2.3.2 from Workshop.
+tML: [21:54:24.713] [.NET TP Worker/DEBUG] [tML]: Selected WebCom 1.1.3 for tML 2026.2.3.2 from Workshop.
+[21:54:24.714] [.NET TP Worker/DEBUG] [tML]: Skipped WheresMyItems 0.6 for tML 2022.5.103.34 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.714] [.NET TP Worker/DEBUG] [tML]: Skipped WheresMyItems 0.6 for tML 2022.5.103.34 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.714] [.NET TP Worker/DEBUG] [tML]: Skipped WheresMyItems 0.7.0.2 for tML 2023.6.25.27 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.714] [.NET TP Worker/DEBUG] [tML]: Skipped WheresMyItems 0.7.0.2 for tML 2023.6.25.27 from Workshop. Reason: a newer version exists.
+[21:54:24.715] [.NET TP Worker/DEBUG] [tML]: Selected WheresMyItems 0.8 for tML 2025.5.3.0 from Workshop.
+tML: [21:54:24.715] [.NET TP Worker/DEBUG] [tML]: Selected WheresMyItems 0.8 for tML 2025.5.3.0 from Workshop.
+[21:54:24.715] [.NET TP Worker/DEBUG] [tML]: Skipped WingSlotExtra 1.3.4 for tML 2022.8.54.4 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+tML: [21:54:24.715] [.NET TP Worker/DEBUG] [tML]: Skipped WingSlotExtra 1.3.4 for tML 2022.8.54.4 from Workshop. Reason: mod is for a different Terraria version/LTS release stream.
+[21:54:24.716] [.NET TP Worker/DEBUG] [tML]: Skipped WingSlotExtra 1.3.6 for tML 2023.5.38.0 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.716] [.NET TP Worker/DEBUG] [tML]: Skipped WingSlotExtra 1.3.6 for tML 2023.5.38.0 from Workshop. Reason: a newer version exists.
+[21:54:24.716] [.NET TP Worker/DEBUG] [tML]: Skipped WingSlotExtra 1.4.4 for tML 2023.12.3.1 from Workshop. Reason: a newer version exists.
+tML: [21:54:24.716] [.NET TP Worker/DEBUG] [tML]: Skipped WingSlotExtra 1.4.4 for tML 2023.12.3.1 from Workshop. Reason: a newer version exists.
+[21:54:24.717] [.NET TP Worker/DEBUG] [tML]: Selected WingSlotExtra 1.4.5 for tML 2025.3.3.1 from Workshop.
+tML: [21:54:24.717] [.NET TP Worker/DEBUG] [tML]: Selected WingSlotExtra 1.4.5 for tML 2025.3.3.1 from Workshop.
+[21:54:24.722] [.NET TP Worker/INFO] [tML]: Finding Mods...
+tML: [21:54:24.722] [.NET TP Worker/INFO] [tML]: Finding Mods...
+[21:54:24.736] [.NET TP Worker/INFO] [tML]: Sandboxing: CheatSheet (Cheat Sheet) v0.7.8.1
+tML: [21:54:24.736] [.NET TP Worker/INFO] [tML]: Sandboxing: CheatSheet (Cheat Sheet) v0.7.8.1
+[21:54:24.828] [.NET TP Worker/INFO] [tML]: Sandboxing: TheArchitectsBlueprintMod (The Architect's Blueprint) v0.2.0
+tML: [21:54:24.828] [.NET TP Worker/INFO] [tML]: Sandboxing: TheArchitectsBlueprintMod (The Architect's Blueprint) v0.2.0
+[21:54:24.972] [.NET TP Worker/INFO] [tML]: Constructing Mods...
+tML: [21:54:24.972] [.NET TP Worker/INFO] [tML]: Constructing Mods...
+[21:54:24.987] [.NET TP Worker/INFO] [tML]: Adding Content: ModLoader (tModLoader) v2026.8.3.0
+tML: [21:54:24.987] [.NET TP Worker/INFO] [tML]: Adding Content: ModLoader (tModLoader) v2026.8.3.0
+[21:54:25.174] [.NET TP Worker/INFO] [tML]: Adding Content: CheatSheet (Cheat Sheet) v0.7.8.1
+tML: [21:54:25.174] [.NET TP Worker/INFO] [tML]: Adding Content: CheatSheet (Cheat Sheet) v0.7.8.1
+[21:54:25.212] [.NET TP Worker/WARN] [CheatSheet]: Failed to load icon_small.png. Reason: icon_small.png does not exist.
+CheatSheet: [21:54:25.212] [.NET TP Worker/WARN] [CheatSheet]: Failed to load icon_small.png. Reason: icon_small.png does not exist.
+[21:54:25.231] [.NET TP Worker/INFO] [tML]: JITModsAsync completed in 255ms
+tML: [21:54:25.231] [.NET TP Worker/INFO] [tML]: JITModsAsync completed in 255ms
+[21:54:25.244] [.NET TP Worker/INFO] [tML]: Adding Content: TheArchitectsBlueprintMod (The Architect's Blueprint) v0.2.0
+tML: [21:54:25.244] [.NET TP Worker/INFO] [tML]: Adding Content: TheArchitectsBlueprintMod (The Architect's Blueprint) v0.2.0
+[21:54:25.344] [.NET TP Worker/WARN] [TheArchitectsBlueprintMod]: Failed to load icon_small.png. Reason: icon_small.png is not 30x30.
+TheArchitectsBlueprintMod: [21:54:25.344] [.NET TP Worker/WARN] [TheArchitectsBlueprintMod]: Failed to load icon_small.png. Reason: icon_small.png is not 30x30.
+[21:54:25.457] [.NET TP Worker/WARN] [tML]: TheArchitectsBlueprintMod spent 127ms blocking on asset loading. Avoid using AssetRequestMode.ImmediateLoad during mod loading where possible
+tML: [21:54:25.457] [.NET TP Worker/WARN] [tML]: TheArchitectsBlueprintMod spent 127ms blocking on asset loading. Avoid using AssetRequestMode.ImmediateLoad during mod loading where possible
+[21:54:25.458] [.NET TP Worker/INFO] [tML]: Resizing...
+tML: [21:54:25.458] [.NET TP Worker/INFO] [tML]: Resizing...
+[21:54:25.531] [.NET TP Worker/INFO] [tML]: Configuring Content: ModLoader (tModLoader) v2026.8.3.0
+tML: [21:54:25.531] [.NET TP Worker/INFO] [tML]: Configuring Content: ModLoader (tModLoader) v2026.8.3.0
+[21:54:25.556] [.NET TP Worker/INFO] [tML]: Configuring Content: CheatSheet (Cheat Sheet) v0.7.8.1
+tML: [21:54:25.556] [.NET TP Worker/INFO] [tML]: Configuring Content: CheatSheet (Cheat Sheet) v0.7.8.1
+[21:54:25.557] [.NET TP Worker/INFO] [tML]: Configuring Content: TheArchitectsBlueprintMod (The Architect's Blueprint) v0.2.0
+tML: [21:54:25.557] [.NET TP Worker/INFO] [tML]: Configuring Content: TheArchitectsBlueprintMod (The Architect's Blueprint) v0.2.0
+[21:54:25.615] [.NET TP Worker/INFO] [tML]: Finalizing Content: ModLoader (tModLoader) v2026.8.3.0
+tML: [21:54:25.615] [.NET TP Worker/INFO] [tML]: Finalizing Content: ModLoader (tModLoader) v2026.8.3.0
+[21:54:25.627] [.NET TP Worker/INFO] [tML]: Finalizing Content: CheatSheet (Cheat Sheet) v0.7.8.1
+tML: [21:54:25.627] [.NET TP Worker/INFO] [tML]: Finalizing Content: CheatSheet (Cheat Sheet) v0.7.8.1
+[21:54:25.643] [.NET TP Worker/INFO] [tML]: Finalizing Content: TheArchitectsBlueprintMod (The Architect's Blueprint) v0.2.0
+tML: [21:54:25.643] [.NET TP Worker/INFO] [tML]: Finalizing Content: TheArchitectsBlueprintMod (The Architect's Blueprint) v0.2.0
+[21:54:25.650] [.NET TP Worker/INFO] [tML]: Mods using the most RAM: CheatSheet 3.4 MB, TheArchitectsBlueprintMod 2.6 MB
+tML: [21:54:25.650] [.NET TP Worker/INFO] [tML]: Mods using the most RAM: CheatSheet 3.4 MB, TheArchitectsBlueprintMod 2.6 MB
+[21:54:25.676] [.NET TP Worker/INFO] [tML]: RAM physical: tModLoader usage: 919.5 MB, All processes usage: 29.4 GB, Available: 34.5 GB, Total Installed: 63.9 GB
+tML: [21:54:25.676] [.NET TP Worker/INFO] [tML]: RAM physical: tModLoader usage: 919.5 MB, All processes usage: 29.4 GB, Available: 34.5 GB, Total Installed: 63.9 GB
+[21:54:25.677] [.NET TP Worker/INFO] [tML]: RAM virtual: tModLoader usage: 1.5 GB, All processes usage: 23.4 GB
+tML: [21:54:25.677] [.NET TP Worker/INFO] [tML]: RAM virtual: tModLoader usage: 1.5 GB, All processes usage: 23.4 GB
+[21:54:25.750] [.NET TP Worker/DEBUG] [tML]: GlobalItem registration stats. Count: 2, Slots per Entity: 1
+	Instanced: 1, Conditional with slot: 0, Conditional by type: 0, Applies to single type: 0
+	List Permutations: 1, Est Memory Consumption: 16 bytes
+tML: [21:54:25.750] [.NET TP Worker/DEBUG] [tML]: GlobalItem registration stats. Count: 2, Slots per Entity: 1
+	Instanced: 1, Conditional with slot: 0, Conditional by type: 0, Applies to single type: 0
+	List Permutations: 1, Est Memory Consumption: 16 bytes
+[21:54:25.770] [.NET TP Worker/DEBUG] [tML]: GlobalNPC registration stats. Count: 4, Slots per Entity: 2
+	Instanced: 2, Conditional with slot: 0, Conditional by type: 0, Applies to single type: 0
+	List Permutations: 1, Est Memory Consumption: 16 bytes
+tML: [21:54:25.770] [.NET TP Worker/DEBUG] [tML]: GlobalNPC registration stats. Count: 4, Slots per Entity: 2
+	Instanced: 2, Conditional with slot: 0, Conditional by type: 0, Applies to single type: 0
+	List Permutations: 1, Est Memory Consumption: 16 bytes
+[21:54:25.776] [.NET TP Worker/DEBUG] [tML]: GlobalProjectile registration stats. Count: 0, Slots per Entity: 0
+	Instanced: 0, Conditional with slot: 0, Conditional by type: 0, Applies to single type: 0
+	List Permutations: 0, Est Memory Consumption: 0 bytes
+tML: [21:54:25.776] [.NET TP Worker/DEBUG] [tML]: GlobalProjectile registration stats. Count: 0, Slots per Entity: 0
+	Instanced: 0, Conditional with slot: 0, Conditional by type: 0, Applies to single type: 0
+	List Permutations: 0, Est Memory Consumption: 0 bytes
+[21:54:25.880] [.NET TP Worker/INFO] [tML]: Adding Recipes...
+tML: [21:54:25.880] [.NET TP Worker/INFO] [tML]: Adding Recipes...
+[21:54:26.944] [.NET TP Worker/INFO] [tML]: Finding Mods...
+tML: [21:54:26.944] [.NET TP Worker/INFO] [tML]: Finding Mods...
+[21:54:26.992] [.NET TP Worker/INFO] [tML]: Mod Load Completed in 2274ms
+tML: [21:54:26.992] [.NET TP Worker/INFO] [tML]: Mod Load Completed in 2274ms
+[21:54:27.030] [Main Thread/DEBUG] [tML]: Web Request: https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=1281930&count=1&feeds=steam_community_announcements
+tML: [21:54:27.030] [Main Thread/DEBUG] [tML]: Web Request: https://api.steampowered.com/ISteamNews/GetNewsForApp/v2/?appid=1281930&count=1&feeds=steam_community_announcements
+[MonoMod.Core] Trace: Updating detour from System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to System.Int32 SyncProxy<System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)>(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) (recompiled System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to 00007ff837066160)
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff837066160 => 0x00007ff831a41300
+[21:54:32.343] [.NET TP Worker/INFO] [Terraria]: Loading World: TASTest, IsCloud=False, Width: 6400, Height: 1800, Evil: 1, GameMode: 3
+Terraria: [21:54:32.343] [.NET TP Worker/INFO] [Terraria]: Loading World: TASTest, IsCloud=False, Width: 6400, Height: 1800, Evil: 1, GameMode: 3
+[21:54:32.355] [.NET TP Worker/INFO] [StatusText]: Loading world data
+StatusText: [21:54:32.355] [.NET TP Worker/INFO] [StatusText]: Loading world data
+[21:54:32.769] [.NET TP Worker/INFO] [StatusText]: Settling liquids
+StatusText: [21:54:32.769] [.NET TP Worker/INFO] [StatusText]: Settling liquids
+[21:54:33.192] [.NET TP Worker/INFO] [StatusText]: Loading map data
+StatusText: [21:54:33.192] [.NET TP Worker/INFO] [StatusText]: Loading map data
+[21:54:33.547] [.NET TP Worker/INFO] [StatusText]: Drawing map
+StatusText: [21:54:33.547] [.NET TP Worker/INFO] [StatusText]: Drawing map
+ArchitectMode HUD layer: Vanilla: Interface Logic 1
+ArchitectMode HUD layer: Vanilla: MP Player Names
+ArchitectMode HUD layer: Vanilla: Emote Bubbles
+ArchitectMode HUD layer: Vanilla: Entity Markers
+ArchitectMode HUD layer: Vanilla: Smart Cursor Targets
+ArchitectMode HUD layer: Vanilla: Laser Ruler
+ArchitectMode HUD layer: Vanilla: Ruler
+ArchitectMode HUD layer: Vanilla: Gamepad Lock On
+ArchitectMode HUD layer: Vanilla: Tile Grid Option
+ArchitectMode HUD layer: Vanilla: Town NPC House Banners
+ArchitectMode HUD layer: Vanilla: Hide UI Toggle
+ArchitectMode HUD layer: Vanilla: Wire Selection
+ArchitectMode HUD layer: Vanilla: Capture Manager Check
+ArchitectMode HUD layer: Vanilla: Ingame Options
+ArchitectMode HUD layer: Vanilla: Fancy UI
+ArchitectMode HUD layer: Vanilla: Achievement Complete Popups
+ArchitectMode HUD layer: Vanilla: Entity Health Bars
+ArchitectMode HUD layer: Vanilla: Invasion Progress Bars
+ArchitectMode HUD layer: Vanilla: Map / Minimap
+ArchitectMode HUD layer: Vanilla: Diagnose Net
+ArchitectMode HUD layer: Vanilla: Diagnose Video
+ArchitectMode HUD layer: Vanilla: Sign Tile Bubble
+ArchitectMode HUD layer: Vanilla: Hair Window
+ArchitectMode HUD layer: Vanilla: Dresser Window
+ArchitectMode HUD layer: Vanilla: NPC / Sign Dialog
+ArchitectMode HUD layer: Vanilla: Interface Logic 2
+ArchitectMode HUD layer: Vanilla: Resource Bars
+ArchitectMode HUD layer: Vanilla: Interface Logic 3
+ArchitectMode HUD layer: CheatSheet: Extra Accessories
+ArchitectMode HUD layer: Vanilla: Inventory
+ArchitectMode HUD layer: Vanilla: Info Accessories Bar
+ArchitectMode HUD layer: Vanilla: Settings Button
+ArchitectMode HUD layer: Vanilla: Hotbar
+ArchitectMode HUD layer: Vanilla: Builder Accessories Bar
+ArchitectMode HUD layer: Vanilla: Radial Hotbars
+ArchitectMode HUD layer: CheatSheet: Paint Tools
+ArchitectMode HUD layer: CheatSheet: All Cheat Sheet
+ArchitectMode HUD layer: Vanilla: Mouse Text
+ArchitectMode HUD layer: Vanilla: Player Chat
+ArchitectMode HUD layer: Vanilla: Death Text
+ArchitectMode HUD layer: Vanilla: Cursor
+ArchitectMode HUD layer: Vanilla: Debug Stuff
+ArchitectMode HUD layer: Vanilla: Mouse Item / NPC Head
+ArchitectMode HUD layer: Vanilla: Mouse Over
+ArchitectMode HUD layer: Vanilla: Interact Item Icon
+ArchitectMode HUD layer: Vanilla: Interface Logic 4
+[21:54:33.620] [Main Thread/INFO] [Terraria]: Entering world with player: TASTest, IsCloud=False, Width: 6400, Height: 1800, Evil: 1, GameMode: 3
+Terraria: [21:54:33.620] [Main Thread/INFO] [Terraria]: Entering world with player: TASTest, IsCloud=False, Width: 6400, Height: 1800, Evil: 1, GameMode: 3
+WaveMaskData texture recreated. 1x1
+WaveMaskData texture recreated. 1x1
+WaveMaskData texture recreated. 89x97
+WaveMaskData texture recreated. 89x97
+WaveMaskData texture recreated. 89x97
+WaveMaskData texture recreated. 89x98
+WaveMaskData texture recreated. 89x98
+WaveMaskData texture recreated. 89x98
+[21:55:25.659] [Main Thread/INFO] [tML]: tModLoader RAM usage has increased: 2.1 GB
+tML: [21:55:25.659] [Main Thread/INFO] [tML]: tModLoader RAM usage has increased: 2.1 GB
+[21:55:42.045] [.NET TP Worker/DEBUG] [tML]: Assembly Resolve: System.Net.Sockets, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a -> System.Net.Sockets.resources, Version=8.0.0.0, Culture=cs-CZ, PublicKeyToken=b03f5f7f11d50a3a
+tML: [21:55:42.045] [.NET TP Worker/DEBUG] [tML]: Assembly Resolve: System.Net.Sockets, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a -> System.Net.Sockets.resources, Version=8.0.0.0, Culture=cs-CZ, PublicKeyToken=b03f5f7f11d50a3a
+[21:55:42.047] [.NET TP Worker/DEBUG] [tML]: Assembly Resolve: System.Net.Sockets, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a -> System.Net.Sockets.resources, Version=8.0.0.0, Culture=cs, PublicKeyToken=b03f5f7f11d50a3a
+tML: [21:55:42.047] [.NET TP Worker/DEBUG] [tML]: Assembly Resolve: System.Net.Sockets, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a -> System.Net.Sockets.resources, Version=8.0.0.0, Culture=cs, PublicKeyToken=b03f5f7f11d50a3a
+[MonoMod.Core] Trace: Updating detour from System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&) to System.Void SyncProxy<System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&)>(System.Diagnostics.StackTraceSymbols, System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&) (recompiled System.Void System.Diagnostics.StackTraceSymbols:GetSourceLineInfo(System.Reflection.Assembly, System.String, System.IntPtr, System.Int32, System.Boolean, System.IntPtr, System.Int32, System.Int32, System.Int32, System.String&, System.Int32&, System.Int32&) to 00007ff8383ad620)
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff8383ad620 => 0x00007ff831a41e80
+[21:56:09.698] [.NET TP Worker/INFO] [StatusText]: Saving map data
+StatusText: [21:56:09.698] [.NET TP Worker/INFO] [StatusText]: Saving map data
+[21:56:10.375] [.NET TP Worker/INFO] [StatusText]: Backing up player file
+StatusText: [21:56:10.375] [.NET TP Worker/INFO] [StatusText]: Backing up player file
+[21:56:10.578] [.NET TP Worker/INFO] [StatusText]: Saving world data
+StatusText: [21:56:10.578] [.NET TP Worker/INFO] [StatusText]: Saving world data
+[21:56:10.695] [.NET TP Worker/INFO] [StatusText]: Validating world save
+StatusText: [21:56:10.695] [.NET TP Worker/INFO] [StatusText]: Validating world save
+[21:56:10.735] [.NET TP Worker/INFO] [StatusText]: Backing up world file
+StatusText: [21:56:10.735] [.NET TP Worker/INFO] [StatusText]: Backing up world file
+[21:56:10.748] [.NET TP Worker/INFO] [StatusText]: Saving modded world data
+StatusText: [21:56:10.748] [.NET TP Worker/INFO] [StatusText]: Saving modded world data
+[21:56:14.147] [.NET TP Worker/INFO] [Terraria]: Loading World: TASTest, IsCloud=False, Width: 6400, Height: 1800, Evil: 1, GameMode: 3
+Terraria: [21:56:14.147] [.NET TP Worker/INFO] [Terraria]: Loading World: TASTest, IsCloud=False, Width: 6400, Height: 1800, Evil: 1, GameMode: 3
+[21:56:14.150] [.NET TP Worker/INFO] [StatusText]: Clearing map data:
+StatusText: [21:56:14.150] [.NET TP Worker/INFO] [StatusText]: Clearing map data:
+[21:56:14.240] [.NET TP Worker/INFO] [StatusText]: Loading world data
+StatusText: [21:56:14.240] [.NET TP Worker/INFO] [StatusText]: Loading world data
+[21:56:14.591] [.NET TP Worker/INFO] [StatusText]: Settling liquids
+StatusText: [21:56:14.591] [.NET TP Worker/INFO] [StatusText]: Settling liquids
+[21:56:14.790] [.NET TP Worker/INFO] [StatusText]: Loading map data
+StatusText: [21:56:14.790] [.NET TP Worker/INFO] [StatusText]: Loading map data
+[21:56:15.113] [.NET TP Worker/INFO] [StatusText]: Drawing map
+StatusText: [21:56:15.113] [.NET TP Worker/INFO] [StatusText]: Drawing map
+[21:56:15.133] [Main Thread/INFO] [Terraria]: Entering world with player: TASTest, IsCloud=False, Width: 6400, Height: 1800, Evil: 1, GameMode: 3
+Terraria: [21:56:15.133] [Main Thread/INFO] [Terraria]: Entering world with player: TASTest, IsCloud=False, Width: 6400, Height: 1800, Evil: 1, GameMode: 3
+[MonoMod.Core] Trace: Updating detour from System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to System.Int32 SyncProxy<System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean)>(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) (recompiled System.Int32 System.ConsolePal+WindowsConsoleStream:WriteFileNative(System.IntPtr, System.ReadOnlySpan`1[[System.Byte, System.Private.CoreLib, Version=8.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], System.Boolean) to 00007ff838434420)
+[MonoMod.Core] Trace: Creating simple detour 0x00007ff838434420 => 0x00007ff831a41300
+[21:57:20.495] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] [Plan] [Block] [0/0] [0/0] [3206, 335] Terraria:Stone - Queued place batch (1 tiles)
+[Generic] [Plan] [Block] [0/0] [0/0] [3202, 335] Terraria:Stone - Queued clear batch (1 tiles)
+[Generic] --- [Plan] END (placeBatches=1, clearBatches=0) ---
+[Generic] --- [Clear] START ---
+TheArchitectsBlueprintMod: [21:57:20.495] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] [Plan] [Block] [0/0] [0/0] [3206, 335] Terraria:Stone - Queued place batch (1 tiles)
+[Generic] [Plan] [Block] [0/0] [0/0] [3202, 335] Terraria:Stone - Queued clear batch (1 tiles)
+[Generic] --- [Plan] END (placeBatches=1, clearBatches=0) ---
+[Generic] --- [Clear] START ---
+[21:57:20.500] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START (tasks=1) ---
+TheArchitectsBlueprintMod: [21:57:20.500] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START (tasks=1) ---
+[21:57:20.506] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Cut] [Block] [1/1] [1/1] [3202, 335] Terraria:Stone - Cleared
+TheArchitectsBlueprintMod: [21:57:20.506] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Cut] [Block] [1/1] [1/1] [3202, 335] Terraria:Stone - Cleared
+[21:57:20.507] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=1, remaining=0, ok=1, errors=0) ---
+[Generic] --- [Place] START (tasks=1) ---
+TheArchitectsBlueprintMod: [21:57:20.507] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=1, remaining=0, ok=1, errors=0) ---
+[Generic] --- [Place] START (tasks=1) ---
+[21:57:20.509] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Place] [Block] [1/1] [1/1] [3206, 335] Terraria:Stone - Error: missing items
+TheArchitectsBlueprintMod: [21:57:20.509] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Place] [Block] [1/1] [1/1] [3206, 335] Terraria:Stone - Error: missing items
+[21:57:20.511] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=1, remaining=0, ok=0, errors=1: 1 missing items) ---
+TheArchitectsBlueprintMod: [21:57:20.511] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=1, remaining=0, ok=0, errors=1: 1 missing items) ---
+[21:57:20.520] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] --- [Plan] END (placeBatches=0, clearBatches=0) ---
+TheArchitectsBlueprintMod: [21:57:20.520] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] --- [Plan] END (placeBatches=0, clearBatches=0) ---
+[21:57:20.521] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] START ---
+TheArchitectsBlueprintMod: [21:57:20.521] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] START ---
+[21:57:20.523] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START ---
+TheArchitectsBlueprintMod: [21:57:20.523] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START ---
+[21:57:20.524] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Place] START ---
+TheArchitectsBlueprintMod: [21:57:20.524] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Place] START ---
+[21:57:20.534] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=0, remaining=0, ok=0, errors=0) ---
+TheArchitectsBlueprintMod: [21:57:20.534] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=0, remaining=0, ok=0, errors=0) ---
+[21:57:20.642] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] [Plan] [Block] [0/0] [0/0] [3206, 335] Terraria:Stone - Queued place batch (1 tiles)
+[Generic] --- [Plan] END (placeBatches=1, clearBatches=0) ---
+[Generic] --- [Clear] START ---
+TheArchitectsBlueprintMod: [21:57:20.642] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] [Plan] [Block] [0/0] [0/0] [3206, 335] Terraria:Stone - Queued place batch (1 tiles)
+[Generic] --- [Plan] END (placeBatches=1, clearBatches=0) ---
+[Generic] --- [Clear] START ---
+[21:57:20.654] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START ---
+TheArchitectsBlueprintMod: [21:57:20.654] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START ---
+[21:57:20.655] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Place] START (tasks=1) ---
+TheArchitectsBlueprintMod: [21:57:20.655] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Place] START (tasks=1) ---
+[21:57:20.656] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Place] [Block] [1/1] [1/1] [3206, 335] Terraria:Stone - Error: missing items
+TheArchitectsBlueprintMod: [21:57:20.656] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Place] [Block] [1/1] [1/1] [3206, 335] Terraria:Stone - Error: missing items
+[21:57:20.657] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=1, remaining=0, ok=0, errors=1: 1 missing items) ---
+TheArchitectsBlueprintMod: [21:57:20.657] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=1, remaining=0, ok=0, errors=1: 1 missing items) ---
+[21:57:20.664] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] --- [Plan] END (placeBatches=0, clearBatches=0) ---
+TheArchitectsBlueprintMod: [21:57:20.664] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] --- [Plan] END (placeBatches=0, clearBatches=0) ---
+[21:57:20.665] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] START ---
+TheArchitectsBlueprintMod: [21:57:20.665] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] START ---
+[21:57:20.666] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START ---
+TheArchitectsBlueprintMod: [21:57:20.666] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START ---
+[21:57:20.668] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Place] START ---
+TheArchitectsBlueprintMod: [21:57:20.668] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Place] START ---
+[21:57:20.684] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=0, remaining=0, ok=0, errors=0) ---
+TheArchitectsBlueprintMod: [21:57:20.684] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=0, remaining=0, ok=0, errors=0) ---
+[21:57:20.736] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] [Plan] [Block] [0/0] [0/0] [3206, 335] Terraria:Stone - Queued place batch (1 tiles)
+[Generic] --- [Plan] END (placeBatches=1, clearBatches=0) ---
+[Generic] --- [Clear] START ---
+TheArchitectsBlueprintMod: [21:57:20.736] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] [Plan] [Block] [0/0] [0/0] [3206, 335] Terraria:Stone - Queued place batch (1 tiles)
+[Generic] --- [Plan] END (placeBatches=1, clearBatches=0) ---
+[Generic] --- [Clear] START ---
+[21:57:20.739] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START ---
+TheArchitectsBlueprintMod: [21:57:20.739] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START ---
+[21:57:20.740] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Place] START (tasks=1) ---
+TheArchitectsBlueprintMod: [21:57:20.740] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Place] START (tasks=1) ---
+[21:57:20.751] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Place] [Block] [1/1] [1/1] [3206, 335] Terraria:Stone - Error: missing items
+TheArchitectsBlueprintMod: [21:57:20.751] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] [Place] [Block] [1/1] [1/1] [3206, 335] Terraria:Stone - Error: missing items
+[21:57:20.768] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=1, remaining=0, ok=0, errors=1: 1 missing items) ---
+TheArchitectsBlueprintMod: [21:57:20.768] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=1, remaining=0, ok=0, errors=1: 1 missing items) ---
+[21:57:20.798] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] --- [Plan] END (placeBatches=0, clearBatches=0) ---
+TheArchitectsBlueprintMod: [21:57:20.798] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Plan] START ---
+[Generic] --- [Plan] END (placeBatches=0, clearBatches=0) ---
+[21:57:20.799] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] START ---
+TheArchitectsBlueprintMod: [21:57:20.799] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] START ---
+[21:57:20.802] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START ---
+TheArchitectsBlueprintMod: [21:57:20.802] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Clear] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Cut] START ---
+[21:57:20.818] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Place] START ---
+TheArchitectsBlueprintMod: [21:57:20.818] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Cut] END (processed=0, remaining=0, ok=0, errors=0) ---
+[Generic] --- [Place] START ---
+[21:57:20.834] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=0, remaining=0, ok=0, errors=0) ---
+TheArchitectsBlueprintMod: [21:57:20.834] [Main Thread/INFO] [TheArchitectsBlueprintMod]: [Generic] --- [Place] END (processed=0, remaining=0, ok=0, errors=0) ---

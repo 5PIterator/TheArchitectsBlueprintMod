@@ -1,90 +1,63 @@
+using System;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.Localization;
 using Terraria.UI;
-using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.UI.Style;
 
 namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
 {
-    /// <summary>Project name label/editor row; toggles in place without rebuilding the preview stack.</summary>
+    /// <summary>Bestiary nameplate with optional inline rename via search field.</summary>
     internal sealed class PayloadProjectNameRow : UIElement
     {
-        private static readonly Color SearchFieldBackground = new(35, 40, 83);
-
-        private readonly UIElement _nameSlot;
-        private readonly UIPanel _labelPanel;
+        private readonly UIElement _nameplateHost;
         private readonly UIText _label;
-        private readonly UIPanel _editorPanel;
-        private readonly UISearchBar _editor;
+        private readonly TmodUIImageButton _editButton;
         private readonly LocalizedText _editorPlaceholder;
+        private TmodUIBestiarySearchField? _editor;
         private bool _editing;
         private string _displayName = string.Empty;
         private string _editingName = string.Empty;
 
         public PayloadProjectNameRow(PayloadPreviewBuildContext ctx)
         {
+            // --- Build idle nameplate + rename button; editor is created on demand.
             OverflowHidden = true;
-            Height.Set(Theme.TextFieldHeight, 0f);
+            Height.Set(Theme.BrowserNameplateHeight, 0f);
             Width.Set(0f, 1f);
+            _editorPlaceholder = Language.GetText("Mods.TheArchitectsBlueprintMod.UI.EditProjectName");
 
-            float btn = Theme.TextFieldHeight;
-            var editButton = new TmodUIImageButton(
+            float btn = Theme.BrowserToolbarButtonSize;
+            _editButton = new TmodUIImageButton(
                 btn,
                 btn,
-                TmodFrameStyle.Icon(TmodUIAssets.Shared.ButtonRenamePath, TmodUIAssets.Bestiary.ButtonBorderPath),
+                TmodFrameStyle.Icon(
+                    TmodUIAssets.Shared.ButtonRenamePath,
+                    TmodUIAssets.Bestiary.ButtonBorderPath,
+                    inactiveAlpha: 1f),
                 Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.EditProjectName"),
                 ctx.ToggleProjectNameEdit);
-            editButton.VAlign = 0.5f;
-            Append(editButton);
+            _editButton.HAlign = 1f;
+            _editButton.VAlign = 0.5f;
+            Append(_editButton);
 
-            _nameSlot = new UIElement { OverflowHidden = true };
-            _nameSlot.Left.Set(btn, 0f);
-            _nameSlot.Width.Set(-btn, 1f);
-            _nameSlot.Height.Set(0f, 1f);
-            Append(_nameSlot);
+            _nameplateHost = new UIElement { OverflowHidden = true };
+            _nameplateHost.Width.Set(-btn - 4f, 1f);
+            _nameplateHost.Height.Set(0f, 1f);
+            Append(_nameplateHost);
 
-            _labelPanel = new UIPanel
-            {
-                BackgroundColor = SearchFieldBackground,
-                BorderColor = SearchFieldBackground,
-                Width = new StyleDimension(0f, 1f),
-                Height = new StyleDimension(0f, 1f)
-            };
-            _labelPanel.SetPadding(6f);
             _label = new UIText(string.Empty, 0.9f)
             {
                 TextColor = Theme.PrimaryText,
-                HAlign = 0f,
+                HAlign = 0.5f,
                 VAlign = 0.5f,
-                TextOriginX = 0f,
+                Top = new StyleDimension(2f, 0f),
+                TextOriginX = 0.5f,
                 TextOriginY = 0.5f,
                 IgnoresMouseInteraction = true
             };
-            _labelPanel.Append(_label);
-            _nameSlot.Append(_labelPanel);
-
-            _editorPlaceholder = Language.GetText("Mods.TheArchitectsBlueprintMod.UI.EditProjectName");
-            _editorPanel = new UIPanel
-            {
-                BackgroundColor = SearchFieldBackground,
-                BorderColor = SearchFieldBackground,
-                Width = new StyleDimension(0f, 1f),
-                Height = new StyleDimension(0f, 1f)
-            };
-            _editorPanel.SetPadding(0f);
-
-            _editor = new UISearchBar(_editorPlaceholder, 0.9f)
-            {
-                Width = new StyleDimension(0f, 1f),
-                Height = new StyleDimension(0f, 1f),
-                IgnoresMouseInteraction = true
-            };
-            _editor.OnContentsChanged += value => _editingName = TmodSearchField.NormalizeContents(value, _editorPlaceholder);
-            _editorPanel.OnLeftClick += (_, _) => _editor.ToggleTakingText();
-            _editorPanel.Append(_editor);
-            _nameSlot.Append(_editorPanel);
+            _nameplateHost.Append(_label);
 
             SetEditing(ctx.ProjectNameEditing, force: true);
         }
@@ -120,13 +93,21 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
             SetEditing(true, force: false);
         }
 
+        /// <summary>Cancels edit and restores the last committed display name.</summary>
+        public void CancelEditing()
+        {
+            // --- Drop in-progress text and return to the nameplate.
+            _editingName = _displayName;
+            SetEditing(false, force: false);
+        }
+
         public void EndTextEntry()
         {
-            if (_editor.IsWritingText)
+            if (_editor?.IsWritingText == true)
                 _editor.ToggleTakingText();
         }
 
-        public bool IsCapturingTextInput => _editor.IsWritingText;
+        public bool IsCapturingTextInput => _editor?.IsWritingText ?? false;
 
         private void SetEditing(bool editing, bool force)
         {
@@ -134,24 +115,43 @@ namespace TheArchitectsBlueprintMod.UI.TmodGUI.Elements
                 return;
 
             _editing = editing;
-            _nameSlot.RemoveAllChildren();
+            _nameplateHost.RemoveAllChildren();
+
             if (_editing)
             {
+                EnsureEditor();
                 SyncEditorContents();
-                _nameSlot.Append(_editorPanel);
+                _nameplateHost.Append(_editor!);
+                _editButton.HoverText = Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.EditProjectName");
             }
             else
             {
-                if (_editor.IsWritingText)
+                if (_editor?.IsWritingText == true)
                     _editor.ToggleTakingText();
                 _label.SetText(_displayName);
-                _nameSlot.Append(_labelPanel);
+                _nameplateHost.Append(_label);
             }
+        }
+
+        private void EnsureEditor()
+        {
+            if (_editor != null)
+                return;
+
+            _editor = new TmodUIBestiarySearchField(
+                _editorPlaceholder,
+                width: 0f,
+                height: Theme.BrowserNameplateHeight);
+            _editor.Width.Set(0f, 1f);
+            _editor.Height.Set(0f, 1f);
+            _editor.ContentsChanged += value => _editingName = value;
+            _editor.StartTakingInput += () => { };
         }
 
         private void SyncEditorContents()
         {
-            _editor.SetContents(_editingName ?? string.Empty, forced: true);
+            EnsureEditor();
+            _editor!.SetContents(_editingName ?? string.Empty, forced: true);
         }
     }
 }

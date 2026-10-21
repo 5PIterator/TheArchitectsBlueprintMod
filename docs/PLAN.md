@@ -117,7 +117,7 @@ Source of truth: `src/UI/Style/Palette.cs`.
 
 ### DEBUG STICK — debug helpers (not a player progression tool)
 
-- Right click: Action wheel — CUT (toggle `CutSource` on the projection under the cursor), STP (stepped paste). Debug builds also get TST (scenario tests).
+- Right click: Action wheel — CUT (toggle `CutSource` on the projection under the cursor), STP (stepped paste). Debug builds also get TST (Test Cases).
 
 ### ARCHITECT'S HAND / ARCHITECT'S BLUEPRINT
 

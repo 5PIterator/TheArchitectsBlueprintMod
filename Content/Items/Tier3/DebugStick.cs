@@ -10,7 +10,7 @@ using TheArchitectsBlueprintMod.Core.Architect;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.Utils;
 #if DEBUG
-using TheArchitectsBlueprintMod.Core.ScenarioTests;
+using TheArchitectsBlueprintMod.Core.TestCases;
 #endif
 
 namespace TheArchitectsBlueprintMod.Content.Items
@@ -27,6 +27,7 @@ namespace TheArchitectsBlueprintMod.Content.Items
 			ToggleProjectionCutSource = 0,
 			StepPaste = 1,
 			RunBlueprintTests = 2,
+			SetTestChamberOrigin = 3,
 		}
 
 		private DebugStickAction _mode = DebugStickAction.ToggleProjectionCutSource;
@@ -111,6 +112,11 @@ namespace TheArchitectsBlueprintMod.Content.Items
 					"STP",
 					onSelect: () => _mode = DebugStickAction.StepPaste,
 					isSelected: () => _mode == DebugStickAction.StepPaste),
+				new ActionWheelEntry(
+					"set_test_chamber",
+					"CHM",
+					onSelect: () => _mode = DebugStickAction.SetTestChamberOrigin,
+					isSelected: () => _mode == DebugStickAction.SetTestChamberOrigin),
 #if DEBUG
 				new ActionWheelEntry(
 					"run_tests",
@@ -132,14 +138,28 @@ namespace TheArchitectsBlueprintMod.Content.Items
 				case DebugStickAction.StepPaste:
 					BeginPasteStepSession(player, cursorTile);
 					return;
+				case DebugStickAction.SetTestChamberOrigin:
+					SetTestChamberOrigin(cursorTile);
+					return;
 #if DEBUG
 				case DebugStickAction.RunBlueprintTests:
-					ScenarioTestRunner.RunAll(new DelegateScenarioTestReporter((msg, color) => Main.NewText(msg, color)), player);
+					TestCaseRunner.RunAll(new DelegateTestCaseReporter((msg, color) => Main.NewText(msg, color)), player);
 					return;
 #endif
 				default:
 					throw new ArgumentOutOfRangeException(nameof(_mode), _mode, "Unknown debug stick action.");
 			}
+		}
+
+		/// <summary>Pins the universal test chamber origin to the cursor tile and syncs peers.</summary>
+		private void SetTestChamberOrigin(Point cursorTile)
+		{
+			// --- Write origin, broadcast, then confirm in chat so discovery and /tab.test share one anchor.
+
+			TestChamberSystem chamber = TestChamberSystem.Instance;
+			chamber.SetOrigin(cursorTile);
+			chamber.BroadcastOriginSync(Mod);
+			Main.NewText($"Test chamber origin set to ({cursorTile.X}, {cursorTile.Y}).", Color.LightGreen);
 		}
 		private void BeginPasteStepSession(Player player, Point cursorTile)
 		{

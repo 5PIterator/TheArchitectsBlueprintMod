@@ -7,9 +7,25 @@ UI: {
 	EditProjectName: Edit project name
 	ExportReadableJsonHoverOff: Export compact .tab
 	ExportReadableJsonHoverOn: Export readable .json
+	ExportFormatCompactTab: Compact .tab
+	ExportFormatReadableJson: Readable .json
 	OpenPayloadBrowser: Open payload browser
 	PrintManifest: Print item manifest
 	ToggleCut: Toggle cut from source
+	BrowserRevert: Revert
+	BrowserApply: Apply
+	BrowserExport: Export
+	BrowserRevertHover: Revert the pending import preview
+	BrowserApplyHover: Apply the previewed payload to the projection
+	BrowserExportHover: Export the active projection payload
+	BrowserStatusRefreshed: Entries refreshed.
+	BrowserStatusPreviewReady: Preview ready — Apply to keep, Revert to discard.
+	BrowserStatusPreviewFailed: Preview failed.
+	BrowserStatusReverted: Preview reverted.
+	BrowserStatusApplied: Import applied to projection.
+	BrowserStatusApplyFailed: Apply failed.
+	BrowserStatusExported: Payload exported.
+	BrowserStatusExportFailed: Export failed.
 
 	ArchitectMode: {
 		Header: Architect Mode — {0}
@@ -57,6 +73,7 @@ UI: {
 		modVersion: Mod version
 		terrariaVersion: Terraria version
 		modsLoaded: Mods loaded
+		missingMods: Missing mods
 	}
 
 	Sort: {
@@ -183,8 +200,9 @@ Items: {
 		Tooltip:
 			'''
 			Debug and step-through helpers.
-			Right: action wheel — CUT, STP
+			Right: action wheel — CUT, STP, CHM
 			Left: apply selected mode, or advance a step session
+			CHM: set the universal test chamber origin at the cursor
 			Right-click cancels an active step session.
 			'''
 	}

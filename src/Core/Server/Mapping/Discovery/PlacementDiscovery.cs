@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Microsoft.Xna.Framework;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.Layers;
 using TheArchitectsBlueprintMod.Debug;
@@ -29,14 +30,14 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             ArgumentNullException.ThrowIfNull(mod);
             ArgumentNullException.ThrowIfNull(player);
 
-            int testX = (int)(player.Center.X / 16f);
-            int testY = (int)(player.Center.Y / 16f) - 5;
-            if (!WorldGen.InWorld(testX, testY))
+            if (!TestChamberSystem.Instance.TryResolveOrigin(player, out Point origin))
             {
                 LogWarn("Player position is outside world bounds. Move in-world and retry.");
                 return;
             }
 
+            int testX = origin.X;
+            int testY = origin.Y;
             var enumerator = CreateSteppedRun(mod, player, testX, testY);
             DebugStepper.RunEnumerator(enumerator, player, allowStepping, log: LogDebug);
         }
@@ -44,20 +45,18 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         /// <summary>Yields placement discovery work for composition into a larger stepped run.</summary>
         internal static IEnumerator CreateEnumerator(Mod mod, Player player)
         {
-            // --- Resolve the chamber origin beside the player, then run the same stepped body as Run.
+            // --- Resolve the chamber origin (or player fallback), then run the same stepped body as Run.
 
             ArgumentNullException.ThrowIfNull(mod);
             ArgumentNullException.ThrowIfNull(player);
 
-            int testX = (int)(player.Center.X / 16f);
-            int testY = (int)(player.Center.Y / 16f) - 5;
-            if (!WorldGen.InWorld(testX, testY))
+            if (!TestChamberSystem.Instance.TryResolveOrigin(player, out Point origin))
             {
                 LogWarn("Player position is outside world bounds. Move in-world and retry.");
                 yield break;
             }
 
-            IEnumerator inner = CreateSteppedRun(mod, player, testX, testY);
+            IEnumerator inner = CreateSteppedRun(mod, player, origin.X, origin.Y);
             while (inner.MoveNext())
                 yield return inner.Current;
         }

@@ -22,17 +22,24 @@ namespace TheArchitectsBlueprintMod.UI.Style
         public const float BrowserScrollbarWidth = 20f;
         public const float BrowserControlPanelWidth = 64f;
         public const float BrowserControlButtonSize = 40f;
-        public const float BrowserPayloadPanelWidth = 200f;
-        public const float BrowserPayloadThumbnailSize = 96f;
+        public const float BrowserPayloadPanelWidth = 260f;
+        public const float BrowserPayloadThumbnailSize = 112f;
         public const float BrowserPayloadDividerHeight = 2f;
-        public const float BrowserPayloadMetadataLineHeight = 18f;
+        public const float BrowserPayloadMetadataLineHeight = 28f;
+        public const float BrowserPayloadMetadataCardMinHeight = 28f;
         public const int BrowserPayloadMetadataMinRows = 3;
-        public const float BrowserToolbarHeight = 40f;
-        public const float BrowserToolbarButtonSize = 30f;
+        public const float BrowserToolbarHeight = 32f;
+        public const float BrowserToolbarButtonSize = 24f;
         public const float BrowserToolbarIconSize = 16f;
-        public const float BrowserToolbarDropdownWidth = 100f;
-        public const float BrowserSearchFieldWidth = 170f;
+        public const float BrowserToolbarDropdownWidth = 112f;
+        public const float BrowserSearchFieldWidth = 200f;
         public const float BrowserOptionsPopupAnchorLeft = -118f;
+        public const float BrowserFooterHeight = 36f;
+        public const float BrowserFooterButtonWidth = 96f;
+        public const float BrowserFooterButtonHeight = 24f;
+        public const float BrowserFooterFormatWidth = 140f;
+        public const float BrowserStatusHeight = 18f;
+        public const float BrowserNameplateHeight = 24f;
         public const float MessageBoxMinHeight = 120f;
         public const float Padding = 12f;
         public const float Spacing = 8f;
@@ -54,29 +61,38 @@ namespace TheArchitectsBlueprintMod.UI.Style
 
         public static float BrowserWidth =>
             BrowserEntryPanelWidth
-            + BrowserControlPanelWidth
             + BrowserPayloadPanelWidth
             + Padding * 2f;
 
         public const float BrowserScrollbarInset = 4f;
 
         public static float BrowserPayloadSectionHeight =>
-            TextFieldHeight
+            BrowserNameplateHeight
             + Spacing
             + BrowserPayloadDividerHeight
             + Spacing
             + BrowserPayloadThumbnailSize
             + Spacing
+            + AuthorRowHeight
+            + Spacing
             + BrowserPayloadDividerHeight
             + Spacing
-            + BrowserPayloadMetadataMinRows * BrowserPayloadMetadataLineHeight;
+            + BrowserPayloadMetadataMinRows * BrowserPayloadMetadataCardMinHeight;
+
+        public const float AuthorRowHeight = 18f;
 
         public static float BrowserContentHeight => Math.Max(
             BrowserGridViewportHeight,
             BrowserPayloadSectionHeight);
 
         public static float BrowserHeight =>
-            Padding + BrowserToolbarHeight + BrowserContentHeight + Padding;
+            Padding
+            + BrowserToolbarHeight
+            + BrowserContentHeight
+            + Spacing
+            + BrowserFooterHeight
+            + BrowserStatusHeight
+            + Padding;
 
         // Bestiary UI palette (vanilla UIBestiaryEntryInfoPage).
         public static readonly Color PanelBackground = new(73, 94, 171, 255);
@@ -84,6 +100,8 @@ namespace TheArchitectsBlueprintMod.UI.Style
         public static readonly Color PanelBackgroundDim = new(35, 40, 83, 128);
         public static readonly Color WindowPanelBackground = new(18, 22, 48, 210);
         public static readonly Color WindowPanelBorder = new(55, 68, 120, 230);
+        public static readonly Color InfoPageBackground = new(73, 94, 171, 255);
+        public static readonly Color InfoPageBorder = new(89, 116, 213, 255);
         public static readonly Color PrimaryText = Color.White;
         public static readonly Color SecondaryText = new(200, 200, 220, 255);
         public static readonly Color PrimaryAccent = Palette.PayloadIoHighlightColor;

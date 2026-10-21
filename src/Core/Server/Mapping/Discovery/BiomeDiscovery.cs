@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using Microsoft.Xna.Framework;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.Utils;
@@ -61,8 +62,14 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
         private static IEnumerator CreateSteppedRun(Mod mod, Player player, ChamberContext chamberContext)
         {
-            int testX = (int)(player.Center.X / 16f);
-            int testY = (int)(player.Center.Y / 16f) - 5;
+            if (!TestChamberSystem.Instance.TryResolveOrigin(player, out Point origin))
+            {
+                LogWarn("Player position is outside world bounds. Move in-world and retry.");
+                yield break;
+            }
+
+            int testX = origin.X;
+            int testY = origin.Y;
 
             var outputPath = GetOutputPath("Biome");
 
