@@ -39,10 +39,6 @@ namespace TheArchitectsBlueprintMod.Core.Architect
             "Vanilla: Mouse Over",
         ];
 
-#if DEBUG
-        private static bool _loggedLayerNames;
-#endif
-
         /// <summary>True when the equip-page entry tab should appear (inventory open, mode inactive).</summary>
         public static bool ShouldShowEntryTab(bool architectModeActive) =>
             Main.playerInventory && !architectModeActive;
@@ -52,9 +48,6 @@ namespace TheArchitectsBlueprintMod.Core.Architect
         {
             // --- Match Camera Mode: hide hotbar, resource bars, minimap, etc.; keep mod overlays at Mouse Text.
 
-#if DEBUG
-            LogLayerNamesOnce(layers);
-#endif
             if (!active)
                 return;
 
@@ -97,17 +90,5 @@ namespace TheArchitectsBlueprintMod.Core.Architect
 
             return false;
         }
-
-#if DEBUG
-        private static void LogLayerNamesOnce(List<GameInterfaceLayer> layers)
-        {
-            if (_loggedLayerNames)
-                return;
-
-            _loggedLayerNames = true;
-            foreach (GameInterfaceLayer layer in layers)
-                System.Diagnostics.Debug.WriteLine($"ArchitectMode HUD layer: {layer.Name}");
-        }
-#endif
     }
 }
