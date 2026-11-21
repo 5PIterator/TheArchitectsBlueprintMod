@@ -67,6 +67,10 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         private const string CompiledInteractionMapJsonFileName = "InteractionMap.itr.json";
 
         private static InteractionMap? _map;
+        private static bool _loadedAllTiles;
+        private static bool _loadedAllWalls;
+        private static HashSet<int>? _loadedTileIds;
+        private static HashSet<int>? _loadedWallIds;
 
         /// <summary>
         /// Gets the CompiledMaps directory. Creates it if missing.
@@ -147,38 +151,51 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
         /// <summary>
         /// Prepares the interaction map for paste by loading only the given tile and wall IDs.
-        /// Call at paste start before any lookups. Replaces any existing cached map.
+        /// Reuses the in-memory cache when it already covers the requested IDs.
         /// </summary>
         /// <param name="tileIds">Tile IDs to load from InteractionMap.itr. Null = load all.</param>
         /// <param name="wallIds">Wall IDs to load from InteractionMap.itr. Null = load all.</param>
         /// <remarks>Remote multiplayer clients do not load from disk; only single-player, dedicated server, or listen-server host.</remarks>
         public static void PrepareForPaste(IReadOnlySet<int>? tileIds, IReadOnlySet<int>? wallIds)
         {
+            // --- Skip disk I/O when the cached map already covers the requested tile/wall sets.
+
             if (!CanLoadPasteInteractionMaps())
                 return;
 
+            if (InteractionMapProvider.Current is not null && CoversRequestedIds(tileIds, wallIds))
+                return;
+
+            ClearLoadedCoverage();
             _map = null;
             InteractionMapProvider.Current = null;
 
             if (tileIds is null)
             {
-                TryLoadInteractionMap(null, wallIds);
+                if (!TryLoadInteractionMap(null, wallIds))
+                    return;
+
+                RememberCoverage(null, wallIds);
                 return;
             }
 
             var expandedTileIds = new HashSet<int>(tileIds);
-            if (!TryLoadInteractionMap(expandedTileIds, wallIds) || _map is null)
+            HashSet<int>? wallSet = wallIds is null ? null : new HashSet<int>(wallIds);
+            if (!TryLoadInteractionMap(expandedTileIds, wallSet) || _map is null)
                 return;
 
             // Expand conversion bases and Echo/fake place targets, then reload the filtered map.
             bool expandedBases = ExpandTileIdsWithRequiredBases(expandedTileIds, _map);
             bool expandedFakes = ExpandTileIdsWithFakePlaceTargets(expandedTileIds, _map);
-            if (!expandedBases && !expandedFakes)
-                return;
+            if (expandedBases || expandedFakes)
+            {
+                _map = null;
+                InteractionMapProvider.Current = null;
+                if (!TryLoadInteractionMap(expandedTileIds, wallSet))
+                    return;
+            }
 
-            _map = null;
-            InteractionMapProvider.Current = null;
-            TryLoadInteractionMap(expandedTileIds, wallIds);
+            RememberCoverage(expandedTileIds, wallSet);
 
             if (TABLog.IsDebugEnabled)
             {
@@ -186,6 +203,66 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     $"Interaction map loaded with {expandedTileIds.Count} tile ids (payload + conversion bases + fakes)",
                     "InteractionMap");
             }
+        }
+
+        /// <summary>True when the cached coverage already includes every requested tile and wall id.</summary>
+        private static bool CoversRequestedIds(IReadOnlySet<int>? tileIds, IReadOnlySet<int>? wallIds)
+        {
+            // --- Full loads cover everything; filtered loads must contain each requested id.
+
+            if (tileIds is null)
+            {
+                if (!_loadedAllTiles)
+                    return false;
+            }
+            else if (!_loadedAllTiles)
+            {
+                if (_loadedTileIds is null)
+                    return false;
+                foreach (int id in tileIds)
+                {
+                    if (!_loadedTileIds.Contains(id))
+                        return false;
+                }
+            }
+
+            if (wallIds is null)
+            {
+                if (!_loadedAllWalls)
+                    return false;
+            }
+            else if (!_loadedAllWalls)
+            {
+                if (_loadedWallIds is null)
+                    return false;
+                foreach (int id in wallIds)
+                {
+                    if (!_loadedWallIds.Contains(id))
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>Records which tile/wall filters the current in-memory map satisfies.</summary>
+        private static void RememberCoverage(IReadOnlySet<int>? tileIds, IReadOnlySet<int>? wallIds)
+        {
+            // --- Null filter means every main of that kind is present (Liquid/Wire/Paint always load).
+
+            _loadedAllTiles = tileIds is null;
+            _loadedAllWalls = wallIds is null;
+            _loadedTileIds = tileIds is null ? null : new HashSet<int>(tileIds);
+            _loadedWallIds = wallIds is null ? null : new HashSet<int>(wallIds);
+        }
+
+        /// <summary>Clears coverage tracking when the map is about to be replaced or released.</summary>
+        private static void ClearLoadedCoverage()
+        {
+            _loadedAllTiles = false;
+            _loadedAllWalls = false;
+            _loadedTileIds = null;
+            _loadedWallIds = null;
         }
 
         private static bool TryLoadInteractionMap(IReadOnlySet<int>? tileIds, IReadOnlySet<int>? wallIds)
@@ -290,6 +367,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         /// </summary>
         public static void Release()
         {
+            ClearLoadedCoverage();
             _map = null;
             InteractionMapProvider.Current = null;
         }

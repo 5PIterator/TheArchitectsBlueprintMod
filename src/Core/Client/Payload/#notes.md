@@ -36,7 +36,20 @@ EntityLayer finds that live host and wipes/writes sidecar `d`. A missing or mism
 
 `TEItemFrame` stores the displayed item in public `item`; `SaveData` writes `d.item` via `ItemIO`.
 `TEDisplayDoll` stores private `_items` / `_dyes` (8+8); vanilla `SaveData` uses `PlayerIO.SaveInventory`
-(mod items only), so capture rewrites those lists with full `ItemIO`.
+(mod items only), so capture rewrites those lists as chest-style identity slots.
+
+### Entity item identity (no GlobalItem)
+
+Entity item tags store **identity only** (`item` name / stack / prefix) — the same model as chests:
+
+- **Chests and DisplayDoll** emit sparse identity slot lists. Legacy ItemIO slots (`mod`/`id`/`globalData`)
+  are converted once at sanitize; unresolved slots are omitted and logged under `EntityCapture`.
+- **TE `d.item`** (e.g. item frames) must stay ItemIO-shaped for `LoadData`, but sanitize rewrites the blob
+  without `globalData` so JSON-widened GlobalItem fields (e.g. SellAll) cannot break place/preview.
+- **Preview** (`EntityPreview`) and **place** (`EntityPlace`) best-effort load identity tags, log misses,
+  and continue other slots. Display dolls use per-slot apply; generic TE `LoadData` is try/caught.
+
+Log categories: `EntityCapture`, `EntityPlace`, `EntityPreview`.
 
 Example:
 

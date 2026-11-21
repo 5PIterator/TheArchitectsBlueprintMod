@@ -20,6 +20,7 @@ namespace TheArchitectsBlueprintMod.Core.Server
         PasteOwnerChat = 5,
         PasteWorldFx = 6,
         ManifestRequest = 7,
+        ManifestResponse = 8,
     }
 
     /// <summary>Lifecycle outcome for a paste request correlation id.</summary>

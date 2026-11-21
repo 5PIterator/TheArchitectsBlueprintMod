@@ -141,9 +141,9 @@ namespace TheArchitectsBlueprintMod.Core
 
             foreach (Projection proj in BlueprintSystem.GetProjections())
             {
-                Point[] excluded = proj.BuildExcludedTilePoints();
+                Rectangle[] excluded = proj.BuildExcludedTileRects();
                 if (excluded.Length > 0)
-                    OverlaySystem.RegTileFill($"{proj.OverlayInstanceKey}:u", excluded, Color.Black * 0.25f, ProjectionExcludedTilesFamily);
+                    OverlaySystem.RegTileRectFill($"{proj.OverlayInstanceKey}:u", excluded, Color.Black * 0.25f, ProjectionExcludedTilesFamily);
             }
         }
 
@@ -212,6 +212,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (area.IsEmpty)
                 return;
 
+            bool changed = false;
             for (int x = area.Left; x < area.Right; x++)
             {
                 for (int y = area.Top; y < area.Bottom; y++)
@@ -220,11 +221,18 @@ namespace TheArchitectsBlueprintMod.Core
                         continue;
 
                     boundedTile.Included = true;
+                    changed = true;
                     count++;
                     if (count >= volumeLimit)
+                    {
+                        target.BumpInclusionVersion();
                         return;
+                    }
                 }
             }
+
+            if (changed)
+                target.BumpInclusionVersion();
         }
 
         private static int CountIncludedTiles(Blueprint target) => PasteLimits.CountIncludedVolume(target);

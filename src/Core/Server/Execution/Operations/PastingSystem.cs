@@ -431,7 +431,8 @@ namespace TheArchitectsBlueprintMod.Core
             return true;
         }
 
-        private static (HashSet<int> TileIds, HashSet<int> WallIds) CollectTileAndWallIds(PasteExecutionContext execution)
+        /// <summary>Collects sparse payload tile and wall type ids for filtered interaction-map loads.</summary>
+        internal static (HashSet<int> TileIds, HashSet<int> WallIds) CollectTileAndWallIds(PasteExecutionContext execution)
         {
             var tileIds = new HashSet<int>();
             var wallIds = new HashSet<int>();

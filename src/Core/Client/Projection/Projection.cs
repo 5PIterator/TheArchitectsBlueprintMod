@@ -408,6 +408,8 @@ namespace TheArchitectsBlueprintMod.Core
                     Tiles[x, y] = new BlueprintCell(rel, world, included);
                 }
             }
+
+            BumpInclusionVersion();
         }
 
         /// <summary>
@@ -431,10 +433,19 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
+            bool changed = false;
             foreach (var tile in Tiles)
             {
-                tile.Included = _selection.Tiles[tile.Relative.X, tile.Relative.Y].Included;
+                bool included = _selection.Tiles[tile.Relative.X, tile.Relative.Y].Included;
+                if (tile.Included == included)
+                    continue;
+
+                tile.Included = included;
+                changed = true;
             }
+
+            if (changed)
+                BumpInclusionVersion();
 
             if (TABLog.IsDebugEnabled)
                 TABLog.Debug($"Projection.SyncInclusion: id={Id} owner={Owner} grid={Area.Width}x{Area.Height}", "Projection");

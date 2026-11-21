@@ -89,8 +89,18 @@ namespace TheArchitectsBlueprintMod.Core
                     continue;
                 }
 
-                TagCompound? data = PayloadEntityHandlers.CaptureChest(chest);
-                list.Add(new PayloadEntity(rel, PayloadEntityNames.Chest, data));
+                try
+                {
+                    TagCompound? data = PayloadEntityHandlers.CaptureChest(chest);
+                    list.Add(new PayloadEntity(rel, PayloadEntityNames.Chest, data));
+                }
+                catch (Exception ex)
+                {
+                    TABLog.Error(
+                        $"EntityCapture Chest failed world=({chest.x},{chest.y}) rel=({rel.X},{rel.Y})",
+                        ex,
+                        LogCategory);
+                }
             }
 
             // Capture every sign whose recorded origin sits in the selection.
@@ -110,8 +120,18 @@ namespace TheArchitectsBlueprintMod.Core
                     continue;
                 }
 
-                TagCompound? data = PayloadEntityHandlers.CaptureSign(sign);
-                list.Add(new PayloadEntity(rel, PayloadEntityNames.Sign, data));
+                try
+                {
+                    TagCompound? data = PayloadEntityHandlers.CaptureSign(sign);
+                    list.Add(new PayloadEntity(rel, PayloadEntityNames.Sign, data));
+                }
+                catch (Exception ex)
+                {
+                    TABLog.Error(
+                        $"EntityCapture Sign failed world=({sign.x},{sign.y}) rel=({rel.X},{rel.Y})",
+                        ex,
+                        LogCategory);
+                }
             }
 
             // Capture TileEntities keyed by position inside the bounds.

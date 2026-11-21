@@ -5,7 +5,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.Map;
+using Terraria.ModLoader;
 using Terraria.UI;
+using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.Architect;
 using TheArchitectsBlueprintMod.Core.Layers;
@@ -22,8 +24,23 @@ namespace TheArchitectsBlueprintMod.Core.Preview
         private const int TilePixelSize = 16;
         private static readonly Color PreviewTint = new(255, 255, 255, 160);
 
+        private sealed class MapPreviewEntry
+        {
+            public Texture2D Texture = null!;
+            public int InclusionVersion;
+            public int Width;
+            public int Height;
+            public int EntryCount;
+        }
+
+        private static readonly Dictionary<int, MapPreviewEntry> MapTextures = new();
+
         public static void Draw(Projection proj)
         {
+            // --- Clip to screen (and optional nearby radius), then cached blit or live DrawRegion.
+
+            MainThreadGpuDispose.Flush();
+
             if (proj.IsLocked || !proj.HasPayload || !proj.IsDefined)
                 return;
 
@@ -34,12 +51,38 @@ namespace TheArchitectsBlueprintMod.Core.Preview
                 return;
 
             GetVisibleRelativeRange(proj.Area, w, h, out int minX, out int maxX, out int minY, out int maxY);
+            ApplyNearbyOnlyClip(proj.Area, w, h, ref minX, ref maxX, ref minY, ref maxY);
             if (minX >= maxX || minY >= maxY)
                 return;
 
-            Vector2 origin = new Vector2(proj.Area.X * TilePixelSize, proj.Area.Y * TilePixelSize) - Main.screenPosition;
             bool IncludeCell(Point p) => TryGetIncludedCell(proj, payload, p, out _);
 
+            if (ProjectionPreviewCache.IsCachedBlitEnabled())
+            {
+                ProjectionPreviewCache.DrawCached(
+                    Main.spriteBatch,
+                    proj,
+                    payload,
+                    minX,
+                    maxX,
+                    minY,
+                    maxY,
+                    PreviewTint,
+                    IncludeCell);
+                EntityLayer.DrawLiveHostMarkers(
+                    Main.spriteBatch,
+                    proj.Area.X,
+                    proj.Area.Y,
+                    minX,
+                    maxX,
+                    minY,
+                    maxY,
+                    PreviewTint,
+                    IncludeCell);
+                return;
+            }
+
+            Vector2 origin = new Vector2(proj.Area.X * TilePixelSize, proj.Area.Y * TilePixelSize) - Main.screenPosition;
             LayerSystem.DrawRegion(
                 Main.spriteBatch,
                 payload.Entries,
@@ -53,14 +96,19 @@ namespace TheArchitectsBlueprintMod.Core.Preview
                 IncludeCell,
                 proj.Area.X,
                 proj.Area.Y,
-                payload.Entities);
+                payload.Entities,
+                payload.CellIndex);
         }
 
         /// <summary>
-        /// Draws included payload cells as vanilla map-colored pixels on the fullscreen map.
+        /// Draws included payload cells as a single baked map-color blit on the fullscreen map.
         /// </summary>
         public static void DrawOnMap(ref MapOverlayDrawContext context, Projection proj)
         {
+            // --- Blit one W×H map-color texture instead of scanning every sparse entry per frame.
+
+            MainThreadGpuDispose.Flush();
+
             if (proj.IsLocked || !proj.HasPayload || !proj.IsDefined)
                 return;
 
@@ -74,40 +122,29 @@ namespace TheArchitectsBlueprintMod.Core.Preview
             if (minX >= maxX || minY >= maxY)
                 return;
 
-            float tileDrawScale = context.DrawScale > 0f
-                ? context.MapScale / context.DrawScale
-                : context.MapScale;
-            if (tileDrawScale <= 0f)
+            float pxPerTile = ArchitectMapTransform.PixelsPerTile;
+            if (pxPerTile <= 0f)
                 return;
 
-            var pixel = ModUtils.DummyTexture;
-            var frame = new SpriteFrame(1, 1, 0, 0);
-            IReadOnlyList<Payload.Entry> entries = payload.Entries;
+            if (!TryGetOrBuildMapTexture(proj, payload, out Texture2D texture))
+                return;
 
-            for (int i = 0; i < entries.Count; i++)
-            {
-                Point rel = entries[i].Relative;
-                if (rel.X < minX || rel.X >= maxX || rel.Y < minY || rel.Y >= maxY)
-                    continue;
+            // Source crop is the visible relative window; destination maps that window to screen.
+            var source = new Rectangle(minX, minY, maxX - minX, maxY - minY);
+            Vector2 topLeft = ArchitectMapTransform.TileToScreen(new Point(proj.Area.X + minX, proj.Area.Y + minY));
+            var dest = new Rectangle(
+                (int)topLeft.X,
+                (int)topLeft.Y,
+                (int)(source.Width * pxPerTile),
+                (int)(source.Height * pxPerTile));
 
-                if (!TryGetIncludedCell(proj, payload, rel, out PayloadCell cell))
-                    continue;
+            float tintAlpha = PreviewTint.A / 255f;
+            Color tint = Color.White * tintAlpha;
+            tint.A = (byte)(255 * tintAlpha);
 
-                if (!PayloadMapColor.TryGetMapColor(cell, out Color mapColor))
-                    continue;
-
-                float tintAlpha = PreviewTint.A / 255f;
-                Color drawColor = mapColor * tintAlpha;
-                drawColor.A = (byte)(mapColor.A * tintAlpha);
-                context.Draw(
-                    pixel,
-                    new Vector2(proj.Area.X + rel.X, proj.Area.Y + rel.Y),
-                    drawColor,
-                    frame,
-                    tileDrawScale,
-                    tileDrawScale,
-                    Alignment.TopLeft);
-            }
+            // Match DrawBorderedRectOnMap: draw into the map overlay batch without restarting it.
+            Main.spriteBatch.Draw(texture, dest, source, tint);
+            _ = context;
         }
 
         /// <summary>Bakes a square preview texture for UI thumbnails. Caller must Dispose the result.</summary>
@@ -138,7 +175,8 @@ namespace TheArchitectsBlueprintMod.Core.Preview
                 offset,
                 scale,
                 PreviewTint,
-                entities: payload.Entities);
+                entities: payload.Entities,
+                cellLookup: payload.CellIndex);
 
             Main.spriteBatch.End();
             Main.instance.GraphicsDevice.SetRenderTarget(null);
@@ -149,6 +187,27 @@ namespace TheArchitectsBlueprintMod.Core.Preview
             mergedTexture.SetData(content);
             renderTarget.Dispose();
             return mergedTexture;
+        }
+
+        /// <summary>Disposes every cached map-color preview texture.</summary>
+        public static void ClearMapTextureCache()
+        {
+            // --- Detach GPU resources and queue main-thread dispose (OnWorldUnload may be off-thread).
+
+            foreach (MapPreviewEntry entry in MapTextures.Values)
+                MainThreadGpuDispose.Dispose(entry.Texture);
+            MapTextures.Clear();
+        }
+
+        /// <summary>Removes one projection's map-color cache entry when that ghost is discarded.</summary>
+        public static void InvalidateMapTexture(int overlayInstanceKey)
+        {
+            // --- Queue dispose of a single entry so inclusion or payload edits can rebuild on next draw.
+
+            if (!MapTextures.Remove(overlayInstanceKey, out MapPreviewEntry? entry))
+                return;
+
+            MainThreadGpuDispose.Dispose(entry.Texture);
         }
 
         /// <summary>Fits a payload pixel size into a square thumbnail, centering the unused axis.</summary>
@@ -176,6 +235,65 @@ namespace TheArchitectsBlueprintMod.Core.Preview
             offset /= scale;
         }
 
+        /// <summary>Returns a W×H map-color texture for the projection, rebuilding when inclusion or payload changes.</summary>
+        private static bool TryGetOrBuildMapTexture(Projection proj, Payload payload, out Texture2D texture)
+        {
+            // --- Reuse the cached bitmap when size, inclusion version, and entry count still match.
+
+            int key = proj.OverlayInstanceKey;
+            int inclusionVersion = proj.InclusionVersion;
+            int w = payload.Width;
+            int h = payload.Height;
+            int entryCount = payload.Entries.Count;
+
+            if (MapTextures.TryGetValue(key, out MapPreviewEntry? entry)
+                && entry.Texture is not null
+                && !entry.Texture.IsDisposed
+                && entry.InclusionVersion == inclusionVersion
+                && entry.Width == w
+                && entry.Height == h
+                && entry.EntryCount == entryCount)
+            {
+                texture = entry.Texture;
+                return true;
+            }
+
+            if (entry is not null)
+            {
+                MainThreadGpuDispose.Dispose(entry.Texture);
+                MapTextures.Remove(key);
+            }
+
+            var colors = new Color[w * h];
+            IReadOnlyList<Payload.Entry> entries = payload.Entries;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                Point rel = entries[i].Relative;
+                if ((uint)rel.X >= (uint)w || (uint)rel.Y >= (uint)h)
+                    continue;
+
+                if (!TryGetIncludedCell(proj, payload, rel, out PayloadCell cell))
+                    continue;
+
+                if (!PayloadMapColor.TryGetMapColor(cell, out Color mapColor))
+                    continue;
+
+                colors[rel.Y * w + rel.X] = mapColor;
+            }
+
+            texture = new Texture2D(Main.graphics.GraphicsDevice, w, h);
+            texture.SetData(colors);
+            MapTextures[key] = new MapPreviewEntry
+            {
+                Texture = texture,
+                InclusionVersion = inclusionVersion,
+                Width = w,
+                Height = h,
+                EntryCount = entryCount,
+            };
+            return true;
+        }
+
         /// <summary>Returns the payload cell when the projection includes that relative coordinate.</summary>
         private static bool TryGetIncludedCell(Projection proj, Payload payload, Point relative, out PayloadCell cell)
         {
@@ -201,6 +319,73 @@ namespace TheArchitectsBlueprintMod.Core.Preview
             int rightTile = (int)((Main.screenPosition.X + Main.screenWidth) / TilePixelSize) + margin;
             int topTile = (int)(Main.screenPosition.Y / TilePixelSize) - margin;
             int bottomTile = (int)((Main.screenPosition.Y + Main.screenHeight) / TilePixelSize) + margin;
+
+            IntersectRelativeClip(
+                area,
+                width,
+                height,
+                leftTile,
+                rightTile,
+                topTile,
+                bottomTile,
+                out minX,
+                out maxX,
+                out minY,
+                out maxY);
+        }
+
+        /// <summary>Further clips the relative window to the player Chebyshev nearby radius when enabled.</summary>
+        private static void ApplyNearbyOnlyClip(
+            Rectangle area,
+            int width,
+            int height,
+            ref int minX,
+            ref int maxX,
+            ref int minY,
+            ref int maxY)
+        {
+            // --- Intersect the current clip with ±NearbyRadiusTiles around the local player.
+
+            ProjectionPreviewPreference preview = ModContent.GetInstance<ClientPasteConfig>().Preview;
+            if (!preview.NearbyOnly)
+                return;
+
+            Point playerTile = Main.LocalPlayer.Center.ToTileCoordinates();
+            int radius = Math.Clamp(preview.NearbyRadiusTiles, 8, 200);
+            IntersectRelativeClip(
+                area,
+                width,
+                height,
+                playerTile.X - radius,
+                playerTile.X + radius,
+                playerTile.Y - radius,
+                playerTile.Y + radius,
+                out int nearMinX,
+                out int nearMaxX,
+                out int nearMinY,
+                out int nearMaxY);
+
+            minX = Math.Max(minX, nearMinX);
+            maxX = Math.Min(maxX, nearMaxX);
+            minY = Math.Max(minY, nearMinY);
+            maxY = Math.Min(maxY, nearMaxY);
+        }
+
+        /// <summary>Intersects a world-tile window with the projection area and returns relative clip bounds.</summary>
+        private static void IntersectRelativeClip(
+            Rectangle area,
+            int width,
+            int height,
+            int leftTile,
+            int rightTile,
+            int topTile,
+            int bottomTile,
+            out int minX,
+            out int maxX,
+            out int minY,
+            out int maxY)
+        {
+            // --- Clamp world tiles to the projection footprint, then convert to relative indices.
 
             int minWorldX = Math.Max(area.Left, leftTile);
             int maxWorldX = Math.Min(area.Right - 1, rightTile);

@@ -13,9 +13,9 @@ Candles and plants place correctly. `layer_R01` should record that, and cover th
 
 ## Large selections and projections
 
-- [ ] **Opening the map lags on a massive selection.** Map overlays are drawn from `ArchitectOverlayMapLayer` → `OverlaySystem.DrawMapOverlays`. Guard masks for large areas are one rectangle (`BlueprintGuard.ApplyGuardOverlay`); a selection that registers a point per tile will not be. Find which overlay walks every cell when the map opens.
-- [ ] **Drawing a massive projection is laggy.** World preview already clips to on-screen tiles plus a 2-tile margin (`PayloadPreview.GetVisibleRelativeRange`). There is no draw cache and no LOD setting. Add a cached blit and/or a nearby-only mode, with client settings for both.
-- [ ] **Printing a manifest for a massive payload freezes, then dumps an unusable chat log.** `ManifestPrinter.EnumerateLines` calls `Main.NewText` once per row. The info log is batched; chat is not. Two changes: batch the chat lines, and page them. An in-chat link should request the next page. Also check `ManifestBuilder`, which reloads interaction maps before the first line is printed — that is the likely freeze.
+- [x] **Opening the map lags on a massive selection.** Map overlays are drawn from `ArchitectOverlayMapLayer` → `OverlaySystem.DrawMapOverlays`. Guard masks for large areas are one rectangle (`BlueprintGuard.ApplyGuardOverlay`); a selection that registers a point per tile will not be. Find which overlay walks every cell when the map opens.
+- [x] **Drawing a massive projection is laggy.** World preview already clips to on-screen tiles plus a 2-tile margin (`PayloadPreview.GetVisibleRelativeRange`). There is no draw cache and no LOD setting. Add a cached blit and/or a nearby-only mode, with client settings for both.
+- [x] **Printing a manifest for a massive payload freezes, then dumps an unusable chat log.** `ManifestPrinter.EnumerateLines` calls `Main.NewText` once per row. The info log is batched; chat is not. Two changes: batch the chat lines, and page them. An in-chat link should request the next page. Also check `ManifestBuilder`, which reloads interaction maps before the first line is printed — that is the likely freeze.
 
 ## Paste policy and safeguards
 

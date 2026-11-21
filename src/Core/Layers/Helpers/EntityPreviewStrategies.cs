@@ -11,6 +11,7 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 using Terraria.UI;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.UI.Preview;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
@@ -22,10 +23,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         private const int WeaponsRackMaxSize = 40;
         private const int DisplayDollArmorSlots = 8;
         private const int HatRackSlots = 2;
+        private const int MaxPreviewLoadWarnKeys = 256;
+        private const string PreviewLogCategory = "EntityPreview";
 
         private static Player? _dollPlayer;
         private static Item[]? _armorScratch;
         private static Item[]? _dyeScratch;
+        private static readonly HashSet<string> PreviewLoadWarnKeys = new(StringComparer.Ordinal);
 
         /// <summary>True when this pass invoked PlayerRenderer and the sprite batch must be restored.</summary>
         public static bool UsedPlayerRenderer { get; private set; }
@@ -405,7 +409,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             }
         }
 
-        /// <summary>Loads ItemIO items and dyes lists from a payload tag when those keys exist.</summary>
+        /// <summary>Loads identity items and dyes lists from a payload tag when those keys exist.</summary>
         private static void TryLoadInventories(TagCompound? data, Item[] items, Item[] dyes)
         {
             // --- Empty d is valid: the dummy body still draws without clothes.
@@ -422,14 +426,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             }
             catch
             {
-                // Leave slots empty when the tag is not an ItemIO inventory.
+                // Leave slots empty when the tag is not an identity inventory.
             }
         }
 
-        /// <summary>Applies sparse ItemIO slot compounds onto a pre-sized item array.</summary>
+        /// <summary>Applies sparse identity slot compounds onto a pre-sized item array.</summary>
         private static void LoadInventorySlots(Item[] dest, IList<TagCompound> slots)
         {
-            // --- Each compound is ItemIO.Save plus a slot index, matching capture and PlayerIO lists.
+            // --- Per-slot best-effort identity load; failures log once.
 
             for (int i = 0; i < slots.Count; i++)
             {
@@ -438,19 +442,21 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 if (slot < 0 || slot >= dest.Length)
                     continue;
 
-                Item loaded = ItemIO.Load(tag);
-                if (loaded is null || loaded.IsAir)
+                if (!PayloadEntityHandlers.TryLoadIdentityItem(tag, out Item loaded))
+                {
+                    WarnPreviewLoadOnce($"slot={slot}");
                     continue;
+                }
 
                 dest[slot] = loaded;
             }
         }
 
-        /// <summary>Reads an ItemIO <c>slot</c> index stored as short or int, or the list index when omitted.</summary>
+        /// <summary>Reads an identity <c>slot</c> index stored as short or int, or the list index when omitted.</summary>
         private static int TryReadSlotIndex(TagCompound tag, int fallback) =>
             PayloadEntityHandlers.ReadSlotIndex(tag, fallback);
 
-        /// <summary>Loads a non-air item from an ItemIO <c>item</c> compound on the entity tag.</summary>
+        /// <summary>Loads a non-air item from an identity-only ItemIO <c>item</c> compound on the entity tag.</summary>
         private static bool TryLoadSingleItem(TagCompound? data, out Item item)
         {
             // --- Require a compound ItemIO blob; skip air and malformed tags.
@@ -459,16 +465,29 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (data is null || !data.ContainsKey("item") || data["item"] is not TagCompound itemTag)
                 return false;
 
-            try
+            if (!PayloadEntityHandlers.TryLoadItemIOTag(itemTag, out item))
             {
-                item = ItemIO.Load(itemTag);
-            }
-            catch
-            {
+                WarnPreviewLoadOnce("singleItem");
                 return false;
             }
 
             return item is { IsAir: false };
+        }
+
+        /// <summary>Logs one EntityPreview warn per distinct key to avoid per-frame spam.</summary>
+        private static void WarnPreviewLoadOnce(string key)
+        {
+            // --- Cap the set so long sessions cannot grow without bound.
+
+            if (PreviewLoadWarnKeys.Count >= MaxPreviewLoadWarnKeys)
+                PreviewLoadWarnKeys.Clear();
+
+            if (!PreviewLoadWarnKeys.Add(key))
+                return;
+
+            TABLog.Warn(
+                $"EntityPreview item load miss {key}",
+                PreviewLogCategory);
         }
 
         /// <summary>Creates a detached TileEntity instance from a payload FullName without placing it in the world.</summary>

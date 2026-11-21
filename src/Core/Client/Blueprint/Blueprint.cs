@@ -42,6 +42,11 @@ namespace TheArchitectsBlueprintMod.Core
         public bool IsDefined => !Area.IsEmpty;
 
         /// <summary>
+        /// Monotonic counter bumped whenever inclusion (or grid reshape that carries inclusion) changes.
+        /// </summary>
+        public int InclusionVersion { get; private set; }
+
+        /// <summary>
         /// World-space bounds in tile coordinates.
         /// </summary>
         public Rectangle Area { get; protected set; } = Rectangle.Empty;
@@ -67,6 +72,7 @@ namespace TheArchitectsBlueprintMod.Core
                 bool hadGrid = Tiles is not null;
                 Area = bounds;
                 Tiles = null;
+                BumpInclusionVersion();
                 if (TABLog.IsDebugEnabled)
                     TABLog.Debug(
                         $"{GetType().Name}.Define: cleared bounds (empty rect) owner={Owner} hadGrid={hadGrid}",
@@ -103,6 +109,7 @@ namespace TheArchitectsBlueprintMod.Core
                 }
             }
 
+            BumpInclusionVersion();
             if (TABLog.IsDebugEnabled)
                 TABLog.Debug(
                     $"{GetType().Name}.Define: owner={Owner} area=({Area.X},{Area.Y}) {Area.Width}x{Area.Height} " +
@@ -120,6 +127,8 @@ namespace TheArchitectsBlueprintMod.Core
             bool had = IsDefined;
             Area = Rectangle.Empty;
             Tiles = null;
+            if (had)
+                BumpInclusionVersion();
             if (TABLog.IsDebugEnabled)
                 TABLog.Debug($"{GetType().Name}.Clear: owner={Owner} hadBounds={had}", "Blueprint");
         }
@@ -163,32 +172,92 @@ namespace TheArchitectsBlueprintMod.Core
         public Point RelativeToWorld(Point relative) => new(Area.X + relative.X, Area.Y + relative.Y);
 
         /// <summary>
-        /// World tile coordinates for cells currently excluded by this blueprint.
+        /// World-space axis-aligned rectangles covering every currently excluded cell.
         /// </summary>
-        public Point[] BuildExcludedTilePoints()
+        public Rectangle[] BuildExcludedTileRects()
         {
+            // --- Greedy row-runs of excluded cells, then merge identical spans vertically.
+
             if (!IsDefined || Tiles is null)
-            {
                 return [];
-            }
 
             int w = Area.Width;
             int h = Area.Height;
-            var points = new List<Point>(w * h / 4);
+            var open = new List<(int X, int Width, int Y, int Height)>();
+            var nextOpen = new List<(int X, int Width, int Y, int Height)>();
+            var closed = new List<Rectangle>();
+            var rowRuns = new List<(int Start, int Width)>();
+
             for (int y = 0; y < h; y++)
             {
-                for (int x = 0; x < w; x++)
+                // Collect contiguous excluded spans on this relative row.
+                rowRuns.Clear();
+                int runStart = -1;
+                for (int x = 0; x <= w; x++)
                 {
-                    if (Tiles[x, y].Included)
+                    bool excluded = x < w && !Tiles[x, y].Included;
+                    if (excluded)
                     {
+                        if (runStart < 0)
+                            runStart = x;
                         continue;
                     }
 
-                    points.Add(Tiles[x, y].World);
+                    if (runStart < 0)
+                        continue;
+
+                    rowRuns.Add((runStart, x - runStart));
+                    runStart = -1;
                 }
+
+                // Extend open rects that match a current-row span; close the rest.
+                nextOpen.Clear();
+                for (int i = 0; i < open.Count; i++)
+                {
+                    (int x, int width, int openY, int height) = open[i];
+                    int match = -1;
+                    for (int r = 0; r < rowRuns.Count; r++)
+                    {
+                        if (rowRuns[r].Start == x && rowRuns[r].Width == width)
+                        {
+                            match = r;
+                            break;
+                        }
+                    }
+
+                    if (match >= 0)
+                    {
+                        nextOpen.Add((x, width, openY, height + 1));
+                        rowRuns.RemoveAt(match);
+                    }
+                    else
+                    {
+                        closed.Add(new Rectangle(Area.X + x, Area.Y + openY, width, height));
+                    }
+                }
+
+                // Unmatched current-row spans become new open rectangles.
+                for (int r = 0; r < rowRuns.Count; r++)
+                    nextOpen.Add((rowRuns[r].Start, rowRuns[r].Width, y, 1));
+
+                open.Clear();
+                open.AddRange(nextOpen);
             }
 
-            return points.Count == 0 ? [] : points.ToArray();
+            for (int i = 0; i < open.Count; i++)
+            {
+                (int x, int width, int y, int height) = open[i];
+                closed.Add(new Rectangle(Area.X + x, Area.Y + y, width, height));
+            }
+
+            return closed.Count == 0 ? [] : closed.ToArray();
+        }
+
+        /// <summary>Increments <see cref="InclusionVersion"/> after inclusion or grid reshape mutations.</summary>
+        public void BumpInclusionVersion()
+        {
+            // --- Monotonic bump so preview/map caches can detect inclusion changes.
+            InclusionVersion++;
         }
 
         public void Translate(Point delta)
@@ -238,16 +307,21 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
+            bool changed = false;
             for (int x = r.Left; x < r.Right; x++)
             {
                 for (int y = r.Top; y < r.Bottom; y++)
                 {
-                    if (TryGetTileByRelative(new Point(x - Area.X, y - Area.Y), out var t))
+                    if (TryGetTileByRelative(new Point(x - Area.X, y - Area.Y), out var t) && !t.Included)
                     {
                         t.Included = true;
+                        changed = true;
                     }
                 }
             }
+
+            if (changed)
+                BumpInclusionVersion();
         }
 
         /// <summary>
@@ -266,16 +340,21 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
+            bool changed = false;
             for (int x = r.Left; x < r.Right; x++)
             {
                 for (int y = r.Top; y < r.Bottom; y++)
                 {
-                    if (TryGetTileByRelative(new Point(x - Area.X, y - Area.Y), out var t))
+                    if (TryGetTileByRelative(new Point(x - Area.X, y - Area.Y), out var t) && t.Included)
                     {
                         t.Included = false;
+                        changed = true;
                     }
                 }
             }
+
+            if (changed)
+                BumpInclusionVersion();
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -19,7 +20,15 @@ namespace TheArchitectsBlueprintMod.Core
         public static readonly Color WarningColor = new(255, 215, 0);
 
         private const int MainWidth = 35;
+        private const int BodyRowsPerPage = 12;
         private const string CellSeparator = " | ";
+        internal const string ChatTagName = "tabmanifest";
+
+        private static readonly List<(string Text, Color Color)> CachedLines = [];
+        private static int CachedPageCount;
+
+        /// <summary>Number of pages in the last received manifest (0 when empty).</summary>
+        internal static int CachedTotalPages => CachedPageCount;
 
         /// <summary>Requests an authoritative manifest print for the given projection.</summary>
         public static void Print(Projection projection)
@@ -36,7 +45,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Writes one manifest line to local chat and queues it for the batched mod info log.</summary>
         public static void EmitLocal(string message, Color color)
         {
-            // --- Chat stays colored and immediate; info matches other TABLog batches (one Logger write on Flush).
+            // --- Immediate single-line path for errors; paged manifests use EmitPage instead.
 
             Main.NewText(message, color);
             TABLog.Info(
@@ -45,6 +54,69 @@ namespace TheArchitectsBlueprintMod.Core
                 chatColor: color,
                 ownerPlayer: null,
                 echoToChat: false);
+        }
+
+        /// <summary>Stores formatted lines, logs them all, and prints page 1 to chat.</summary>
+        public static void ReceiveAndPrintFirstPage(IReadOnlyList<(string Text, Color Color)> lines)
+        {
+            // --- Cache for clickable next-page tags; file log always gets the full dump.
+
+            CachedLines.Clear();
+            for (int i = 0; i < lines.Count; i++)
+            {
+                (string text, Color color) = lines[i];
+                CachedLines.Add((text, color));
+                TABLog.Info(
+                    text,
+                    TABLog.ManifestCategory,
+                    chatColor: color,
+                    ownerPlayer: null,
+                    echoToChat: false);
+            }
+
+            TABLog.Flush();
+            CachedPageCount = CountPages(CachedLines.Count);
+            PrintPage(1);
+        }
+
+        /// <summary>Prints one cached manifest page as a single multiline chat message.</summary>
+        public static void PrintPage(int page)
+        {
+            // --- Join body rows with color tags; append a next-page link when more pages remain.
+
+            if (CachedLines.Count == 0)
+                return;
+
+            int pageCount = Math.Max(1, CachedPageCount);
+            page = Math.Clamp(page, 1, pageCount);
+
+            int start;
+            int end;
+            GetPageRange(CachedLines.Count, page, out start, out end);
+
+            var builder = new StringBuilder(512);
+            for (int i = start; i < end; i++)
+            {
+                if (builder.Length > 0)
+                    builder.Append('\n');
+                (string text, Color color) = CachedLines[i];
+                builder.Append(WrapWithColorTag(text, color));
+            }
+
+            if (page < pageCount)
+            {
+                builder.Append('\n');
+                builder.Append('[').Append(ChatTagName).Append(':').Append(page + 1).Append(']');
+            }
+            else if (pageCount > 1)
+            {
+                builder.Append('\n');
+                builder.Append(WrapWithColorTag(
+                    Language.GetTextValue("Mods.TheArchitectsBlueprintMod.UI.Manifest.PageEnd", page, pageCount),
+                    HeaderColor));
+            }
+
+            Main.NewText(builder.ToString());
         }
 
         /// <summary>Invokes <paramref name="emit"/> for each formatted manifest chat line in print order.</summary>
@@ -219,6 +291,48 @@ namespace TheArchitectsBlueprintMod.Core
                 return "[i:0]";
 
             return $"[i:{itemId}]";
+        }
+
+        /// <summary>Wraps plain text in a vanilla color chat tag.</summary>
+        private static string WrapWithColorTag(string text, Color color)
+        {
+            // --- Nested [i:id] tags parse inside the colored span.
+
+            return $"[c/{color.R:X2}{color.G:X2}{color.B:X2}:{text}]";
+        }
+
+        /// <summary>Computes how many chat pages a line list needs (header lines stay on page 1).</summary>
+        private static int CountPages(int lineCount)
+        {
+            // --- Page 1 can hold a few header lines plus BodyRowsPerPage body rows.
+
+            if (lineCount <= 0)
+                return 0;
+
+            int headerLines = Math.Min(2, lineCount);
+            int bodyLines = Math.Max(0, lineCount - headerLines);
+            if (bodyLines <= BodyRowsPerPage)
+                return 1;
+
+            return 1 + (int)Math.Ceiling((bodyLines - BodyRowsPerPage) / (double)BodyRowsPerPage);
+        }
+
+        /// <summary>Resolves inclusive start and exclusive end indices for a 1-based page.</summary>
+        private static void GetPageRange(int lineCount, int page, out int start, out int end)
+        {
+            // --- Page 1 includes header rows; later pages are pure BodyRowsPerPage slices.
+
+            int headerLines = Math.Min(2, lineCount);
+            if (page <= 1)
+            {
+                start = 0;
+                end = Math.Min(lineCount, headerLines + BodyRowsPerPage);
+                return;
+            }
+
+            int bodyStart = headerLines + BodyRowsPerPage + (page - 2) * BodyRowsPerPage;
+            start = Math.Min(lineCount, bodyStart);
+            end = Math.Min(lineCount, start + BodyRowsPerPage);
         }
     }
 }

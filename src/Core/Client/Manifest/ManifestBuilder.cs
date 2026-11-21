@@ -6,6 +6,7 @@ using Terraria.ID;
 using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core.Layers;
+using TheArchitectsBlueprintMod.Core.Server;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 using TheArchitectsBlueprintMod.Debug;
 
@@ -39,98 +40,91 @@ namespace TheArchitectsBlueprintMod.Core
             if (execution is not { IsDefined: true } || !execution.Payload.IsDefined)
                 return new Manifest([], []);
 
-            bool ownedLoad = EnsureInteractionMapForPlanning();
-            try
+            bool mapReady = EnsureInteractionMapForPlanning(execution);
+            if (!mapReady && TABLog.IsDebugEnabled)
+                TABLog.Debug("Manifest planning continuing without a compiled interaction map.", TABLog.ManifestCategory);
+
+            List<Inventory> inventories = PasteInventorySources.Collect(execution);
+            InventoryStackLedger ledger = InventoryStackLedger.FromInventories(inventories);
+            PasteTileLookup lookup = PastePlanningLookup.Build(execution);
+            LayerPipeline pipeline = LayerSystem.ComposePipeline();
+            PastingConfig config = ModContent.GetInstance<PastingConfig>();
+            PasteContext identifyContext = CreateIdentifyContext(execution, lookup);
+
+            PasteDemandAccounting totalAccounting = new(ledger);
+            PasteDemandAccounting remainingAccounting = new(ledger);
+            CollectDemand(execution, lookup, pipeline, config, in identifyContext, totalAccounting, remainingAccounting);
+
+            Dictionary<DemandPairKey, int> totalDemand = totalAccounting.BuildFinalPairs();
+            Dictionary<DemandPairKey, int> remainingDemand = remainingAccounting.BuildFinalPairs();
+
+            var pairKeys = new SortedSet<DemandPairKey>(DemandPairKeyComparer.Instance);
+            foreach (DemandPairKey key in totalDemand.Keys)
+                pairKeys.Add(key);
+            foreach (DemandPairKey key in remainingDemand.Keys)
+                pairKeys.Add(key);
+
+            // Emit one entry per main+tool+ammo pair: direct, then ammo, then missing (ammo last).
+            var satisfied = new List<ManifestEntry>(pairKeys.Count);
+            var satisfiedAmmo = new List<ManifestEntry>();
+            var missingEntries = new List<ManifestEntry>();
+            var missingAmmo = new List<ManifestEntry>();
+            foreach (DemandPairKey key in pairKeys)
             {
-                List<Inventory> inventories = PasteInventorySources.Collect(execution);
-                InventoryStackLedger ledger = InventoryStackLedger.FromInventories(inventories);
-                PasteTileLookup lookup = PastePlanningLookup.Build(execution);
-                LayerPipeline pipeline = LayerSystem.ComposePipeline();
-                PastingConfig config = ModContent.GetInstance<PastingConfig>();
-                PasteContext identifyContext = CreateIdentifyContext(execution, lookup);
+                totalDemand.TryGetValue(key, out int total);
+                remainingDemand.TryGetValue(key, out int remaining);
+                int available = ledger.CountAvailable(key.ConsumableItemId);
+                int missing = Math.Max(0, remaining - available);
 
-                PasteDemandAccounting totalAccounting = new(ledger);
-                PasteDemandAccounting remainingAccounting = new(ledger);
-                CollectDemand(execution, lookup, pipeline, config, in identifyContext, skipMatched: false, totalAccounting);
-                CollectDemand(execution, lookup, pipeline, config, in identifyContext, skipMatched: true, remainingAccounting);
-
-                Dictionary<DemandPairKey, int> totalDemand = totalAccounting.BuildFinalPairs();
-                Dictionary<DemandPairKey, int> remainingDemand = remainingAccounting.BuildFinalPairs();
-
-                var pairKeys = new SortedSet<DemandPairKey>(DemandPairKeyComparer.Instance);
-                foreach (DemandPairKey key in totalDemand.Keys)
-                    pairKeys.Add(key);
-                foreach (DemandPairKey key in remainingDemand.Keys)
-                    pairKeys.Add(key);
-
-                // Emit one entry per main+tool+ammo pair: direct, then ammo, then missing (ammo last).
-                var satisfied = new List<ManifestEntry>(pairKeys.Count);
-                var satisfiedAmmo = new List<ManifestEntry>();
-                var missingEntries = new List<ManifestEntry>();
-                var missingAmmo = new List<ManifestEntry>();
-                foreach (DemandPairKey key in pairKeys)
+                bool isAmmo = key.ToolItemId != key.ConsumableItemId;
+                int toolAvailable = 0;
+                int toolMissing = 0;
+                if (isAmmo)
                 {
-                    totalDemand.TryGetValue(key, out int total);
-                    remainingDemand.TryGetValue(key, out int remaining);
-                    int available = ledger.CountAvailable(key.ConsumableItemId);
-                    int missing = Math.Max(0, remaining - available);
-
-                    bool isAmmo = key.ToolItemId != key.ConsumableItemId;
-                    int toolAvailable = 0;
-                    int toolMissing = 0;
-                    if (isAmmo)
-                    {
-                        toolAvailable = CountToolAvailable(ledger, key.ToolItemId);
-                        toolMissing = toolAvailable > 0 ? 0 : 1;
-                    }
-
-                    var entry = new ManifestEntry(
-                        key.MainName,
-                        key.ToolItemId,
-                        key.ConsumableItemId,
-                        total,
-                        available,
-                        missing,
-                        toolAvailable,
-                        toolMissing,
-                        ledger.GetContributingSources(key.ConsumableItemId));
-
-                    bool isMissing = missing > 0 || toolMissing > 0;
-                    if (isMissing && isAmmo)
-                        missingAmmo.Add(entry);
-                    else if (isMissing)
-                        missingEntries.Add(entry);
-                    else if (isAmmo)
-                        satisfiedAmmo.Add(entry);
-                    else
-                        satisfied.Add(entry);
+                    toolAvailable = CountToolAvailable(ledger, key.ToolItemId);
+                    toolMissing = toolAvailable > 0 ? 0 : 1;
                 }
 
-                satisfied.AddRange(satisfiedAmmo);
-                satisfied.AddRange(missingEntries);
-                satisfied.AddRange(missingAmmo);
-                var entries = satisfied;
+                var entry = new ManifestEntry(
+                    key.MainName,
+                    key.ToolItemId,
+                    key.ConsumableItemId,
+                    total,
+                    available,
+                    missing,
+                    toolAvailable,
+                    toolMissing,
+                    ledger.GetContributingSources(key.ConsumableItemId));
 
-                var unresolved = new List<string>();
-                AppendUnique(unresolved, totalAccounting.Unresolved);
-                AppendUnique(unresolved, remainingAccounting.Unresolved);
-                unresolved.Sort(StringComparer.OrdinalIgnoreCase);
-                return new Manifest(entries, unresolved);
+                bool isMissing = missing > 0 || toolMissing > 0;
+                if (isMissing && isAmmo)
+                    missingAmmo.Add(entry);
+                else if (isMissing)
+                    missingEntries.Add(entry);
+                else if (isAmmo)
+                    satisfiedAmmo.Add(entry);
+                else
+                    satisfied.Add(entry);
             }
-            finally
-            {
-                // Release only when Manifest loaded the map and no paste still needs it.
-                if (ownedLoad && !HasActivePasteOperations())
-                    ItrStorage.Release();
-            }
+
+            satisfied.AddRange(satisfiedAmmo);
+            satisfied.AddRange(missingEntries);
+            satisfied.AddRange(missingAmmo);
+            var entries = satisfied;
+
+            var unresolved = new List<string>();
+            AppendUnique(unresolved, totalAccounting.Unresolved);
+            AppendUnique(unresolved, remainingAccounting.Unresolved);
+            unresolved.Sort(StringComparer.OrdinalIgnoreCase);
+            return new Manifest(entries, unresolved);
         }
 
         /// <summary>
-        /// Ensures InteractionMapProvider.Current holds the full compiled map for planning.
+        /// Ensures InteractionMapProvider.Current covers this payload's tile/wall ids for planning.
         /// </summary>
-        private static bool EnsureInteractionMapForPlanning()
+        private static bool EnsureInteractionMapForPlanning(PasteExecutionContext execution)
         {
-            // --- Always reload unfiltered; a paste cache may omit walls/tiles this blueprint needs.
+            // --- Reuse a covering paste cache; otherwise load only sparse payload tile/wall ids.
 
             if (!ItrStorage.CanLoadPasteInteractionMaps())
             {
@@ -141,10 +135,11 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
             }
 
-            // Null tile/wall filters load every layer, including Paint/Wire/Liquid.
-            ItrStorage.PrepareForPaste(null, null);
+            bool hadMap = InteractionMapProvider.Current is not null;
+            var (tileIds, wallIds) = PastingSystem.CollectTileAndWallIds(execution);
+            ItrStorage.PrepareForPaste(tileIds, wallIds);
             bool mapLoaded = InteractionMapProvider.Current is not null;
-            LogMapStatus(mapLoaded, ownedLoad: mapLoaded, reusedExisting: false);
+            LogMapStatus(mapLoaded, ownedLoad: false, reusedExisting: hadMap && mapLoaded);
             return mapLoaded;
         }
 
@@ -164,15 +159,6 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             return ledger.CountAvailable(toolItemId);
-        }
-
-        /// <summary>True when PastingSystem still holds at least one in-flight paste operation.</summary>
-        private static bool HasActivePasteOperations()
-        {
-            // --- Avoid releasing a full map out from under an active paste after Manifest planning.
-
-            PastingSystem? pasting = ModContent.GetInstance<PastingSystem>();
-            return pasting is not null && pasting.GetActiveOperationCount() > 0;
         }
 
         /// <summary>Logs once whether Manifest planning has a compiled interaction map.</summary>
@@ -209,46 +195,56 @@ namespace TheArchitectsBlueprintMod.Core
             LayerPipeline pipeline,
             PastingConfig config,
             in PasteContext identifyContext,
-            bool skipMatched,
-            PasteDemandAccounting accounting)
+            PasteDemandAccounting totalAccounting,
+            PasteDemandAccounting remainingAccounting)
         {
-            // --- Walk included payload cells, identify layers, and record demand units with batch dedup.
+            // --- Sparse entry walk: identify once per included cell, then record total and remaining demand.
 
-            var visitedCells = new HashSet<LayerWorldKey>();
-            var visitedFrameOrigins = new HashSet<Point>();
-            var visitedFluidPools = new HashSet<Point>();
+            var totalVisitedCells = new HashSet<LayerWorldKey>();
+            var totalVisitedFrameOrigins = new HashSet<Point>();
+            var totalVisitedFluidPools = new HashSet<Point>();
+            var remainingVisitedCells = new HashSet<LayerWorldKey>();
+            var remainingVisitedFrameOrigins = new HashSet<Point>();
+            var remainingVisitedFluidPools = new HashSet<Point>();
 
-            Point size = execution.PayloadSize;
-            for (int x = 0; x < size.X; x++)
+            IReadOnlyList<Payload.Entry> entries = execution.Payload.Entries;
+            for (int e = 0; e < entries.Count; e++)
             {
-                for (int y = 0; y < size.Y; y++)
+                Point rel = entries[e].Relative;
+                if (!execution.IsIncluded(rel))
+                    continue;
+
+                if (!lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
+                    continue;
+                if (pasteTile.PayloadCell.IsEmpty)
+                    continue;
+
+                List<LayerIdentifyResult> identified = LayerSystem.Identify(
+                    in pasteTile,
+                    in lookup,
+                    pipeline,
+                    in identifyContext,
+                    config,
+                    PasteSubject.Payload);
+
+                for (int i = 0; i < identified.Count; i++)
                 {
-                    Point rel = new(x, y);
-                    if (!execution.IsIncluded(rel))
-                        continue;
-
-                    if (!lookup.TryGetPasteTile(rel, out PasteTile pasteTile))
-                        continue;
-                    if (pasteTile.PayloadCell.IsEmpty)
-                        continue;
-
-                    List<LayerIdentifyResult> identified = LayerSystem.Identify(
-                        in pasteTile,
+                    RecordIdentifiedLayer(
+                        identified[i],
                         in lookup,
-                        pipeline,
-                        in identifyContext,
-                        config,
-                        PasteSubject.Payload);
-
-                    for (int i = 0; i < identified.Count; i++)
-                        RecordIdentifiedLayer(
-                            identified[i],
-                            in lookup,
-                            skipMatched,
-                            accounting,
-                            visitedCells,
-                            visitedFrameOrigins,
-                            visitedFluidPools);
+                        skipMatched: false,
+                        totalAccounting,
+                        totalVisitedCells,
+                        totalVisitedFrameOrigins,
+                        totalVisitedFluidPools);
+                    RecordIdentifiedLayer(
+                        identified[i],
+                        in lookup,
+                        skipMatched: true,
+                        remainingAccounting,
+                        remainingVisitedCells,
+                        remainingVisitedFrameOrigins,
+                        remainingVisitedFluidPools);
                 }
             }
         }

@@ -30,6 +30,9 @@ namespace TheArchitectsBlueprintMod.Core
     internal static class PayloadEntityHandlers
     {
         private const string LogCategory = "Paste";
+        private const string EntityCaptureLog = "EntityCapture";
+        private const string EntityPlaceLog = "EntityPlace";
+        private const int DisplayDollSlotCount = 8;
 
         private static readonly FieldInfo? DisplayDollItemsField = typeof(TEDisplayDoll).GetField(
             "_items",
@@ -42,7 +45,7 @@ namespace TheArchitectsBlueprintMod.Core
         public static readonly PayloadEntityHandler Generic = new()
         {
             CaptureTe = CaptureGenericTileEntity,
-            Sanitize = ClampTagSize,
+            Sanitize = SanitizeGenericTileEntityData,
             Apply = TryApplyGenericTileEntity,
         };
 
@@ -61,6 +64,8 @@ namespace TheArchitectsBlueprintMod.Core
             [PayloadEntityNames.DisplayDoll] = new()
             {
                 CaptureTe = CaptureDisplayDoll,
+                Sanitize = SanitizeDisplayDollData,
+                Apply = TryApplyDisplayDoll,
             },
         };
 
@@ -202,7 +207,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Captures chest items and name into a payload tag.</summary>
         public static TagCompound? CaptureChest(Chest chest)
         {
-            // --- Sparse non-empty slots plus optional custom name, capped for security.
+            // --- Sparse identity slots plus optional custom name, capped for security.
 
             var tag = new TagCompound();
 
@@ -212,28 +217,10 @@ namespace TheArchitectsBlueprintMod.Core
             if (!string.IsNullOrEmpty(name))
                 tag["name"] = name;
 
-            var items = new List<TagCompound>();
-            Item[] slots = chest.item;
-            int limit = Math.Min(slots.Length, PayloadEntityLimits.MaxChestItemSlots);
-            for (int slot = 0; slot < limit; slot++)
-            {
-                Item item = slots[slot];
-                if (item is null || item.IsAir || item.stack <= 0)
-                    continue;
-
-                int stack = Math.Clamp(item.stack, 1, PayloadEntityLimits.MaxStackPerSlot);
-                var entry = new TagCompound
-                {
-                    ["slot"] = slot,
-                    ["item"] = ContentNameResolver.GetItemName(item.type),
-                    ["stack"] = stack,
-                };
-                if (item.prefix != 0)
-                    entry["prefix"] = (int)item.prefix;
-                items.Add(entry);
-            }
-
-            if (items.Count > 0)
+            List<TagCompound>? items = SaveIdentityInventory(
+                chest.item,
+                PayloadEntityLimits.MaxChestItemSlots);
+            if (items is not null)
                 tag["items"] = items;
 
             return tag.Count > 0 ? tag : null;
@@ -399,6 +386,340 @@ namespace TheArchitectsBlueprintMod.Core
 
             object value = tag["slot"];
             return value switch
+            {
+                int i => i,
+                short s => s,
+                byte b => b,
+                long l => (int)l,
+                _ => fallback,
+            };
+        }
+
+        /// <summary>Builds a sparse identity slot tag from a live inventory item.</summary>
+        internal static bool TrySaveIdentitySlot(Item item, int slot, out TagCompound entry)
+        {
+            // --- Emit name/stack/prefix only; never GlobalItem data.
+
+            entry = null!;
+            if (item is null || item.IsAir || item.stack <= 0)
+                return false;
+
+            // Clamp stack and resolve a portable content name.
+            int stack = Math.Clamp(item.stack, 1, PayloadEntityLimits.MaxStackPerSlot);
+            entry = new TagCompound
+            {
+                ["slot"] = slot,
+                ["item"] = ContentNameResolver.GetItemName(item.type),
+                ["stack"] = stack,
+            };
+            if (item.prefix != 0)
+                entry["prefix"] = (int)item.prefix;
+            return true;
+        }
+
+        /// <summary>Saves non-air inventory slots as sparse identity tags up to <paramref name="maxSlots"/>.</summary>
+        internal static List<TagCompound>? SaveIdentityInventory(Item[]? inv, int maxSlots)
+        {
+            // --- Walk occupied slots and emit identity tags; omit empty inventories.
+
+            if (inv is null || inv.Length == 0 || maxSlots <= 0)
+                return null;
+
+            var list = new List<TagCompound>();
+            int limit = Math.Min(inv.Length, maxSlots);
+            for (int slot = 0; slot < limit; slot++)
+            {
+                if (!TrySaveIdentitySlot(inv[slot], slot, out TagCompound entry))
+                    continue;
+                list.Add(entry);
+            }
+
+            return list.Count > 0 ? list : null;
+        }
+
+        /// <summary>Sanitizes a sparse identity inventory, converting legacy ItemIO slots when needed.</summary>
+        internal static List<TagCompound>? SanitizeIdentityInventory(
+            IList<TagCompound> slots,
+            int maxSlots,
+            string listName)
+        {
+            // --- Keep resolvable identity slots; rewrite mod/id ItemIO blobs once.
+
+            var list = new List<TagCompound>();
+            var usedSlots = new HashSet<int>();
+            for (int i = 0; i < slots.Count && list.Count < maxSlots; i++)
+            {
+                TagCompound raw = slots[i];
+                if (!TryNormalizeIdentitySlot(raw, i, maxSlots, out TagCompound normalized, out int slot))
+                {
+                    TABLog.Warn(
+                        $"EntityCapture dropped {listName}[{i}] unresolved identity slot",
+                        EntityCaptureLog);
+                    continue;
+                }
+
+                if (!usedSlots.Add(slot))
+                    continue;
+
+                list.Add(normalized);
+            }
+
+            return list.Count > 0 ? list : null;
+        }
+
+        /// <summary>Loads an identity slot tag into a memory Item without mutating the world.</summary>
+        internal static bool TryLoadIdentityItem(TagCompound entry, out Item item)
+        {
+            // --- Resolve name (or legacy ItemIO fields), then SetDefaults with stack/prefix.
+
+            item = null!;
+            if (!TryResolveIdentityFields(entry, out int itemType, out int stack, out int prefix) || itemType <= 0)
+                return false;
+
+            item = new Item();
+            item.SetDefaults(itemType);
+            if (item.IsAir)
+                return false;
+
+            item.stack = Math.Clamp(stack, 1, PayloadEntityLimits.MaxStackPerSlot);
+            if (prefix > 0)
+                item.Prefix(prefix);
+            return true;
+        }
+
+        /// <summary>Loads an identity-only ItemIO blob into a memory Item without mutating the world.</summary>
+        internal static bool TryLoadItemIOTag(TagCompound tag, out Item item)
+        {
+            // --- Single ItemIO.Load attempt; callers expect globalData already stripped at sanitize.
+
+            item = null!;
+            if (tag is null || tag.Count == 0)
+                return false;
+
+            try
+            {
+                item = ItemIO.Load(tag);
+            }
+            catch
+            {
+                item = null!;
+                return false;
+            }
+
+            return item is { IsAir: false };
+        }
+
+        /// <summary>Normalizes one inventory entry to identity form (name/stack/prefix/slot).</summary>
+        private static bool TryNormalizeIdentitySlot(
+            TagCompound raw,
+            int indexFallback,
+            int maxSlots,
+            out TagCompound normalized,
+            out int slot)
+        {
+            // --- Prefer existing item name; else resolve legacy ItemIO identity fields.
+
+            normalized = null!;
+            slot = ReadSlotIndex(raw, indexFallback);
+            if (slot < 0 || slot >= maxSlots)
+                return false;
+
+            if (!TryResolveIdentityFields(raw, out int itemType, out int stack, out int prefix) || itemType <= 0)
+                return false;
+
+            string itemName = ContentNameResolver.GetItemName(itemType);
+            if (string.IsNullOrWhiteSpace(itemName) || ContentNameResolver.ResolveItem(itemName) is null)
+                return false;
+
+            normalized = new TagCompound
+            {
+                ["slot"] = slot,
+                ["item"] = itemName,
+                ["stack"] = Math.Clamp(stack, 1, PayloadEntityLimits.MaxStackPerSlot),
+            };
+            if (prefix > 0)
+                normalized["prefix"] = prefix;
+            return true;
+        }
+
+        /// <summary>Resolves type/stack/prefix from an identity slot or legacy ItemIO tag.</summary>
+        private static bool TryResolveIdentityFields(
+            TagCompound tag,
+            out int itemType,
+            out int stack,
+            out int prefix)
+        {
+            // --- Identity name first; fall back to ItemIO mod/id/name fields.
+
+            itemType = 0;
+            stack = ReadTagInt(tag, "stack", 1);
+            prefix = ReadTagInt(tag, "prefix", 0);
+
+            // Chest/doll identity slots store a portable content name under "item".
+            if (tag.ContainsKey("item") && tag["item"] is string itemName && !string.IsNullOrWhiteSpace(itemName))
+            {
+                if (ContentNameResolver.ResolveItem(itemName) is int id && id > 0)
+                {
+                    itemType = id;
+                    return true;
+                }
+
+                return false;
+            }
+
+            return TryResolveItemTypeFromTag(tag, out itemType) && itemType > 0;
+        }
+
+        /// <summary>Resolves an item type from ItemIO mod+id, mod+name, or legacy item name keys.</summary>
+        private static bool TryResolveItemTypeFromTag(TagCompound tag, out int itemType)
+        {
+            // --- Prefer numeric id with mod namespace, then FullName / search name.
+
+            itemType = 0;
+            if (tag.ContainsKey("mod") && tag.ContainsKey("id"))
+            {
+                string? mod = tag.GetString("mod");
+                int id = ReadTagInt(tag, "id", 0);
+                if (string.Equals(mod, "Terraria", StringComparison.OrdinalIgnoreCase) && id > 0)
+                {
+                    itemType = id;
+                    return itemType < ItemLoader.ItemCount;
+                }
+
+                if (!string.IsNullOrEmpty(mod) && tag.ContainsKey("name"))
+                {
+                    string? name = tag.GetString("name");
+                    if (!string.IsNullOrEmpty(name) && ContentNameResolver.ResolveItem($"{mod}/{name}") is int modId)
+                    {
+                        itemType = modId;
+                        return true;
+                    }
+
+                    if (!string.IsNullOrEmpty(name) && ContentNameResolver.ResolveItem($"{mod}:{name}") is int modIdColon)
+                    {
+                        itemType = modIdColon;
+                        return true;
+                    }
+                }
+            }
+
+            if (tag.ContainsKey("mod") && tag.ContainsKey("name"))
+            {
+                string? mod = tag.GetString("mod");
+                string? name = tag.GetString("name");
+                if (!string.IsNullOrEmpty(mod) && !string.IsNullOrEmpty(name))
+                {
+                    if (ContentNameResolver.ResolveItem($"{mod}/{name}") is int bySlash)
+                    {
+                        itemType = bySlash;
+                        return true;
+                    }
+
+                    if (ContentNameResolver.ResolveItem($"{mod}:{name}") is int byColon)
+                    {
+                        itemType = byColon;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>Rewrites an ItemIO item blob to identity-only Save output (no globalData).</summary>
+        private static bool TryRewriteIdentityItemIO(
+            TagCompound raw,
+            out TagCompound rewritten,
+            out string? dropReason)
+        {
+            // --- Strip globalData, resolve type, SetDefaults, ItemIO.Save with clean numeric types.
+
+            rewritten = null!;
+            dropReason = null;
+            if (raw is null || raw.Count == 0)
+            {
+                dropReason = "emptyTag";
+                return false;
+            }
+
+            // Load without GlobalItem fields so JSON-widened globals cannot throw.
+            Item? loaded = null;
+            TagCompound stripped = CloneWithoutGlobalData(raw);
+            try
+            {
+                Item candidate = ItemIO.Load(stripped);
+                if (candidate is { IsAir: false })
+                    loaded = candidate;
+            }
+            catch
+            {
+                loaded = null;
+            }
+
+            // Fall back to type/stack/prefix when the stripped tag still cannot load.
+            if (loaded is null)
+            {
+                if (!TryResolveItemTypeFromTag(raw, out int itemType) || itemType <= 0)
+                {
+                    dropReason = "unresolvedItem";
+                    return false;
+                }
+
+                loaded = new Item();
+                loaded.SetDefaults(itemType);
+                if (loaded.IsAir)
+                {
+                    dropReason = "unresolvedItem";
+                    return false;
+                }
+
+                loaded.stack = Math.Clamp(ReadTagInt(raw, "stack", 1), 1, PayloadEntityLimits.MaxStackPerSlot);
+                int prefix = ReadTagInt(raw, "prefix", 0);
+                if (prefix > 0)
+                    loaded.Prefix(prefix);
+            }
+            else if (loaded.stack > PayloadEntityLimits.MaxStackPerSlot)
+            {
+                loaded.stack = PayloadEntityLimits.MaxStackPerSlot;
+            }
+
+            try
+            {
+                rewritten = CloneWithoutGlobalData(ItemIO.Save(loaded));
+                return rewritten.Count > 0;
+            }
+            catch (Exception ex)
+            {
+                dropReason = ex.GetType().Name;
+                return false;
+            }
+        }
+
+        /// <summary>Clones a tag without the globalData list so fragile GlobalItem fields are dropped.</summary>
+        private static TagCompound CloneWithoutGlobalData(TagCompound source)
+        {
+            // --- Shallow-copy every key except globalData.
+
+            var clone = new TagCompound();
+            foreach (KeyValuePair<string, object> pair in source)
+            {
+                if (string.Equals(pair.Key, "globalData", StringComparison.Ordinal))
+                    continue;
+                clone[pair.Key] = pair.Value;
+            }
+
+            return clone;
+        }
+
+        /// <summary>Reads a non-negative int from a tag key that may be stored as several numeric types.</summary>
+        private static int ReadTagInt(TagCompound tag, string key, int fallback)
+        {
+            // --- JSON import widens integers to int; ItemIO may use byte/short.
+
+            if (!tag.ContainsKey(key))
+                return fallback;
+
+            return tag[key] switch
             {
                 int i => i,
                 short s => s,
@@ -768,13 +1089,25 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Loads TagCompound data onto the TileEntity at exact coordinates and shares it.</summary>
         private static bool TryApplyGenericTileEntity(int worldX, int worldY, TagCompound data)
         {
-            // --- ByPosition lookup at the payload origin only.
+            // --- ByPosition lookup; catch LoadData failures so one bad TE does not throw into paste.
 
             Point16 key = new(worldX, worldY);
             if (!TileEntity.ByPosition.TryGetValue(key, out TileEntity? te) || te is null)
                 return false;
 
-            te.LoadData(data);
+            try
+            {
+                te.LoadData(data);
+            }
+            catch (Exception ex)
+            {
+                TABLog.Warn(
+                    $"EntityPlace TE LoadData failed world=({worldX},{worldY}) type={te.GetType().Name}: "
+                    + $"{ex.GetType().Name}: {ex.Message}",
+                    EntityPlaceLog);
+                return false;
+            }
+
             if (Main.netMode == NetmodeID.Server)
                 NetMessage.SendData(MessageID.TileEntitySharing, -1, -1, null, te.ID, key.X, key.Y);
 
@@ -783,7 +1116,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         private static TagCompound? CaptureDisplayDoll(TileEntity te)
         {
-            // --- Read private inventories, then emit PlayerIO-compatible items/dyes lists for LoadData.
+            // --- Read private inventories, then emit chest-style identity items/dyes lists.
 
             if (te is not TEDisplayDoll doll)
                 return CaptureGenericTileEntity(te);
@@ -794,50 +1127,124 @@ namespace TheArchitectsBlueprintMod.Core
             {
                 TABLog.Warn(
                     "EntityCapture DisplayDoll reflection miss: _items/_dyes fields unavailable",
-                    "EntityCapture");
+                    EntityCaptureLog);
                 return null;
             }
 
             var tag = new TagCompound();
-            List<TagCompound>? itemTags = SaveFullInventory(items);
+            List<TagCompound>? itemTags = SaveIdentityInventory(items, DisplayDollSlotCount);
             if (itemTags is not null)
                 tag["items"] = itemTags;
 
-            List<TagCompound>? dyeTags = SaveFullInventory(dyes);
+            List<TagCompound>? dyeTags = SaveIdentityInventory(dyes, DisplayDollSlotCount);
             if (dyeTags is not null)
                 tag["dyes"] = dyeTags;
 
             return tag.Count > 0 ? tag : null;
         }
 
-        private static List<TagCompound>? SaveFullInventory(Item[]? inv)
+        /// <summary>Sanitizes DisplayDoll items/dyes lists to identity slots, converting legacy ItemIO.</summary>
+        private static TagCompound? SanitizeDisplayDollData(TagCompound data)
         {
-            // --- Sparse slot list: ItemIO.Save + slot index, compatible with PlayerIO.LoadInventory.
+            // --- Normalize each inventory slot to name/stack/prefix, then enforce the entity byte cap.
 
-            if (inv is null || inv.Length == 0)
-                return null;
-
-            var list = new List<TagCompound>();
-            for (int k = 0; k < inv.Length; k++)
+            var cleaned = new TagCompound();
+            if (data.ContainsKey("items") && data["items"] is IList<TagCompound> items)
             {
-                Item item = inv[k];
-                if (item is null || item.IsAir)
-                    continue;
-
-                TagCompound itemTag = ItemIO.Save(item);
-                if (itemTag.Count == 0)
-                    continue;
-
-                itemTag.Set("slot", (short)k);
-                list.Add(itemTag);
+                List<TagCompound>? normalized = SanitizeIdentityInventory(
+                    items,
+                    DisplayDollSlotCount,
+                    "items");
+                if (normalized is not null)
+                    cleaned["items"] = normalized;
             }
 
-            return list.Count > 0 ? list : null;
+            if (data.ContainsKey("dyes") && data["dyes"] is IList<TagCompound> dyes)
+            {
+                List<TagCompound>? normalized = SanitizeIdentityInventory(
+                    dyes,
+                    DisplayDollSlotCount,
+                    "dyes");
+                if (normalized is not null)
+                    cleaned["dyes"] = normalized;
+            }
+
+            return cleaned.Count > 0 ? ClampTagSize(cleaned) : null;
+        }
+
+        /// <summary>Applies identity DisplayDoll inventory tags into reflected _items/_dyes after wipe.</summary>
+        private static bool TryApplyDisplayDoll(int worldX, int worldY, TagCompound data)
+        {
+            // --- Per-slot identity load into live arrays; skip failures so other slots still place.
+
+            Point16 key = new(worldX, worldY);
+            if (!TileEntity.ByPosition.TryGetValue(key, out TileEntity? te) || te is not TEDisplayDoll)
+                return false;
+
+            Item[]? items = DisplayDollItemsField?.GetValue(te) as Item[];
+            Item[]? dyes = DisplayDollDyesField?.GetValue(te) as Item[];
+            if (items is null && dyes is null)
+            {
+                TABLog.Warn(
+                    $"EntityPlace DisplayDoll reflection miss world=({worldX},{worldY})",
+                    EntityPlaceLog);
+                return false;
+            }
+
+            // Wipe first so unlisted slots do not survive the override.
+            WipeInventoryField(te, DisplayDollItemsField);
+            WipeInventoryField(te, DisplayDollDyesField);
+
+            bool wrote = false;
+            if (items is not null && data.ContainsKey("items") && data["items"] is IList<TagCompound> itemSlots)
+                wrote |= ApplyIdentityInventory(items, itemSlots, worldX, worldY, "items");
+
+            if (dyes is not null && data.ContainsKey("dyes") && data["dyes"] is IList<TagCompound> dyeSlots)
+                wrote |= ApplyIdentityInventory(dyes, dyeSlots, worldX, worldY, "dyes");
+
+            if (Main.netMode == NetmodeID.Server)
+                NetMessage.SendData(MessageID.TileEntitySharing, -1, -1, null, te.ID, key.X, key.Y);
+
+            // Empty identity inventories still count as a successful wipe-only apply.
+            return wrote || (!data.ContainsKey("items") && !data.ContainsKey("dyes"));
+        }
+
+        /// <summary>Writes identity Item slots into a live inventory array, logging per-slot load misses.</summary>
+        private static bool ApplyIdentityInventory(
+            Item[] dest,
+            IList<TagCompound> slots,
+            int worldX,
+            int worldY,
+            string listName)
+        {
+            // --- Best-effort identity load with logging; skip out-of-range or unresolved slots.
+
+            bool wrote = false;
+            for (int i = 0; i < slots.Count; i++)
+            {
+                TagCompound tag = slots[i];
+                int slot = ReadSlotIndex(tag, i);
+                if (slot < 0 || slot >= dest.Length)
+                    continue;
+
+                if (!TryLoadIdentityItem(tag, out Item loaded))
+                {
+                    TABLog.Warn(
+                        $"EntityPlace DisplayDoll load miss world=({worldX},{worldY}) {listName} slot={slot}",
+                        EntityPlaceLog);
+                    continue;
+                }
+
+                dest[slot] = loaded;
+                wrote = true;
+            }
+
+            return wrote;
         }
 
         private static TagCompound? SanitizeChestData(TagCompound data)
         {
-            // --- Keep capped name and validated sparse slots; drop empty chest tags.
+            // --- Keep capped name and validated sparse identity slots; drop empty chest tags.
 
             var cleaned = new TagCompound();
 
@@ -852,30 +1259,11 @@ namespace TheArchitectsBlueprintMod.Core
 
             if (data.ContainsKey("items") && data["items"] is IList<TagCompound> items)
             {
-                var itemList = new List<TagCompound>();
-                var usedSlots = new HashSet<int>();
-                for (int i = 0; i < items.Count && itemList.Count < PayloadEntityLimits.MaxChestItemSlots; i++)
-                {
-                    TagCompound entry = items[i];
-                    int slot = ReadSlotIndex(entry, itemList.Count);
-                    if (slot < 0 || slot >= PayloadEntityLimits.MaxChestItemSlots || !usedSlots.Add(slot))
-                        continue;
-                    string itemName = entry.GetString("item");
-                    if (string.IsNullOrWhiteSpace(itemName) || ContentNameResolver.ResolveItem(itemName) is null)
-                        continue;
-                    int stack = Math.Clamp(entry.GetInt("stack"), 1, PayloadEntityLimits.MaxStackPerSlot);
-                    var outEntry = new TagCompound
-                    {
-                        ["slot"] = slot,
-                        ["item"] = itemName,
-                        ["stack"] = stack,
-                    };
-                    if (entry.ContainsKey("prefix"))
-                        outEntry["prefix"] = entry.GetInt("prefix");
-                    itemList.Add(outEntry);
-                }
-
-                if (itemList.Count > 0)
+                List<TagCompound>? itemList = SanitizeIdentityInventory(
+                    items,
+                    PayloadEntityLimits.MaxChestItemSlots,
+                    "chest.items");
+                if (itemList is not null)
                     cleaned["items"] = itemList;
             }
 
@@ -890,6 +1278,39 @@ namespace TheArchitectsBlueprintMod.Core
             if (text.Length > PayloadEntityLimits.MaxSignTextLength)
                 text = text[..PayloadEntityLimits.MaxSignTextLength];
             return string.IsNullOrEmpty(text) ? null : new TagCompound { ["text"] = text };
+        }
+
+        /// <summary>Rewrites a nested ItemIO item blob to identity-only form, then enforces the entity byte cap.</summary>
+        private static TagCompound? SanitizeGenericTileEntityData(TagCompound data)
+        {
+            // --- TEItemFrame-style d.item must stay ItemIO-shaped for LoadData, without globalData.
+
+            TagCompound working = data;
+            if (data.ContainsKey("item") && data["item"] is TagCompound itemTag)
+            {
+                if (!TryRewriteIdentityItemIO(itemTag, out TagCompound rewritten, out string? dropReason))
+                {
+                    TABLog.Warn(
+                        $"EntityCapture TE dropped uncertified item reason={dropReason ?? "unknown"}",
+                        EntityCaptureLog);
+                    working = new TagCompound();
+                    foreach (KeyValuePair<string, object> pair in data)
+                    {
+                        if (string.Equals(pair.Key, "item", StringComparison.Ordinal))
+                            continue;
+                        working[pair.Key] = pair.Value;
+                    }
+                }
+                else
+                {
+                    working = new TagCompound();
+                    foreach (KeyValuePair<string, object> pair in data)
+                        working[pair.Key] = pair.Value;
+                    working["item"] = rewritten;
+                }
+            }
+
+            return working.Count > 0 ? ClampTagSize(working) : null;
         }
 
         private static TagCompound? ClampTagSize(TagCompound data)
@@ -953,22 +1374,15 @@ namespace TheArchitectsBlueprintMod.Core
                 if (slot < 0 || slot >= chest.item.Length || slot >= PayloadEntityLimits.MaxChestItemSlots)
                     continue;
 
-                string itemName = entry.GetString("item");
-                int? itemId = ContentNameResolver.ResolveItem(itemName);
-                if (itemId is null or <= 0)
+                if (!TryLoadIdentityItem(entry, out Item loaded))
                 {
-                    TABLog.Warn($"EntityApply chest slot={slot} unresolved item={itemName}", LogCategory);
+                    TABLog.Warn(
+                        $"EntityApply chest slot={slot} unresolved item={entry.GetString("item")}",
+                        LogCategory);
                     continue;
                 }
 
-                int stack = Math.Clamp(entry.GetInt("stack"), 1, PayloadEntityLimits.MaxStackPerSlot);
-                int prefix = entry.ContainsKey("prefix") ? entry.GetInt("prefix") : 0;
-
-                Item item = chest.item[slot] ??= new Item();
-                item.SetDefaults(itemId.Value);
-                item.stack = stack;
-                if (prefix > 0)
-                    item.Prefix(prefix);
+                chest.item[slot] = loaded;
 
                 if (Main.netMode == NetmodeID.Server)
                     NetMessage.SendData(MessageID.SyncChestItem, -1, -1, null, chestIndex, slot);

@@ -27,6 +27,7 @@ namespace TheArchitectsBlueprintMod.Core
         private const string KeyMetadata = "metadata";
         private const string KeyPayload = "payload";
         private const string KeyEntities = "entities";
+        private const string KeyModsLoaded = "modsLoaded";
         private const string KeyLegacyCells = "cells";
         private const string KeyCellBody = "c";
         private const string KeyThumbnailPng = "thumbnailPng";
@@ -170,8 +171,11 @@ namespace TheArchitectsBlueprintMod.Core
             TagIO.ToStream(BuildDocument(payload, meta), stream, compress: true);
         }
 
+        /// <summary>Writes a readable .tab.json mirror with compact nested modsLoaded, payload, and entities.</summary>
         public static void WriteJsonDocument(Stream stream, Payload payload, PayloadExportMetadata meta)
         {
+            // --- Strip thumbnail, build JObject, then emit the hybrid compact JSON shape.
+
             PayloadExportMetadata stripped = new(
                 meta.ProjectName,
                 meta.PlayerName,
@@ -183,7 +187,126 @@ namespace TheArchitectsBlueprintMod.Core
             TagCompound document = BuildDocument(payload, stripped);
             JObject json = TagCompoundToJObject(document);
             using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false), bufferSize: 4096, leaveOpen: true);
-            writer.Write(json.ToString(Formatting.Indented));
+            WriteHybridCompactJson(writer, json);
+        }
+
+        /// <summary>Writes an indented document shell with minified modsLoaded and one compact object per payload/entity line.</summary>
+        private static void WriteHybridCompactJson(TextWriter writer, JObject root)
+        {
+            // --- Walk known root properties; compact only modsLoaded, payload, and entities.
+
+            writer.WriteLine("{");
+            bool first = true;
+
+            // Emit each root property with a leading comma on the previous line when needed.
+            void BeginProperty()
+            {
+                if (!first)
+                    writer.WriteLine(",");
+                first = false;
+            }
+
+            if (root.TryGetValue(KeyFormat, out JToken? format))
+            {
+                BeginProperty();
+                writer.Write($"  \"{KeyFormat}\": ");
+                WriteCompactToken(writer, format);
+            }
+
+            if (root.TryGetValue(KeySchemaVersion, out JToken? schema))
+            {
+                BeginProperty();
+                writer.Write($"  \"{KeySchemaVersion}\": ");
+                WriteCompactToken(writer, schema);
+            }
+
+            if (root.TryGetValue(KeyMetadata, out JToken? metaToken) && metaToken is JObject meta)
+            {
+                BeginProperty();
+                writer.Write($"  \"{KeyMetadata}\": ");
+                WriteHybridMetadata(writer, meta, indent: 2);
+            }
+
+            if (root.TryGetValue(KeyPayload, out JToken? payloadToken) && payloadToken is JArray payloadArray)
+            {
+                BeginProperty();
+                writer.Write($"  \"{KeyPayload}\": ");
+                WriteCompactObjectArray(writer, payloadArray, indent: 2);
+            }
+
+            if (root.TryGetValue(KeyEntities, out JToken? entitiesToken) && entitiesToken is JArray entitiesArray)
+            {
+                BeginProperty();
+                writer.Write($"  \"{KeyEntities}\": ");
+                WriteCompactObjectArray(writer, entitiesArray, indent: 2);
+            }
+
+            writer.WriteLine();
+            writer.Write("}");
+        }
+
+        /// <summary>Writes metadata with indented properties and a single-line minified modsLoaded array.</summary>
+        private static void WriteHybridMetadata(TextWriter writer, JObject meta, int indent)
+        {
+            // --- Indent each property line; minify modsLoaded (and other simple values) with Formatting.None.
+
+            string pad = new string(' ', indent);
+            string inner = new string(' ', indent + 2);
+            writer.WriteLine("{");
+
+            bool first = true;
+            foreach (JProperty prop in meta.Properties())
+            {
+                if (!first)
+                    writer.WriteLine(",");
+                first = false;
+
+                writer.Write(inner);
+                writer.Write('"');
+                writer.Write(prop.Name);
+                writer.Write("\": ");
+                WriteCompactToken(writer, prop.Value);
+            }
+
+            writer.WriteLine();
+            writer.Write(pad);
+            writer.Write('}');
+        }
+
+        /// <summary>Writes a JSON array of objects with one minified object per line.</summary>
+        private static void WriteCompactObjectArray(TextWriter writer, JArray array, int indent)
+        {
+            // --- Open the array, stream each element as Formatting.None, then close at the parent indent.
+
+            string pad = new string(' ', indent);
+            string inner = new string(' ', indent + 2);
+            writer.WriteLine("[");
+
+            using (var jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.None, CloseOutput = false })
+            {
+                for (int i = 0; i < array.Count; i++)
+                {
+                    writer.Write(inner);
+                    array[i].WriteTo(jsonWriter);
+                    jsonWriter.Flush();
+                    if (i < array.Count - 1)
+                        writer.Write(',');
+                    writer.WriteLine();
+                }
+            }
+
+            writer.Write(pad);
+            writer.Write(']');
+        }
+
+        /// <summary>Writes a JToken with no added whitespace.</summary>
+        private static void WriteCompactToken(TextWriter writer, JToken token)
+        {
+            // --- Stream the token through a non-closing JsonTextWriter so values stay minified.
+
+            using var jsonWriter = new JsonTextWriter(writer) { Formatting = Formatting.None, CloseOutput = false };
+            token.WriteTo(jsonWriter);
+            jsonWriter.Flush();
         }
 
         public static bool TryReadJsonDocument(string json, out Payload payload, out PayloadDocumentInfo info, out string? error)
@@ -756,7 +879,7 @@ namespace TheArchitectsBlueprintMod.Core
                 tag["terrariaVersion"] = meta.TerrariaVersion;
 
             if (meta.ModsLoaded is { Count: > 0 })
-                tag["modsLoaded"] = meta.ModsLoaded;
+                tag[KeyModsLoaded] = meta.ModsLoaded;
 
             if (meta.ThumbnailPng is { Length: > 0 })
                 tag[KeyThumbnailPng] = meta.ThumbnailPng;
@@ -773,9 +896,9 @@ namespace TheArchitectsBlueprintMod.Core
             int height = metaTag.ContainsKey("height") ? metaTag.GetInt("height") : 0;
 
             IReadOnlyList<string>? modsLoaded = null;
-            if (metaTag.ContainsKey("modsLoaded"))
+            if (metaTag.ContainsKey(KeyModsLoaded))
             {
-                IList<string> mods = metaTag.GetList<string>("modsLoaded");
+                IList<string> mods = metaTag.GetList<string>(KeyModsLoaded);
                 if (mods is { Count: > 0 })
                     modsLoaded = new List<string>(mods);
             }

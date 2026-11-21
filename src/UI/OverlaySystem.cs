@@ -537,27 +537,31 @@ namespace TheArchitectsBlueprintMod.UI
 
         private static void DrawTileRectFillOnMap(Rectangle[] rects, Color fill)
         {
-            var pixel = ModUtils.DummyTexture;
-            var frame = new SpriteFrame(1, 1, 0, 0);
-            float scale = MapTileDrawScale();
+            // --- One screen-space quad per rectangle (same as DrawBorderedRectOnMap fill path).
 
+            var pixel = ModUtils.DummyTexture;
+            float pxPerTile = ArchitectMapTransform.PixelsPerTile;
+            if (pxPerTile <= 0f)
+                return;
+
+            var screenClip = new Rectangle(0, 0, Main.screenWidth, Main.screenHeight);
             for (int i = 0; i < rects.Length; i++)
             {
                 Rectangle r = rects[i];
-                for (int y = r.Top; y < r.Bottom; y++)
-                {
-                    for (int x = r.Left; x < r.Right; x++)
-                    {
-                        _mapDrawContext.Draw(
-                            pixel,
-                            new Vector2(x, y),
-                            fill,
-                            frame,
-                            scale,
-                            scale,
-                            Alignment.TopLeft);
-                    }
-                }
+                if (r.Width <= 0 || r.Height <= 0)
+                    continue;
+
+                Vector2 topLeft = ArchitectMapTransform.TileToScreen(new Point(r.X, r.Y));
+                var screenRect = new Rectangle(
+                    (int)topLeft.X,
+                    (int)topLeft.Y,
+                    (int)(r.Width * pxPerTile),
+                    (int)(r.Height * pxPerTile));
+                screenRect = Rectangle.Intersect(screenRect, screenClip);
+                if (screenRect.IsEmpty)
+                    continue;
+
+                Main.spriteBatch.Draw(pixel, screenRect, PixelSource, fill);
             }
 
             if (ModContent.GetInstance<ClientPasteConfig>().Overlay.RectBorders)

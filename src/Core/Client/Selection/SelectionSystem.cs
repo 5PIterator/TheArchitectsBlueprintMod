@@ -121,9 +121,9 @@ namespace TheArchitectsBlueprintMod.Core
             // Clear previous exclusion fill: RegTileFill does not run when the mask is all included, and the
             // catalog would otherwise keep the last non-empty "excluded" registration.
             OverlaySystem.Unregister("excluded", family);
-            Point[] excluded = selection.BuildExcludedTilePoints();
+            Rectangle[] excluded = selection.BuildExcludedTileRects();
             if (excluded.Length > 0)
-                OverlaySystem.RegTileFill("excluded", excluded, Color.Black * 0.35f, family);
+                OverlaySystem.RegTileRectFill("excluded", excluded, Color.Black * 0.35f, family);
             // Draw the pin points of the selection
             if (TryGetPoints(player, out var a, out var b))
             {

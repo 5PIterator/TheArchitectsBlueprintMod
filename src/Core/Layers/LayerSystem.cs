@@ -156,6 +156,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
     internal static class LayerSystem
     {
         private const string ResourceName = "TheArchitectsBlueprintMod.LayerOrder.json";
+        private static LayerPipeline? _cachedPipeline;
 
         public static Layer Wall => WallLayer.Definition;
         public static Layer Block => BlockLayer.Definition;
@@ -189,7 +190,26 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// </summary>
         public static LayerPipeline ComposePipeline()
         {
+            // --- Reuse the composed pipeline; LayerOrder.json and built-ins do not change at runtime.
+            if (_cachedPipeline is not null)
+                return _cachedPipeline;
+
+            _cachedPipeline = ComposePipelineCore();
+            return _cachedPipeline;
+        }
+
+        /// <summary>Drops the cached pipeline so the next compose rebuilds from LayerOrder.json.</summary>
+        public static void ClearPipelineCache()
+        {
+            // --- Used on world unload; discovery results stay valid across worlds but cache is cheap to rebuild.
+            _cachedPipeline = null;
+        }
+
+        /// <summary>Builds a fresh layer pipeline from registry order and LayerOrder.json.</summary>
+        private static LayerPipeline ComposePipelineCore()
+        {
             // --- Register built-in pipeline layers and discover custom sub-layers for id lookup only.
+
             IReadOnlyList<Layer> customSubLayers = CustomLayer.DiscoverAttributedLayers();
             var registry = new List<Layer>(BuiltInLayers);
 
@@ -241,16 +261,12 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             Func<Point, bool>? includeCell = null,
             int? worldOriginX = null,
             int? worldOriginY = null,
-            IReadOnlyList<PayloadEntity>? entities = null)
+            IReadOnlyList<PayloadEntity>? entities = null,
+            IReadOnlyDictionary<Point, PayloadCell>? cellLookup = null)
         {
-            // --- Build a sparse cell map and shared context, then run BeginPass / cells / DrawPass per layer.
+            // --- Reuse an optional cell index, then run BeginPass / cells / DrawPass per layer.
 
-            var cellLookup = new Dictionary<Point, PayloadCell>(entries.Count);
-            foreach (Payload.Entry entry in entries)
-            {
-                if (!entry.Cell.IsEmpty)
-                    cellLookup[entry.Relative] = entry.Cell;
-            }
+            IReadOnlyDictionary<Point, PayloadCell> lookup = cellLookup ?? BuildTemporaryCellLookup(entries);
 
             var ctx = new PreviewDrawContext
             {
@@ -258,7 +274,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 Position = position,
                 Scale = scale,
                 Tint = tint,
-                CellLookup = cellLookup,
+                CellLookup = lookup,
                 Entities = entities,
                 MinX = minX,
                 MaxX = maxX,
@@ -285,14 +301,53 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             }
         }
 
+        /// <summary>Builds a one-shot relative→cell dictionary when the caller has no Payload.CellIndex.</summary>
+        private static Dictionary<Point, PayloadCell> BuildTemporaryCellLookup(IReadOnlyList<Payload.Entry> entries)
+        {
+            // --- Same shape as Payload.EnsureCellIndex for callers that only pass Entries.
+
+            var cellLookup = new Dictionary<Point, PayloadCell>(entries.Count);
+            for (int i = 0; i < entries.Count; i++)
+            {
+                Payload.Entry entry = entries[i];
+                if (!entry.Cell.IsEmpty)
+                    cellLookup[entry.Relative] = entry.Cell;
+            }
+
+            return cellLookup;
+        }
+
         /// <summary>Invokes <paramref name="draw"/> for each non-empty payload cell inside the visible clip.</summary>
         private static void ForEachVisibleCell(
             IReadOnlyList<Payload.Entry> entries,
             in PreviewDrawContext ctx,
             Action<PayloadCell, int, int> draw)
         {
-            foreach (Payload.Entry entry in entries)
+            // --- Prefer a dense clip walk when the visible window is smaller than the sparse entry list.
+
+            int visibleArea = (ctx.MaxX - ctx.MinX) * (ctx.MaxY - ctx.MinY);
+            if (ctx.CellLookup is not null && visibleArea >= 0 && visibleArea < entries.Count)
             {
+                for (int relY = ctx.MinY; relY < ctx.MaxY; relY++)
+                {
+                    for (int relX = ctx.MinX; relX < ctx.MaxX; relX++)
+                    {
+                        if (!ctx.IsCellVisible(relX, relY))
+                            continue;
+
+                        if (!ctx.CellLookup.TryGetValue(new Point(relX, relY), out PayloadCell cell) || cell.IsEmpty)
+                            continue;
+
+                        draw(cell, relX, relY);
+                    }
+                }
+
+                return;
+            }
+
+            for (int i = 0; i < entries.Count; i++)
+            {
+                Payload.Entry entry = entries[i];
                 Point rel = entry.Relative;
                 if (!ctx.IsCellVisible(rel.X, rel.Y))
                     continue;

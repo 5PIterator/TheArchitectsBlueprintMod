@@ -285,6 +285,16 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Non-empty cells with relative coordinates.</summary>
         public IReadOnlyList<Entry> Entries => _entries;
 
+        /// <summary>Lazy relative→cell index for O(1) preview lookups (built once per payload instance).</summary>
+        public IReadOnlyDictionary<Point, PayloadCell> CellIndex
+        {
+            get
+            {
+                EnsureCellIndex();
+                return _cellIndex!;
+            }
+        }
+
         /// <summary>Position-keyed entity sidecar (chest / sign / TileEntity data).</summary>
         public IReadOnlyList<PayloadEntity> Entities => _entities;
 

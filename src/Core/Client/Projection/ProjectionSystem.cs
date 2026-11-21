@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using TheArchitectsBlueprintMod.Core.Architect;
+using TheArchitectsBlueprintMod.Core.Layers;
+using TheArchitectsBlueprintMod.Core.Preview;
 using TheArchitectsBlueprintMod.Debug;
 using TheArchitectsBlueprintMod.UI;
-using TheArchitectsBlueprintMod.Core.Preview;
 using TheArchitectsBlueprintMod.UI.Style;
 using Microsoft.Xna.Framework;
 using Terraria;
@@ -110,6 +111,8 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
             }
 
+            PayloadPreview.InvalidateMapTexture(projection.OverlayInstanceKey);
+            ProjectionPreviewCache.Invalidate(projection.OverlayInstanceKey);
             BlueprintSystem.UnregisterBlueprint(projection);
             ProjectionControl.InvalidateGestureIfDragging(projection);
             UpdateProjectionOverlay(Main.player[projection.Owner]);
@@ -211,9 +214,11 @@ namespace TheArchitectsBlueprintMod.Core
                     string k = proj.OverlayInstanceKey.ToString();
 
                     // Sprites first so projection tint/borders (registered after) stay visible on top.
+                    // Cached blit stays on while dragging; uncached huge payloads still skip during drag.
                     bool skipSpritePreview = ModContent.GetInstance<ProjectionControl>().IsActivelyDragging(player)
                         && proj.HasPayload
-                        && proj.Payload.Width * proj.Payload.Height > 50_000;
+                        && proj.Payload.Width * proj.Payload.Height > 50_000
+                        && !ProjectionPreviewCache.IsCachedBlitEnabled();
                     if (!proj.IsLocked && proj.HasPayload && !skipSpritePreview)
                     {
                         Projection capture = proj;
@@ -269,6 +274,10 @@ namespace TheArchitectsBlueprintMod.Core
                 proj.Clear();
                 n++;
             }
+
+            PayloadPreview.ClearMapTextureCache();
+            ProjectionPreviewCache.Clear();
+            LayerSystem.ClearPipelineCache();
 
             if (TABLog.IsDebugEnabled && n > 0)
                 TABLog.Debug($"ProjectionSystem.OnWorldUnload: cleared {n} projection(s)", "ProjectionSystem");

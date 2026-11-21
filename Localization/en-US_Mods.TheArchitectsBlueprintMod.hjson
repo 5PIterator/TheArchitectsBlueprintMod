@@ -64,6 +64,8 @@ UI: {
 		EntryMissingPaired: (-{0}) (-{1})
 		Unresolved: "{0} unresolved mapping(s):"
 		Satisfied: All remaining materials are available.
+		NextPage: "[Next page ({0}/{1})]"
+		PageEnd: (End of manifest — page {0}/{1})
 	}
 
 	Metadata: {
@@ -411,6 +413,7 @@ Configs: {
 		Headers: {
 			Preferences: Preferences
 			Arrow: Arrow
+			Preview: Preview
 			Debug: Debug Header
 		}
 
@@ -486,6 +489,38 @@ Configs: {
 			MaxSpeed: {
 				Label: Arrow max velocity
 				Tooltip: Maximum travel speed for paste arrows.
+			}
+		}
+
+		Preview: {
+			Label: Projection preview
+			Tooltip:
+				'''
+				Client-only world ghost drawing for large projections.
+				Cached blit and nearby-only mode reduce lag on massive payloads; the host does not own these settings.
+				'''
+
+			UseCachedBlit: {
+				Label: Cached blit
+				Tooltip:
+					'''
+					When enabled (default), the world projection preview bakes visible 64×64 tile chunks once and reuses them while panning.
+					When disabled, every frame redraws layers for the visible clip (slower on large modded payloads).
+					'''
+			}
+
+			NearbyOnly: {
+				Label: Nearby only
+				Tooltip:
+					'''
+					When enabled, the world projection preview only draws within Nearby radius tiles of the player (intersected with the screen).
+					When disabled (default), the full on-screen projection footprint is drawn.
+					'''
+			}
+
+			NearbyRadiusTiles: {
+				Label: Nearby radius
+				Tooltip: Chebyshev tile radius around the player used when Nearby only is enabled. Default 48.
 			}
 		}
 
@@ -1633,6 +1668,25 @@ Configs: {
 
 		TileExecutorOnly: {
 			Label: Tile Executor Only
+			Tooltip: ""
+		}
+	}
+
+	ProjectionPreviewPreference: {
+		Tooltip: ""
+
+		UseCachedBlit: {
+			Label: Use Cached Blit
+			Tooltip: ""
+		}
+
+		NearbyOnly: {
+			Label: Nearby Only
+			Tooltip: ""
+		}
+
+		NearbyRadiusTiles: {
+			Label: Nearby Radius Tiles
 			Tooltip: ""
 		}
 	}

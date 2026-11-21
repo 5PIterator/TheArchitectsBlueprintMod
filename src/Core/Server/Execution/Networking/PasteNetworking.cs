@@ -115,6 +115,9 @@ namespace TheArchitectsBlueprintMod.Core.Server
                 case PasteNetPacketType.ManifestRequest:
                     PasteManifestNetworking.HandlePacket(mod, reader, whoAmI);
                     return;
+                case PasteNetPacketType.ManifestResponse:
+                    PasteManifestNetworking.HandleResponse(reader);
+                    return;
                 default:
                     throw new InvalidDataException($"Unknown paste packet type: {packetType}");
             }

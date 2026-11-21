@@ -72,6 +72,20 @@ namespace TheArchitectsBlueprintMod.Config
         public bool RectBorders;
     }
 
+    /// <summary>Client-only projection world-preview quality preferences.</summary>
+    public sealed class ProjectionPreviewPreference
+    {
+        [DefaultValue(true)]
+        public bool UseCachedBlit = true;
+
+        [DefaultValue(false)]
+        public bool NearbyOnly;
+
+        [DefaultValue(48)]
+        [Range(8, 200)]
+        public int NearbyRadiusTiles = 48;
+    }
+
     /// <summary>Client-side paste preferences carried with each paste request. Server policy decides which are honored.</summary>
     public sealed class ClientPasteConfig : ModConfig
     {
@@ -84,6 +98,9 @@ namespace TheArchitectsBlueprintMod.Config
 
         [Header("Arrow")]
         public ArrowPastePreference Arrow = new();
+
+        [Header("Preview")]
+        public ProjectionPreviewPreference Preview = new();
 
         [Header("Debug")]
         public PasteOverlayDebugConfig Overlay = new();

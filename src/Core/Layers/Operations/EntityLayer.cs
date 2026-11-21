@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -166,38 +167,85 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 }
             }
 
-            // In-world projection also marks live table hosts (including ghosts) under the visible footprint.
             if (ctx.WorldOriginX is int worldOriginX && ctx.WorldOriginY is int worldOriginY)
-            {
-                var worldBounds = new Rectangle(
-                    worldOriginX + ctx.MinX,
-                    worldOriginY + ctx.MinY,
-                    ctx.MaxX - ctx.MinX,
-                    ctx.MaxY - ctx.MinY);
-
-                foreach (PayloadEntityHandlers.HostAtOrigin host in PayloadEntityHandlers.EnumerateHostsInBounds(worldBounds))
-                {
-                    int relX = host.WorldX - worldOriginX;
-                    int relY = host.WorldY - worldOriginY;
-                    if (!ctx.IsCellVisible(relX, relY))
-                        continue;
-                    if (!covered.Add(new Point(relX, relY)))
-                        continue;
-
-                    var args = new PreviewEntityDrawArgs
-                    {
-                        Ctx = ctx,
-                        Entity = new PayloadEntity(new Point(relX, relY), host.FullName),
-                        OriginCell = default,
-                        RelX = relX,
-                        RelY = relY,
-                    };
-                    EntityPreviewStrategies.TryDrawOriginMarker(in args);
-                }
-            }
+                DrawLiveHosts(in ctx, worldOriginX, worldOriginY, covered);
 
             if (EntityPreviewStrategies.UsedPlayerRenderer)
                 RestoreSpriteBatch(in ctx);
+        }
+
+        /// <summary>
+        /// Draws live chest/sign/TE origin markers for a cached world blit that omitted world-origin passes.
+        /// </summary>
+        public static void DrawLiveHostMarkers(
+            SpriteBatch sb,
+            int worldOriginX,
+            int worldOriginY,
+            int minX,
+            int maxX,
+            int minY,
+            int maxY,
+            Color tint,
+            Func<Point, bool>? includeCell)
+        {
+            // --- Build a minimal preview context and reuse the live-host marker path.
+
+            var ctx = new PreviewDrawContext
+            {
+                SpriteBatch = sb,
+                Position = new Vector2(worldOriginX * PreviewDrawContext.TilePixelSize, worldOriginY * PreviewDrawContext.TilePixelSize)
+                    - Main.screenPosition,
+                Scale = 1f,
+                Tint = tint,
+                MinX = minX,
+                MaxX = maxX,
+                MinY = minY,
+                MaxY = maxY,
+                IncludeCell = includeCell,
+                WorldOriginX = worldOriginX,
+                WorldOriginY = worldOriginY,
+            };
+
+            EntityPreviewStrategies.BeginPass();
+            DrawLiveHosts(in ctx, worldOriginX, worldOriginY, covered: null);
+            if (EntityPreviewStrategies.UsedPlayerRenderer)
+                RestoreSpriteBatch(in ctx);
+        }
+
+        /// <summary>Marks live entity hosts under the visible footprint that are not already covered.</summary>
+        private static void DrawLiveHosts(
+            in PreviewDrawContext ctx,
+            int worldOriginX,
+            int worldOriginY,
+            HashSet<Point>? covered)
+        {
+            // --- Scan world chests/signs/TEs in the visible world bounds only.
+
+            var worldBounds = new Rectangle(
+                worldOriginX + ctx.MinX,
+                worldOriginY + ctx.MinY,
+                ctx.MaxX - ctx.MinX,
+                ctx.MaxY - ctx.MinY);
+
+            foreach (PayloadEntityHandlers.HostAtOrigin host in PayloadEntityHandlers.EnumerateHostsInBounds(worldBounds))
+            {
+                int relX = host.WorldX - worldOriginX;
+                int relY = host.WorldY - worldOriginY;
+                if (!ctx.IsCellVisible(relX, relY))
+                    continue;
+                if (covered is not null && !covered.Add(new Point(relX, relY)))
+                    continue;
+
+                var args = new PreviewEntityDrawArgs
+                {
+                    Ctx = ctx,
+                    Entity = new PayloadEntity(new Point(relX, relY), host.FullName),
+                    OriginCell = default,
+                    RelX = relX,
+                    RelY = relY,
+                };
+                EntityPreviewStrategies.TryDrawOriginMarker(in args);
+            }
         }
 
         private static void RestoreSpriteBatch(in PreviewDrawContext ctx)

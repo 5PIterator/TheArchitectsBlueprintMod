@@ -12,6 +12,7 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
+using Terraria.UI.Chat;
 using TheArchitectsBlueprintMod.Content.Items;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.UI;
@@ -109,7 +110,7 @@ namespace TheArchitectsBlueprintMod.Core.Architect
 
         public override void Load()
         {
-            // --- Preload toolbar icons and create the TmodGUI UserInterface host.
+            // --- Preload toolbar icons, register chat tags, and create the TmodGUI UserInterface host.
 
             foreach (string path in PreloadIconPaths)
                 TryLoadIconAsset(path);
@@ -117,6 +118,7 @@ namespace TheArchitectsBlueprintMod.Core.Architect
             if (Main.dedServ)
                 return;
 
+            ChatManager.Register<ManifestPageTagHandler>(ManifestPrinter.ChatTagName);
             _ui = new UserInterface();
         }
 
