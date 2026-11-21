@@ -1,0 +1,39 @@
+﻿# Test Case dump started 2026-11-20T19:27:06.6832074+01:00
+# Run label: all
+19:27:06.683 [INFO] Running 25 Test Case(s)...
+19:27:06.722 [PASS] layer_R01 | Normal mushroom/Plant, water candle/Frame, small pebble/Frame+Echo; stone Block; .itr zero-count resolves Mushroom and rejects unmapped.
+19:27:06.724 [FAIL] paste-mp_B04 | Requires a multiplayer client (Host & Play host, Host & Play joiner, or dedicated-server client).
+19:27:06.724 [FAIL] paste-mp_N03 | Requires a multiplayer client (Host & Play host, Host & Play joiner, or dedicated-server client).
+19:27:06.724 [FAIL] paste-mp_P01 | Requires a multiplayer client (Host & Play host, Host & Play joiner, or dedicated-server client).
+19:27:06.727 [FAIL] paste-mp_P02 | Requires a multiplayer client (Host & Play host, Host & Play joiner, or dedicated-server client).
+19:27:06.727 [INFO] paste_F05: stone Build baseline skipped (Player is outside paste inventory reach (ReachTiles=2) of the chamber work area; stand near the CHM origin before running the Case.).
+19:27:06.743 [INFO] paste_F05: modular 28x21 sparse=540 Build=0ms Identify=7ms cells=588.
+19:27:06.743 [PASS] paste_F05 | Build=0ms Identify=7ms on 28x21 (tripwire 2000ms).
+19:27:06.744 [FAIL] paste_N03 | Player is outside paste inventory reach (ReachTiles=2) of the chamber work area; stand near the CHM origin before running the Case.
+19:27:06.744 [FAIL] paste_P01 | Player is outside paste inventory reach (ReachTiles=2) of the chamber work area; stand near the CHM origin before running the Case.
+19:27:06.744 [FAIL] paste_P02 | Player is outside paste inventory reach (ReachTiles=2) of the chamber work area; stand near the CHM origin before running the Case.
+19:27:06.746 [FAIL] paste_P04 | Player is outside paste inventory reach (ReachTiles=2) of the chamber work area; stand near the CHM origin before running the Case.
+19:27:06.749 [INFO] payload_B04: compared=1, missing=0, unexpected=0, fieldMismatch=0.
+19:27:06.749 [PASS] payload_B04 | FromSparse filtering kept only the in-bounds stone cell.
+19:27:06.750 [PASS] payload_N08 | ComputeMissingMods and ValidateOnly report flag unknown mods only.
+19:27:07.401 [INFO] payload_O07: full cell load blocked (Payload cell (2,2): tile cells require style.); DocumentInfo OK (540x321, project=SuperStructure).
+19:27:07.401 [PASS] payload_O07 | Document metadata loaded for SS_MassiveModded.tab (540x321); re-export with style for full cell parse.
+19:27:07.401 [INFO] payload_P01: compared=1, missing=0, unexpected=0, fieldMismatch=0.
+19:27:07.401 [PASS] payload_P01 | TagIO document roundtrip matched the stone cell.
+19:27:07.401 [INFO] payload_P02: compared=1, missing=0, unexpected=0, fieldMismatch=0.
+19:27:07.401 [PASS] payload_P02 | TagIO stream roundtrip matched metadata and cell.
+19:27:07.404 [INFO] payload_P03: compared=1, missing=0, unexpected=0, fieldMismatch=0.
+19:27:07.404 [INFO] payload_P03: compared=2, missing=0, unexpected=0, fieldMismatch=0.
+19:27:07.404 [PASS] payload_P03 | Mirror and legacy JSON imports matched their stone cells.
+19:27:07.405 [PASS] payload_P05 | Validate-only reports clean stone and one incompatible unresolvable tile.
+19:27:07.405 [PASS] payload_P06 | SkipIncompatible kept stone and remapped the unresolvable tile.
+19:27:07.405 [FAIL] payload_R09 | Export ModsLoaded still lists session mods for vanilla-only stone: ModLoader, AbslbEasy, ArmorReforge, AutoTrash, BetterAutosave, BossChecklist, BossCursor, CalamityModMusic, CalamityMod, CalamityLootSwap, InnoVault, SubworldLibrary, SerousCommonLib, MagicStorage, CalamityOverhaul, CheatExtensions, CheatSheet, ClamExtraMusic, ColoredCalRelics, Fargowiltas, Luminance, FargowiltasSouls, ColoredFargoRelics, CursorHP, DiscordWorldLogs, FargowiltasCrossmod, FixedAchievements, GadgetGalore, HEROsMod, HPAware, RecipeBrowser, MagicRecipeIntegrator, MoreBeams, OreExcavator, OreExchange, PersistentPlayerPosition, PingMod, SellAll, SharedMap, SmarterCursor, TerrariaOverhaul, TheArchitectsBlueprintMod, TMLAchievements, UnCalamityModMusic. Expected null/empty until per-tile export tracking lands.
+19:27:07.412 [PASS] projection_P01 | NewProjection captured a 2x2 payload.
+19:27:07.412 [PASS] projection_P02 | SetCut toggled and empty payload forced CutSource off.
+19:27:07.412 [INFO] projection_P03: compared=1, missing=0, unexpected=0, fieldMismatch=0.
+19:27:07.412 [PASS] projection_P03 | MoveTo relocated the target and preserved relative payload cells.
+19:27:07.412 [PASS] selection_P01 | SetPoints defined 4x3 and ClearSelection cleared it.
+19:27:07.412 [PASS] selection_P02 | ExcludeTiles and IncludeTiles toggled the center cell.
+19:27:07.412 [PASS] selection_P03 | TranslateSelection moved origin and preserved size.
+19:27:07.412 [INFO] Summary: 16 passed, 9 failed, 0 errors.
+# Test Case dump ended 2026-11-20T19:27:07.4127504+01:00

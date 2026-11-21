@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
-using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Core.Layers;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 using TheArchitectsBlueprintMod.Debug;
@@ -106,20 +105,13 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Records one wire-kind placement demand unit.</summary>
         public void RecordWireKind(int wireKind)
         {
-            // --- Accept any mapped wrench/multicolor tool; hard-fallback to Wire/Actuator when unmapped.
+            // --- Accept any mapped wrench/multicolor tool; unresolved when .itr has no row.
 
-            if (RecordMainKind(
-                    "Wire",
-                    wireKind,
-                    unresolvedKey: null,
-                    fallbackItemIds: () => InteractionMapProvider.GetWireItemIds(wireKind)))
-                return;
-
-            int fallback = wireKind == 4 ? ItemID.Actuator : ItemID.Wire;
-            LogLookupOnce(
-                $"Wire:{wireKind}:hardFallback",
-                $"Wire main={wireKind} candidates=0 fallbackHard=itemId={fallback}");
-            AddPairDemand(FormatMainLabel("Wire", wireKind), fallback, fallback, 1);
+            RecordMainKind(
+                "Wire",
+                wireKind,
+                unresolvedKey: FormatMainLabel("Wire", wireKind),
+                fallbackItemIds: () => InteractionMapProvider.GetWireItemIds(wireKind));
         }
 
         /// <summary>Records one paint-kind or coating placement demand unit.</summary>
@@ -210,7 +202,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         private void RecordTileMutation(ushort tileType, int style, int? baseId)
         {
-            // --- Inventory-aware tile interaction, then map ids, then styled drop, then unresolved.
+            // --- Inventory-aware tile interaction, then map tool ids, then unresolved (.itr only).
 
             string lookupKey = FormatLookupKey("Tile", tileType, style, baseId);
             if (TrySelectAndRecord(
@@ -228,16 +220,6 @@ namespace TheArchitectsBlueprintMod.Core
                     tileType,
                     style: style))
                 return;
-
-            int drop = TileLoader.GetItemDropFromTypeAndStyle(tileType, Math.Max(0, style));
-            if (drop > 0)
-            {
-                LogLookupOnce(
-                    lookupKey,
-                    $"Tile main={tileType} candidates=0 fallbackDrop=itemId={drop}");
-                AddPairDemand(FormatMainLabel("Tile", tileType, style), drop, drop, 1);
-                return;
-            }
 
             string unresolvedKey = FormatUnresolvedTile(tileType, style);
             LogLookupOnce(

@@ -131,16 +131,19 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             PlacementInteractionMap map,
             IReadOnlyDictionary<int, string> createTileItems)
         {
-            // --- Skip placeable tiles except sunflower (handled separately); keep classifiers in sync with PlantLayer.
+            // --- Skip placeable tiles except sunflower/Plants; keep classifiers in sync with PlantLayer.
             Log("Family: GroundPlants");
             int discovered = 0;
+
+            // TileID.Plants is skipped by createTile FlowerPackets; emit Staff + GrassSeeds + style-8 Mushroom.
+            discovered += DiscoverPlantsTile(map);
 
             for (int tileId = 0; tileId < TileLoader.TileCount; tileId++)
             {
                 if (!PlantLayer.Definition.IsCustom((ushort)tileId))
                     continue;
 
-                if (tileId == TileID.Sunflower)
+                if (tileId == TileID.Sunflower || tileId == TileID.Plants)
                     continue;
 
                 // Thorns have a dedicated family with biome seed anchors.
@@ -160,6 +163,60 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
             Log($"  GroundPlants summary: {discovered} tiles.");
             return discovered;
+        }
+
+        /// <summary>Emits StaffofRegrowth, GrassSeeds, and style-8 Mushroom rows for TileID.Plants.</summary>
+        private static int DiscoverPlantsTile(PlacementInteractionMap map)
+        {
+            // --- Style-agnostic Staff/GrassSeeds plus exact style 8 Staff/Mushroom for normal mushrooms.
+
+            const int mushroomStyle = 8;
+            int added = 0;
+            string tileName = ContentNameResolver.GetTileName(TileID.Plants);
+
+            if (ContentNameResolver.ResolveItem(StaffOfRegrowthItem).HasValue)
+            {
+                map.AddTile(TileID.Plants, InteractionEntry.Create(
+                    "Tile",
+                    item: StaffOfRegrowthItem,
+                    yield: DecorativeYield,
+                    style: null));
+                map.AddTile(TileID.Plants, InteractionEntry.Create(
+                    "Tile",
+                    item: StaffOfRegrowthItem,
+                    yield: DecorativeYield,
+                    style: mushroomStyle));
+                added += 2;
+                LogDebug($"  {tileName} ({TileID.Plants}) -> {StaffOfRegrowthItem} yield={DecorativeYield} (+style {mushroomStyle})");
+            }
+            else
+            {
+                LogWarn($"  WARN {tileName} ({TileID.Plants}): StaffofRegrowth unresolved.");
+            }
+
+            if (ContentNameResolver.ResolveItem("GrassSeeds").HasValue)
+            {
+                map.AddTile(TileID.Plants, InteractionEntry.Create(
+                    "Tile",
+                    item: "GrassSeeds",
+                    yield: ConsumableYield,
+                    style: null));
+                added++;
+                LogDebug($"  {tileName} ({TileID.Plants}) -> GrassSeeds yield={ConsumableYield}");
+            }
+
+            if (ContentNameResolver.ResolveItem("Mushroom").HasValue)
+            {
+                map.AddTile(TileID.Plants, InteractionEntry.Create(
+                    "Tile",
+                    item: "Mushroom",
+                    yield: ConsumableYield,
+                    style: mushroomStyle));
+                added++;
+                LogDebug($"  {tileName} ({TileID.Plants}) style={mushroomStyle} -> Mushroom yield={ConsumableYield}");
+            }
+
+            return added > 0 ? 1 : 0;
         }
 
         /// <summary>Emits the Sunflower item for every TileObjectData placement style.</summary>

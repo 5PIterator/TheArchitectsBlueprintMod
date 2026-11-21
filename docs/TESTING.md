@@ -4,6 +4,17 @@ In-game, trigger-driven Test Cases under `src/tests/test_plans/{feature-slug}/`.
 
 Terms: **Test Plan** (Case list for one feature), **Test Scenario** (Case title), **Case Tag** (`{feature}_{T}{nn}`), **Test Case** (`ITestCase`), **Test Report** (reporter + log), **Test Fixture** (shared setup chain), **Test Trigger** (in-game run command).
 
+## Test Report outcomes
+
+| Outcome | Meaning |
+|---------|---------|
+| **Pass** | Assertions held |
+| **Fail** | Case could run; setup under tester/product control failed, or an assertion failed |
+| **Abandon** | Environment the Case cannot fix (wrong net mode, missing required mod, remote client cannot load InteractionMap files) |
+| **Error** | Unexpected exception |
+
+Summary line: `passed / failed / abandoned / errors`. Topology-only Cases such as `paste-mp_*` **Abandon** on single-player instead of Fail. Mod-gated Cases such as `layer_R03` **Abandon** when `CalamityMod` is not loaded.
+
 ## Test Triggers
 
 **Prerequisite:** pin the universal test chamber origin. Equip the Debug Stick, select wheel action **CHM**, and left-click a flat open area. `/tab.test all|run` and Debug Stick **TST** refuse to start until the origin is set (persisted in the world file; synced to peers in multiplayer).
@@ -29,6 +40,7 @@ src/tests/
   harness/       # runner, registry, guards, reporter
   fixtures/      # cross-feature Fixture network (+ fixtures/Mp/)
   payloads/      # .tab assets
+  maps/          # VanillaMap.itr / ModdedMap.itr fixtures (pinned by layer_R02/R03)
   test_plans/
     selection/   # ↔ docs/test-plans/selection.md
     projection/  # ↔ docs/test-plans/projection.md
@@ -64,7 +76,7 @@ All Case geometry is offset from the CHM origin (not the player). Stand near the
 | `StoneTargetB` | (2, -2) | `paste-mp_B04` second paste |
 | `MaterialChestOrigin` | (1, -4) | `paste-mp_*` wood-chest chamber |
 | `FixtureOrigin(w,h)` | (0, 0) bottom-left | `paste_P04`, `paste_F05` |
-| `LayerSupport(i)` | (-2+2i, -1) | `layer_R01` columns 0..2 |
+| `LayerSupport(i)` | (-2+2i, -1) | `layer_R01` columns 0..3 (`layer_R02`/`R03` pin map fixtures only) |
 | `SelectionOrigin` | (8, -4) | `selection_*` |
 | `ProjectionOrigin` | (20, -6) | `projection_*` |
 

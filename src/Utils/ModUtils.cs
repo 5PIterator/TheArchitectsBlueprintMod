@@ -289,9 +289,11 @@ namespace TheArchitectsBlueprintMod.Utils
 
 		public static void LoadItem(int type)
 		{
-			// Use this instead of Main.instance.LoadItem because we don't need ImmediateLoad
-			if (TextureAssets.Item[type].State == AssetState.NotLoaded)
-				Main.Assets.Request<Texture2D>(TextureAssets.Item[type].Name, AssetRequestMode.AsyncLoad);
+			// ImmediateLoad so PasteArrow can draw modded item sprites on the first PreDraw frame.
+			if (type <= 0 || type >= TextureAssets.Item.Length)
+				return;
+
+			Main.instance.LoadItem(type);
 		}
 
 		public static void MouseText(string cursorText, int rare = 0, byte diff = 0)

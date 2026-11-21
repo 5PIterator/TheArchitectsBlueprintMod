@@ -146,7 +146,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>Queues wire/actuator reconciliation to payload intent through TileExecutor.</summary>
         private static bool ApplyWireIntent(int x, int y, in PayloadCell.WireData intent, in PasteContext context, ref bool changed)
         {
-            bool consumeItem = context.RequireItems && !context.IsSweep;
+            bool consumeItem = !context.IsSweep;
 
             if (Main.tile[x, y].RedWire != intent.RedWire)
             {

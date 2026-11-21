@@ -949,6 +949,19 @@ Configs: {
 			Tooltip: When enabled, Shimmer.itr.json from SourceMaps is included in the compiled maps. Server / host only in multiplayer.
 		}
 
+		CompiledInteractionMapPath: {
+			Label: Compiled map path
+			Tooltip:
+				'''
+				Path to the compiled InteractionMap used for paste lookups.
+				Leave empty to use CompiledMaps/InteractionMap.itr (and its .itr.json sibling).
+				Relative paths are resolved from the mod directory; absolute paths are used as-is.
+				Examples: CompiledMaps/VanillaMap.itr, CompiledMaps/ModdedMap.itr
+				Compile still always writes CompiledMaps/InteractionMap.itr.
+				Server / host only in multiplayer.
+				'''
+		}
+
 		RunPlacementDiscovery: {
 			Label: Run placement discovery
 			Tooltip: One-shot action. Save config with this enabled to run placement discovery.

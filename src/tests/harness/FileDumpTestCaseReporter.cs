@@ -50,6 +50,12 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
             _inner.Fail(caseTag, message);
         }
 
+        public void Abandon(string caseTag, string message)
+        {
+            Write("ABANDON", $"{caseTag} | {message}");
+            _inner.Abandon(caseTag, message);
+        }
+
         public void Error(string caseTag, string message)
         {
             Write("ERROR", $"{caseTag} | {message}");

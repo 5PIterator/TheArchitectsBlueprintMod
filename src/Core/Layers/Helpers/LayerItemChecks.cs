@@ -8,14 +8,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
     /// <summary>Central plan-time item availability checks mirroring <see cref="TileExecutor"/> / manifest demand families.</summary>
     internal static class LayerItemChecks
     {
-        /// <summary>Returns true when item requirements are disabled, unavailable, or satisfied for this layer tile.</summary>
+        /// <summary>Returns true when Sweep is on, lookup is missing, or .itr item channels are satisfied.</summary>
         public static bool HasRequiredItems(
             Layer layer,
             in PasteTile tile,
             in PasteTileLookup lookup,
             in PasteContext context)
         {
-            if (!context.RequireItems || context.InventoryLookup is null || context.IsSweep)
+            // --- Sweep stays exempt; RequireItems only controls inventory presence vs zero-count map checks.
+
+            if (context.IsSweep || context.InventoryLookup is null)
                 return true;
 
             return layer.Id switch
@@ -166,30 +168,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
         private static bool HasWireKindItems(int wireKind, in PasteContext context)
         {
+            // --- Wire/Actuator presence comes only from mapped .itr tools.
+
             if (context.InventoryLookup is null)
                 return false;
 
-            TileItemAvailability availability = context.InventoryLookup.GetWireItemAvailability(
-                wireKind,
-                context.InteractionBudget);
-            if (availability == TileItemAvailability.Available)
-                return true;
-            if (availability != TileItemAvailability.UnresolvedInteraction)
-                return false;
-
-            Item[]? items = context.InventoryLookup.GetContents();
-            if (items is null)
-                return false;
-
-            int fallbackItem = wireKind == 4 ? ItemID.Actuator : ItemID.Wire;
-            for (int i = 0; i < items.Length; i++)
-            {
-                Item item = items[i];
-                if (item.type == fallbackItem && item.stack > 0)
-                    return true;
-            }
-
-            return false;
+            return context.InventoryLookup.GetWireItemAvailability(
+                    wireKind,
+                    context.InteractionBudget,
+                    requireInventory: context.RequireItems)
+                == TileItemAvailability.Available;
         }
 
         private static bool NeedsEchoCoating(in PayloadCell.PaintData intent, in Tile target) =>

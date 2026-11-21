@@ -336,7 +336,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         public static bool HasItemForTile(ushort tileType, int style, in PasteContext ctx, int? baseId = null)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
+            if (ctx.IsSweep || ctx.InventoryLookup is null)
                 return true;
             return GetTileItemAvailability(tileType, style, in ctx, baseId) == TileItemAvailability.Available;
         }
@@ -344,7 +344,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Whether required inventory contains an item for the given wall type.</summary>
         public static bool HasItemForWall(ushort wallType, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
+            if (ctx.IsSweep || ctx.InventoryLookup is null)
                 return true;
             return GetWallItemAvailability(wallType, in ctx) == TileItemAvailability.Available;
         }
@@ -352,39 +352,58 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Whether inventory can supply any mapped tool for the paint or coating main.</summary>
         public static bool HasItemForPaint(int paintMainId, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
+            if (ctx.IsSweep || ctx.InventoryLookup is null)
                 return true;
-            return ctx.InventoryLookup.GetPaintItemAvailability(paintMainId, ctx.InteractionBudget)
+            return ctx.InventoryLookup.GetPaintItemAvailability(
+                    paintMainId,
+                    ctx.InteractionBudget,
+                    requireInventory: ctx.RequireItems)
                 == TileItemAvailability.Available;
         }
 
         public static bool HasItemForInteraction(InteractionEntry entry, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
+            if (ctx.IsSweep || ctx.InventoryLookup is null)
                 return true;
-            return ctx.InventoryLookup.GetInteractionAvailability(entry, ctx.InteractionBudget) == TileItemAvailability.Available;
+            return ctx.InventoryLookup.GetInteractionAvailability(
+                    entry,
+                    ctx.InteractionBudget,
+                    requireInventory: ctx.RequireItems)
+                == TileItemAvailability.Available;
         }
 
         /// <summary>Returns true when inventory can supply any mapped tool for the liquid type.</summary>
         public static bool HasItemForLiquid(int liquidType, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
+            if (ctx.IsSweep || ctx.InventoryLookup is null)
                 return true;
-            return ctx.InventoryLookup.GetLiquidItemAvailability(liquidType, ctx.InteractionBudget) == TileItemAvailability.Available;
+            return ctx.InventoryLookup.GetLiquidItemAvailability(
+                    liquidType,
+                    ctx.InteractionBudget,
+                    requireInventory: ctx.RequireItems)
+                == TileItemAvailability.Available;
         }
 
         public static TileItemAvailability GetTileItemAvailability(ushort tileType, int style, in PasteContext ctx, int? baseId = null)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
+            if (ctx.IsSweep || ctx.InventoryLookup is null)
                 return TileItemAvailability.Available;
-            return ctx.InventoryLookup.GetTileItemAvailability(tileType, style, ctx.InteractionBudget, baseId);
+            return ctx.InventoryLookup.GetTileItemAvailability(
+                tileType,
+                style,
+                ctx.InteractionBudget,
+                baseId,
+                requireInventory: ctx.RequireItems);
         }
 
         public static TileItemAvailability GetWallItemAvailability(ushort wallType, in PasteContext ctx)
         {
-            if (!ctx.RequireItems || ctx.InventoryLookup is null || ctx.IsSweep)
+            if (ctx.IsSweep || ctx.InventoryLookup is null)
                 return TileItemAvailability.Available;
-            return ctx.InventoryLookup.GetWallItemAvailability(wallType, ctx.InteractionBudget);
+            return ctx.InventoryLookup.GetWallItemAvailability(
+                wallType,
+                ctx.InteractionBudget,
+                requireInventory: ctx.RequireItems);
         }
 
         /// <summary>Returns true when inventory can supply the interaction; otherwise sets <paramref name="failReason"/>.</summary>
@@ -394,9 +413,13 @@ namespace TheArchitectsBlueprintMod.Core
             out LayerFailReason failReason)
         {
             failReason = LayerFailReason.None;
-            TileItemAvailability availability = ctx.RequireItems && ctx.InventoryLookup is not null && !ctx.IsSweep
-                ? ctx.InventoryLookup.GetInteractionAvailability(entry, ctx.InteractionBudget)
-                : TileItemAvailability.Available;
+            if (ctx.IsSweep || ctx.InventoryLookup is null)
+                return true;
+
+            TileItemAvailability availability = ctx.InventoryLookup.GetInteractionAvailability(
+                entry,
+                ctx.InteractionBudget,
+                requireInventory: ctx.RequireItems);
             if (availability == TileItemAvailability.Available)
                 return true;
 
@@ -688,12 +711,15 @@ namespace TheArchitectsBlueprintMod.Core
             out Chest? sourceChest,
             out PlacementReservationLedger ledger)
         {
+            // --- Always reserve through .itr; RequireItems only controls whether stacks are debited.
+
             placeStyle = mutation.Style;
             itemType = 0;
             origin = default;
             fromChest = false;
             sourceChest = null;
             ledger = new PlacementReservationLedger();
+            bool requireInventory = ctx.RequireItems;
 
             // Paint uses PaintMutationState; reserve each needed facet via priority-ordered tools.
             if (mutation.Kind == TileMutationKind.ApplyPaintState)
@@ -710,7 +736,8 @@ namespace TheArchitectsBlueprintMod.Core
                     out origin,
                     out fromChest,
                     out sourceChest,
-                    out ledger);
+                    out ledger,
+                    requireInventory);
             }
 
             InteractionEntry? entry = ResolveInteractionForMutation(mutation, in ctx);
@@ -719,7 +746,8 @@ namespace TheArchitectsBlueprintMod.Core
                     entry,
                     ctx.InteractionBudget,
                     ctx.Player,
-                    out InteractionReservation reservation))
+                    out InteractionReservation reservation,
+                    requireInventory))
             {
                 placeStyle = reservation.PlaceStyle;
                 itemType = reservation.ConsumableItemId;
@@ -741,7 +769,8 @@ namespace TheArchitectsBlueprintMod.Core
                     out origin,
                     out fromChest,
                     out sourceChest,
-                    out ledger);
+                    out ledger,
+                    requireInventory);
             }
 
             if (mutation.Kind is TileMutationKind.PlaceTile or TileMutationKind.PlaceObject)
@@ -757,7 +786,8 @@ namespace TheArchitectsBlueprintMod.Core
                     out origin,
                     out fromChest,
                     out sourceChest,
-                    out ledger);
+                    out ledger,
+                    requireInventory);
             }
 
             return false;
@@ -798,7 +828,8 @@ namespace TheArchitectsBlueprintMod.Core
                         ctx.Player,
                         ctx.InteractionBudget,
                         out InteractionEntry? reservedEntry,
-                        out InteractionReservation reservation)
+                        out InteractionReservation reservation,
+                        requireInventory: ctx.RequireItems)
                     || reservedEntry is null)
                 {
                     for (int j = completed.Count - 1; j >= 0; j--)
@@ -1082,7 +1113,10 @@ namespace TheArchitectsBlueprintMod.Core
             TileMutation mutation,
             in PasteContext ctx)
         {
-            // --- Consume path reserves inventory then flies chest→tile; cosmetic path flies paste origin→tile.
+            // --- Always reserve through .itr (zero-count when !RequireItems); abort when unmapped.
+
+            if (ctx.InventoryLookup is null)
+                return false;
 
             int placeStyle = mutation.Style;
             int itemType;
@@ -1090,69 +1124,62 @@ namespace TheArchitectsBlueprintMod.Core
             bool fromChest = false;
             Chest? sourceChest = null;
             PlacementReservationLedger ledger = default;
-            bool cosmetic = !ShouldConsumeOnPlace(in ctx, mutation.ConsumeItem);
+            bool debitStacks = ShouldConsumeOnPlace(in ctx, mutation.ConsumeItem);
 
-            if (cosmetic)
+            if (mutation.Kind == TileMutationKind.SetLiquid
+                && session.TryGetLiquidPool(mutation.MutationId, out LiquidPoolCell[] poolCells)
+                && poolCells.Length > 0)
             {
-                // No item debit: spawn from relative (0,0) of the paste footprint.
-                itemType = ResolveCosmeticPlaceItemType(mutation, in ctx);
-                origin = InventoryManager.GetTileWorldCenter(ctx.TargetOrigin);
-            }
-            else
-            {
-                if (ctx.InventoryLookup is null)
+                // --- Reserve the selected liquid tool once per pool cell, then fire one shared arrow.
+                if (!ctx.InventoryLookup.TryReserveForLiquidPool(
+                        mutation.Type,
+                        poolCells.Length,
+                        ctx.Player,
+                        ctx.InteractionBudget,
+                        out ledger,
+                        out origin,
+                        out fromChest,
+                        out sourceChest,
+                        requireInventory: ctx.RequireItems))
                     return false;
 
-                if (mutation.Kind == TileMutationKind.SetLiquid
-                    && session.TryGetLiquidPool(mutation.MutationId, out LiquidPoolCell[] poolCells)
-                    && poolCells.Length > 0)
-                {
-                    // --- Reserve the selected liquid tool once per pool cell, then fire one shared arrow.
-                    if (!ctx.InventoryLookup.TryReserveForLiquidPool(
-                            mutation.Type,
-                            poolCells.Length,
-                            ctx.Player,
-                            ctx.InteractionBudget,
-                            out ledger,
-                            out origin,
-                            out fromChest,
-                            out sourceChest))
-                        return false;
-
-                    itemType = ledger.VisualItemType > 0 ? ledger.VisualItemType : mutation.Type;
-                    TABLog.Debug(
-                        $"FireLiquidPool mutation={mutation.MutationId} cells={poolCells.Length} visual={itemType} "
-                        + $"debited={ledger.DebitedStackCount} freeYield={ledger.FreeYieldSpendCount}",
-                        TABLog.TileExecutorCategory);
-                }
-                else if (!TryReserveForPlacementMutation(
-                    mutation,
-                    in ctx,
-                    out placeStyle,
-                    out itemType,
-                    out origin,
-                    out fromChest,
-                    out sourceChest,
-                    out ledger))
-                {
-                    return false;
-                }
-
-                if (ledger.VisualItemType > 0)
-                    itemType = ledger.VisualItemType;
+                itemType = ledger.VisualItemType > 0 ? ledger.VisualItemType : 0;
+                TABLog.Debug(
+                    $"FireLiquidPool mutation={mutation.MutationId} cells={poolCells.Length} visual={itemType} "
+                    + $"debited={ledger.DebitedStackCount} freeYield={ledger.FreeYieldSpendCount} "
+                    + $"requireInventory={ctx.RequireItems}",
+                    TABLog.TileExecutorCategory);
             }
+            else if (!TryReserveForPlacementMutation(
+                mutation,
+                in ctx,
+                out placeStyle,
+                out itemType,
+                out origin,
+                out fromChest,
+                out sourceChest,
+                out ledger))
+            {
+                return false;
+            }
+
+            if (ledger.VisualItemType > 0)
+                itemType = ledger.VisualItemType;
+
+            // Unmapped or empty visual means .itr failed to resolve a place item.
+            if (itemType <= 0)
+                return false;
 
             var impactMutation = mutation with
             {
                 // Keep ApplyPaintState.Paint intact; Style is only for tile/object placement.
                 Style = mutation.Kind == TileMutationKind.ApplyPaintState ? mutation.Style : placeStyle,
                 ItemType = itemType,
-                ItemStack = cosmetic ? 0 : Math.Max(1, ledger.DebitedStackCount),
-                ConsumeItem = !cosmetic && mutation.ConsumeItem,
+                ItemStack = debitStacks ? Math.Max(1, ledger.DebitedStackCount) : 0,
+                ConsumeItem = debitStacks && mutation.ConsumeItem,
             };
 
-            if (!cosmetic)
-                session.AttachPlacementLedger(impactMutation.MutationId, ledger);
+            session.AttachPlacementLedger(impactMutation.MutationId, ledger);
 
             Vector2 destination = InventoryManager.GetTileWorldCenter(mutation.World);
             uint firedAt = Main.GameUpdateCount;
@@ -1186,105 +1213,13 @@ namespace TheArchitectsBlueprintMod.Core
             TileExecutorLog.ArrowState(
                 in impactMutation,
                 state: spawned ? "Fire" : "Headless",
-                detail: cosmetic ? $"cosmetic eta={arriveBy - firedAt}" : $"eta={arriveBy - firedAt}");
+                detail: debitStacks
+                    ? $"eta={arriveBy - firedAt}"
+                    : $"zeroCount eta={arriveBy - firedAt}");
             TileExecutorLog.Projectile(in impactMutation, fired: true);
             if (fromChest && sourceChest is not null)
                 InventoryManager.PlayChestEatAnimation(sourceChest);
             return true;
-        }
-
-        /// <summary>Picks a display item id for non-consuming place arrows from the interaction map.</summary>
-        private static int ResolveCosmeticPlaceItemType(TileMutation mutation, in PasteContext ctx)
-        {
-            // --- Prefer finite shopping-list rows (seeds) over infinite tools for cosmetic icons.
-
-            InteractionEntry? entry = ResolveCosmeticPlaceInteraction(mutation, in ctx);
-            if (entry is not null)
-            {
-                int visual = entry.GetVisualItemId();
-                if (visual > 0)
-                    return visual;
-            }
-
-            // No mapped place item: 0 lets PasteArrow draw its default wooden-arrow projectile sprite.
-            return 0;
-        }
-
-        /// <summary>Resolves the interaction row for a cosmetic place arrow, including fake place targets.</summary>
-        private static InteractionEntry? ResolveCosmeticPlaceInteraction(TileMutation mutation, in PasteContext ctx)
-        {
-            // --- Finite-first among mapped candidates; ledger is unused when RequireItems is false.
-
-            if (!InteractionSelection.TrySelectFiniteFirst(
-                    EnumerateCosmeticPlaceInteractions(mutation, ctx),
-                    isMet: null,
-                    out InteractionEntry? chosen,
-                    out _,
-                    out _,
-                    out _)
-                || chosen is null)
-            {
-                return null;
-            }
-
-            return chosen;
-        }
-
-        /// <summary>Yields interaction candidates for cosmetic arrow icon selection.</summary>
-        private static IEnumerable<InteractionEntry> EnumerateCosmeticPlaceInteractions(
-            TileMutation mutation,
-            PasteContext ctx)
-        {
-            // --- Priority-ordered rows for the placed main; fake targets append after direct rows.
-
-            switch (mutation.Kind)
-            {
-                case TileMutationKind.PlaceTile or TileMutationKind.PlaceObject:
-                    foreach (InteractionEntry entry in InteractionMapProvider.EnumerateTileInteractions(
-                                 mutation.Type,
-                                 mutation.Style,
-                                 ResolveBaseTileIdForMutation(mutation)))
-                        yield return entry;
-                    break;
-                case TileMutationKind.PlaceWall:
-                    foreach (InteractionEntry entry in InteractionMapProvider.EnumerateWallInteractions(mutation.Type))
-                        yield return entry;
-                    break;
-                case TileMutationKind.SetLiquid:
-                    foreach (InteractionEntry entry in InteractionMapProvider.EnumerateLiquidInteractions(mutation.Type))
-                        yield return entry;
-                    break;
-                case TileMutationKind.PlaceWireRed
-                    or TileMutationKind.PlaceWireGreen
-                    or TileMutationKind.PlaceWireBlue
-                    or TileMutationKind.PlaceWireYellow
-                    or TileMutationKind.PlaceActuator:
-                    foreach (InteractionEntry entry in InteractionMapProvider.EnumerateWireInteractions(
-                                 WireKindFromMutationKind(mutation.Kind)))
-                        yield return entry;
-                    break;
-                case TileMutationKind.ApplyPaintState:
-                    foreach (InteractionEntry entry in InteractionMapProvider.EnumeratePaintInteractions(
-                                 mutation.Paint.TileColor != 0 ? mutation.Paint.TileColor : mutation.Paint.WallColor))
-                        yield return entry;
-                    break;
-                default:
-                    InteractionEntry? resolvedEntry = ResolveInteractionForMutation(mutation, ctx);
-                    if (resolvedEntry is not null)
-                        yield return resolvedEntry;
-                    break;
-            }
-
-            InteractionEntry? fakeEntry = mutation.Kind switch
-            {
-                TileMutationKind.PlaceTile or TileMutationKind.PlaceObject =>
-                    InteractionMapProvider.Current?.FindByFakeMain("Tile", mutation.Type, mutation.Style),
-                TileMutationKind.PlaceWall =>
-                    InteractionMapProvider.Current?.FindByFakeMain("Wall", mutation.Type),
-                _ => null,
-            };
-            if (fakeEntry is not null)
-                yield return fakeEntry;
         }
 
         private static bool TryFireStorePasteArrow(

@@ -814,7 +814,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>Places one tree trunk tile by writing payload framing directly.</summary>
         private static LayerResult PlaceTreeSegment(in PasteTile segment, in PasteContext context)
         {
-            // --- Support is validated before this call; blit exact frames (no TileFrame hooks — they would reframe branches).
+            // --- Resolve .itr first, then blit exact frames (no TileFrame hooks — they would reframe branches).
             int x = segment.World.X;
             int y = segment.World.Y;
             if (!segment.PayloadCell.HasTile())
@@ -825,6 +825,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             ushort tileType = (ushort)segment.PayloadCell.Block.Type;
             Tile dest = Main.tile[x, y];
 
+            if (!TryReserveTreeSegmentItems(in segment, in context, out LayerFailReason itemFailReason))
+                return LayerResult.Fail(itemFailReason, message);
+
             if (dest.HasTile && dest.TileType != tileType && context.UseReplacePlace)
             {
                 if (!TileExecutor.EnqueueVoidKillTile(x, y, in context))
@@ -834,25 +837,47 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!TileExecutor.EnqueueApplyPayloadBlock(x, y, in segment.PayloadCell, in context))
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
 
-            if (!TryReserveTreeSegmentItems(in segment, in context))
-                return LayerResult.Fail(LayerFailReason.MissingItems, message);
-
             return LayerResult.Ok(message, okLabel);
         }
 
-        /// <summary>Reserves Living Wood Wand ammo; ApplyPayloadBlock does not consume on its own.</summary>
-        private static bool TryReserveTreeSegmentItems(in PasteTile segment, in PasteContext context)
+        /// <summary>Reserves Living Wood Wand ammo from .itr before ApplyPayloadBlock writes the trunk.</summary>
+        private static bool TryReserveTreeSegmentItems(
+            in PasteTile segment,
+            in PasteContext context,
+            out LayerFailReason failReason)
         {
-            if (!segment.PayloadCell.HasTile() || !context.RequireItems || context.InventoryLookup is null || context.IsSweep)
-                return true;
-            if (!TryResolveTreeInteraction(in segment, context.Lookup, out InteractionEntry? entry) || entry is null)
-                return false;
+            // --- Sweep stays exempt; otherwise require a mapped tree interaction (zero-count when !RequireItems).
 
-            return context.InventoryLookup.TryReserveForInteraction(
-                entry,
-                context.InteractionBudget,
-                context.Player,
-                out _);
+            failReason = LayerFailReason.None;
+            if (!segment.PayloadCell.HasTile() || context.IsSweep)
+                return true;
+
+            if (context.InventoryLookup is null)
+            {
+                failReason = LayerFailReason.UnresolvedInteraction;
+                return false;
+            }
+
+            if (!TryResolveTreeInteraction(in segment, context.Lookup, out InteractionEntry? entry) || entry is null)
+            {
+                failReason = LayerFailReason.UnresolvedInteraction;
+                return false;
+            }
+
+            if (!context.InventoryLookup.TryReserveForInteraction(
+                    entry,
+                    context.InteractionBudget,
+                    context.Player,
+                    out _,
+                    requireInventory: context.RequireItems))
+            {
+                failReason = context.RequireItems
+                    ? LayerFailReason.MissingItems
+                    : LayerFailReason.UnresolvedInteraction;
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>Returns the next clear index: branch columns top-down, then trunk column top-down.</summary>

@@ -64,6 +64,18 @@ namespace TheArchitectsBlueprintMod.Utils
             if (!tile.HasTile || tile.TileType >= TileLoader.TileCount)
                 return;
 
+            // Ambient rubble has no TileObjectData; decode Echo style from sprite-sheet frames.
+            if (FrameOperations.TryResolveAmbientRubbleEcho(
+                    tile.TileType,
+                    tile.TileFrameX,
+                    tile.TileFrameY,
+                    out FrameOperations.AmbientRubbleEcho ambient))
+            {
+                style = ambient.Style;
+                alternate = 0;
+                return;
+            }
+
             // Seed with GetTileInfo, then override style from drop placeStyle when available.
             int infoStyle = 0;
             TileObjectData.GetTileInfo(tile, ref infoStyle, ref alternate);

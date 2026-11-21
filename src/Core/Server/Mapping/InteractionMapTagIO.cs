@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using TheArchitectsBlueprintMod.Debug;
+using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
 namespace TheArchitectsBlueprintMod.Core.TileMapping
@@ -111,6 +113,21 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                     return false;
                 }
 
+                if (root.TryGetProperty("metadata", out JsonElement metaEl)
+                    && metaEl.ValueKind == JsonValueKind.Object
+                    && metaEl.TryGetProperty("modsLoaded", out JsonElement modsEl)
+                    && modsEl.ValueKind == JsonValueKind.Array)
+                {
+                    var modsLoaded = new List<string>();
+                    foreach (JsonElement el in modsEl.EnumerateArray())
+                    {
+                        if (el.ValueKind == JsonValueKind.String && el.GetString() is string name && !string.IsNullOrEmpty(name))
+                            modsLoaded.Add(name);
+                    }
+
+                    WarnIfContentModsMissing(modsLoaded);
+                }
+
                 foreach (JsonProperty layerProp in dataEl.EnumerateObject())
                     ReadLayerData(layerProp.Name, layerProp.Value, map, tileIdsToLoad, wallIdsToLoad);
 
@@ -194,6 +211,19 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             {
                 error = "Interaction map is missing entries.";
                 return false;
+            }
+
+            // Binary maps store raw numeric ids; reject when the compiled mod list no longer matches.
+            if (root.ContainsKey(KeyMetadata))
+            {
+                TagCompound metaTag = root.GetCompound(KeyMetadata);
+                if (!ModsLoadedMatchesCurrent(ReadModsLoaded(metaTag), out string? mismatch))
+                {
+                    error = mismatch ?? "Compiled interaction map modsLoaded does not match the active mod list.";
+                    return false;
+                }
+
+                WarnIfContentModsMissing(ReadModsLoaded(metaTag));
             }
 
             IList<TagCompound> entries = root.GetList<TagCompound>(KeyEntries);
@@ -378,6 +408,101 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             if (metadata.GeneratedAt.HasValue)
                 tag["generatedAt"] = metadata.GeneratedAt.Value.ToString("O");
             return tag;
+        }
+
+        /// <summary>Reads the optional modsLoaded string list from compiled metadata.</summary>
+        private static List<string>? ReadModsLoaded(TagCompound metaTag)
+        {
+            // --- Prefer the string list written by MetadataToTag.
+
+            if (!metaTag.ContainsKey("modsLoaded"))
+                return null;
+
+            try
+            {
+                IList<string> list = metaTag.GetList<string>("modsLoaded");
+                return list is { Count: > 0 } ? [.. list] : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>True when compiled modsLoaded matches the currently loaded mod names (order-insensitive).</summary>
+        internal static bool ModsLoadedMatchesCurrent(IReadOnlyList<string>? modsLoaded, out string? mismatch)
+        {
+            // --- Require the same set of mod names; binary numeric ids shift across load-order changes.
+
+            mismatch = null;
+            List<string> current = CollectCurrentModNames();
+            if (modsLoaded is null || modsLoaded.Count == 0)
+            {
+                if (current.Count <= 1)
+                    return true;
+
+                mismatch = "Compiled interaction map is missing modsLoaded metadata while content mods are active.";
+                return false;
+            }
+
+            var compiled = new HashSet<string>(modsLoaded, StringComparer.OrdinalIgnoreCase);
+            var active = new HashSet<string>(current, StringComparer.OrdinalIgnoreCase);
+            if (compiled.SetEquals(active))
+                return true;
+
+            mismatch =
+                $"Compiled interaction map modsLoaded mismatch (compiled={modsLoaded.Count}, active={current.Count}); "
+                + "falling back to name-resolved InteractionMap.itr.json.";
+            return false;
+        }
+
+        /// <summary>Warns when active content mods are absent from the compiled map's modsLoaded list.</summary>
+        internal static void WarnIfContentModsMissing(IReadOnlyList<string>? modsLoaded)
+        {
+            // --- Surface incomplete .itr coverage for modded worlds without blocking name-resolved JSON.
+
+            List<string> current = CollectCurrentModNames();
+            var compiled = new HashSet<string>(modsLoaded ?? [], StringComparer.OrdinalIgnoreCase);
+            var missing = new List<string>();
+            for (int i = 0; i < current.Count; i++)
+            {
+                string name = current[i];
+                if (string.Equals(name, "ModLoader", StringComparison.OrdinalIgnoreCase))
+                    continue;
+                if (!compiled.Contains(name))
+                    missing.Add(name);
+            }
+
+            if (missing.Count == 0)
+                return;
+
+            TABLog.Warn(
+                $"Interaction map modsLoaded is missing active mods [{string.Join(", ", missing)}]; "
+                + "modded tiles without .itr rows will fail as UnresolvedInteraction.",
+                "InteractionMap");
+        }
+
+        /// <summary>Collects currently loaded mod names for modsLoaded comparisons.</summary>
+        private static List<string> CollectCurrentModNames()
+        {
+            // --- Mirror InteractionMapMetadata.Create so compile and load agree on membership.
+
+            var list = new List<string>();
+            try
+            {
+                for (int i = 0; i < ModLoader.Mods.Length; i++)
+                {
+                    Mod? mod = ModLoader.Mods[i];
+                    if (mod is not null && !string.IsNullOrEmpty(mod.Name))
+                        list.Add(mod.Name);
+                }
+            }
+            catch
+            {
+                // ignore
+            }
+
+            return list;
         }
 
         private static bool ShouldLoadMain(string layer, int mainId, IReadOnlySet<int>? tileIdsToLoad, IReadOnlySet<int>? wallIdsToLoad)

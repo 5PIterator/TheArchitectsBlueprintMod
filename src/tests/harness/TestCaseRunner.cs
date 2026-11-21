@@ -171,7 +171,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
         private static void PrintSummary(TallyingTestCaseReporter tally)
         {
             tally.Inner.Info(
-                $"Summary: {tally.PassCount} passed, {tally.FailCount} failed, {tally.ErrorCount} errors.");
+                $"Summary: {tally.PassCount} passed, {tally.FailCount} failed, {tally.AbandonCount} abandoned, {tally.ErrorCount} errors.");
         }
     }
 
@@ -181,6 +181,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
         public void Info(string message) => caller.Reply(message, Color.LightGray);
         public void Pass(string caseTag, string message) => caller.Reply($"[PASS] {caseTag} | {message}", Color.LightGreen);
         public void Fail(string caseTag, string message) => caller.Reply($"[FAIL] {caseTag} | {message}", Color.OrangeRed);
+        public void Abandon(string caseTag, string message) => caller.Reply($"[ABANDON] {caseTag} | {message}", Color.Yellow);
         public void Error(string caseTag, string message) => caller.Reply($"[ERROR] {caseTag} | {message}", Color.Red);
     }
 
@@ -190,15 +191,17 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
         public void Info(string message) => output(message, Color.LightGray);
         public void Pass(string caseTag, string message) => output($"[PASS] {caseTag} | {message}", Color.LightGreen);
         public void Fail(string caseTag, string message) => output($"[FAIL] {caseTag} | {message}", Color.OrangeRed);
+        public void Abandon(string caseTag, string message) => output($"[ABANDON] {caseTag} | {message}", Color.Yellow);
         public void Error(string caseTag, string message) => output($"[ERROR] {caseTag} | {message}", Color.Red);
     }
 
-    /// <summary>Counts pass / fail / error while forwarding to an inner reporter.</summary>
+    /// <summary>Counts pass / fail / abandon / error while forwarding to an inner reporter.</summary>
     internal sealed class TallyingTestCaseReporter(ITestCaseReporter inner) : ITestCaseReporter
     {
         public ITestCaseReporter Inner => inner;
         public int PassCount { get; private set; }
         public int FailCount { get; private set; }
+        public int AbandonCount { get; private set; }
         public int ErrorCount { get; private set; }
 
         public void Info(string message) => inner.Info(message);
@@ -213,6 +216,12 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
         {
             FailCount++;
             inner.Fail(caseTag, message);
+        }
+
+        public void Abandon(string caseTag, string message)
+        {
+            AbandonCount++;
+            inner.Abandon(caseTag, message);
         }
 
         public void Error(string caseTag, string message)

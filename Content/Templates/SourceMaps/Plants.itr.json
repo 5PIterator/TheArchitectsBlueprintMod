@@ -217,6 +217,32 @@
           }
         ]
       },
+      "Plants": {
+        "interactions": [
+          {
+            "Item": "StaffofRegrowth",
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "GrassSeeds",
+            "Yield": 1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "StaffofRegrowth",
+            "Style": 8,
+            "Yield": -1,
+            "Layer": "Tile"
+          },
+          {
+            "Item": "Mushroom",
+            "Style": 8,
+            "Yield": 1,
+            "Layer": "Tile"
+          }
+        ]
+      },
       "Plants2": {
         "interactions": [
           {

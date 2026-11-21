@@ -454,11 +454,21 @@ namespace TheArchitectsBlueprintMod.Core
                     if (InteractionMap.TryGetAlternateFurnitureTile(tileType, out int alternateTile))
                         tileIds.Add(alternateTile);
 
-                    // Include fake place targets so Echo rows stay available for filtered paste maps.
-                    int style = cell.ResolvePlacementStyle();
-                    InteractionEntry? entry = InteractionMapProvider.GetFirstTileInteraction((ushort)tileType, style);
-                    if (entry?.FakeId is int fakeId && fakeId > 0)
-                        tileIds.Add(fakeId);
+                    // Ambient rubble Echo counterparts are expanded in ItrStorage after the map loads.
+                    if (tileType == TileID.SmallPiles)
+                    {
+                        tileIds.Add(TileID.SmallPiles1x1Echo);
+                        tileIds.Add(TileID.SmallPiles2x1Echo);
+                    }
+                    else if (tileType == TileID.LargePiles)
+                        tileIds.Add(TileID.LargePilesEcho);
+                    else if (tileType == TileID.LargePiles2)
+                        tileIds.Add(TileID.LargePiles2Echo);
+                    else if (tileType == TileID.PlantDetritus)
+                    {
+                        tileIds.Add(TileID.PlantDetritus3x2Echo);
+                        tileIds.Add(TileID.PlantDetritus2x2Echo);
+                    }
                 }
 
                 if (cell.Wall.Type != WallID.None)

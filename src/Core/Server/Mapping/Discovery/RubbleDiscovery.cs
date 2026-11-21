@@ -187,7 +187,12 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             }))
                 added++;
 
-            if (!TryDeriveNaturalTileName(echoName, out string naturalName))
+            if (!TryDeriveNaturalTileName(echoName, out string naturalName, out bool hadSizeToken))
+                return added;
+
+            // Multi-size Echo families (SmallPiles1x1Echo / SmallPiles2x1Echo) collide on the same
+            // natural main+style; paste resolves Echo from frames and looks up Echo-as-main rows.
+            if (hadSizeToken)
                 return added;
 
             int? naturalId = ContentNameResolver.ResolveTile(naturalName);
@@ -236,11 +241,12 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         }
 
         /// <summary>Strips Echo/Replica and size tokens to derive a natural tile name.</summary>
-        private static bool TryDeriveNaturalTileName(string echoName, out string naturalName)
+        private static bool TryDeriveNaturalTileName(string echoName, out string naturalName, out bool hadSizeToken)
         {
             // --- SmallPiles1x1Echo → SmallPiles; LifeFruitReplica → LifeFruit; PotsEcho → Pots.
 
             naturalName = "";
+            hadSizeToken = false;
             if (string.IsNullOrEmpty(echoName))
                 return false;
 
@@ -252,7 +258,9 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             else
                 return false;
 
+            string beforeSize = stem;
             stem = SizeTokenRegex.Replace(stem, "");
+            hadSizeToken = !string.Equals(beforeSize, stem, StringComparison.Ordinal);
             if (string.IsNullOrEmpty(stem))
                 return false;
 

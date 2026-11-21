@@ -5,6 +5,7 @@ using System.Text.Json;
 using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Debug;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace TheArchitectsBlueprintMod.Core.TileMapping
@@ -96,6 +97,49 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             GetCompiledMapPath(CompiledInteractionMapJsonFileName);
 
         /// <summary>
+        /// Resolves binary and JSON paths for the InteractionMap used at paste load time.
+        /// </summary>
+        /// <remarks>
+        /// Empty config uses CompiledMaps/InteractionMap; otherwise absolute/relative path with .itr / .itr.json stem rules.
+        /// Compile output still always uses <see cref="GetCompiledInteractionMapPath"/>.
+        /// </remarks>
+        internal static void ResolveLoadPaths(out string binaryPath, out string jsonPath)
+        {
+            // --- Prefer config override; empty falls back to default compile output names.
+
+            string? configured = TileMappingConfig.Instance?.CompiledInteractionMapPath;
+            if (string.IsNullOrWhiteSpace(configured))
+            {
+                binaryPath = GetCompiledInteractionMapPath();
+                jsonPath = GetCompiledInteractionMapJsonPath();
+                return;
+            }
+
+            // Trim and resolve relative paths against the mod directory.
+            string trimmed = configured.Trim();
+            string resolved = Path.IsPathRooted(trimmed)
+                ? trimmed
+                : Path.Combine(TileMappingSystem.GetModDirectory(), trimmed);
+
+            // Split into binary (.itr) and readable (.itr.json) siblings from stem or extension.
+            if (resolved.EndsWith(".itr.json", StringComparison.OrdinalIgnoreCase))
+            {
+                jsonPath = resolved;
+                binaryPath = resolved[..^5]; // strip ".json"
+            }
+            else if (resolved.EndsWith(".itr", StringComparison.OrdinalIgnoreCase))
+            {
+                binaryPath = resolved;
+                jsonPath = resolved + ".json";
+            }
+            else
+            {
+                binaryPath = resolved + ".itr";
+                jsonPath = resolved + ".itr.json";
+            }
+        }
+
+        /// <summary>
         /// True when this game instance may load CompiledMaps from disk for paste
         /// (single-player, dedicated server, or listen-server host).
         /// </summary>
@@ -126,7 +170,10 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             if (!TryLoadInteractionMap(expandedTileIds, wallIds) || _map is null)
                 return;
 
-            if (!ExpandTileIdsWithRequiredBases(expandedTileIds, _map))
+            // Expand conversion bases and Echo/fake place targets, then reload the filtered map.
+            bool expandedBases = ExpandTileIdsWithRequiredBases(expandedTileIds, _map);
+            bool expandedFakes = ExpandTileIdsWithFakePlaceTargets(expandedTileIds, _map);
+            if (!expandedBases && !expandedFakes)
                 return;
 
             _map = null;
@@ -136,14 +183,18 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
             if (TABLog.IsDebugEnabled)
             {
                 TABLog.Debug(
-                    $"Interaction map loaded with {expandedTileIds.Count} tile ids (payload + conversion bases)",
+                    $"Interaction map loaded with {expandedTileIds.Count} tile ids (payload + conversion bases + fakes)",
                     "InteractionMap");
             }
         }
 
         private static bool TryLoadInteractionMap(IReadOnlySet<int>? tileIds, IReadOnlySet<int>? wallIds)
         {
-            string binaryPath = GetCompiledInteractionMapPath();
+            // --- Resolve configured load paths, try binary then JSON sibling.
+
+            ResolveLoadPaths(out string binaryPath, out string jsonPath);
+            TABLog.Info($"Loading interaction map binary='{binaryPath}' json='{jsonPath}'", "InteractionMap");
+
             if (File.Exists(binaryPath))
             {
                 using var stream = File.OpenRead(binaryPath);
@@ -157,7 +208,6 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
                 TABLog.Warn($"Failed to load compiled interaction map '{binaryPath}': {error}", "InteractionMap");
             }
 
-            string jsonPath = GetCompiledInteractionMapJsonPath();
             if (!File.Exists(jsonPath))
                 return false;
 
@@ -188,6 +238,49 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
 
             for (int i = 0; i < snapshot.Length; i++)
                 map.CollectConversionBaseTiles(snapshot[i], 0, tileIds);
+
+            return tileIds.Count > snapshot.Length;
+        }
+
+        /// <summary>Adds FakeId / Echo place targets so filtered paste maps include Rubblemaker rows.</summary>
+        private static bool ExpandTileIdsWithFakePlaceTargets(HashSet<int> tileIds, InteractionMap map)
+        {
+            // --- Snapshot first so newly added Echo ids are not re-walked in this pass.
+
+            int[] snapshot = [.. tileIds];
+            foreach ((int tileId, List<InteractionEntry> list) in map.GetAllTileEntries())
+            {
+                if (!tileIds.Contains(tileId))
+                    continue;
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    InteractionEntry entry = list[i];
+                    if (entry.FakeId is int fakeId && fakeId > 0)
+                        tileIds.Add(fakeId);
+                    if (entry.GetPlaceMainId() is int placeMain && placeMain > 0)
+                        tileIds.Add(placeMain);
+                }
+            }
+
+            // Ambient rubble payloads also need their Echo TileObjectData counterparts.
+            for (int i = 0; i < snapshot.Length; i++)
+            {
+                if (snapshot[i] == TileID.SmallPiles)
+                {
+                    tileIds.Add(TileID.SmallPiles1x1Echo);
+                    tileIds.Add(TileID.SmallPiles2x1Echo);
+                }
+                else if (snapshot[i] == TileID.LargePiles)
+                    tileIds.Add(TileID.LargePilesEcho);
+                else if (snapshot[i] == TileID.LargePiles2)
+                    tileIds.Add(TileID.LargePiles2Echo);
+                else if (snapshot[i] == TileID.PlantDetritus)
+                {
+                    tileIds.Add(TileID.PlantDetritus3x2Echo);
+                    tileIds.Add(TileID.PlantDetritus2x2Echo);
+                }
+            }
 
             return tileIds.Count > snapshot.Length;
         }

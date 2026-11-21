@@ -83,7 +83,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (PaintStateMatches(tile.PayloadTile, live))
                 return LayerResult.Ok();
 
-            bool consumeItem = context.RequireItems && !context.IsSweep;
+            bool consumeItem = !context.IsSweep;
             if (consumeItem && !LayerItemChecks.HasRequiredPaintItems(in src, live, in context))
             {
                 LayerFailReason reason = ResolvePaintItemFailReason(in src, live, in context);

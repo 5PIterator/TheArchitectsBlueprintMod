@@ -42,6 +42,9 @@ namespace TheArchitectsBlueprintMod.Config
         [DefaultValue(true)]
         public bool EnableShimmerTransforms;
 
+        [DefaultValue("")]
+        public string CompiledInteractionMapPath = "";
+
         [Header("Actions")]
 
         [DefaultValue(false)]

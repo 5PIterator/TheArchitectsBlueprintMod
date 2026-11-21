@@ -9,6 +9,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
         void Info(string message);
         void Pass(string caseTag, string message);
         void Fail(string caseTag, string message);
+        void Abandon(string caseTag, string message);
         void Error(string caseTag, string message);
     }
 }

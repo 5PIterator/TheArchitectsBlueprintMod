@@ -135,7 +135,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         }
 
         /// <summary>Returns true for vanilla one-tile plants that require a supporting ground tile.</summary>
-        private static bool RequiresGroundSupport(ushort tileType) =>
+        public static bool RequiresGroundSupport(ushort tileType) =>
             tileType == TileID.Plants
             || tileType == TileID.JunglePlants
             || tileType == TileID.HallowedPlants

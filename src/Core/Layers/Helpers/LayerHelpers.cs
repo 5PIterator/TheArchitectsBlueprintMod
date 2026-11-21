@@ -36,6 +36,14 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return true;
 
             // Treat a placed fake (e.g. Echo rubble) as satisfying the natural payload main.
+            if (FrameOperations.TryResolveAmbientRubbleEcho(
+                    intent.TileType,
+                    intent.TileFrameX,
+                    intent.TileFrameY,
+                    out FrameOperations.AmbientRubbleEcho ambient)
+                && ambient.EchoType == tile.Target.TileType)
+                return true;
+
             int style = tile.PayloadCell.ResolvePlacementStyle();
             InteractionEntry? entry = InteractionMapProvider.GetFirstTileInteraction(intent.TileType, style);
             return entry?.FakeId is int fakeId && fakeId == tile.Target.TileType;
@@ -175,10 +183,131 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
     internal static class FrameOperations
     {
+        /// <summary>Resolved Echo place target for a natural ambient-rubble tile (no TileObjectData).</summary>
+        internal readonly struct AmbientRubbleEcho(
+            ushort echoType,
+            int style,
+            int subX,
+            int subY,
+            int width,
+            int height)
+        {
+            public ushort EchoType { get; } = echoType;
+            public int Style { get; } = style;
+            public int SubX { get; } = subX;
+            public int SubY { get; } = subY;
+            public int Width { get; } = width;
+            public int Height { get; } = height;
+        }
+
+        /// <summary>Maps natural ambient rubble frames onto Rubblemaker Echo TileObjectData targets.</summary>
+        public static bool TryResolveAmbientRubbleEcho(
+            int tileType,
+            short frameX,
+            short frameY,
+            out AmbientRubbleEcho echo)
+        {
+            // --- Decode vanilla sprite-sheet framing into Echo type, style, and cell offset.
+
+            echo = default;
+            switch (tileType)
+            {
+                case TileID.SmallPiles when frameY < 18:
+                    echo = new AmbientRubbleEcho(
+                        (ushort)TileID.SmallPiles1x1Echo,
+                        style: Math.Max(0, frameX / 18),
+                        subX: 0,
+                        subY: 0,
+                        width: 1,
+                        height: 1);
+                    return true;
+                case TileID.SmallPiles:
+                    echo = new AmbientRubbleEcho(
+                        (ushort)TileID.SmallPiles2x1Echo,
+                        style: Math.Max(0, frameX / 36),
+                        subX: (frameX % 36) / 18,
+                        subY: 0,
+                        width: 2,
+                        height: 1);
+                    return true;
+                case TileID.LargePiles:
+                    echo = new AmbientRubbleEcho(
+                        (ushort)TileID.LargePilesEcho,
+                        style: Math.Max(0, frameX / 54),
+                        subX: (frameX % 54) / 18,
+                        subY: frameY / 18,
+                        width: 3,
+                        height: 2);
+                    return true;
+                case TileID.LargePiles2:
+                    echo = new AmbientRubbleEcho(
+                        (ushort)TileID.LargePiles2Echo,
+                        style: Math.Max(0, frameX / 54),
+                        subX: (frameX % 54) / 18,
+                        subY: frameY / 18,
+                        width: 3,
+                        height: 2);
+                    return true;
+                case TileID.PlantDetritus when frameY < 36:
+                    echo = new AmbientRubbleEcho(
+                        (ushort)TileID.PlantDetritus3x2Echo,
+                        style: Math.Max(0, frameX / 54),
+                        subX: (frameX % 54) / 18,
+                        subY: frameY / 18,
+                        width: 3,
+                        height: 2);
+                    return true;
+                case TileID.PlantDetritus:
+                    echo = new AmbientRubbleEcho(
+                        (ushort)TileID.PlantDetritus2x2Echo,
+                        style: Math.Max(0, (frameX / 36)),
+                        subX: (frameX % 36) / 18,
+                        subY: (frameY - 36) / 18,
+                        width: 2,
+                        height: 2);
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>True when the tile type is natural ambient rubble that places through Echo counterparts.</summary>
+        public static bool IsAmbientRubbleTileType(int tileType) =>
+            tileType is TileID.SmallPiles or TileID.LargePiles or TileID.LargePiles2 or TileID.PlantDetritus;
+
         public static IReadOnlyList<Point>? GetFrameTiles(Point originRel, in Tile sourceTile, in PasteTileLookup lookup)
         {
             if (!sourceTile.HasTile || !TileLoaderSupport.IsKnownTileType(sourceTile.TileType))
                 return null;
+
+            // Ambient rubble has no TileObjectData; expand from decoded Echo footprint.
+            if (TryResolveAmbientRubbleEcho(
+                    sourceTile.TileType,
+                    sourceTile.TileFrameX,
+                    sourceTile.TileFrameY,
+                    out AmbientRubbleEcho ambient))
+            {
+                TileObjectData? ambientData = TileObjectData.GetTileData(ambient.EchoType, ambient.Style);
+                int w = ambientData is not null ? Math.Max(1, ambientData.Width) : ambient.Width;
+                int h = ambientData is not null ? Math.Max(1, ambientData.Height) : ambient.Height;
+                int subX = ambient.SubX;
+                int subY = ambient.SubY;
+                int topLeftX = originRel.X - subX;
+                int topLeftY = originRel.Y - subY;
+                var ambientList = new List<Point>(w * h);
+                for (int dy = 0; dy < h; dy++)
+                {
+                    for (int dx = 0; dx < w; dx++)
+                    {
+                        Point relative = new(topLeftX + dx, topLeftY + dy);
+                        if (!lookup.IsInPasteScope(relative))
+                            return null;
+                        ambientList.Add(relative);
+                    }
+                }
+
+                return ambientList;
+            }
 
             int style = 0, alternate = 0;
             TileObjectData.GetTileInfo(sourceTile, ref style, ref alternate);
@@ -189,21 +318,21 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (data is null)
                 return [originRel];
 
-            int w = Math.Max(1, data.Width);
-            int h = Math.Max(1, data.Height);
+            int width = Math.Max(1, data.Width);
+            int height = Math.Max(1, data.Height);
 
-            int subX = ResolveSubX(sourceTile.TileFrameX, data, w);
-            int subY = ResolveSubY(sourceTile.TileFrameY, data, h);
+            int cellSubX = ResolveSubX(sourceTile.TileFrameX, data, width);
+            int cellSubY = ResolveSubY(sourceTile.TileFrameY, data, height);
 
-            int topLeftX = originRel.X - subX;
-            int topLeftY = originRel.Y - subY;
+            int originTopLeftX = originRel.X - cellSubX;
+            int originTopLeftY = originRel.Y - cellSubY;
 
-            var list = new List<Point>(w * h);
-            for (int dy = 0; dy < h; dy++)
+            var list = new List<Point>(width * height);
+            for (int dy = 0; dy < height; dy++)
             {
-                for (int dx = 0; dx < w; dx++)
+                for (int dx = 0; dx < width; dx++)
                 {
-                    Point relative = new(topLeftX + dx, topLeftY + dy);
+                    Point relative = new(originTopLeftX + dx, originTopLeftY + dy);
                     if (!lookup.IsInPasteScope(relative))
                         return null;
 
@@ -488,6 +617,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!tile.HasTile || !IsFrameEligibleTileType(tile.TileType))
                 return false;
 
+            // Natural ambient rubble always frames through Echo counterparts.
+            if (IsAmbientRubbleTileType(tile.TileType))
+                return true;
+
             // Live TileObjectData already encodes the placed style/alternate.
             if (HasFrameAnchor(tile))
                 return true;
@@ -507,6 +640,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!IsFrameEligibleTileType(tileType))
                 return false;
 
+            if (IsAmbientRubbleTileType(tileType))
+                return true;
+
             return MatchesFramePlacementCharacteristics(tileType, style);
         }
 
@@ -524,17 +660,19 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         }
 
         /// <summary>
-        /// True when this type may enter Frame classification (known, non-falling, not Tree-owned).
+        /// True when this type may enter Frame classification (known, non-falling, not Tree/Plant-owned).
         /// </summary>
         private static bool IsFrameEligibleTileType(int tileType)
         {
-            // --- Skip unknown/falling tiles and TreeLayer types (Living Wood Wand multi-style must not Frame-claim trees).
+            // --- Skip unknown/falling tiles and Tree/Plant types so multi-style .itr rows do not Frame-claim them.
             // Do not call CustomLayer.TileTypeIsClaimedByAttributedLayer here: PlantLayer.IsCustom → Frame → cycle.
+            // PlantLayer.RequiresGroundSupport is a fixed vanilla set (no Frame call), so it is cycle-safe.
 
             return TileLoaderSupport.IsKnownTileType(tileType)
                 && !TileLoaderSupport.IsUnknownTileType((ushort)tileType)
                 && !TileID.Sets.Falling[tileType]
-                && !TreeLayer.IsTreeType((ushort)tileType);
+                && !TreeLayer.IsTreeType((ushort)tileType)
+                && !PlantLayer.RequiresGroundSupport((ushort)tileType);
         }
 
         public static PasteTile GetPlacementOriginTile(IReadOnlyList<PasteTile> tiles) =>
@@ -687,6 +825,15 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!TileLoaderSupport.IsKnownTileType(tileType))
                 return default;
 
+            // Ambient rubble has no TileObjectData; use Echo style and origin from decoded frames.
+            if (TryResolveAmbientRubbleEcho(tileType, frameX, frameY, out AmbientRubbleEcho ambient))
+            {
+                TileObjectData? ambientData = TileObjectData.GetTileData(ambient.EchoType, ambient.Style);
+                Point16 origin = ambientData?.Origin ?? Point16.Zero;
+                int direction = ambientData is not null ? ResolvePlacementDirection(ambientData) : -1;
+                return new FramePlacementVariant(ambient.Style, 0, origin, direction, ambientData);
+            }
+
             int placeStyle = ResolveAuthoritativePlaceStyle(tileType, cachedStyle, cachedAlternate);
             if (TryMatchFramePlacementVariant(tileType, placeStyle, frameX, frameY, out FramePlacementVariant matched))
                 return matched;
@@ -776,18 +923,36 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>Returns true when frame X/Y fall in this alternate's style sprite column or row.</summary>
         private static bool FramesMatchAlternateStyle(TileObjectData data, int placeStyle, short frameX, short frameY)
         {
-            // --- Derive the spritesheet style index from frames and compare to placeStyle * multiplier + Style.
+            // --- Derive the spritesheet style index from frames, honoring StyleWrapLimit / StyleLineSkip.
             int multiplier = data.StyleMultiplier > 0 ? data.StyleMultiplier : 1;
             int expectedStyleIndex = placeStyle * multiplier + data.Style;
             if (data.StyleHorizontal)
             {
                 int fullWidth = Math.Max(1, data.CoordinateFullWidth);
                 int frameStyleIndex = Math.Abs((int)frameX) / fullWidth;
+                if (data.StyleWrapLimit > 0)
+                {
+                    int wrap = data.StyleWrapLimit;
+                    int lineSkip = Math.Max(0, data.StyleLineSkip);
+                    int row = Math.Abs((int)frameY) / Math.Max(1, data.CoordinateFullHeight);
+                    int wrappedIndex = (row / Math.Max(1, 1 + lineSkip)) * wrap + frameStyleIndex;
+                    return wrappedIndex == expectedStyleIndex;
+                }
+
                 return frameStyleIndex == expectedStyleIndex;
             }
 
             int fullHeight = Math.Max(1, data.CoordinateFullHeight);
             int frameStyleRow = Math.Abs((int)frameY) / fullHeight;
+            if (data.StyleWrapLimit > 0)
+            {
+                int wrap = data.StyleWrapLimit;
+                int lineSkip = Math.Max(0, data.StyleLineSkip);
+                int col = Math.Abs((int)frameX) / Math.Max(1, data.CoordinateFullWidth);
+                int wrappedIndex = (col / Math.Max(1, 1 + lineSkip)) * wrap + frameStyleRow;
+                return wrappedIndex == expectedStyleIndex;
+            }
+
             return frameStyleRow == expectedStyleIndex;
         }
 
@@ -809,19 +974,34 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             if (!hasTile || !TileLoaderSupport.IsKnownTileType(framing.TileType))
                 return tile.World;
 
+            if (TryResolveAmbientRubbleEcho(
+                    framing.TileType,
+                    framing.TileFrameX,
+                    framing.TileFrameY,
+                    out AmbientRubbleEcho ambient))
+            {
+                TileObjectData? ambientData = TileObjectData.GetTileData(ambient.EchoType, ambient.Style);
+                int w = ambientData is not null ? Math.Max(1, ambientData.Width) : ambient.Width;
+                int h = ambientData is not null ? Math.Max(1, ambientData.Height) : ambient.Height;
+                Point16 ambientOrigin = ambientData?.Origin ?? Point16.Zero;
+                int ox = Math.Clamp(ambientOrigin.X, 0, w - 1);
+                int oy = Math.Clamp(ambientOrigin.Y, 0, h - 1);
+                return new Point(tile.World.X + (ox - ambient.SubX), tile.World.Y + (oy - ambient.SubY));
+            }
+
             FramePlacementVariant variant = ResolveFramePlacementVariant(in tile, forClear);
             TileObjectData? data = variant.Data ?? TileObjectData.GetTileData(framing);
             if (data is null)
                 return tile.World;
 
-            int w = Math.Max(1, data.Width);
-            int h = Math.Max(1, data.Height);
-            int subX = ResolveSubX(framing.TileFrameX, data, w);
-            int subY = ResolveSubY(framing.TileFrameY, data, h);
+            int width = Math.Max(1, data.Width);
+            int height = Math.Max(1, data.Height);
+            int subX = ResolveSubX(framing.TileFrameX, data, width);
+            int subY = ResolveSubY(framing.TileFrameY, data, height);
             var origin = data.Origin;
-            int ox = Math.Clamp(origin.X, 0, w - 1);
-            int oy = Math.Clamp(origin.Y, 0, h - 1);
-            return new Point(tile.World.X + (ox - subX), tile.World.Y + (oy - subY));
+            int originX = Math.Clamp(origin.X, 0, width - 1);
+            int originY = Math.Clamp(origin.Y, 0, height - 1);
+            return new Point(tile.World.X + (originX - subX), tile.World.Y + (originY - subY));
         }
 
         /// <summary>Groups batch tiles into logical frame objects keyed by origin world position.</summary>
@@ -935,8 +1115,9 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             int x = origin.World.X;
             int y = origin.World.Y;
             int style = variant.Style;
+            ushort placeType = ResolveFramePlaceType(origin.PayloadCell, style);
             Tile dest = Main.tile[x, y];
-            if (dest.HasTile && dest.TileType == tileType)
+            if (dest.HasTile && (dest.TileType == tileType || dest.TileType == placeType))
                 return true;
 
             // Defer selection until inventory can supply the item when retry-on-missing is enabled.
@@ -947,41 +1128,57 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return false;
 
             // Wall-anchored objects are not ready until a live wall exists (or Wall-layer work is still in flight).
-            if (HasWallAnchor(tileType, style) && dest.WallType == WallID.None)
+            if (HasWallAnchor(placeType, style) && dest.WallType == WallID.None)
                 return false;
 
             if (UsesTilePlacement(candidate.Tiles, in origin))
             {
-                if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
+                if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, placeType, in context))
                     return false;
 
                 if (context.IsSweep)
                     return true;
 
                 // Place will void-kill under replace; treat occupied replaceable cells as schedulable.
-                if (context.UseReplacePlace && dest.HasTile && dest.TileType != tileType)
+                if (context.UseReplacePlace && dest.HasTile && dest.TileType != placeType)
                     return true;
 
-                return TileLoader.CanPlace(x, y, tileType);
+                return TileLoader.CanPlace(x, y, placeType);
             }
 
-            if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, tileType, in context))
+            if (!TileLoaderSupport.IsReplaceAllowedAt(x, y, placeType, in context))
                 return false;
 
             if (context.IsSweep)
                 return true;
 
             // Match FrameOperations.Place: replace void-kill happens before the real place mutation.
-            if (context.UseReplacePlace && dest.HasTile && dest.TileType != tileType)
+            if (context.UseReplacePlace && dest.HasTile && dest.TileType != placeType)
                 return true;
 
-            if (TileObject.CanPlace(x, y, tileType, style, variant.Direction, out _, onlyCheck: true))
+            if (TileObject.CanPlace(x, y, placeType, style, variant.Direction, out _, onlyCheck: true))
                 return true;
 
             if (allPending is null)
                 return false;
 
             return HasReadyFramePlacementSupport(candidate, allPending, in context);
+        }
+
+        /// <summary>Resolves the TileObjectData place type (Echo/fake when applicable) for a payload cell.</summary>
+        public static ushort ResolveFramePlaceType(in PayloadCell cell, int style)
+        {
+            // --- Ambient rubble frames decode to Echo ids; otherwise prefer interaction FakeId.
+
+            ushort payloadType = (ushort)cell.Block.Type;
+            if (TryResolveAmbientRubbleEcho(payloadType, cell.Block.FrameX, cell.Block.FrameY, out AmbientRubbleEcho ambient))
+                return ambient.EchoType;
+
+            InteractionEntry? interaction = InteractionMapProvider.GetFirstTileInteraction(payloadType, style);
+            if (interaction?.GetPlaceMainId() is int placeMain && placeMain > 0)
+                return (ushort)placeMain;
+
+            return payloadType;
         }
 
         /// <summary>Returns true when a wall-anchored candidate is waiting on a wall that should still arrive.</summary>
@@ -1008,11 +1205,12 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return context.EffectSession?.HasPendingOrInFlightWallAt(world) == true;
         }
 
-        /// <summary>Returns true when tracked inventories can supply the candidate's placement item.</summary>
+        /// <summary>Returns true when .itr can supply the candidate's placement item (inventory optional).</summary>
         public static bool HasRequiredItemsForFrameCandidate(FrameCandidate candidate, in PasteContext context)
         {
-            // --- Empty payload and sweep never require a consumable item.
-            if (!context.RequireItems || context.IsSweep)
+            // --- Sweep stays exempt; RequireItems only controls inventory presence inside TileExecutor.
+
+            if (context.IsSweep)
                 return true;
 
             PasteTile origin = candidate.OriginTile;
@@ -1662,11 +1860,12 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             int direction = variant.Direction;
             short frameX = origin.PayloadCell.Block.FrameX;
             short frameY = origin.PayloadCell.Block.FrameY;
-            InteractionEntry? interaction = InteractionMapProvider.GetFirstTileInteraction(payloadType, style);
-            ushort placeType = interaction?.GetPlaceMainId() is int placeMain && placeMain > 0
-                ? (ushort)placeMain
-                : payloadType;
-            bool usesFake = interaction?.FakeId is int fakeId && fakeId > 0 && fakeId != payloadType;
+            ushort placeType = ResolveFramePlaceType(origin.PayloadCell, style);
+            InteractionEntry? interaction = InteractionMapProvider.GetFirstTileInteraction(placeType, style)
+                ?? InteractionMapProvider.GetFirstTileInteraction(payloadType, style)
+                ?? InteractionMapProvider.Current?.FindByFakeMain("Tile", placeType, style);
+            bool usesFake = placeType != payloadType
+                || interaction?.FakeId is int fakeId && fakeId > 0 && fakeId != payloadType;
             Tile dest = Main.tile[x, y];
 
             if (dest.HasTile && (dest.TileType == placeType || dest.TileType == payloadType))
@@ -1701,10 +1900,13 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return LayerResult.Fail(LayerFailReason.InvalidPlacement, message);
             }
 
-            // Item lookup stays on payload type so natural→fake rows resolve Rubblemaker + ammo.
-            if (!TileExecutor.TryCheckTileItem(payloadType, style, in context, out LayerFailReason itemFailReason))
+            // Prefer Echo/place type (ambient rubble); fall back to payload for natural→fake ammo rows.
+            ushort itemLookupType = IsAmbientRubbleTileType(payloadType) ? placeType : payloadType;
+            if (!TileExecutor.TryCheckTileItem(itemLookupType, style, in context, out LayerFailReason itemFailReason)
+                && (itemLookupType == payloadType
+                    || !TileExecutor.TryCheckTileItem(payloadType, style, in context, out itemFailReason)))
             {
-                TileItemAvailability issue = TileExecutor.GetTileItemAvailability(payloadType, style, in context);
+                TileItemAvailability issue = TileExecutor.GetTileItemAvailability(itemLookupType, style, in context);
                 PastingDebug.LogPlacement(placeType, style, null, x, y, false, "PlaceObject", placeType, issue, alternate, frameX, frameY);
                 return LayerResult.Fail(itemFailReason, message);
             }

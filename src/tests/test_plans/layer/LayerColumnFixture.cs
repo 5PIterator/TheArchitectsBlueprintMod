@@ -21,7 +21,9 @@ namespace TheArchitectsBlueprintMod.Core.TestCases.LayerTests
             ushort supportType,
             ushort subjectType,
             out Point subject,
-            out string? error)
+            out string? error,
+            short subjectFrameX = 0,
+            short subjectFrameY = 0)
         {
             // --- Clear both cells, stamp support, then stamp the subject one tile above.
 
@@ -51,8 +53,8 @@ namespace TheArchitectsBlueprintMod.Core.TestCases.LayerTests
             subjectTile.TileType = subjectType;
             subjectTile.IsHalfBlock = false;
             subjectTile.BlockType = BlockType.Solid;
-            subjectTile.TileFrameX = 0;
-            subjectTile.TileFrameY = 0;
+            subjectTile.TileFrameX = subjectFrameX;
+            subjectTile.TileFrameY = subjectFrameY;
 
             // Verify support stamp landed with the requested type.
             if (!Main.tile[support.X, support.Y].HasTile || Main.tile[support.X, support.Y].TileType != supportType)

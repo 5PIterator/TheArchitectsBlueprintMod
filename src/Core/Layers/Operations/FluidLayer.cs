@@ -77,7 +77,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return LayerResult.Ok();
 
             string okLabel = LayerLogFormat.PlacedLabel(in context);
-            bool consumeItem = context.RequireItems && !context.IsSweep;
+            bool consumeItem = !context.IsSweep;
             var changedCells = new List<LiquidPoolCell>(tiles.Count);
 
             for (int i = 0; i < tiles.Count; i++)

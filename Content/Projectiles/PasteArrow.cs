@@ -26,6 +26,7 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
         private float _minSpeed;
         private float _maxSpeed;
         private int _cachedItemType;
+        private int _syncedItemType;
         private bool _hasSyncedDestination;
         private Vector2 _syncedDestination;
         private bool _hasSyncedFlightProfile;
@@ -66,6 +67,7 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
             _spawnFxPlayed = false;
             _ageTicks = 0;
             _cachedItemType = 0;
+            _syncedItemType = 0;
             _hasSyncedDestination = false;
             _syncedDestination = Vector2.Zero;
             _hasSyncedFlightProfile = false;
@@ -104,8 +106,9 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
             int itemType = reader.ReadInt32();
             if (itemType > 0 && itemType < ItemLoader.ItemCount)
             {
-                if (Projectile.damage <= 0)
-                    Projectile.damage = itemType;
+                // Prefer the full 32-bit ExtraAI item id over short-synced Projectile.damage.
+                _syncedItemType = itemType;
+                Projectile.damage = itemType;
                 Projectile.localAI[2] = itemType;
             }
 
@@ -301,7 +304,11 @@ namespace TheArchitectsBlueprintMod.Content.Projectiles
 
         private bool TryResolveItemType(out int itemType)
         {
-            itemType = Projectile.damage;
+            // --- Prefer authoritative ExtraAI sync, then damage/localAI, then session lookup.
+
+            itemType = _syncedItemType;
+            if (itemType <= 0)
+                itemType = Projectile.damage;
             if (itemType <= 0)
                 itemType = (int)Projectile.localAI[2];
             if (itemType > 0 && itemType < ItemLoader.ItemCount)

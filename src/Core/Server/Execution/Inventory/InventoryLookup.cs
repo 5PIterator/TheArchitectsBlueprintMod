@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Terraria;
 using Terraria.ID;
-using Terraria.ModLoader;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 using TheArchitectsBlueprintMod.Debug;
 
@@ -13,24 +12,14 @@ namespace TheArchitectsBlueprintMod.Core{
     /// </summary>
     internal sealed class InventoryLookup
     {
-        private delegate bool TryFindConsumableDelegate(out Item? item, out Inventory? sourceInventory);
-
         private readonly struct InventoryItemRef(Inventory inventory, Item item)
         {
             public Inventory Inventory { get; } = inventory;
             public Item Item { get; } = item;
         }
 
-        private readonly struct TileKey(ushort tileType, int style)
-        {
-            public ushort TileType { get; } = tileType;
-            public int Style { get; } = style;
-        }
-
         private readonly List<Inventory> _inventories = [];
         private readonly Dictionary<int, List<InventoryItemRef>> _itemRefsByType = [];
-        private readonly Dictionary<TileKey, IReadOnlyList<int>> _tileItemIdsByKey = [];
-        private readonly Dictionary<ushort, IReadOnlyList<int>> _wallItemIdsByType = [];
         private bool _isDirty = true;
 
         public IReadOnlyList<Inventory> Inventories => _inventories;
@@ -49,8 +38,6 @@ namespace TheArchitectsBlueprintMod.Core{
             }
 
             _itemRefsByType.Clear();
-            _tileItemIdsByKey.Clear();
-            _wallItemIdsByType.Clear();
             _isDirty = true;
             LogTrackedInventories("Refresh");
         }
@@ -78,47 +65,43 @@ namespace TheArchitectsBlueprintMod.Core{
             return [.. contents];
         }
 
-        public bool HasItemForTile(ushort tileType, int style, InteractionBudget? budget = null, int? baseId = null) =>
-            GetTileItemAvailability(tileType, style, budget, baseId) == TileItemAvailability.Available;
+        public bool HasItemForTile(
+            ushort tileType,
+            int style,
+            InteractionBudget? budget = null,
+            int? baseId = null,
+            bool requireInventory = true) =>
+            GetTileItemAvailability(tileType, style, budget, baseId, requireInventory) == TileItemAvailability.Available;
 
-        public bool HasItemForWall(ushort wallType, InteractionBudget? budget = null) =>
-            GetWallItemAvailability(wallType, budget) == TileItemAvailability.Available;
+        public bool HasItemForWall(ushort wallType, InteractionBudget? budget = null, bool requireInventory = true) =>
+            GetWallItemAvailability(wallType, budget, requireInventory) == TileItemAvailability.Available;
 
         /// <summary>True when any priority-ordered paint/coating interaction for the main is available.</summary>
-        public bool HasItemForPaint(int paintMainId, InteractionBudget? budget = null) =>
-            GetPaintItemAvailability(paintMainId, budget) == TileItemAvailability.Available;
+        public bool HasItemForPaint(int paintMainId, InteractionBudget? budget = null, bool requireInventory = true) =>
+            GetPaintItemAvailability(paintMainId, budget, requireInventory) == TileItemAvailability.Available;
 
+        /// <summary>Returns tile availability from InteractionMap only; inventory presence is optional.</summary>
         public TileItemAvailability GetTileItemAvailability(
             ushort tileType,
             int style,
             InteractionBudget? budget = null,
-            int? baseId = null)
+            int? baseId = null,
+            bool requireInventory = true)
         {
-            if (_inventories.Count == 0)
-                return TileItemAvailability.MissingFromInventory;
+            // --- Walk .itr rows only; never fall back to TileLoader drops at runtime.
 
             bool sawInteraction = false;
             foreach (InteractionEntry entry in InteractionMapProvider.EnumerateTileInteractions(tileType, style, baseId))
             {
                 sawInteraction = true;
-                if (GetInteractionAvailability(entry, budget) == TileItemAvailability.Available)
+                if (GetInteractionAvailability(entry, budget, requireInventory) == TileItemAvailability.Available)
                     return TileItemAvailability.Available;
             }
 
             if (sawInteraction)
-            {
-                if (HasInventoryItemForStyledTileDrop(tileType, style))
-                    return TileItemAvailability.Available;
-                return TileItemAvailability.MissingFromInventory;
-            }
+                return requireInventory ? TileItemAvailability.MissingFromInventory : TileItemAvailability.UnresolvedInteraction;
 
-            RebuildIfNeeded();
-            if (TryFindFirstAvailableByItemIds(ResolveTileItemIds(tileType, style), out _, out _))
-                return TileItemAvailability.Available;
-
-            return HasResolvableTileItemIds(tileType, style)
-                ? TileItemAvailability.MissingFromInventory
-                : TileItemAvailability.UnresolvedInteraction;
+            return TileItemAvailability.UnresolvedInteraction;
         }
 
         /// <summary>
@@ -130,69 +113,67 @@ namespace TheArchitectsBlueprintMod.Core{
             InteractionBudget? budget = null,
             int? style = null,
             int? baseId = null,
-            Func<IReadOnlyList<int>>? fallbackItemIds = null)
+            bool requireInventory = true)
         {
-            // --- Try each priority-sorted interaction, then optional fallback item ids.
-
-            if (_inventories.Count == 0)
-                return TileItemAvailability.MissingFromInventory;
+            // --- Walk priority-sorted .itr rows; unresolved when the map has no usable entry.
 
             bool sawInteraction = false;
             foreach (InteractionEntry entry in InteractionMapProvider.EnumerateInteractions(layer, mainId, style, baseId))
             {
                 sawInteraction = true;
-                if (GetInteractionAvailability(entry, budget) == TileItemAvailability.Available)
+                if (GetInteractionAvailability(entry, budget, requireInventory) == TileItemAvailability.Available)
                     return TileItemAvailability.Available;
             }
 
             if (sawInteraction)
-                return TileItemAvailability.MissingFromInventory;
+                return requireInventory ? TileItemAvailability.MissingFromInventory : TileItemAvailability.UnresolvedInteraction;
 
-            IReadOnlyList<int> fallback = fallbackItemIds?.Invoke() ?? [];
-            if (fallback.Count == 0)
-                return TileItemAvailability.UnresolvedInteraction;
-
-            RebuildIfNeeded();
-            if (TryFindFirstAvailableByItemIds(fallback, out _, out _))
-                return TileItemAvailability.Available;
-
-            return TileItemAvailability.MissingFromInventory;
+            return TileItemAvailability.UnresolvedInteraction;
         }
 
-        public TileItemAvailability GetWallItemAvailability(ushort wallType, InteractionBudget? budget = null) =>
-            GetMainItemAvailability(
-                "Wall",
-                wallType,
-                budget,
-                fallbackItemIds: () => ResolveWallItemIds(wallType));
+        public TileItemAvailability GetWallItemAvailability(
+            ushort wallType,
+            InteractionBudget? budget = null,
+            bool requireInventory = true) =>
+            GetMainItemAvailability("Wall", wallType, budget, requireInventory: requireInventory);
 
         /// <summary>Returns availability for any tool that can place the given wire kind.</summary>
-        public TileItemAvailability GetWireItemAvailability(int wireKind, InteractionBudget? budget = null) =>
-            GetMainItemAvailability(
-                "Wire",
-                wireKind,
-                budget,
-                fallbackItemIds: () => InteractionMapProvider.GetWireItemIds(wireKind));
+        public TileItemAvailability GetWireItemAvailability(
+            int wireKind,
+            InteractionBudget? budget = null,
+            bool requireInventory = true) =>
+            GetMainItemAvailability("Wire", wireKind, budget, requireInventory: requireInventory);
 
         /// <summary>Returns availability for any tool that can place the given liquid type.</summary>
-        public TileItemAvailability GetLiquidItemAvailability(int liquidType, InteractionBudget? budget = null) =>
-            GetMainItemAvailability(
-                "Liquid",
-                liquidType,
-                budget,
-                fallbackItemIds: () => InteractionMapProvider.GetLiquidItemIds(liquidType));
+        public TileItemAvailability GetLiquidItemAvailability(
+            int liquidType,
+            InteractionBudget? budget = null,
+            bool requireInventory = true) =>
+            GetMainItemAvailability("Liquid", liquidType, budget, requireInventory: requireInventory);
 
         /// <summary>Returns availability for any tool that can apply the given paint or coating main.</summary>
-        public TileItemAvailability GetPaintItemAvailability(int paintMainId, InteractionBudget? budget = null) =>
-            GetMainItemAvailability("Paint", paintMainId, budget);
+        public TileItemAvailability GetPaintItemAvailability(
+            int paintMainId,
+            InteractionBudget? budget = null,
+            bool requireInventory = true) =>
+            GetMainItemAvailability("Paint", paintMainId, budget, requireInventory: requireInventory);
 
-        public TileItemAvailability GetInteractionAvailability(InteractionEntry entry, InteractionBudget? budget)
+        /// <summary>Returns whether a single .itr interaction is available for the optional inventory requirement.</summary>
+        public TileItemAvailability GetInteractionAvailability(
+            InteractionEntry entry,
+            InteractionBudget? budget,
+            bool requireInventory = true)
         {
-            if (_inventories.Count == 0)
-                return TileItemAvailability.MissingFromInventory;
+            // --- Require a mapped tool id; skip inventory presence when requireInventory is false.
 
             if (!entry.ItemId.HasValue || entry.ItemId.Value <= 0)
                 return TileItemAvailability.UnresolvedInteraction;
+
+            if (!requireInventory)
+                return TileItemAvailability.Available;
+
+            if (_inventories.Count == 0)
+                return TileItemAvailability.MissingFromInventory;
 
             RebuildIfNeeded();
             if (!TryFindFirstAvailableByItemIds(entry.GetToolItemIds(), out _, out _))
@@ -223,17 +204,59 @@ namespace TheArchitectsBlueprintMod.Core{
             InteractionEntry entry,
             InteractionBudget? budget,
             Player player,
-            out InteractionReservation reservation)
+            out InteractionReservation reservation,
+            bool requireInventory = true)
         {
+            // --- Map-only zero-count path when !requireInventory; otherwise debit from tracked inventories.
+
             reservation = default;
             if (!entry.ItemId.HasValue || entry.ItemId.Value <= 0)
                 return false;
 
+            int consumableId = entry.AmmoId ?? entry.ItemId.Value;
+            int placeStyle = entry.Style ?? 0;
+
+            if (!requireInventory)
+            {
+                // Prefer an inventory origin when the tool happens to be present; else fly from the player.
+                Vector2 origin = player.Center;
+                bool fromChest = false;
+                Chest? sourceChest = null;
+                Item? visualItem = null;
+                RebuildIfNeeded();
+                if (TryFindFirstAvailableByItemIds(entry.GetToolItemIds(), out Item? toolItem, out Inventory? toolInventory)
+                    && toolItem is not null
+                    && toolInventory is not null
+                    && TryResolveInventoryOrigin(toolInventory, player, out origin))
+                {
+                    placeStyle = entry.Style ?? Math.Max(0, toolItem.placeStyle);
+                    visualItem = toolItem;
+                    sourceChest = toolInventory.Chest;
+                    fromChest = sourceChest is not null;
+                }
+
+                reservation = new InteractionReservation(
+                    ToolItemId: entry.ItemId.Value,
+                    ConsumableItemId: consumableId,
+                    PlaceStyle: Math.Max(0, placeStyle),
+                    ConsumableItem: visualItem,
+                    Origin: origin,
+                    FromChest: fromChest,
+                    SourceChest: sourceChest,
+                    ConsumedStack: false);
+
+                TABLog.Debug(
+                    $"ReserveInteraction zeroCount tool={entry.ItemId} consumable={consumableId} "
+                    + $"layer={entry.Layer} main={entry.MainId}",
+                    TABLog.InventoryCategory);
+                return true;
+            }
+
             RebuildIfNeeded();
-            if (!TryFindFirstAvailableByItemIds(entry.GetToolItemIds(), out Item? toolItem, out Inventory? toolInventory)
-                || toolItem is null
-                || toolInventory is null
-                || !TryResolveInventoryOrigin(toolInventory, player, out Vector2 origin))
+            if (!TryFindFirstAvailableByItemIds(entry.GetToolItemIds(), out Item? reservedTool, out Inventory? reservedToolInventory)
+                || reservedTool is null
+                || reservedToolInventory is null
+                || !TryResolveInventoryOrigin(reservedToolInventory, player, out Vector2 reservedOrigin))
             {
                 TABLog.Debug(
                     $"ReserveInteraction miss tool={entry.ItemId} layer={entry.Layer} main={entry.MainId}",
@@ -241,7 +264,7 @@ namespace TheArchitectsBlueprintMod.Core{
                 return false;
             }
 
-            int consumableId = entry.AmmoId ?? entry.ItemId.Value;
+            placeStyle = entry.Style ?? Math.Max(0, reservedTool.placeStyle);
             bool hasDistinctAmmo = InteractionBudget.HasDistinctAmmo(entry);
             bool needsDebit = budget is null
                 ? !InteractionBudget.IsInfiniteYield(entry)
@@ -291,15 +314,15 @@ namespace TheArchitectsBlueprintMod.Core{
                 ConsumeReservedItem(consumableItem, consumableInventory, "ReserveInteraction");
             }
 
-            Chest? sourceChest = toolInventory.Chest;
+            Chest? reservedSourceChest = reservedToolInventory.Chest;
             reservation = new InteractionReservation(
                 ToolItemId: entry.ItemId.Value,
                 ConsumableItemId: consumableId,
-                PlaceStyle: Math.Max(0, toolItem.placeStyle),
-                ConsumableItem: consumableItem ?? toolItem,
-                Origin: origin,
-                FromChest: sourceChest is not null,
-                SourceChest: sourceChest,
+                PlaceStyle: Math.Max(0, placeStyle),
+                ConsumableItem: consumableItem ?? reservedTool,
+                Origin: reservedOrigin,
+                FromChest: reservedSourceChest is not null,
+                SourceChest: reservedSourceChest,
                 ConsumedStack: consumedStack);
 
             TABLog.Debug(
@@ -321,16 +344,41 @@ namespace TheArchitectsBlueprintMod.Core{
             out InteractionEntry? reservedEntry,
             out InteractionReservation reservation,
             int? style = null,
-            int? baseId = null)
+            int? baseId = null,
+            bool requireInventory = true)
         {
-            // --- Try each mapped interaction in priority order until one reserves.
+            // --- Prefer finite-first mapped rows when inventory is optional; otherwise try each until one reserves.
 
             reservedEntry = null;
             reservation = default;
 
+            if (!requireInventory)
+            {
+                if (!InteractionSelection.TrySelectFiniteFirst(
+                        InteractionMapProvider.EnumerateInteractions(layer, mainId, style, baseId),
+                        isMet: null,
+                        out InteractionEntry? chosen,
+                        out _,
+                        out _,
+                        out _)
+                    || chosen is null)
+                {
+                    return false;
+                }
+
+                if (!TryReserveForInteraction(chosen, budget, player, out reservation, requireInventory: false))
+                    return false;
+
+                reservedEntry = chosen;
+                TABLog.Debug(
+                    $"ReserveMain zeroCount layer={layer} main={mainId} tool={chosen.ItemId} item={reservation.ConsumableItemId}",
+                    TABLog.InventoryCategory);
+                return true;
+            }
+
             foreach (InteractionEntry entry in InteractionMapProvider.EnumerateInteractions(layer, mainId, style, baseId))
             {
-                if (TryReserveForInteraction(entry, budget, player, out reservation))
+                if (TryReserveForInteraction(entry, budget, player, out reservation, requireInventory: true))
                 {
                     reservedEntry = entry;
                     TABLog.Debug(
@@ -348,6 +396,7 @@ namespace TheArchitectsBlueprintMod.Core{
             return false;
         }
 
+        /// <summary>Reserves a tile place interaction from .itr only; fails when the map has no row.</summary>
         public bool TryReserveForTileMutation(
             ushort tileType,
             int style,
@@ -359,8 +408,11 @@ namespace TheArchitectsBlueprintMod.Core{
             out Vector2 origin,
             out bool fromChest,
             out Chest? sourceChest,
-            out PlacementReservationLedger ledger)
+            out PlacementReservationLedger ledger,
+            bool requireInventory = true)
         {
+            // --- InteractionMap is the only authority; TileLoader drops are discovery-only.
+
             placeStyle = Math.Max(0, style);
             itemType = 0;
             origin = default;
@@ -376,7 +428,8 @@ namespace TheArchitectsBlueprintMod.Core{
                     out InteractionEntry? reservedEntry,
                     out InteractionReservation reservation,
                     style,
-                    baseId)
+                    baseId,
+                    requireInventory)
                 && reservedEntry is not null)
             {
                 placeStyle = reservation.PlaceStyle;
@@ -387,36 +440,19 @@ namespace TheArchitectsBlueprintMod.Core{
                 ledger.Record(reservedEntry, in reservation);
                 TABLog.Debug(
                     $"ReserveTile ok tile={tileType} style={style} item={itemType} consumedStack={reservation.ConsumedStack} "
-                    + $"source={(fromChest ? "chest" : "player")} origin=({origin.X:0.##},{origin.Y:0.##}) path=interaction",
+                    + $"requireInventory={requireInventory} source={(fromChest ? "chest" : "player")} "
+                    + $"origin=({origin.X:0.##},{origin.Y:0.##}) path=interaction",
                     TABLog.InventoryCategory);
                 return true;
             }
 
-            if (!TryReserveForMutation(
-                player,
-                (out Item? item, out Inventory? sourceInventory) =>
-                    TryFindConsumableItemByTile(tileType, style, out item, out sourceInventory),
-                out Item? fallbackItem,
-                out Inventory? fallbackInventory,
-                out origin,
-                out fromChest,
-                out sourceChest))
-            {
-                TABLog.Debug(
-                    $"ReserveTile miss tile={tileType} style={style}",
-                    TABLog.InventoryCategory);
-                return false;
-            }
-
-            placeStyle = Math.Max(0, fallbackItem!.placeStyle);
-            itemType = ConsumeReservedItem(fallbackItem, fallbackInventory, "ReserveTileFallback");
-            ledger.RecordFallbackDebit(itemType);
             TABLog.Debug(
-                $"ReserveTile ok (fallback) tile={tileType} style={style} item={itemType} source={(fromChest ? "chest" : "player")} origin=({origin.X:0.##},{origin.Y:0.##})",
+                $"ReserveTile miss tile={tileType} style={style} requireInventory={requireInventory}",
                 TABLog.InventoryCategory);
-            return true;
+            return false;
         }
 
+        /// <summary>Reserves a wall place interaction from .itr only; fails when the map has no row.</summary>
         public bool TryReserveForWallMutation(
             ushort wallType,
             Player player,
@@ -425,8 +461,11 @@ namespace TheArchitectsBlueprintMod.Core{
             out Vector2 origin,
             out bool fromChest,
             out Chest? sourceChest,
-            out PlacementReservationLedger ledger)
+            out PlacementReservationLedger ledger,
+            bool requireInventory = true)
         {
+            // --- InteractionMap is the only authority for wall place tools.
+
             itemType = 0;
             origin = default;
             fromChest = false;
@@ -439,7 +478,8 @@ namespace TheArchitectsBlueprintMod.Core{
                     player,
                     budget,
                     out InteractionEntry? reservedEntry,
-                    out InteractionReservation reservation)
+                    out InteractionReservation reservation,
+                    requireInventory: requireInventory)
                 && reservedEntry is not null)
             {
                 itemType = reservation.ConsumableItemId;
@@ -449,33 +489,16 @@ namespace TheArchitectsBlueprintMod.Core{
                 ledger.Record(reservedEntry, in reservation);
                 TABLog.Debug(
                     $"ReserveWall ok wall={wallType} item={itemType} consumedStack={reservation.ConsumedStack} "
-                    + $"source={(fromChest ? "chest" : "player")} origin=({origin.X:0.##},{origin.Y:0.##}) path=interaction",
+                    + $"requireInventory={requireInventory} source={(fromChest ? "chest" : "player")} "
+                    + $"origin=({origin.X:0.##},{origin.Y:0.##}) path=interaction",
                     TABLog.InventoryCategory);
                 return true;
             }
 
-            if (!TryReserveForMutation(
-                player,
-                (out Item? item, out Inventory? sourceInventory) =>
-                    TryFindConsumableItemByWall(wallType, out item, out sourceInventory),
-                out Item? fallbackItem,
-                out Inventory? fallbackInventory,
-                out origin,
-                out fromChest,
-                out sourceChest))
-            {
-                TABLog.Debug(
-                    $"ReserveWall miss wall={wallType}",
-                    TABLog.InventoryCategory);
-                return false;
-            }
-
-            itemType = ConsumeReservedItem(fallbackItem!, fallbackInventory, "ReserveWallFallback");
-            ledger.RecordFallbackDebit(itemType);
             TABLog.Debug(
-                $"ReserveWall ok (fallback) wall={wallType} item={itemType} source={(fromChest ? "chest" : "player")} origin=({origin.X:0.##},{origin.Y:0.##})",
+                $"ReserveWall miss wall={wallType} requireInventory={requireInventory}",
                 TABLog.InventoryCategory);
-            return true;
+            return false;
         }
 
         /// <summary>Reserves a wire/actuator placement using any available mapped tool for the wire kind.</summary>
@@ -487,7 +510,8 @@ namespace TheArchitectsBlueprintMod.Core{
             out Vector2 origin,
             out bool fromChest,
             out Chest? sourceChest,
-            out PlacementReservationLedger ledger)
+            out PlacementReservationLedger ledger,
+            bool requireInventory = true)
         {
             // --- Try each mapped tool (single wrench, Wire Kite, Grand Design, etc.) until one reserves.
             itemType = 0;
@@ -502,7 +526,8 @@ namespace TheArchitectsBlueprintMod.Core{
                     player,
                     budget,
                     out InteractionEntry? reservedEntry,
-                    out InteractionReservation reservation)
+                    out InteractionReservation reservation,
+                    requireInventory: requireInventory)
                 && reservedEntry is not null)
             {
                 itemType = reservation.ConsumableItemId;
@@ -512,12 +537,15 @@ namespace TheArchitectsBlueprintMod.Core{
                 ledger.Record(reservedEntry, in reservation);
                 TABLog.Debug(
                     $"ReserveWire ok kind={wireKind} tool={reservedEntry.ItemId} item={itemType} consumedStack={reservation.ConsumedStack} "
-                    + $"source={(fromChest ? "chest" : "player")} origin=({origin.X:0.##},{origin.Y:0.##}) path=interaction",
+                    + $"requireInventory={requireInventory} source={(fromChest ? "chest" : "player")} "
+                    + $"origin=({origin.X:0.##},{origin.Y:0.##}) path=interaction",
                     TABLog.InventoryCategory);
                 return true;
             }
 
-            TABLog.Debug($"ReserveWire miss kind={wireKind}", TABLog.InventoryCategory);
+            TABLog.Debug(
+                $"ReserveWire miss kind={wireKind} requireInventory={requireInventory}",
+                TABLog.InventoryCategory);
             return false;
         }
 
@@ -527,8 +555,16 @@ namespace TheArchitectsBlueprintMod.Core{
             Player player,
             InteractionBudget? budget,
             out InteractionEntry? reservedEntry,
-            out InteractionReservation reservation) =>
-            TryReserveForMain("Paint", paintMainId, player, budget, out reservedEntry, out reservation);
+            out InteractionReservation reservation,
+            bool requireInventory = true) =>
+            TryReserveForMain(
+                "Paint",
+                paintMainId,
+                player,
+                budget,
+                out reservedEntry,
+                out reservation,
+                requireInventory: requireInventory);
 
         /// <summary>
         /// Reserves one liquid interaction once per pool cell, keeping per-cell yield economics.
@@ -541,7 +577,8 @@ namespace TheArchitectsBlueprintMod.Core{
             out PlacementReservationLedger ledger,
             out Vector2 origin,
             out bool fromChest,
-            out Chest? sourceChest)
+            out Chest? sourceChest,
+            bool requireInventory = true)
         {
             // --- Pick the first mapped liquid tool that can cover every cell; roll back partial failures.
             ledger = new PlacementReservationLedger();
@@ -552,14 +589,40 @@ namespace TheArchitectsBlueprintMod.Core{
             if (cellCount <= 0)
                 return true;
 
-            foreach (InteractionEntry entry in InteractionMapProvider.EnumerateLiquidInteractions(liquidType))
+            IEnumerable<InteractionEntry> candidates = InteractionMapProvider.EnumerateLiquidInteractions(liquidType);
+            if (!requireInventory)
+            {
+                if (!InteractionSelection.TrySelectFiniteFirst(
+                        candidates,
+                        isMet: null,
+                        out InteractionEntry? chosen,
+                        out _,
+                        out _,
+                        out _)
+                    || chosen is null)
+                {
+                    TABLog.Debug(
+                        $"ReserveLiquidPool miss liquid={liquidType} cells={cellCount} requireInventory=false",
+                        TABLog.InventoryCategory);
+                    return false;
+                }
+
+                candidates = [chosen];
+            }
+
+            foreach (InteractionEntry entry in candidates)
             {
                 var completed = new List<InteractionReservation>(cellCount);
                 bool failed = false;
 
                 for (int i = 0; i < cellCount; i++)
                 {
-                    if (!TryReserveForInteraction(entry, budget, player, out InteractionReservation reservation))
+                    if (!TryReserveForInteraction(
+                            entry,
+                            budget,
+                            player,
+                            out InteractionReservation reservation,
+                            requireInventory))
                     {
                         failed = true;
                         for (int j = completed.Count - 1; j >= 0; j--)
@@ -590,12 +653,15 @@ namespace TheArchitectsBlueprintMod.Core{
                 TABLog.Debug(
                     $"ReserveLiquidPool ok liquid={liquidType} tool={entry.ItemId} cells={cellCount} "
                     + $"debited={ledger.DebitedStackCount} freeYield={ledger.FreeYieldSpendCount} "
-                    + $"visual={ledger.VisualItemType} source={(fromChest ? "chest" : "player")}",
+                    + $"visual={ledger.VisualItemType} requireInventory={requireInventory} "
+                    + $"source={(fromChest ? "chest" : "player")}",
                     TABLog.InventoryCategory);
                 return true;
             }
 
-            TABLog.Debug($"ReserveLiquidPool miss liquid={liquidType} cells={cellCount}", TABLog.InventoryCategory);
+            TABLog.Debug(
+                $"ReserveLiquidPool miss liquid={liquidType} cells={cellCount} requireInventory={requireInventory}",
+                TABLog.InventoryCategory);
             return false;
         }
 
@@ -764,86 +830,6 @@ namespace TheArchitectsBlueprintMod.Core{
             _isDirty = false;
         }
 
-        private bool HasResolvableTileItemIds(ushort tileType, int style)
-        {
-            IReadOnlyList<int>? itemIds = ResolveTileItemIds(tileType, style);
-            if (itemIds is { Count: > 0 })
-                return true;
-
-            return ResolveStyledTileDropItemId(tileType, style) > 0;
-        }
-
-        private bool HasInventoryItemForStyledTileDrop(ushort tileType, int style)
-        {
-            int dropItemId = ResolveStyledTileDropItemId(tileType, style);
-            if (dropItemId <= 0)
-                return false;
-
-            RebuildIfNeeded();
-            return TryFindFirstAvailableByItemIds([dropItemId], out _, out _);
-        }
-
-        private static int ResolveStyledTileDropItemId(ushort tileType, int style)
-        {
-            if (tileType <= 0 || tileType >= TileLoader.TileCount)
-                return 0;
-
-            return TileLoader.GetItemDropFromTypeAndStyle(tileType, Math.Max(0, style));
-        }
-
-        private bool HasResolvableWallItemIds(ushort wallType)
-        {
-            IReadOnlyList<int>? itemIds = ResolveWallItemIds(wallType);
-            return itemIds is { Count: > 0 };
-        }
-
-        private bool TryFindConsumableItemByTile(ushort tileType, int style, out Item? item, out Inventory? sourceInventory)
-        {
-            IReadOnlyList<int> itemIds = ResolveTileItemIds(tileType, style);
-            if (TryFindConsumableByItemIds(itemIds, out item, out sourceInventory))
-            {
-                TABLog.Debug(
-                    $"FindConsumableTile hit tile={tileType} style={style} item={item?.type} "
-                    + $"stack={item?.stack} source={InventoryManager.DescribeSource(sourceInventory)} path=map",
-                    TABLog.InventoryCategory);
-                return true;
-            }
-
-            item = null;
-            sourceInventory = null;
-            int fallbackItemId = ResolveStyledTileDropItemId(tileType, style);
-            if (fallbackItemId > 0 && TryFindFirstAvailableByItemIds([fallbackItemId], out item, out sourceInventory))
-            {
-                TABLog.Debug(
-                    $"FindConsumableTile hit tile={tileType} style={style} item={item?.type} "
-                    + $"stack={item?.stack} source={InventoryManager.DescribeSource(sourceInventory)} path=dropFallback",
-                    TABLog.InventoryCategory);
-                return true;
-            }
-
-            TABLog.Debug(
-                $"FindConsumableTile miss tile={tileType} style={style} mapIds={FormatItemIdList(itemIds)} dropFallback={fallbackItemId}",
-                TABLog.InventoryCategory);
-            return false;
-        }
-
-        private bool TryFindConsumableItemByWall(ushort wallType, out Item? item, out Inventory? sourceInventory)
-        {
-            IReadOnlyList<int> itemIds = ResolveWallItemIds(wallType);
-            return TryFindConsumableByItemIds(itemIds, out item, out sourceInventory);
-        }
-
-        private bool TryFindConsumableByItemIds(IReadOnlyList<int>? itemIds, out Item? item, out Inventory? sourceInventory)
-        {
-            item = null;
-            sourceInventory = null;
-            if (_inventories.Count == 0 || itemIds is not { Count: > 0 })
-                return false;
-
-            RebuildIfNeeded();
-            return TryFindFirstAvailableByItemIds(itemIds, out item, out sourceInventory);
-        }
-
         private bool TryFindFirstAvailableByItemIds(IReadOnlyList<int> itemIds, out Item? item, out Inventory? sourceInventory)
         {
             // --- Pick the matching stack from the highest-priority source; discovery index breaks ties.
@@ -882,29 +868,6 @@ namespace TheArchitectsBlueprintMod.Core{
             return item is not null;
         }
 
-        private IReadOnlyList<int> ResolveTileItemIds(ushort tileType, int style)
-        {
-            TileKey key = new(tileType, Math.Max(0, style));
-            if (_tileItemIdsByKey.TryGetValue(key, out IReadOnlyList<int>? cached))
-                return cached ?? [];
-
-            IReadOnlyList<int>? ids = InteractionMapProvider.GetTileItemIds(tileType, style);
-            IReadOnlyList<int> resolved = ids is { Count: > 0 } ? ids : [];
-            _tileItemIdsByKey[key] = resolved;
-            return resolved;
-        }
-
-        private IReadOnlyList<int> ResolveWallItemIds(ushort wallType)
-        {
-            if (_wallItemIdsByType.TryGetValue(wallType, out IReadOnlyList<int>? cached))
-                return cached ?? [];
-
-            IReadOnlyList<int>? ids = InteractionMapProvider.GetWallItemIds(wallType);
-            IReadOnlyList<int> resolved = ids is { Count: > 0 } ? ids : [];
-            _wallItemIdsByType[wallType] = resolved;
-            return resolved;
-        }
-
         private static bool TryResolveInventoryOrigin(Inventory? sourceInventory, Player player, out Vector2 origin)
         {
             origin = default;
@@ -921,37 +884,6 @@ namespace TheArchitectsBlueprintMod.Core{
             }
 
             return false;
-        }
-
-        private bool TryReserveForMutation(
-            Player player,
-            TryFindConsumableDelegate tryFind,
-            out Item? item,
-            out Inventory? sourceInventory,
-            out Vector2 origin,
-            out bool fromChest,
-            out Chest? sourceChest)
-        {
-            item = null;
-            sourceInventory = null;
-            origin = default;
-            fromChest = false;
-            sourceChest = null;
-            if (!tryFind(out item, out sourceInventory)
-                || item is null
-                || !TryResolveInventoryOrigin(sourceInventory, player, out origin))
-            {
-                TABLog.Debug("ReserveMutation miss: item not found or origin unresolved", TABLog.InventoryCategory);
-                return false;
-            }
-
-            sourceChest = sourceInventory?.Chest;
-            fromChest = sourceChest is not null;
-            TABLog.Debug(
-                $"ReserveMutation found item={item.type} stack={item.stack} source={InventoryManager.DescribeSource(sourceInventory)} "
-                + $"awaitingConsume=true",
-                TABLog.InventoryCategory);
-            return true;
         }
 
         private int ConsumeReservedItem(Item item, Inventory? sourceInventory, string reason)
@@ -1067,12 +999,5 @@ namespace TheArchitectsBlueprintMod.Core{
             }
         }
 
-        private static string FormatItemIdList(IReadOnlyList<int> itemIds)
-        {
-            if (itemIds is not { Count: > 0 })
-                return "[]";
-
-            return $"[{string.Join(',', itemIds)}]";
-        }
     }
 }

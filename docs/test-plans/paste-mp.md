@@ -5,7 +5,7 @@
 - **Feature slug:** `paste-mp` (Cases: `src/tests/test_plans/paste-mp/`)
 - **In scope:** Topology-neutral MP paste on a multiplayer client (listen host or remote joiner): stone paste with chest consumption, cut, no materials, operation-limit lifecycle.
 - **Out of scope:** Dedicated-server process as runner; overlay/Dig FX peer visibility (manual extras in TESTING.md).
-- **Environment:** Multiplayer client in a loaded world; CHM origin; material chest at `MaterialChestOrigin` (reach ring).
+- **Environment:** Multiplayer client in a loaded world; CHM origin; material chest at `MaterialChestOrigin` (reach ring). Missing MP topology **Abandons** the Case (not Fail) via `RequireMultiplayerClient`.
 
 ## Harness mapping
 
@@ -83,6 +83,6 @@ ChamberOrigin → RequireMultiplayerClient
 
 ## Runbook
 
-1. Prerequisites: MP client (not dedicated process), CHM origin, near chamber.
+1. Prerequisites: MP client (not dedicated process), CHM origin, near chamber. On single-player, `/tab.test all` reports `[ABANDON]` for these Cases instead of Fail.
 2. Per topology A/B/C, run all four `paste-mp_*` ids (see [TESTING.md](../TESTING.md)).
 3. Report: chat + case log dump; optional `[PasteNet]` route check.
