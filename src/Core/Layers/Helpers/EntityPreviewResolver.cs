@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Terraria.ModLoader.IO;
 using TheArchitectsBlueprintMod.Core;
+using TheArchitectsBlueprintMod.Core.Compat;
 
 namespace TheArchitectsBlueprintMod.Core.Layers
 {
@@ -14,7 +15,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         public TryDrawEntityPreview? TryDraw { get; init; }
     }
 
-    /// <summary>Inputs for drawing a payload entity at its captured origin cell.</summary>
+    /// <summary>Inputs for drawing a payload entity at its copied origin cell.</summary>
     internal readonly struct PreviewEntityDrawArgs
     {
         public PreviewDrawContext Ctx { get; init; }
@@ -63,6 +64,10 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 if (data.ContainsKey("items") && EntityPreviewStrategies.TryDrawPlayerDoll(in args))
                     return true;
             }
+
+            // Only claimed Terraria (or future adapter) FullNames may ConstructFromBase and LoadData.
+            if (!CompatibilityRegistry.Claims(fullName))
+                return drew;
 
             return EntityPreviewStrategies.TryDrawGenericTileEntity(in args) || drew;
         }

@@ -13,7 +13,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
 {
     /// <summary>
     /// Test Fixture chain for stone paste (SP, listen host, or remote joiner):
-    /// StoneWorldPrepared → ProjectionCaptured → ProjectionMoved → (Materials*) → PasteExecuted → Teardown.
+    /// StoneWorldPrepared → ProjectionCopied → ProjectionMoved → (Materials*) → PasteExecuted → Teardown.
     /// </summary>
     internal static class StonePasteFixture
     {
@@ -46,11 +46,11 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
                 WorldGen.KillTile(tile.X, tile.Y, fail: false, effectOnly: false, noItem: true);
         }
 
-        /// <summary>Fixture node ProjectionCaptured: selection + projection over an area.</summary>
+        /// <summary>Fixture node ProjectionCopied: selection + projection over an area.</summary>
         public static bool TryCreateProjection(
             Player player,
             Rectangle area,
-            bool captureWorldPayload,
+            bool copyWorldPayload,
             out Core.Projection? projection,
             out string? error)
         {
@@ -69,7 +69,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
                 return false;
             }
 
-            projection = projectionSystem.NewProjection(player, selection, captureWorldPayload);
+            projection = projectionSystem.NewProjection(player, selection, copyWorldPayload);
             if (projection is null || !projection.IsDefined)
             {
                 error = "Failed to create projection for paste setup.";
@@ -105,7 +105,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
             string caseTag,
             System.Action<bool, Core.Projection?, Payload, Point, Point, string?> onComplete)
         {
-            // --- Authority place stone + clear target, then capture/move like paste-mp stone Cases.
+            // --- Authority place stone + clear target, then copy/move like paste-mp stone Cases.
 
             MpCoordinator.GetStoneCells(out Point source, out Point target);
 

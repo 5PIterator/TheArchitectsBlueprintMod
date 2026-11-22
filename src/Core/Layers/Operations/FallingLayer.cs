@@ -25,8 +25,8 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 !TileID.Sets.Falling[subjectTile.TileType])
                 return LayerResult.IdentifyNone();
 
-            // Cut-at-source: anchor Target is live capture; lookup.Target is the offset paste destination (often empty).
-            // Walk the column using lookup.Source (capture-area snapshot) and source-area world coords.
+            // Cut-at-source: anchor Target is live copy source; lookup.Target is the offset paste destination (often empty).
+            // Walk the column using lookup.Source (copy-area snapshot) and source-area world coords.
             bool sourceCut = TileComparison.IsSourceCutIntent(in tile);
             PasteSubject columnSubject = sourceCut ? PasteSubject.Source : identifySubject;
 

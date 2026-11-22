@@ -135,7 +135,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// </summary>
         public void BeginSyncBatch(TileBatch batch, PasteTile head)
         {
-            // --- Capture the batch world square so later ApplyMutation can SendTileSquare once per write.
+            // --- Snapshot the batch world square so later ApplyMutation can SendTileSquare once per write.
 
             _ = head;
             if (batch is not null && batch.TryGetSyncSquare(out Rectangle square))

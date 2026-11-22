@@ -11,7 +11,7 @@ namespace TheArchitectsBlueprintMod.Core
     {
         /// <summary>Placement intent from <see cref="PasteTile.PayloadTile"/>.</summary>
         Payload,
-        /// <summary>Live world at the capture/source area; used for source-area cut clears only.</summary>
+        /// <summary>Live world at the copy/source area; used for source-area cut clears only.</summary>
         Source,
         /// <summary>Live world at the paste destination (clear-at-target planning).</summary>
         Target,
@@ -33,7 +33,7 @@ namespace TheArchitectsBlueprintMod.Core
         public readonly PayloadCell PayloadCell = payloadCell;
         /// <summary>What is required to place <see cref="Target"/> (items, wiring, etc.) for the active layer.</summary>
         public readonly InteractionEntry Interaction = interaction;
-        /// <summary>Live world at the source/capture area (<see cref="Projection.TryGetSourceTile"/>). Used for source-area cut clears, not placement intent.</summary>
+        /// <summary>Live world at the source/copy area (<see cref="Projection.TryGetSourceTile"/>). Used for source-area cut clears, not placement intent.</summary>
         public readonly Tile Source = source;
         /// <summary>Target tile: live world tile in the target area at <see cref="World"/> (<see cref="Projection.TryGetTargetTile"/>).</summary>
         public readonly Tile Target = target;

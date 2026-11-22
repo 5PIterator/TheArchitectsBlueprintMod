@@ -222,7 +222,7 @@ namespace TheArchitectsBlueprintMod.Core.TileMapping
         /// <summary>Emits the Sunflower item for every TileObjectData placement style.</summary>
         private static int DiscoverSunflowerStyles(PlacementInteractionMap map)
         {
-            // --- FrameLayer places sunflowers; style keys must match captured RandomStyleRange variants.
+            // --- FrameLayer places sunflowers; style keys must match copied RandomStyleRange variants.
             Log("Family: SunflowerStyles");
             if (!ContentNameResolver.ResolveItem(SunflowerItem).HasValue)
             {

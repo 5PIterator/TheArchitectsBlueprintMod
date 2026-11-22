@@ -24,9 +24,9 @@ namespace TheArchitectsBlueprintMod.Core
             public Terraria.LiquidData LiquidData;
             public TileWallBrightnessInvisibilityData TWBIData;
             public TileWallWireStateData TWWStateData;
-            /// <summary>Authoritative placement style captured at cell build (drop item placeStyle / TileObjectData).</summary>
+            /// <summary>Authoritative placement style copied at cell build (drop item placeStyle / TileObjectData).</summary>
             public int TileStyle;
-            /// <summary>Placement alternate captured at cell build.</summary>
+            /// <summary>Placement alternate copied at cell build.</summary>
             public int TileAlternate;
         };
         public readonly struct WallData(TileData? data)
@@ -227,7 +227,7 @@ namespace TheArchitectsBlueprintMod.Core
 
         public bool HasTile() => !IsEmpty && Detail.HasTile;
 
-        /// <summary>Returns the placement style stored on this payload cell at capture/import time.</summary>
+        /// <summary>Returns the placement style stored on this payload cell at copy/import time.</summary>
         public int ResolvePlacementStyle()
         {
             // --- Documents require style on tile cells; never re-derive from sprite frames.
@@ -314,10 +314,10 @@ namespace TheArchitectsBlueprintMod.Core
         public int Width => _width;
         public int Height => _height;
 
-        /// <summary>Captures live world tiles and entity sidecars under <paramref name="worldBounds"/>.</summary>
+        /// <summary>Copies live world tiles and entity sidecars under <paramref name="worldBounds"/>.</summary>
         public static Payload FromWorld(Rectangle worldBounds)
         {
-            // --- Snapshot sparse cells, then capture position-keyed chest/sign/TE entities.
+            // --- Snapshot sparse cells, then copy position-keyed chest/sign/TE entities.
 
             if (worldBounds.IsEmpty)
                 return Empty;
@@ -340,7 +340,7 @@ namespace TheArchitectsBlueprintMod.Core
                 }
             }
 
-            PayloadEntity[] entities = PayloadEntityCapture.CaptureFromWorld(worldBounds);
+            PayloadEntity[] entities = PayloadEntityCopy.CopyFromWorld(worldBounds);
             return new Payload(w, h, entries.ToArray(), entities);
         }
 
@@ -384,7 +384,7 @@ namespace TheArchitectsBlueprintMod.Core
 
             PayloadEntity[] sanitizedEntities = entities is null || entities.Count == 0
                 ? Array.Empty<PayloadEntity>()
-                : PayloadEntityCapture.Sanitize(entities, width, height);
+                : PayloadEntityCopy.Sanitize(entities, width, height);
 
             return new Payload(width, height, filteredEntries, sanitizedEntities);
         }

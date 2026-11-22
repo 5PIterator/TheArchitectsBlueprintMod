@@ -1,10 +1,12 @@
 using System.ComponentModel;
+using Terraria;
 using Terraria.ModLoader.Config;
+using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.Phases;
 
 namespace TheArchitectsBlueprintMod.Config
 {
-    /// <summary>Per-client paste caps enforced on requests and during server validation.</summary>
+    /// <summary>Per-client paste caps and safeguard gates enforced on requests and during server validation.</summary>
     public sealed class ClientPasteLimitsConfig
     {
         [DefaultValue(200)]
@@ -22,6 +24,23 @@ namespace TheArchitectsBlueprintMod.Config
         [DefaultValue(1)]
         [Range(1, 128)]
         public int PlayerOperationLimit = 1;
+
+        [DefaultValue(true)]
+        public bool AllowClientSafeguardPreferences = true;
+
+        [DefaultValue(true)]
+        public bool RestrictCopyAndPasteToRevealedTiles = true;
+
+        [DefaultValue(true)]
+        public bool LimitCopyAndPasteToPlayerReach = true;
+
+        [DefaultValue(200)]
+        [Range(16, 5000)]
+        public int MaxReachDistanceTiles = 200;
+
+        [DefaultValue(5000)]
+        [Range(16, 5000)]
+        public int MaxReachDistanceTilesCap = 5000;
     }
 
     /// <summary>Server-wide paste execution caps.</summary>
@@ -293,6 +312,16 @@ namespace TheArchitectsBlueprintMod.Config
 
         [Header("LayerPolicy")]
         public LayerPolicyConfig LayerPolicy = new();
+
+        public override void OnChanged()
+        {
+            // --- After host sync, refresh local guard overlays against the new server gates.
+
+            if (Main.dedServ || Main.gameMenu || Main.LocalPlayer is not { active: true } player)
+                return;
+
+            BlueprintGuard.RefreshOrClearForLocalPlayer(player);
+        }
 
         /// <summary>Whether task building should run identification for the paste layer with the given <c>Layer.Id</c>.</summary>
         public bool IsLayerIdentificationEnabled(string layerId)

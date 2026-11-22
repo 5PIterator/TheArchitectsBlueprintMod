@@ -11,7 +11,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
 {
     /// <summary>
     /// Test Fixture chain for .tab paste:
-    /// FixtureLoaded → ProjectionCaptured → RequirePlayerNearChamber → MaterialsGiven → PasteExecuted → Teardown.
+    /// FixtureLoaded → ProjectionCopied → RequirePlayerNearChamber → MaterialsGiven → PasteExecuted → Teardown.
     /// </summary>
     internal static class TabPasteFixture
     {
@@ -53,7 +53,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
             if (!StonePasteFixture.TryCreateProjection(
                     player,
                     area,
-                    captureWorldPayload: false,
+                    copyWorldPayload: false,
                     out Core.Projection? projection,
                     out string? setupError)
                 || projection is null)

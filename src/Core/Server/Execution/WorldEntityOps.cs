@@ -17,7 +17,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>
         /// Wipes and applies payload entity data when the expected host exists at the payload origin.
         /// </summary>
-        public static bool TryPlaceEntity(Point world, in PayloadEntity entity, in PasteContext ctx)
+        public static bool TryPasteEntity(Point world, in PayloadEntity entity, in PasteContext ctx)
         {
             // --- Prefer the host Frame/Block just created; recreate the table entry if framing left tiles without one.
 
@@ -25,13 +25,13 @@ namespace TheArchitectsBlueprintMod.Core
                 && !TryEnsureHostForPlacedTiles(world, in entity))
             {
                 TABLog.Warn(
-                    $"EntityPlace ({world.X},{world.Y}) rel=({entity.Relative.X},{entity.Relative.Y}) "
+                    $"EntityPaste ({world.X},{world.Y}) rel=({entity.Relative.X},{entity.Relative.Y}) "
                     + $"n={entity.FullName} result=missing",
                     LogCategory);
                 return false;
             }
 
-            return TryReplaceEntityData(world, in entity, "EntityPlace");
+            return TryReplaceEntityData(world, in entity, "EntityPaste");
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (!PayloadEntityHandlers.TryEnsureHost(entity.FullName, world.X, world.Y))
             {
                 TABLog.Warn(
-                    $"EntityPlace ({world.X},{world.Y}) rel=({entity.Relative.X},{entity.Relative.Y}) "
+                    $"EntityPaste ({world.X},{world.Y}) rel=({entity.Relative.X},{entity.Relative.Y}) "
                     + $"n={entity.FullName} result=ensureFail",
                     LogCategory);
                 return false;
@@ -61,7 +61,7 @@ namespace TheArchitectsBlueprintMod.Core
                 return false;
 
             TABLog.Info(
-                $"EntityPlace ({world.X},{world.Y}) rel=({entity.Relative.X},{entity.Relative.Y}) "
+                $"EntityPaste ({world.X},{world.Y}) rel=({entity.Relative.X},{entity.Relative.Y}) "
                 + $"n={entity.FullName} result=ensured",
                 LogCategory);
             return true;
@@ -144,7 +144,7 @@ namespace TheArchitectsBlueprintMod.Core
                     continue;
                 }
 
-                if (TryPlaceEntityBlind(pasteTile.World, in entity))
+                if (TryPasteEntityBlind(pasteTile.World, in entity))
                     applied++;
                 else
                     failed++;
@@ -156,7 +156,7 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>Creates the host at the payload origin and applies sidecar data.</summary>
-        private static bool TryPlaceEntityBlind(Point world, in PayloadEntity entity)
+        private static bool TryPasteEntityBlind(Point world, in PayloadEntity entity)
         {
             // --- Sweep recreates hosts at exact payload coordinates, then wipe/apply there.
 

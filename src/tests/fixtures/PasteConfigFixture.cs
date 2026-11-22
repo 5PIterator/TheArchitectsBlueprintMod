@@ -10,7 +10,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
 {
     /// <summary>
     /// Test Fixture node that pins every paste-related ModConfig field for Case runs, then restores.
-    /// Covers ClientPasteConfig, PastingConfig, and ArchitectBlueprintConfig.
+    /// Covers ClientPasteConfig and PastingConfig (including client safeguard prefs and server gates).
     /// </summary>
     internal static class PasteConfigFixture
     {
@@ -23,10 +23,9 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
 
             ClientPasteConfig client = ModContent.GetInstance<ClientPasteConfig>();
             PastingConfig server = ModContent.GetInstance<PastingConfig>();
-            ArchitectBlueprintConfig architect = ModContent.GetInstance<ArchitectBlueprintConfig>();
 
-            ConfigSnapshot previous = Snapshot(client, server, architect);
-            Apply(profile, client, server, architect);
+            ConfigSnapshot previous = Snapshot(client, server);
+            Apply(profile, client, server);
 
             while (true)
             {
@@ -37,7 +36,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
                 }
                 catch
                 {
-                    Restore(client, server, architect, previous);
+                    Restore(client, server, previous);
                     throw;
                 }
 
@@ -47,38 +46,25 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
                 yield return body.Current;
             }
 
-            Restore(client, server, architect, previous);
+            Restore(client, server, previous);
         }
 
         private static ConfigSnapshot Snapshot(
             ClientPasteConfig client,
-            PastingConfig server,
-            ArchitectBlueprintConfig architect) =>
+            PastingConfig server) =>
             new(
                 SnapshotClient(client),
-                SnapshotServer(server),
-                SnapshotArchitect(architect));
+                SnapshotServer(server));
 
         private static void Apply(
             PasteConfigProfile profile,
             ClientPasteConfig client,
-            PastingConfig server,
-            ArchitectBlueprintConfig architect)
+            PastingConfig server)
         {
             // --- Every field is assigned; no ModConfig value is left at the player's prior setting.
 
-            ApplyArchitectDefaults(architect);
             ApplyServerDefaults(server, retryOnMissingItems: profile == PasteConfigProfile.RetryOnMissing);
             ApplyClientDefaults(client, retryOnMissingItems: profile == PasteConfigProfile.RetryOnMissing);
-        }
-
-        private static void ApplyArchitectDefaults(ArchitectBlueprintConfig architect)
-        {
-            // --- Chamber Cases must not depend on map reveal or a tight capture/paste reach radius.
-
-            architect.RestrictCaptureAndPasteToRevealedTiles = false;
-            architect.LimitCaptureAndPasteToPlayerReach = false;
-            architect.MaxReachDistanceTiles = 5000;
         }
 
         private static void ApplyServerDefaults(PastingConfig server, bool retryOnMissingItems)
@@ -88,6 +74,11 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
             clientLimits.MaxPasteHeight = 200;
             clientLimits.VolumeLimit = 5000;
             clientLimits.PlayerOperationLimit = 1;
+            clientLimits.AllowClientSafeguardPreferences = true;
+            clientLimits.RestrictCopyAndPasteToRevealedTiles = false;
+            clientLimits.LimitCopyAndPasteToPlayerReach = false;
+            clientLimits.MaxReachDistanceTiles = 5000;
+            clientLimits.MaxReachDistanceTilesCap = 5000;
 
             ServerPasteLimitsConfig serverLimits = server.Limits.Server;
             serverLimits.ServerOperationLimit = 8;
@@ -151,10 +142,15 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
 
         private static void ApplyClientDefaults(ClientPasteConfig client, bool retryOnMissingItems)
         {
+            // --- Chamber Cases must not depend on map reveal or a tight copy/paste reach radius.
+
             client.Plan.Strategy.Style = ClearStyle.Transparent;
             client.Clear.Strategy.ItemDrop = ClearItemDropStyle.Void;
             client.Place.Strategy.RetryOnMissingItems = retryOnMissingItems;
             client.Place.Strategy.RetryOnInvalidPlacement = false;
+            client.Safeguards.RestrictCopyAndPasteToRevealedTiles = false;
+            client.Safeguards.LimitCopyAndPasteToPlayerReach = false;
+            client.Safeguards.MaxReachDistanceTiles = 5000;
             client.Arrow.Speed = 48;
             client.Arrow.MinSpeed = 2.5f;
             client.Arrow.MaxSpeed = 24f;
@@ -164,12 +160,10 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
         private static void Restore(
             ClientPasteConfig client,
             PastingConfig server,
-            ArchitectBlueprintConfig architect,
             ConfigSnapshot previous)
         {
             RestoreClient(client, previous.Client);
             RestoreServer(server, previous.Server);
-            RestoreArchitect(architect, previous.Architect);
         }
 
         private static ClientSnapshot SnapshotClient(ClientPasteConfig client) =>
@@ -178,6 +172,9 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
                 client.Clear.Strategy.ItemDrop,
                 client.Place.Strategy.RetryOnMissingItems,
                 client.Place.Strategy.RetryOnInvalidPlacement,
+                client.Safeguards.RestrictCopyAndPasteToRevealedTiles,
+                client.Safeguards.LimitCopyAndPasteToPlayerReach,
+                client.Safeguards.MaxReachDistanceTiles,
                 client.Arrow.Speed,
                 client.Arrow.MinSpeed,
                 client.Arrow.MaxSpeed,
@@ -189,6 +186,9 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
             client.Clear.Strategy.ItemDrop = s.ClearItemDrop;
             client.Place.Strategy.RetryOnMissingItems = s.RetryOnMissingItems;
             client.Place.Strategy.RetryOnInvalidPlacement = s.RetryOnInvalidPlacement;
+            client.Safeguards.RestrictCopyAndPasteToRevealedTiles = s.RestrictToRevealedTiles;
+            client.Safeguards.LimitCopyAndPasteToPlayerReach = s.LimitToPlayerReach;
+            client.Safeguards.MaxReachDistanceTiles = s.MaxReachDistanceTiles;
             client.Arrow.Speed = s.ArrowSpeed;
             client.Arrow.MinSpeed = s.ArrowMinSpeed;
             client.Arrow.MaxSpeed = s.ArrowMaxSpeed;
@@ -201,6 +201,11 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
                 server.Limits.Client.MaxPasteHeight,
                 server.Limits.Client.VolumeLimit,
                 server.Limits.Client.PlayerOperationLimit,
+                server.Limits.Client.AllowClientSafeguardPreferences,
+                server.Limits.Client.RestrictCopyAndPasteToRevealedTiles,
+                server.Limits.Client.LimitCopyAndPasteToPlayerReach,
+                server.Limits.Client.MaxReachDistanceTiles,
+                server.Limits.Client.MaxReachDistanceTilesCap,
                 server.Limits.Server.ServerOperationLimit,
                 server.Limits.Server.MaxPhaseTickSize,
                 server.Limits.Server.MaxTilesPerCategory,
@@ -251,6 +256,11 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
             server.Limits.Client.MaxPasteHeight = s.MaxPasteHeight;
             server.Limits.Client.VolumeLimit = s.VolumeLimit;
             server.Limits.Client.PlayerOperationLimit = s.PlayerOperationLimit;
+            server.Limits.Client.AllowClientSafeguardPreferences = s.AllowClientSafeguardPreferences;
+            server.Limits.Client.RestrictCopyAndPasteToRevealedTiles = s.RestrictToRevealedTiles;
+            server.Limits.Client.LimitCopyAndPasteToPlayerReach = s.LimitToPlayerReach;
+            server.Limits.Client.MaxReachDistanceTiles = s.MaxReachDistanceTiles;
+            server.Limits.Client.MaxReachDistanceTilesCap = s.MaxReachDistanceTilesCap;
             server.Limits.Server.ServerOperationLimit = s.ServerOperationLimit;
             server.Limits.Server.MaxPhaseTickSize = s.MaxPhaseTickSize;
             server.Limits.Server.MaxTilesPerCategory = s.MaxTilesPerCategory;
@@ -302,44 +312,33 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
             server.LayerPolicy.CustomLayers.Tree = s.LayerTree;
         }
 
-        private static ArchitectSnapshot SnapshotArchitect(ArchitectBlueprintConfig architect) =>
-            new(
-                architect.RestrictCaptureAndPasteToRevealedTiles,
-                architect.LimitCaptureAndPasteToPlayerReach,
-                architect.MaxReachDistanceTiles);
-
-        private static void RestoreArchitect(ArchitectBlueprintConfig architect, ArchitectSnapshot s)
-        {
-            architect.RestrictCaptureAndPasteToRevealedTiles = s.RestrictToRevealedTiles;
-            architect.LimitCaptureAndPasteToPlayerReach = s.LimitToPlayerReach;
-            architect.MaxReachDistanceTiles = s.MaxReachDistanceTiles;
-        }
-
         private readonly record struct ConfigSnapshot(
             ClientSnapshot Client,
-            ServerSnapshot Server,
-            ArchitectSnapshot Architect);
+            ServerSnapshot Server);
 
         private readonly record struct ClientSnapshot(
             ClearStyle PlanStyle,
             ClearItemDropStyle ClearItemDrop,
             bool RetryOnMissingItems,
             bool RetryOnInvalidPlacement,
+            bool RestrictToRevealedTiles,
+            bool LimitToPlayerReach,
+            int MaxReachDistanceTiles,
             int ArrowSpeed,
             float ArrowMinSpeed,
             float ArrowMaxSpeed,
             bool OverlayRectBorders);
-
-        private readonly record struct ArchitectSnapshot(
-            bool RestrictToRevealedTiles,
-            bool LimitToPlayerReach,
-            int MaxReachDistanceTiles);
 
         private readonly record struct ServerSnapshot(
             int MaxPasteWidth,
             int MaxPasteHeight,
             int VolumeLimit,
             int PlayerOperationLimit,
+            bool AllowClientSafeguardPreferences,
+            bool RestrictToRevealedTiles,
+            bool LimitToPlayerReach,
+            int MaxReachDistanceTiles,
+            int MaxReachDistanceTilesCap,
             int ServerOperationLimit,
             int MaxPhaseTickSize,
             int MaxTilesPerCategory,

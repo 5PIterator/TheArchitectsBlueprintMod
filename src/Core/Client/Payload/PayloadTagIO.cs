@@ -447,14 +447,22 @@ namespace TheArchitectsBlueprintMod.Core
                 entries.Add(new Payload.Entry(new Point(x, y), cell));
             }
 
-            payload = Payload.FromSparse(entries, info.Width, info.Height, ReadEntities(root, info.Width, info.Height));
+            payload = Payload.FromSparse(
+                entries,
+                info.Width,
+                info.Height,
+                ReadEntities(root, info.Width, info.Height, info.ModsLoaded));
             return payload.IsDefined;
         }
 
         /// <summary>Reads the optional schema-5 entities list; missing/empty yields no entities.</summary>
-        private static PayloadEntity[] ReadEntities(TagCompound root, int width, int height)
+        private static PayloadEntity[] ReadEntities(
+            TagCompound root,
+            int width,
+            int height,
+            IReadOnlyList<string>? modsLoaded)
         {
-            // --- Parse (x,y,n,d) tags and sanitize against document bounds.
+            // --- Parse (x,y,n,d) tags and sanitize against document bounds using document modsLoaded.
 
             if (!root.ContainsKey(KeyEntities))
                 return [];
@@ -491,7 +499,7 @@ namespace TheArchitectsBlueprintMod.Core
                 entities.Add(new PayloadEntity(new Point(x, y), name, data));
             }
 
-            return PayloadEntityCapture.Sanitize(entities, width, height);
+            return PayloadEntityCopy.Sanitize(entities, width, height, modsLoaded);
         }
 
         public static bool TryReadDocumentInfo(Stream stream, out PayloadDocumentInfo info, out string? error)
@@ -998,124 +1006,11 @@ namespace TheArchitectsBlueprintMod.Core
             return first.ContainsKey("TileType") || first.ContainsKey("WallType");
         }
 
-        private static JObject TagCompoundToJObject(TagCompound tag)
-        {
-            var obj = new JObject();
-            foreach (KeyValuePair<string, object> pair in tag)
-                obj[pair.Key] = TagValueToJToken(pair.Value);
-            return obj;
-        }
+        private static JObject TagCompoundToJObject(TagCompound tag) =>
+            (JObject)NbtTagValues.ToJson(tag);
 
-        private static JToken TagValueToJToken(object value)
-        {
-            switch (value)
-            {
-                case string s:
-                    return s;
-                case int i:
-                    return i;
-                case float f:
-                    return f;
-                case double d:
-                    return d;
-                case bool b:
-                    return b;
-                case byte b:
-                    return b;
-                case short s:
-                    return s;
-                case long l:
-                    return l;
-                case TagCompound compound:
-                    return TagCompoundToJObject(compound);
-                case IList<string> strings:
-                {
-                    var array = new JArray();
-                    for (int i = 0; i < strings.Count; i++)
-                        array.Add(strings[i]);
-                    return array;
-                }
-                case IList<int> ints:
-                {
-                    var array = new JArray();
-                    for (int i = 0; i < ints.Count; i++)
-                        array.Add(ints[i]);
-                    return array;
-                }
-                case IList<TagCompound> tags:
-                {
-                    var array = new JArray();
-                    for (int i = 0; i < tags.Count; i++)
-                        array.Add(TagCompoundToJObject(tags[i]));
-                    return array;
-                }
-                default:
-                    return JValue.CreateNull();
-            }
-        }
-
-        private static TagCompound JObjectToTagCompound(JObject obj)
-        {
-            var tag = new TagCompound();
-            foreach (JProperty property in obj.Properties())
-            {
-                object? converted = JTokenToTagValue(property.Value);
-                if (converted is not null)
-                    tag[property.Name] = converted;
-            }
-
-            return tag;
-        }
-
-        private static object? JTokenToTagValue(JToken token)
-        {
-            return token.Type switch
-            {
-                JTokenType.String => token.Value<string>(),
-                JTokenType.Integer => token.Value<int>(),
-                JTokenType.Float => token.Value<float>(),
-                JTokenType.Boolean => token.Value<bool>(),
-                JTokenType.Object => JObjectToTagCompound((JObject)token),
-                JTokenType.Array => JArrayToTagList((JArray)token),
-                _ => null,
-            };
-        }
-
-        private static object JArrayToTagList(JArray array)
-        {
-            if (array.Count == 0)
-                return new List<TagCompound>();
-
-            if (array[0] is JObject)
-            {
-                var compounds = new List<TagCompound>(array.Count);
-                foreach (JToken item in array)
-                {
-                    if (item is JObject obj)
-                        compounds.Add(JObjectToTagCompound(obj));
-                }
-
-                return compounds;
-            }
-
-            if (array[0].Type == JTokenType.String)
-            {
-                var strings = new List<string>(array.Count);
-                foreach (JToken item in array)
-                    strings.Add(item.Type == JTokenType.String ? item.Value<string>() ?? string.Empty : item.ToString());
-                return strings;
-            }
-
-            if (array[0].Type == JTokenType.Integer)
-            {
-                var ints = new List<int>(array.Count);
-                foreach (JToken item in array)
-                    ints.Add(item.Type == JTokenType.Integer ? item.Value<int>() : 0);
-                return ints;
-            }
-
-            return new List<TagCompound>();
-        }
+        private static TagCompound JObjectToTagCompound(JObject obj) =>
+            NbtTagValues.FromJson(obj) as TagCompound ?? [];
 
         private static bool TryGetInt32(TagCompound tag, string key, out int value)
         {

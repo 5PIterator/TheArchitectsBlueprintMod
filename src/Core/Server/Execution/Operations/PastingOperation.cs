@@ -625,8 +625,15 @@ namespace TheArchitectsBlueprintMod.Core
 
             switch (to)
             {
-                // Entering ClearTarget: announce the new stage.
+                // Entering ClearTarget: Sweep skips clear/cut queues and jumps straight to Done.
                 case PrepWorkStage.PlanClear:
+                    if (_sweepPhase.Active)
+                    {
+                        _prepWork = PrepWorkStage.Done;
+                        TABLog.Debug("Prep: stage PlaceSource -> Done (sweep active — skip Clear/Cut)", "Paste");
+                        break;
+                    }
+
                     TABLog.Debug("Prep: ClearTarget — queuing clears at destination", "Paste");
                     TABLog.Debug("Prep: stage PlaceSource -> ClearTarget", "Paste");
                     break;
@@ -1163,14 +1170,15 @@ namespace TheArchitectsBlueprintMod.Core
 
         internal Phase? ResolveFirstEnabledExecutionPhase()
         {
+            // Sweep owns the footprint blit; skip Clear/Cut/Place when it is active.
+            if (_sweepPhase.Active)
+                return _sweepPhase;
             if (_clearPhase.Active)
                 return _clearPhase;
             if (_cutPhase.Active)
                 return _cutPhase;
             if (_placePhase.Active)
                 return _placePhase;
-            if (_sweepPhase.Active)
-                return _sweepPhase;
             return null;
         }
 
@@ -1213,6 +1221,14 @@ namespace TheArchitectsBlueprintMod.Core
         private void BuildBlindExecutionQueues()
         {
             // --- Build clear/cut/place queues without plan-derived filtering.
+
+            // Sweep blits the footprint itself; leave clear/cut/place queues empty.
+            if (_sweepPhase.Active)
+            {
+                TABLog.Debug("Blind queues skipped (sweep active)", "Paste");
+                return;
+            }
+
             PasteContext identifyContext = Context;
             for (int y = 0; y < Execution.GridHeight; y++)
             {

@@ -1584,7 +1584,7 @@ namespace TheArchitectsBlueprintMod.Core
             return tile.HasTile && tile.TileType == type;
         }
 
-        /// <summary>Writes captured origin frames after PlaceTile/PlaceObject, optionally replaying TileFrame hooks.</summary>
+        /// <summary>Writes copied origin frames after PlaceTile/PlaceObject, optionally replaying TileFrame hooks.</summary>
         private static bool TryApplyBundledPostPlaceFrame(
             int x,
             int y,
@@ -1609,7 +1609,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Writes TileFrameX/Y. Optionally runs TileLoader.TileFrame, which can recreate PlaceObject hosts.</summary>
         private static bool ApplyTileFrame(int x, int y, short frameX, short frameY, bool runPlacementHooks = true)
         {
-            // --- Assign captured frames, then TileFrame only when PlaceTile still needs the post-place hook.
+            // --- Assign copied frames, then TileFrame only when PlaceTile still needs the post-place hook.
 
             Tile tile = Main.tile[x, y];
             if (!tile.HasTile)

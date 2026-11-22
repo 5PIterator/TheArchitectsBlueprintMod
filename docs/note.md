@@ -19,11 +19,11 @@ Candles and plants place correctly. `layer_R01` should record that, and cover th
 
 ## Paste policy and safeguards
 
-- [ ] **Move blueprint safeguards under Client Global Limits.** Reach and revealed-tile limits live in their own server config, `ArchitectBlueprintConfig`. Paste caps live in `PastingConfig.Limits.Client` (`GlobalLimitsConfig`, header `GlobalLimits`). The note asks for the safeguard toggles on that client limits block instead of a separate config entry.
-- [ ] **Disabling safeguards leaves tiles black.** The mask color is `(0, 0, 0, 220)` in `BlueprintGuard`. `ApplyGuardOverlay` unregisters only when it runs. After both `LimitCaptureAndPasteToPlayerReach` and `RestrictCaptureAndPasteToRevealedTiles` are off, `NeedsDynamicGuardRefresh` is false and `RefreshClientGuardMasks` cancels the scan without clearing the existing `guarded` overlay. Turning the flags off should unregister those masks and clear `BlueprintCell.Protected`.
-- [ ] **Config entry icon.** `ArchitectSystem` already has `Content/Icons/ArchitectMode`. tModLoader config entries do not show it. Find whether a `ModConfig` header or attribute can take that icon.
-- [ ] **Sweep is ignored by Clear.** With Sweep active, plan-place only seeds allowed relatives and skips place identification (`PastingOperation`, around the `_sweepPhase.Active` branch). `ResolveFirstEnabledExecutionPhase` still runs Clear, then Cut, then Place, and Sweep last. When Sweep is on, skip those other checks and blit the footprint. Keep Sweep tick size and tick speed.
-- [ ] **Overhaul and finish every setting description.** Labels and tooltips live in `Localization/en-US_Mods.TheArchitectsBlueprintMod.hjson` under `Configs` (`ClientLogConfig`, `ClientPasteConfig`, `PastingConfig`, `ArchitectModeConfig`, `ArchitectBlueprintConfig`, `TileMappingConfig`). Many tooltips are still `""`: log level, client clear strategy, overlay, Clear/Cut/Place Active, arrow preference, and the duplicate `LayerPolicySettings` / `LayerPolicyConfig` / `CustomLayerPolicySettings` blocks. Headers still say `Debug Header` and `Projectile Policy Header`. Rewrite each tooltip so it says what the setting does, whether the client or the host owns it, and what the default does. The filled `PastingConfig.LayerPolicy` text can seed the empty layer-policy copies.
+- [x] **Move blueprint safeguards under Client Global Limits.** Client prefs live in `ClientPasteConfig.Safeguards`; host gates/defaults/cap live in `PastingConfig.Limits.Client`. `ArchitectBlueprintConfig` removed. Effective policy merges via `EffectiveSafeguardPolicy`.
+- [x] **Disabling safeguards leaves tiles black.** `ClearClientGuardState` unregisters guarded overlays and clears `Protected`; wired from refresh early-exit, overlay player tick, and config `OnChanged`.
+- [x] **Config entry icon.** No per-`ModConfig` icon API; added mod-root `icon.png` / `icon_small.png` from `Content/Icons/ArchitectMode` for the Mods/config list.
+- [x] **Sweep is ignored by Clear.** `ResolveFirstEnabledExecutionPhase` prefers Sweep; plan skips Clear/Cut when Sweep is active; blind queue build returns early. Tick size/speed unchanged.
+- [x] **Overhaul and finish every setting description.** Configs tooltips filled (including layer-policy type fallbacks); placeholder headers removed/renamed; safeguard entries documented.
 
 ## UI
 

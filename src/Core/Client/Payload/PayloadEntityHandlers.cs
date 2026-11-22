@@ -9,29 +9,21 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using TheArchitectsBlueprintMod.Core.Compat;
 using TheArchitectsBlueprintMod.Core.TileMapping;
 using TheArchitectsBlueprintMod.Debug;
 
 namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Per-kind capture/apply behavior. <see cref="PayloadEntityHandlers.Resolve"/> fills null members from Generic.
-    /// </summary>
-    internal readonly struct PayloadEntityHandler
-    {
-        public Func<TileEntity, TagCompound?>? CaptureTe { get; init; }
-        public Func<TagCompound, TagCompound?>? Sanitize { get; init; }
-        public Func<int, int, TagCompound, bool>? Apply { get; init; }
-    }
-
-    /// <summary>
-    /// Default TileEntity path plus a FullName table of custom handlers (chest, sign, display doll).
+    /// Host lifecycle plus vanilla copy/sanitize/apply helpers used by <see cref="Compat.Adapters.TerrariaCopyPasteAdapter"/>.
+    /// Dispatch entry points route through <see cref="CompatibilityRegistry"/>.
     /// </summary>
     internal static class PayloadEntityHandlers
     {
         private const string LogCategory = "Paste";
-        private const string EntityCaptureLog = "EntityCapture";
-        private const string EntityPlaceLog = "EntityPlace";
+        private const string EntityCopyLog = "EntityCopy";
+        private const string EntityPasteLog = "EntityPaste";
         private const int DisplayDollSlotCount = 8;
 
         private static readonly FieldInfo? DisplayDollItemsField = typeof(TEDisplayDoll).GetField(
@@ -40,57 +32,6 @@ namespace TheArchitectsBlueprintMod.Core
         private static readonly FieldInfo? DisplayDollDyesField = typeof(TEDisplayDoll).GetField(
             "_dyes",
             BindingFlags.Instance | BindingFlags.NonPublic);
-
-        /// <summary>Default path: exact ByPosition, SaveData/LoadData.</summary>
-        public static readonly PayloadEntityHandler Generic = new()
-        {
-            CaptureTe = CaptureGenericTileEntity,
-            Sanitize = SanitizeGenericTileEntityData,
-            Apply = TryApplyGenericTileEntity,
-        };
-
-        private static readonly Dictionary<string, PayloadEntityHandler> ByName = new(StringComparer.Ordinal)
-        {
-            [PayloadEntityNames.Chest] = new()
-            {
-                Sanitize = SanitizeChestData,
-                Apply = TryApplyChestData,
-            },
-            [PayloadEntityNames.Sign] = new()
-            {
-                Sanitize = SanitizeSignData,
-                Apply = TryApplySignData,
-            },
-            [PayloadEntityNames.DisplayDoll] = new()
-            {
-                CaptureTe = CaptureDisplayDoll,
-                Sanitize = SanitizeDisplayDollData,
-                Apply = TryApplyDisplayDoll,
-            },
-        };
-
-        /// <summary>Returns the custom handler for <paramref name="fullName"/>, or the generic TileEntity path.</summary>
-        public static PayloadEntityHandler Resolve(string fullName)
-        {
-            // --- Table hit wins (null members filled from Generic); unknown names use the TE default.
-
-            if (!string.IsNullOrEmpty(fullName) && ByName.TryGetValue(fullName, out PayloadEntityHandler handler))
-                return OverlayGeneric(handler);
-            return Generic;
-        }
-
-        /// <summary>Copies Generic into any unset handler members.</summary>
-        private static PayloadEntityHandler OverlayGeneric(PayloadEntityHandler custom)
-        {
-            // --- Table row wins per member; Generic fills Find/Capture/Sanitize/Apply when omitted.
-
-            return new PayloadEntityHandler
-            {
-                CaptureTe = custom.CaptureTe ?? Generic.CaptureTe,
-                Sanitize = custom.Sanitize ?? Generic.Sanitize,
-                Apply = custom.Apply ?? Generic.Apply,
-            };
-        }
 
         /// <summary>One host table entry whose recorded origin lies inside a world rectangle.</summary>
         public readonly struct HostAtOrigin
@@ -150,7 +91,7 @@ namespace TheArchitectsBlueprintMod.Core
                 if (te is null)
                     continue;
 
-                string? name = PayloadEntityCapture.TryGetTileEntityFullName(te);
+                string? name = PayloadEntityCopy.TryGetTileEntityFullName(te);
                 if (string.IsNullOrEmpty(name))
                     continue;
 
@@ -187,7 +128,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (!TileEntity.ByPosition.TryGetValue(new Point16(worldX, worldY), out TileEntity? te) || te is null)
                 return false;
 
-            string? name = PayloadEntityCapture.TryGetTileEntityFullName(te);
+            string? name = PayloadEntityCopy.TryGetTileEntityFullName(te);
             if (string.IsNullOrEmpty(name))
                 return false;
 
@@ -204,8 +145,8 @@ namespace TheArchitectsBlueprintMod.Core
             TryGetLiveFullName(worldX, worldY, out string liveName)
             && string.Equals(liveName, fullName, StringComparison.Ordinal);
 
-        /// <summary>Captures chest items and name into a payload tag.</summary>
-        public static TagCompound? CaptureChest(Chest chest)
+        /// <summary>Copies chest items and name into a payload tag.</summary>
+        public static TagCompound? CopyChest(Chest chest)
         {
             // --- Sparse identity slots plus optional custom name, capped for security.
 
@@ -226,8 +167,8 @@ namespace TheArchitectsBlueprintMod.Core
             return tag.Count > 0 ? tag : null;
         }
 
-        /// <summary>Captures non-empty sign text into a payload tag.</summary>
-        public static TagCompound? CaptureSign(Sign sign)
+        /// <summary>Copies non-empty sign text into a payload tag.</summary>
+        public static TagCompound? CopySign(Sign sign)
         {
             // --- Store trimmed text when non-empty.
 
@@ -240,39 +181,80 @@ namespace TheArchitectsBlueprintMod.Core
             return new TagCompound { ["text"] = text };
         }
 
-        /// <summary>Captures TileEntity data using the kind handler, or generic SaveData.</summary>
-        public static TagCompound? CaptureTileEntity(TileEntity te, string fullName)
+        /// <summary>Copies TileEntity data through the compatibility registry.</summary>
+        public static TagCompound? CopyTileEntity(TileEntity te, string fullName, CompatibilityContext? ctx = null)
         {
-            // --- Custom CaptureTe when registered; otherwise SaveData into a fresh tag.
+            // --- Bind FullName onto a session context, then dispatch Copy.
 
-            PayloadEntityHandler handler = Resolve(fullName);
-            if (handler.CaptureTe is not null)
-                return handler.CaptureTe(te);
-
-            return Generic.CaptureTe!(te);
+            CompatibilityContext context = ctx ?? CompatibilityRegistry.CreateSessionContext(CompatibilityPhase.Copy);
+            context.Phase = CompatibilityPhase.Copy;
+            context.FullName = fullName;
+            context.LiveTileEntity = te;
+            return CompatibilityRegistry.DispatchCopy(context, te);
         }
 
-        /// <summary>Sanitizes payload entity data using the kind handler, or a byte-size cap.</summary>
-        public static TagCompound? Sanitize(string fullName, TagCompound? data)
+        /// <summary>Sanitizes payload entity data through the compatibility registry.</summary>
+        public static TagCompound? Sanitize(string fullName, TagCompound? data, IReadOnlyList<string>? modsLoaded = null)
         {
-            // --- Drop empty tags; dispatch to handler Sanitize when present.
+            // --- Drop empty tags; otherwise dispatch Sanitize with document or session mods.
 
             if (data is null || data.Count == 0)
                 return null;
 
-            PayloadEntityHandler handler = Resolve(fullName);
-            Func<TagCompound, TagCompound?> sanitize = handler.Sanitize ?? Generic.Sanitize!;
-            return sanitize(data);
+            CompatibilityContext context = CompatibilityRegistry.CreateSessionContext(CompatibilityPhase.Sanitize, modsLoaded);
+            context.FullName = fullName;
+            return CompatibilityRegistry.DispatchSanitize(context, data);
         }
 
-        /// <summary>Applies payload data using the kind handler, or generic TileEntity.LoadData.</summary>
-        public static bool TryApply(string fullName, int worldX, int worldY, TagCompound data)
+        /// <summary>Applies payload data through the compatibility registry.</summary>
+        public static bool TryApply(string fullName, int worldX, int worldY, TagCompound data, IReadOnlyList<string>? modsLoaded = null)
         {
-            // --- Handler Apply if registered; otherwise LoadData + TileEntitySharing.
+            // --- Bind FullName and dispatch Place; applied result comes from the claiming adapter.
 
-            PayloadEntityHandler handler = Resolve(fullName);
-            Func<int, int, TagCompound, bool> apply = handler.Apply ?? Generic.Apply!;
-            return apply(worldX, worldY, data);
+            CompatibilityContext context = CompatibilityRegistry.CreateSessionContext(CompatibilityPhase.Paste, modsLoaded);
+            context.FullName = fullName;
+            return CompatibilityRegistry.DispatchPaste(context, worldX, worldY, data);
+        }
+
+        /// <summary>Vanilla copy path: DisplayDoll custom inventory, else generic SaveData.</summary>
+        internal static TagCompound? CopyVanillaTileEntity(TileEntity te, string fullName)
+        {
+            // --- DisplayDoll bypasses SaveData; all other FullNames use generic SaveData.
+
+            if (string.Equals(fullName, PayloadEntityNames.DisplayDoll, StringComparison.Ordinal))
+                return CopyDisplayDoll(te);
+
+            return CopyGenericTileEntity(te);
+        }
+
+        /// <summary>Vanilla sanitize path for Chest, Sign, DisplayDoll, or generic TE tags.</summary>
+        internal static TagCompound? SanitizeVanilla(string fullName, TagCompound data)
+        {
+            // --- Switch on synthetic/vanilla FullNames; unknown names use generic TE sanitize.
+
+            if (string.Equals(fullName, PayloadEntityNames.Chest, StringComparison.Ordinal))
+                return SanitizeChestData(data);
+            if (string.Equals(fullName, PayloadEntityNames.Sign, StringComparison.Ordinal))
+                return SanitizeSignData(data);
+            if (string.Equals(fullName, PayloadEntityNames.DisplayDoll, StringComparison.Ordinal))
+                return SanitizeDisplayDollData(data);
+
+            return SanitizeGenericTileEntityData(data);
+        }
+
+        /// <summary>Vanilla apply path for Chest, Sign, DisplayDoll, or generic LoadData.</summary>
+        internal static bool ApplyVanilla(string fullName, int worldX, int worldY, TagCompound data)
+        {
+            // --- Switch on synthetic/vanilla FullNames; unknown names use generic TE LoadData.
+
+            if (string.Equals(fullName, PayloadEntityNames.Chest, StringComparison.Ordinal))
+                return TryApplyChestData(worldX, worldY, data);
+            if (string.Equals(fullName, PayloadEntityNames.Sign, StringComparison.Ordinal))
+                return TryApplySignData(worldX, worldY, data);
+            if (string.Equals(fullName, PayloadEntityNames.DisplayDoll, StringComparison.Ordinal))
+                return TryApplyDisplayDoll(worldX, worldY, data);
+
+            return TryApplyGenericTileEntity(worldX, worldY, data);
         }
 
         /// <summary>Removes a chest, sign, or TileEntity host at exact world coordinates.</summary>
@@ -453,8 +435,8 @@ namespace TheArchitectsBlueprintMod.Core
                 if (!TryNormalizeIdentitySlot(raw, i, maxSlots, out TagCompound normalized, out int slot))
                 {
                     TABLog.Warn(
-                        $"EntityCapture dropped {listName}[{i}] unresolved identity slot",
-                        EntityCaptureLog);
+                        $"EntityCopy dropped {listName}[{i}] unresolved identity slot",
+                        EntityCopyLog);
                     continue;
                 }
 
@@ -496,12 +478,16 @@ namespace TheArchitectsBlueprintMod.Core
             if (tag is null || tag.Count == 0)
                 return false;
 
+            NbtTagValues.PrepareForLoader(tag);
             try
             {
                 item = ItemIO.Load(tag);
             }
-            catch
+            catch (Exception ex)
             {
+                TABLog.Warn(
+                    $"EntityPreview NBT item load failed: {ex.Message}",
+                    "EntityPreview");
                 item = null!;
                 return false;
             }
@@ -627,7 +613,7 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>Rewrites an ItemIO item blob to identity-only Save output (no globalData).</summary>
-        private static bool TryRewriteIdentityItemIO(
+        internal static bool TryRewriteIdentityItemIO(
             TagCompound raw,
             out TagCompound rewritten,
             out string? dropReason)
@@ -645,14 +631,18 @@ namespace TheArchitectsBlueprintMod.Core
             // Load without GlobalItem fields so JSON-widened globals cannot throw.
             Item? loaded = null;
             TagCompound stripped = CloneWithoutGlobalData(raw);
+            NbtTagValues.PrepareForLoader(stripped);
             try
             {
                 Item candidate = ItemIO.Load(stripped);
                 if (candidate is { IsAir: false })
                     loaded = candidate;
             }
-            catch
+            catch (Exception ex)
             {
+                TABLog.Warn(
+                    $"EntityCopy NBT item load failed: {ex.Message}",
+                    EntityCopyLog);
                 loaded = null;
             }
 
@@ -781,7 +771,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (TryFind(fullName, worldX, worldY))
                 return true;
 
-            return TryPlaceTileEntityHost(fullName, worldX, worldY);
+            return TryPasteTileEntityHost(fullName, worldX, worldY);
         }
 
         /// <summary>Ensures a Main.chest entry exists at exact x/y, ignoring live tile type.</summary>
@@ -965,7 +955,7 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>Creates a TileEntity record at exact coordinates, allowing ghosts when Place rejects the tile.</summary>
-        private static bool TryPlaceTileEntityHost(string fullName, int worldX, int worldY)
+        private static bool TryPasteTileEntityHost(string fullName, int worldX, int worldY)
         {
             // --- Prefer typed Place; force-register when ValidTile rejects a ghost origin.
 
@@ -975,7 +965,7 @@ namespace TheArchitectsBlueprintMod.Core
             Point16 key = new(worldX, worldY);
             if (TileEntity.ByPosition.TryGetValue(key, out TileEntity? existing) && existing is not null)
             {
-                string? existingName = PayloadEntityCapture.TryGetTileEntityFullName(existing);
+                string? existingName = PayloadEntityCopy.TryGetTileEntityFullName(existing);
                 if (string.Equals(existingName, fullName, StringComparison.Ordinal))
                     return true;
             }
@@ -989,7 +979,7 @@ namespace TheArchitectsBlueprintMod.Core
                     PayloadEntityNames.WeaponsRack => TEWeaponsRack.Place(worldX, worldY),
                     PayloadEntityNames.HatRack => TEHatRack.Place(worldX, worldY),
                     PayloadEntityNames.FoodPlatter => TEFoodPlatter.Place(worldX, worldY),
-                    _ => TryPlaceModOrGenericTileEntity(fullName, worldX, worldY),
+                    _ => TryPasteModOrGenericTileEntity(fullName, worldX, worldY),
                 };
 
                 if (placedId >= 0)
@@ -1014,7 +1004,7 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>Places a mod TileEntity via ModContent when the vanilla Place switch does not apply.</summary>
-        private static int TryPlaceModOrGenericTileEntity(string fullName, int worldX, int worldY)
+        private static int TryPasteModOrGenericTileEntity(string fullName, int worldX, int worldY)
         {
             // --- ModTileEntity.Place registers the host at the payload origin.
 
@@ -1077,7 +1067,7 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>Serializes a TileEntity via SaveData, omitting an empty tag.</summary>
-        private static TagCompound? CaptureGenericTileEntity(TileEntity te)
+        private static TagCompound? CopyGenericTileEntity(TileEntity te)
         {
             // --- SaveData into a fresh tag; omit when empty.
 
@@ -1095,6 +1085,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (!TileEntity.ByPosition.TryGetValue(key, out TileEntity? te) || te is null)
                 return false;
 
+            NbtTagValues.PrepareForLoader(data);
             try
             {
                 te.LoadData(data);
@@ -1102,9 +1093,9 @@ namespace TheArchitectsBlueprintMod.Core
             catch (Exception ex)
             {
                 TABLog.Warn(
-                    $"EntityPlace TE LoadData failed world=({worldX},{worldY}) type={te.GetType().Name}: "
+                    $"EntityPaste TE LoadData failed world=({worldX},{worldY}) type={te.GetType().Name}: "
                     + $"{ex.GetType().Name}: {ex.Message}",
-                    EntityPlaceLog);
+                    EntityPasteLog);
                 return false;
             }
 
@@ -1114,20 +1105,20 @@ namespace TheArchitectsBlueprintMod.Core
             return true;
         }
 
-        private static TagCompound? CaptureDisplayDoll(TileEntity te)
+        private static TagCompound? CopyDisplayDoll(TileEntity te)
         {
             // --- Read private inventories, then emit chest-style identity items/dyes lists.
 
             if (te is not TEDisplayDoll doll)
-                return CaptureGenericTileEntity(te);
+                return CopyGenericTileEntity(te);
 
             Item[]? items = DisplayDollItemsField?.GetValue(doll) as Item[];
             Item[]? dyes = DisplayDollDyesField?.GetValue(doll) as Item[];
             if (items is null && dyes is null)
             {
                 TABLog.Warn(
-                    "EntityCapture DisplayDoll reflection miss: _items/_dyes fields unavailable",
-                    EntityCaptureLog);
+                    "EntityCopy DisplayDoll reflection miss: _items/_dyes fields unavailable",
+                    EntityCopyLog);
                 return null;
             }
 
@@ -1186,8 +1177,8 @@ namespace TheArchitectsBlueprintMod.Core
             if (items is null && dyes is null)
             {
                 TABLog.Warn(
-                    $"EntityPlace DisplayDoll reflection miss world=({worldX},{worldY})",
-                    EntityPlaceLog);
+                    $"EntityPaste DisplayDoll reflection miss world=({worldX},{worldY})",
+                    EntityPasteLog);
                 return false;
             }
 
@@ -1230,8 +1221,8 @@ namespace TheArchitectsBlueprintMod.Core
                 if (!TryLoadIdentityItem(tag, out Item loaded))
                 {
                     TABLog.Warn(
-                        $"EntityPlace DisplayDoll load miss world=({worldX},{worldY}) {listName} slot={slot}",
-                        EntityPlaceLog);
+                        $"EntityPaste DisplayDoll load miss world=({worldX},{worldY}) {listName} slot={slot}",
+                        EntityPasteLog);
                     continue;
                 }
 
@@ -1291,8 +1282,8 @@ namespace TheArchitectsBlueprintMod.Core
                 if (!TryRewriteIdentityItemIO(itemTag, out TagCompound rewritten, out string? dropReason))
                 {
                     TABLog.Warn(
-                        $"EntityCapture TE dropped uncertified item reason={dropReason ?? "unknown"}",
-                        EntityCaptureLog);
+                        $"EntityCopy TE dropped uncertified item reason={dropReason ?? "unknown"}",
+                        EntityCopyLog);
                     working = new TagCompound();
                     foreach (KeyValuePair<string, object> pair in data)
                     {
@@ -1313,8 +1304,11 @@ namespace TheArchitectsBlueprintMod.Core
             return working.Count > 0 ? ClampTagSize(working) : null;
         }
 
-        private static TagCompound? ClampTagSize(TagCompound data)
+        /// <summary>Drops entity data whose compressed TagIO size exceeds the per-entity byte cap.</summary>
+        internal static TagCompound? ClampTagSize(TagCompound data)
         {
+            // --- Serialize with compression and compare against MaxDataTagBytes.
+
             try
             {
                 using var ms = new System.IO.MemoryStream();

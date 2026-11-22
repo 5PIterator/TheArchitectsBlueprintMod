@@ -280,7 +280,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
             out Payload expected,
             out string? error)
         {
-            // --- Capture after world-setup visibility, move onto cleared target, verify reach.
+            // --- Copy after world-setup visibility, move onto cleared target, verify reach.
             projection = null;
             expected = Payload.Empty;
             error = null;
@@ -294,7 +294,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
             if (!StonePasteFixture.TryCreateProjection(
                     player,
                     new Rectangle(source.X, source.Y, 1, 1),
-                    captureWorldPayload: true,
+                    copyWorldPayload: true,
                     out projection,
                     out error)
                 || projection is null)
@@ -304,7 +304,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
 
             if (!projection.HasPayload)
             {
-                error = "Projection has no payload after capture.";
+                error = "Projection has no payload after copy.";
                 StonePasteFixture.Cleanup(player, projection);
                 projection = null;
                 return false;

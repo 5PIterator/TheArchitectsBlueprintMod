@@ -79,6 +79,9 @@ namespace TheArchitectsBlueprintMod.Core.Server
         public int ArrowSpeed { get; private set; }
         public float ArrowMinSpeed { get; private set; }
         public float ArrowMaxSpeed { get; private set; }
+        public bool RestrictToRevealedTiles { get; private set; }
+        public bool LimitToPlayerReach { get; private set; }
+        public int MaxReachDistanceTiles { get; private set; }
         public PasteClientLogHints LogHints { get; private set; }
         public List<Point> ExcludedRelatives { get; private set; } = [];
         public byte[] PayloadBytes { get; private set; } = [];
@@ -121,6 +124,9 @@ namespace TheArchitectsBlueprintMod.Core.Server
             request.ArrowSpeed = hints.ArrowSpeed;
             request.ArrowMinSpeed = hints.ArrowMinSpeed;
             request.ArrowMaxSpeed = hints.ArrowMaxSpeed;
+            request.RestrictToRevealedTiles = hints.RestrictToRevealedTiles;
+            request.LimitToPlayerReach = hints.LimitToPlayerReach;
+            request.MaxReachDistanceTiles = hints.MaxReachDistanceTiles;
             request.LogHints = PasteClientLogHints.FromClientConfig();
             request.SourceArea = projection.SourceArea;
             request.CutSource = !projection.SourceArea.IsEmpty && projection.CutSource;
@@ -144,6 +150,9 @@ namespace TheArchitectsBlueprintMod.Core.Server
             writer.Write(ArrowSpeed);
             writer.Write(ArrowMinSpeed);
             writer.Write(ArrowMaxSpeed);
+            writer.Write(RestrictToRevealedTiles);
+            writer.Write(LimitToPlayerReach);
+            writer.Write(MaxReachDistanceTiles);
             LogHints.Write(writer);
             writer.Write(ExcludedRelatives.Count);
             for (int i = 0; i < ExcludedRelatives.Count; i++)
@@ -182,6 +191,9 @@ namespace TheArchitectsBlueprintMod.Core.Server
             request.ArrowSpeed = reader.ReadInt32();
             request.ArrowMinSpeed = reader.ReadSingle();
             request.ArrowMaxSpeed = reader.ReadSingle();
+            request.RestrictToRevealedTiles = reader.ReadBoolean();
+            request.LimitToPlayerReach = reader.ReadBoolean();
+            request.MaxReachDistanceTiles = reader.ReadInt32();
             request.LogHints = PasteClientLogHints.Read(reader);
 
             int excludedCount = reader.ReadInt32();

@@ -47,7 +47,7 @@ namespace TheArchitectsBlueprintMod.Debug
         /// <summary>Configured chamber origin, or (0,0) when unset.</summary>
         public Point Origin => _hasOrigin ? new Point(_originX, _originY) : Point.Zero;
 
-        /// <summary>Stone capture cell relative to the chamber origin (inside paste reach).</summary>
+        /// <summary>Stone copy cell relative to the chamber origin (inside paste reach).</summary>
         public Point StoneSource => Cell(-1, -2);
 
         /// <summary>Stone paste destination relative to the chamber origin.</summary>

@@ -3,7 +3,7 @@
 ## Scope
 
 - **Feature slug:** `paste` (Cases: `src/tests/test_plans/paste/`)
-- **In scope:** Capture → stock materials → paste → world cell match; cut paste; refuse place without materials; modular layer `.tab` paste; plan/Identify timing tripwire.
+- **In scope:** Copy → stock materials → paste → world cell match; cut paste; refuse place without materials; modular layer `.tab` paste; plan/Identify timing tripwire.
 - **Out of scope:** Multiplayer authority (see [paste-mp.md](paste-mp.md)); classifier ownership (see [layer.md](layer.md)).
 - **Environment:** SP or multiplayer client (listen host / remote joiner), CHM origin, stand near chamber (reach). Journey materials recommended for `paste_P04`.
 
@@ -21,18 +21,18 @@
 
 ```text
 ChamberOrigin → RequirePlayerNearChamber → DefaultPaste (PasteConfigFixture)
-  → StoneWorldPrepared → ProjectionCaptured → ProjectionMoved   ← StonePasteFixture.JoinProjectionMoved
+  → StoneWorldPrepared → ProjectionCopied → ProjectionMoved   ← StonePasteFixture.JoinProjectionMoved
        ├→ MaterialsGiven  → PasteExecuted → WorldMatched → Teardown   (stone, cut)
        ├→ MaterialsAbsent → PasteExecuted → TargetStaysAir → Teardown (paste_N03)
        └→ (planperf stone Build sample)
-  → FixtureLoaded → ProjectionCaptured → MaterialsGiven → PasteExecuted → Teardown
+  → FixtureLoaded → ProjectionCopied → MaterialsGiven → PasteExecuted → Teardown
        ← TabPasteFixture.Run (paste_P04)
-  → FixtureLoaded → ProjectionCaptured → (Build + Identify timing only)  (planperf)
+  → FixtureLoaded → ProjectionCopied → (Build + Identify timing only)  (planperf)
 ```
 
 | Fixture | Purpose | Prerequisites | Side effects / teardown |
 |---------|---------|---------------|-------------------------|
-| `DefaultPaste` | Pins all ClientPasteConfig + PastingConfig + ArchitectBlueprintConfig (reach/map limits off; no place retries) | stand near CHM | restores prior ModConfigs |
+| `DefaultPaste` | Pins all ClientPasteConfig + PastingConfig (reach/map safeguards off; no place retries) | stand near CHM | restores prior ModConfigs |
 | `RequirePlayerNearChamber` | Fail if out of paste inventory reach (no teleport) | ChamberOrigin | none |
 | `ProjectionMoved` | 1x1 stone at StoneSource moved to StoneTarget (authority setup) | ChamberOrigin | `ClearWorldCells`; Cleanup projection |
 | `MaterialsGiven` | `GiveRequiredItems` from manifest | ProjectionMoved | inventory dirty |
@@ -42,13 +42,13 @@ ChamberOrigin → RequirePlayerNearChamber → DefaultPaste (PasteConfigFixture)
 
 ## Test Cases
 
-### paste_P01 — 1x1 stone capture, give required items, paste onto air, cell diff
+### paste_P01 — 1x1 stone copy, give required items, paste onto air, cell diff
 
 - **Type:** Positive
 - **Trigger:** `/tab.test run paste_P01`
 - **Fixture join:** `DefaultPaste` → `ProjectionMoved` → `MaterialsGiven`
 - **Steps:** Join projection moved → give items → paste → diff target → teardown.
-- **Expected Report:** Pass when target matches captured cell.
+- **Expected Report:** Pass when target matches copied cell.
 
 ### paste_P02 — 1x1 cut paste with required items: target matches and source clears
 

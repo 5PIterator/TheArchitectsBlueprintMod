@@ -15,7 +15,10 @@ namespace TheArchitectsBlueprintMod.Core
         ClearItemDropStyle clearItemDropStyle,
         int arrowSpeed,
         float arrowMinSpeed,
-        float arrowMaxSpeed)
+        float arrowMaxSpeed,
+        bool restrictToRevealedTiles,
+        bool limitToPlayerReach,
+        int maxReachDistanceTiles)
     {
         public bool RetryOnMissingItems { get; } = retryOnMissingItems;
         public bool RetryOnInvalidPlacement { get; } = retryOnInvalidPlacement;
@@ -24,10 +27,15 @@ namespace TheArchitectsBlueprintMod.Core
         public int ArrowSpeed { get; } = arrowSpeed;
         public float ArrowMinSpeed { get; } = arrowMinSpeed;
         public float ArrowMaxSpeed { get; } = arrowMaxSpeed;
+        public bool RestrictToRevealedTiles { get; } = restrictToRevealedTiles;
+        public bool LimitToPlayerReach { get; } = limitToPlayerReach;
+        public int MaxReachDistanceTiles { get; } = maxReachDistanceTiles;
 
         /// <summary>Reads local client ModConfig values for outbound paste requests.</summary>
         public static PasteClientHints FromClientConfig()
         {
+            // --- Snapshot paste strategy and safeguard prefs for the wire request.
+
             var client = ModContent.GetInstance<ClientPasteConfig>();
             return new PasteClientHints(
                 client.Place.Strategy.RetryOnMissingItems,
@@ -36,7 +44,60 @@ namespace TheArchitectsBlueprintMod.Core
                 client.Clear.Strategy.ItemDrop,
                 client.Arrow.Speed,
                 client.Arrow.MinSpeed,
-                client.Arrow.MaxSpeed);
+                client.Arrow.MaxSpeed,
+                client.Safeguards.RestrictCopyAndPasteToRevealedTiles,
+                client.Safeguards.LimitCopyAndPasteToPlayerReach,
+                client.Safeguards.MaxReachDistanceTiles);
+        }
+    }
+
+    /// <summary>Resolved copy/paste safeguard flags after applying server gates and optional client hints.</summary>
+    internal readonly struct EffectiveSafeguardPolicy
+    {
+        public bool RestrictToRevealedTiles { get; init; }
+        public bool LimitToPlayerReach { get; init; }
+        public int MaxReachDistanceTiles { get; init; }
+
+        /// <summary>True when either reach or reveal policy can change without blueprint geometry changing.</summary>
+        public bool NeedsDynamicRefresh => LimitToPlayerReach || RestrictToRevealedTiles;
+
+        /// <summary>Merges server safeguard gates with optional client hints and clamps reach to the host ceiling.</summary>
+        public static EffectiveSafeguardPolicy Resolve(PastingConfig server, in PasteClientHints hints)
+        {
+            // --- Prefer client toggles when allowed; always clamp reach to the server cap.
+
+            ClientPasteLimitsConfig limits = server.Limits.Client;
+            bool allowPrefs = limits.AllowClientSafeguardPreferences;
+
+            bool restrict = allowPrefs
+                ? hints.RestrictToRevealedTiles
+                : limits.RestrictCopyAndPasteToRevealedTiles;
+            bool reach = allowPrefs
+                ? hints.LimitToPlayerReach
+                : limits.LimitCopyAndPasteToPlayerReach;
+            int maxReach = allowPrefs
+                ? hints.MaxReachDistanceTiles
+                : limits.MaxReachDistanceTiles;
+
+            if (maxReach > limits.MaxReachDistanceTilesCap)
+                maxReach = limits.MaxReachDistanceTilesCap;
+            if (maxReach < 16)
+                maxReach = 16;
+
+            return new EffectiveSafeguardPolicy
+            {
+                RestrictToRevealedTiles = restrict,
+                LimitToPlayerReach = reach,
+                MaxReachDistanceTiles = maxReach,
+            };
+        }
+
+        /// <summary>Resolves safeguards for the local client from ModConfig values.</summary>
+        public static EffectiveSafeguardPolicy ResolveLocal()
+        {
+            // --- Same merge path as paste requests, using the live client config snapshot.
+
+            return Resolve(ModContent.GetInstance<PastingConfig>(), PasteClientHints.FromClientConfig());
         }
     }
 
@@ -109,7 +170,7 @@ namespace TheArchitectsBlueprintMod.Core
     }
 
     /// <summary>
-    /// Arguments for layer execution. Placement consumes inventory via <see cref="TileExecutor"/> and <see cref="InventoryLookup"/>.
+    /// Arguments for layer execution. Pasting consumes inventory via <see cref="TileExecutor"/> and <see cref="InventoryLookup"/>.
     /// </summary>
     internal readonly struct PasteContext(
         int playerIndex,

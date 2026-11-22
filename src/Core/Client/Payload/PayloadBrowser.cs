@@ -334,7 +334,7 @@ namespace TheArchitectsBlueprintMod.Core
 
             EnsureSnapshot(projection);
             ProjectionSnapshot snapshot = _snapshots[projection.OverlayInstanceKey];
-            snapshot.Selection = CaptureSelectionSnapshot(projection);
+            snapshot.Selection = CopySelectionSnapshot(projection);
             snapshot.Payload = projection.HasPayload ? Payload.FromClone(projection.Payload) : Payload.Empty;
             snapshot.CutSource = projection.CutSource;
             snapshot.PreviewDirty = false;
@@ -640,13 +640,13 @@ namespace TheArchitectsBlueprintMod.Core
             if (_snapshots.ContainsKey(projection.OverlayInstanceKey))
                 return;
 
-            Selection selection = CaptureSelectionSnapshot(projection);
+            Selection selection = CopySelectionSnapshot(projection);
             Payload payload = projection.HasPayload ? Payload.FromClone(projection.Payload) : Payload.Empty;
             _snapshots[projection.OverlayInstanceKey] =
                 new ProjectionSnapshot(projection, selection, payload, projection.CutSource);
         }
 
-        private static Selection CaptureSelectionSnapshot(Projection projection)
+        private static Selection CopySelectionSnapshot(Projection projection)
         {
             var selection = new Selection(projection.Owner);
             Rectangle sourceArea = projection.SourceArea;

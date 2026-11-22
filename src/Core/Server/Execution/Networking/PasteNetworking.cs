@@ -289,10 +289,14 @@ namespace TheArchitectsBlueprintMod.Core.Server
                     request.ClearItemDropStrategy,
                     request.ArrowSpeed,
                     request.ArrowMinSpeed,
-                    request.ArrowMaxSpeed);
+                    request.ArrowMaxSpeed,
+                    request.RestrictToRevealedTiles,
+                    request.LimitToPlayerReach,
+                    request.MaxReachDistanceTiles);
                 var policy = EffectivePastePolicy.Resolve(config, hints);
+                var safeguards = EffectiveSafeguardPolicy.Resolve(config, hints);
                 var pastingSystem = ModContent.GetInstance<PastingSystem>();
-                if (!pastingSystem.ExecutePaste(execution, policy, out var startReason))
+                if (!pastingSystem.ExecutePaste(execution, policy, safeguards, out var startReason))
                 {
                     LogNet($"PasteRequest execute failed id={requestId} reason={startReason}");
                     SendAck(mod, whoAmI, requestId, PasteAckKind.Rejected, startReason);

@@ -19,6 +19,9 @@ namespace TheArchitectsBlueprintMod.Config
         [DefaultValue(TabLogLevel.Debug)]
         public TabLogLevel MinimumLogLevel = TabLogLevel.Debug;
 
+        [DefaultValue(TabLogLevel.Off)]
+        public TabLogLevel MinimumChatLogLevel = TabLogLevel.Off;
+
         [Header("LogTags")]
 
         [DefaultValue(true)]
@@ -65,12 +68,6 @@ namespace TheArchitectsBlueprintMod.Config
 
         [DefaultValue(true)]
         public bool TagOther;
-
-        [DefaultValue(false)]
-        public bool PrintDebugLogsToChat;
-
-        [DefaultValue(false)]
-        public bool PrintInfoLogsToChat;
 
         public override void OnLoaded()
         {

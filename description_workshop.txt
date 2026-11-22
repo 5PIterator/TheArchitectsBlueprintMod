@@ -1,5 +1,5 @@
 [h1]The Architect's Blueprint[/h1]
-Capture a region of your world, refine which tiles belong in the build, and paste a ghost copy elsewhere using materials from your inventory and nearby chests.
+Copy a region of your world, refine which tiles belong in the build, and paste a ghost copy elsewhere using materials from your inventory and nearby chests.
 
 Save structures locally, load them back later, and build the same way in singleplayer or multiplayer.
 

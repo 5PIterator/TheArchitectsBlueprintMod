@@ -1,4 +1,4 @@
-Capture a region of your world, refine which tiles belong in the build, and paste a ghost copy elsewhere using materials from your inventory and nearby chests.
+Copy a region of your world, refine which tiles belong in the build, and paste a ghost copy elsewhere using materials from your inventory and nearby chests.
 
 - Select, include/exclude, copy, and paste structures with tiered sticks and wands
 - All-in-one Architect's Stencil for the full workflow

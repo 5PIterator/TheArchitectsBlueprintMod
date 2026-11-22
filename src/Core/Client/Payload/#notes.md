@@ -1,6 +1,6 @@
 # Payload entities (TE-01)
 
-Capture tiles and entities separately. Referencing matches Terraria: entities are keyed by
+Copy tiles and entities separately. Referencing matches Terraria: entities are keyed by
 **payload-relative coordinates** (`ByPosition` / `Chest.FindChest` style). Cells stay
 tile-only — no entity id on the cell. World runtime ids are not part of the blueprint contract.
 
@@ -12,7 +12,7 @@ Synthetic names: `Terraria:Chest`, `Terraria:Sign`. TileEntities use their FullN
 In memory after load: `Dictionary<(x,y), PayloadEntity>` via `Payload.TryGetEntity`.
 
 Security is enforced in three layers:
-- At capture (client building the payload) — e.g. large chest stacks
+- At copy (client building the payload) — e.g. large chest stacks
 - At import (external payload load) — maliciously edited documents
 - On the server when receiving a paste packet
 
@@ -26,30 +26,47 @@ Proper item consumption is planned separately:
 - Place + RequireItems: paste arrows that consume inventory and insert into the entity.
 Until then, EntityLayer wipes then LoadData/chest-slot writes (replace, not merge).
 
-Capture and apply share a generic TileEntity path (`TileObjectData.TopLeft`, `SaveData`/`LoadData`)
-with a FullName table of custom handlers: `Terraria:Chest`, `Terraria:Sign`, and `TEDisplayDoll`
-(full `ItemIO` capture). Hosts are created by Frame PlaceObject via `TileObject.Place` plus
+Copy and apply go through **`CompatibilityRegistry`** (`src/Core/Client/Payload/Compat/`):
+priority-ordered `ICompatibilityAdapter` hooks for Copy / Sanitize / Paste. Session or document
+`modsLoaded` is on `CompatibilityContext`. The built-in **Terraria** adapter (`Priority = 0`) claims
+only `Terraria:` FullNames (Chest / Sign / DisplayDoll and other vanilla TEs). FullNames with no
+adapter are **tiles only**: copy skips the sidecar, sanitize drops legacy `d`, and paste/preview
+never call `LoadData`. Host find/create/wipe/sweep stay on `PayloadEntityHandlers`.
+
+Hosts are created by Frame PlaceObject via `TileObject.Place` plus
 `TileObjectData.CallPostPlacementPlayerHook` (`HookPostPlaceMyPlayer`), the same sequence as
 player `PlaceThing`. `WorldGen.PlaceObject` writes tiles only and never runs that hook.
-EntityLayer finds that live host and wipes/writes sidecar `d`. A missing or mismatched host is
-`InvalidPlacement`; this layer does not create chests, signs, or TileEntities.
+EntityLayer finds that live host and wipes/writes sidecar `d`. Sweep can blind-create hosts for
+claimed entities only.
 
 `TEItemFrame` stores the displayed item in public `item`; `SaveData` writes `d.item` via `ItemIO`.
 `TEDisplayDoll` stores private `_items` / `_dyes` (8+8); vanilla `SaveData` uses `PlayerIO.SaveInventory`
-(mod items only), so capture rewrites those lists as chest-style identity slots.
+(mod items only), so copy rewrites those lists as chest-style identity slots.
+
+### Mod compatibility adapters
+
+Register new adapters with `CompatibilityRegistry.Register` (typically from `CompatibilitySystem.Load`).
+Adapters live under `Compat/Adapters/`. Higher `Priority` wins; return `false` from
+`TryCopy` / `TrySanitize` / `TryPaste` to defer. `TryPaste` uses `out bool applied` so
+“handled but failed” does not fall through to Terraria. `CompatibilityRegistry.Claims(fullName)`
+reports whether any available adapter owns a name.
+
+**Unclaimed mods (including MagicStorage):** no adapter claims their FullNames. Tile cells still
+copy and paste; the empty host left by the tile's place hook (if any) is left alone. No entity
+`d` is stored, applied, or previewed.
 
 ### Entity item identity (no GlobalItem)
 
 Entity item tags store **identity only** (`item` name / stack / prefix) — the same model as chests:
 
 - **Chests and DisplayDoll** emit sparse identity slot lists. Legacy ItemIO slots (`mod`/`id`/`globalData`)
-  are converted once at sanitize; unresolved slots are omitted and logged under `EntityCapture`.
+  are converted once at sanitize; unresolved slots are omitted and logged under `EntityCopy`.
 - **TE `d.item`** (e.g. item frames) must stay ItemIO-shaped for `LoadData`, but sanitize rewrites the blob
-  without `globalData` so JSON-widened GlobalItem fields (e.g. SellAll) cannot break place/preview.
-- **Preview** (`EntityPreview`) and **place** (`EntityPlace`) best-effort load identity tags, log misses,
+  without `globalData` so JSON-widened GlobalItem fields (e.g. SellAll) cannot break paste/preview.
+- **Preview** (`EntityPreview`) and **paste** (`EntityPaste`) best-effort load identity tags, log misses,
   and continue other slots. Display dolls use per-slot apply; generic TE `LoadData` is try/caught.
 
-Log categories: `EntityCapture`, `EntityPlace`, `EntityPreview`.
+Log categories: `EntityCopy`, `EntityPaste`, `EntityPreview`.
 
 Example:
 

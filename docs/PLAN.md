@@ -8,7 +8,7 @@ TAB is a Terraria mod that allows players to copy and paste structures using the
 - **Selection:** An instance of a Blueprint, acting as a selected region of the world that TAB will consider as a source of tiles to copy.
 - **Projection:** An instance of a Blueprint, acting as a movable ghost of a Selection that TAB will consider as a target of tiles to paste.
 
-**CUT**: When enabled on a projection, a paste also clears tiles in that projection's source capture area, so the operation behaves like a move instead of a duplicate (`Projection.CutSource` / `PastingOperation.ApplySourceClear`).
+**CUT**: When enabled on a projection, a paste also clears tiles in that projection's source copy area, so the operation behaves like a move instead of a duplicate (`Projection.CutSource` / `PastingOperation.ApplySourceClear`).
 
 ## Internal vs dedicated actions
 
@@ -30,7 +30,7 @@ TAB is a Terraria mod that allows players to copy and paste structures using the
   - There is a single projection type; optional cut is not a separate “Cut Projection.”
 - **PASTE:** Starts the pasting process for a Projection under the cursor. (Blue/Sapphire/V)
   - Uses the player’s inventory or an inventory adjacent to the Blueprint or Projection.
-  - Clears tiles in the **target** area according to paste rules, then fills from inventory. If **CUT** is on for that projection, the paste pipeline also clears the **source capture area**.
+  - Clears tiles in the **target** area according to paste rules, then fills from inventory. If **CUT** is on for that projection, the paste pipeline also clears the **source copy area**.
 - **CUT** (per projection, optional): **Target UX** — toggle with an interactive control on the projection overlay. **Current build** — see Temporary implementation below.
 
 ## Action and accent colors

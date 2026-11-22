@@ -8,8 +8,7 @@ namespace TheArchitectsBlueprintMod.Debug
     internal readonly struct PasteClientLogHints
     {
         public TabLogLevel MinimumLogLevel { get; init; }
-        public bool PrintDebugLogsToChat { get; init; }
-        public bool PrintInfoLogsToChat { get; init; }
+        public TabLogLevel MinimumChatLogLevel { get; init; }
         public bool TagGeneric { get; init; }
         public bool TagPaste { get; init; }
         public bool TagTileExecutor { get; init; }
@@ -35,8 +34,7 @@ namespace TheArchitectsBlueprintMod.Debug
             return new PasteClientLogHints
             {
                 MinimumLogLevel = cfg.MinimumLogLevel,
-                PrintDebugLogsToChat = cfg.PrintDebugLogsToChat,
-                PrintInfoLogsToChat = cfg.PrintInfoLogsToChat,
+                MinimumChatLogLevel = cfg.MinimumChatLogLevel,
                 TagGeneric = cfg.TagGeneric,
                 TagPaste = cfg.TagPaste,
                 TagTileExecutor = cfg.TagTileExecutor,
@@ -58,11 +56,10 @@ namespace TheArchitectsBlueprintMod.Debug
         /// <summary>Writes this hint set onto a paste request packet.</summary>
         public void Write(BinaryWriter writer)
         {
-            // --- Compact bool/level wire format matching Read.
+            // --- Compact level/bool wire format matching Read.
 
             writer.Write((byte)MinimumLogLevel);
-            writer.Write(PrintDebugLogsToChat);
-            writer.Write(PrintInfoLogsToChat);
+            writer.Write((byte)MinimumChatLogLevel);
             writer.Write(TagGeneric);
             writer.Write(TagPaste);
             writer.Write(TagTileExecutor);
@@ -83,17 +80,15 @@ namespace TheArchitectsBlueprintMod.Debug
         /// <summary>Reads a hint set previously written by Write.</summary>
         public static PasteClientLogHints Read(BinaryReader reader)
         {
-            // --- Validate level byte, then read the same bool order as Write.
+            // --- Validate level bytes, then read the same bool order as Write.
 
-            byte levelByte = reader.ReadByte();
-            if (levelByte > (byte)TabLogLevel.Error)
-                throw new InvalidDataException($"Paste request has invalid log level byte: {levelByte}.");
+            TabLogLevel minimumLogLevel = ReadLogLevel(reader, "log");
+            TabLogLevel minimumChatLogLevel = ReadLogLevel(reader, "chat");
 
             return new PasteClientLogHints
             {
-                MinimumLogLevel = (TabLogLevel)levelByte,
-                PrintDebugLogsToChat = reader.ReadBoolean(),
-                PrintInfoLogsToChat = reader.ReadBoolean(),
+                MinimumLogLevel = minimumLogLevel,
+                MinimumChatLogLevel = minimumChatLogLevel,
                 TagGeneric = reader.ReadBoolean(),
                 TagPaste = reader.ReadBoolean(),
                 TagTileExecutor = reader.ReadBoolean(),
@@ -115,18 +110,9 @@ namespace TheArchitectsBlueprintMod.Debug
         /// <summary>True when this owner's prefs want the given line relayed to their chat.</summary>
         public bool ShouldRelay(string? category, TabLogLevel level)
         {
-            // --- Chat echo toggle for severity, then category tag, then minimum level.
+            // --- Log floor, then chat floor, then category tag.
 
-            if (level < MinimumLogLevel)
-                return false;
-
-            bool chatEnabled = level switch
-            {
-                TabLogLevel.Debug => PrintDebugLogsToChat,
-                TabLogLevel.Info => PrintInfoLogsToChat,
-                _ => true,
-            };
-            if (!chatEnabled)
+            if (!MeetsLogThreshold(level) || !MeetsChatThreshold(level))
                 return false;
 
             return IsCategoryEnabled(category);
@@ -156,6 +142,31 @@ namespace TheArchitectsBlueprintMod.Debug
                 null or "" => TagOther,
                 _ => TagOther,
             };
+        }
+
+        private bool MeetsLogThreshold(TabLogLevel level)
+        {
+            if (MinimumLogLevel == TabLogLevel.Off || level == TabLogLevel.Off)
+                return false;
+
+            return level >= MinimumLogLevel;
+        }
+
+        private bool MeetsChatThreshold(TabLogLevel level)
+        {
+            if (MinimumChatLogLevel == TabLogLevel.Off || level == TabLogLevel.Off)
+                return false;
+
+            return level >= MinimumChatLogLevel;
+        }
+
+        private static TabLogLevel ReadLogLevel(BinaryReader reader, string kind)
+        {
+            byte levelByte = reader.ReadByte();
+            if (levelByte > (byte)TabLogLevel.Error)
+                throw new InvalidDataException($"Paste request has invalid {kind} log level byte: {levelByte}.");
+
+            return (TabLogLevel)levelByte;
         }
     }
 }

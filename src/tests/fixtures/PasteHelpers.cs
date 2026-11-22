@@ -99,7 +99,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases
             Action<bool, string?> onComplete,
             int maxSteps = 600)
         {
-            // --- Capture StartPaste false reasons on host; wait for Rejected ACK on remote request path.
+            // --- Snapshot StartPaste false reasons on host; wait for Rejected ACK on remote request path.
 
             PastingSystem pastingSystem = ModContent.GetInstance<PastingSystem>();
             bool remoteRequest = MpCoordinator.UsesRemotePasteRequestPath();

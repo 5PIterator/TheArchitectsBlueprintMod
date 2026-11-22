@@ -51,7 +51,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Alias for <see cref="TargetArea"/> (legacy Projection naming).</summary>
         public Rectangle Area => TargetArea;
 
-        /// <summary>World rectangle of the capture / cut source.</summary>
+        /// <summary>World rectangle of the copy / cut source.</summary>
         public Rectangle SourceArea { get; }
 
         /// <summary>When true, planning includes a source-area clear pass.</summary>

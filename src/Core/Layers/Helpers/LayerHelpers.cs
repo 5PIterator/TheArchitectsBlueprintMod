@@ -17,7 +17,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
     internal static class TileComparison
     {
-        /// <summary>Cut-at-source tiles use an empty <see cref="PasteTile.Source"/> and live <see cref="PasteTile.Target"/> at the capture area.</summary>
+        /// <summary>Cut-at-source tiles use an empty <see cref="PasteTile.Source"/> and live <see cref="PasteTile.Target"/> at the copy area.</summary>
         public static bool IsSourceCutIntent(in PasteTile tile) =>
             tile.PayloadCell.HasTile() && !tile.Source.HasTile && tile.Target.HasTile;
 
@@ -801,7 +801,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         /// <summary>Resolves placeStyle, alternate, origin, and direction from a payload cell snapshot.</summary>
         public static FramePlacementVariant ResolveFramePlacementVariant(in PayloadCell cell)
         {
-            // --- Use cached style/alt plus frames so mis-captured orientation-as-style still recovers.
+            // --- Use cached style/alt plus frames so mis-copied orientation-as-style still recovers.
             if (!cell.HasTile())
                 return default;
 
@@ -821,7 +821,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             int cachedStyle,
             int cachedAlternate)
         {
-            // --- Prefer a frame-matching alternate; fix vanilla Signs-style orientation-as-style captures.
+            // --- Prefer a frame-matching alternate; fix vanilla Signs-style orientation-as-style copies.
             if (!TileLoaderSupport.IsKnownTileType(tileType))
                 return default;
 
@@ -859,7 +859,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 data);
         }
 
-        /// <summary>Returns the item placeStyle when orientation was mis-captured as style for multi-alternate tiles.</summary>
+        /// <summary>Returns the item placeStyle when orientation was mis-copied as style for multi-alternate tiles.</summary>
         private static int ResolveAuthoritativePlaceStyle(int tileType, int cachedStyle, int cachedAlternate)
         {
             // --- Drop-item placeStyle wins; otherwise keep cached style unless it indexes an alternate of style 0.
@@ -887,7 +887,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return Math.Max(0, cachedStyle);
         }
 
-        /// <summary>Walks style alternates and returns the first whose sprite column matches the captured frames.</summary>
+        /// <summary>Walks style alternates and returns the first whose sprite column matches the copied frames.</summary>
         private static bool TryMatchFramePlacementVariant(
             int tileType,
             int placeStyle,

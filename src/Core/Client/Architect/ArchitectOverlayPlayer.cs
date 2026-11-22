@@ -49,7 +49,7 @@ namespace TheArchitectsBlueprintMod.Core
 
             if (!BlueprintGuard.NeedsDynamicGuardRefresh())
             {
-                BlueprintGuard.CancelClientGuardScan();
+                BlueprintGuard.ClearClientGuardState(Player);
                 return;
             }
 

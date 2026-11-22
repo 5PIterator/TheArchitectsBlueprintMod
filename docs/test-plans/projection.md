@@ -3,7 +3,7 @@
 ## Scope
 
 - **Feature slug:** `projection` (Cases: `src/tests/test_plans/projection/`)
-- **In scope:** Capture selection into projection, cut flag, MoveTo target.
+- **In scope:** Copy selection into projection, cut flag, MoveTo target.
 - **Out of scope:** Paste world writes (see paste plans).
 - **Environment:** In-world, CHM origin; uses `ProjectionOrigin` + `PayloadCellFixture` for synthetic payloads.
 
@@ -20,7 +20,7 @@
 ## Fixture network
 
 ```text
-ChamberOrigin → ProjectionOriginReady ┬→ copy (capture world)
+ChamberOrigin → ProjectionOriginReady ┬→ copy (copy world)
                                       └→ SyntheticStonePayload → cut / move
 ```
 
@@ -31,12 +31,12 @@ ChamberOrigin → ProjectionOriginReady ┬→ copy (capture world)
 
 ## Test Cases
 
-### projection_P01 — NewProjection captures a selection into a matching payload size
+### projection_P01 — NewProjection copies a selection into a matching payload size
 
 - **Type:** Positive
 - **Trigger:** `/tab.test run projection_P01`
 - **Fixture join:** `ProjectionOriginReady`
-- **Steps:** Define selection → NewProjection(capture) → assert payload size.
+- **Steps:** Define selection → NewProjection(copy) → assert payload size.
 - **Expected Report:** Pass when payload size matches selection.
 
 ### projection_P02 — SetCut toggles CutSource; empty payload forces it off
@@ -59,7 +59,7 @@ ChamberOrigin → ProjectionOriginReady ┬→ copy (capture world)
 
 | Behavior | Positive | Negative | Boundary | Performance | Regression | Other |
 |----------|----------|----------|----------|-------------|------------|-------|
-| Capture | projection_P01 | — | — | — | — | — |
+| Copy | projection_P01 | — | — | — | — | — |
 | Cut flag | projection_P02 | — | — | — | — | — |
 | MoveTo | projection_P03 | — | — | — | — | — |
 

@@ -42,7 +42,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases.ProjectionTests
                 yield break;
             }
 
-            Core.Projection? projection = projectionSystem.NewProjection(player, selection, captureWorldPayload: false);
+            Core.Projection? projection = projectionSystem.NewProjection(player, selection, copyWorldPayload: false);
             if (projection is null)
             {
                 reporter.Fail(Id, "NewProjection failed.");

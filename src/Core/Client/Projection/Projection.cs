@@ -12,7 +12,7 @@ namespace TheArchitectsBlueprintMod.Core
     /// <summary>
     /// A movable ghost of a <see cref="Selection"/>: carries the <see cref="Core.Payload">payload</see>
     /// (detached <c>TileData</c> snapshots per cell), aligned with <see cref="SourceArea"/> / <see cref="TargetArea"/>.
-    /// <see cref="SourceTiles"/> is a snapshot of the capture region (clone); <see cref="TargetTiles"/> is this projection’s
+    /// <see cref="SourceTiles"/> is a snapshot of the copy region (clone); <see cref="TargetTiles"/> is this projection’s
     /// grid (moves with the ghost) and is where include/exclude is edited after construction.
     /// A projection always retains a selection snapshot; <see cref="SetPayload"/> resizes both target and source footprints
     /// to the payload grid at the current ghost anchor when applying a defined payload.
@@ -49,7 +49,7 @@ namespace TheArchitectsBlueprintMod.Core
         public int Id { get; internal set; }
 
         /// <summary>
-        /// When true, paste planning includes a source-area clear pass at the original capture area.
+        /// When true, paste planning includes a source-area clear pass at the original copy area.
         /// Use <see cref="SetCut"/> or <see cref="ToggleCut"/> so the world overlay stays in sync.
         /// </summary>
         public bool CutSource { get; private set; }
@@ -359,7 +359,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>
         /// Rebuilds <see cref="TargetTiles"/> (this blueprint’s <see cref="Blueprint.Tiles"/>) for the current
         /// <see cref="Blueprint.Area"/>, preserving <see cref="BlueprintCell.Included"/> from the previous grid when
-        /// dimensions allow; otherwise copies inclusion once from the selection snapshot captured in the constructor.
+        /// dimensions allow; otherwise copies inclusion once from the selection snapshot taken in the constructor.
         /// Payload and inclusion are decoupled: <see cref="LoadPayloadFromWorld"/> does not change which cells are included.
         /// </summary>
         private void RefreshTargetTiles()

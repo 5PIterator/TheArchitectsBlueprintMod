@@ -4,7 +4,7 @@
 
 - **Feature slug:** `selection` (Cases: `src/tests/test_plans/selection/`)
 - **In scope:** Defining selection bounds, include/exclude mask, translating selection.
-- **Out of scope:** Paste, projection capture internals.
+- **Out of scope:** Paste, projection copy internals.
 - **Environment:** In-world, CHM origin; uses `SelectionOrigin` chamber slot.
 
 ## Harness mapping

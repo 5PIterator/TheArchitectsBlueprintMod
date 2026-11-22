@@ -69,16 +69,16 @@ namespace TheArchitectsBlueprintMod.Core
         /// Creates a projection from a selection; returns null on failure.
         /// Adds the projection to the player's list and sets <see cref="ActiveProjection"/>.
         /// </summary>
-        public Projection NewProjection(Player player, Selection selection, bool captureWorldPayload = true)
+        public Projection NewProjection(Player player, Selection selection, bool copyWorldPayload = true)
         {
             ArgumentNullException.ThrowIfNull(selection);
 
-            if (captureWorldPayload && !BlueprintGuard.TryValidateIncludedTiles(player, selection, out _))
+            if (copyWorldPayload && !BlueprintGuard.TryValidateIncludedTiles(player, selection, out _))
                 return null;
 
             var projection = new Projection(player.whoAmI, selection, cutSource: false);
 
-            if (captureWorldPayload)
+            if (copyWorldPayload)
                 projection.LoadPayloadFromWorld();
             BlueprintSystem.RegisterBlueprint(projection);
             projection.UpdateOverlay();
@@ -221,8 +221,8 @@ namespace TheArchitectsBlueprintMod.Core
                         && !ProjectionPreviewCache.IsCachedBlitEnabled();
                     if (!proj.IsLocked && proj.HasPayload && !skipSpritePreview)
                     {
-                        Projection capture = proj;
-                        OverlaySystem.RegScreen($"{k}:sprites", () => PayloadPreview.Draw(capture), family);
+                        Projection projectionForPreview = proj;
+                        OverlaySystem.RegScreen($"{k}:sprites", () => PayloadPreview.Draw(projectionForPreview), family);
                         OverlaySystem.RegMapPayloadPreview($"{k}:mapPixels", proj, family);
                     }
 

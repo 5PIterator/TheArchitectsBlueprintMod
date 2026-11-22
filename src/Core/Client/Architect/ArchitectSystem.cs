@@ -447,7 +447,7 @@ namespace TheArchitectsBlueprintMod.Core.Architect
         {
             // --- Resolve a projection, then flip CutSource when the payload allows it.
 
-            // Capture a defined selection into a projection when the overlay is sitting on a selection.
+            // Copy a defined selection into a projection when the overlay is sitting on a selection.
             Projection? projection = EnsureProjectionForToolbarAction();
             if (projection is null)
                 return;
@@ -918,7 +918,7 @@ namespace TheArchitectsBlueprintMod.Core.Architect
 
         private static Projection? EnsureProjectionForToolbarAction()
         {
-            // --- Reuse the frontmost projection, or capture a defined selection into a new one.
+            // --- Reuse the frontmost projection, or copy a defined selection into a new one.
 
             Blueprint? target = ModContent.GetInstance<BlueprintSystem>().GetTopmostDefinedSelectionOrProjection();
             if (target is Projection projection && projection.IsDefined)
@@ -935,7 +935,7 @@ namespace TheArchitectsBlueprintMod.Core.Architect
 
             if (!BlueprintGuard.TryValidateIncludedTiles(player, selection, out var failure))
             {
-                BlueprintGuard.NotifyCaptureBlocked(failure);
+                BlueprintGuard.NotifyCopyBlocked(failure);
                 return null;
             }
 

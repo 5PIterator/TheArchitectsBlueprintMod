@@ -401,7 +401,7 @@ namespace TheArchitectsBlueprintMod.Utils
         /// <summary>True when the item's createTile is this tile or its open/closed furniture counterpart.</summary>
         private static bool PlacesTileType(int createTile, int tileType)
         {
-            // --- Door items create the closed tile; captured open doors still use that placeStyle.
+            // --- Door items create the closed tile; copied open doors still use that placeStyle.
 
             if (createTile == tileType)
                 return true;

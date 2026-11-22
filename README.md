@@ -2,7 +2,7 @@
 
 **Version 0.2.1 (pre-release)**
 
-Capture a region of your world, refine which tiles belong in the build, and paste a ghost copy elsewhere using materials from your inventory and nearby chests. Save structures locally and load them back later.
+Copy a region of your world, refine which tiles belong in the build, and paste a ghost copy elsewhere using materials from your inventory and nearby chests. Save structures locally and load them back later.
 
 ## What you can do
 

@@ -75,7 +75,7 @@ namespace TheArchitectsBlueprintMod.Core
 
                     if (!BlueprintGuard.TryValidateIncludedTiles(player, topmost, out var failure))
                     {
-                        BlueprintGuard.NotifyCaptureBlocked(failure);
+                        BlueprintGuard.NotifyCopyBlocked(failure);
                         return;
                     }
 

@@ -119,7 +119,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases.PasteMpTests
             if (!StonePasteFixture.TryCreateProjection(
                     player,
                     new Rectangle(source.X, source.Y, 1, 1),
-                    captureWorldPayload: true,
+                    copyWorldPayload: true,
                     out Core.Projection? projectionB,
                     out string? projectionBError)
                 || projectionB is null

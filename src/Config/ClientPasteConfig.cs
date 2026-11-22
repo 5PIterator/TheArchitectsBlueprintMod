@@ -1,5 +1,7 @@
 using System.ComponentModel;
+using Terraria;
 using Terraria.ModLoader.Config;
+using TheArchitectsBlueprintMod.Core;
 using TheArchitectsBlueprintMod.Core.Phases;
 
 namespace TheArchitectsBlueprintMod.Config
@@ -86,6 +88,20 @@ namespace TheArchitectsBlueprintMod.Config
         public int NearbyRadiusTiles = 48;
     }
 
+    /// <summary>Client copy/paste safeguard preferences honored when the server allows them.</summary>
+    public sealed class BlueprintSafeguardPreference
+    {
+        [DefaultValue(true)]
+        public bool RestrictCopyAndPasteToRevealedTiles = true;
+
+        [DefaultValue(true)]
+        public bool LimitCopyAndPasteToPlayerReach = true;
+
+        [DefaultValue(200)]
+        [Range(16, 5000)]
+        public int MaxReachDistanceTiles = 200;
+    }
+
     /// <summary>Client-side paste preferences carried with each paste request. Server policy decides which are honored.</summary>
     public sealed class ClientPasteConfig : ModConfig
     {
@@ -96,6 +112,9 @@ namespace TheArchitectsBlueprintMod.Config
         public ClearPastePreference Clear = new();
         public PlacePastePreference Place = new();
 
+        [Header("Safeguards")]
+        public BlueprintSafeguardPreference Safeguards = new();
+
         [Header("Arrow")]
         public ArrowPastePreference Arrow = new();
 
@@ -104,5 +123,15 @@ namespace TheArchitectsBlueprintMod.Config
 
         [Header("Debug")]
         public PasteOverlayDebugConfig Overlay = new();
+
+        public override void OnChanged()
+        {
+            // --- Refresh or clear guard overlays when local safeguard prefs change.
+
+            if (Main.gameMenu || Main.LocalPlayer is not { active: true } player)
+                return;
+
+            BlueprintGuard.RefreshOrClearForLocalPlayer(player);
+        }
     }
 }

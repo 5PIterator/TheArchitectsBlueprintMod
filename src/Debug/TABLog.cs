@@ -116,16 +116,6 @@ namespace TheArchitectsBlueprintMod.Debug
         }
 
         /// <summary>
-        /// True when debug logging should also be echoed to chat.
-        /// </summary>
-        public static bool IsDebugChatEnabled => ClientLogConfig.Instance?.PrintDebugLogsToChat ?? false;
-
-        /// <summary>
-        /// True when info logging should also be echoed to chat.
-        /// </summary>
-        public static bool IsInfoChatEnabled => ClientLogConfig.Instance?.PrintInfoLogsToChat ?? false;
-
-        /// <summary>
         /// True when debug/info records for the given category should be emitted.
         /// </summary>
         public static bool IsCategoryEnabled(string? category) => ShouldEmitCategory(category);
@@ -136,6 +126,18 @@ namespace TheArchitectsBlueprintMod.Debug
         /// <summary>True when debug records meet the client minimum log level.</summary>
         public static bool IsDebugEnabled => IsLevelEnabled(TabLogLevel.Debug);
 
+        /// <summary>True when the severity should also echo to chat under the client chat floor.</summary>
+        public static bool ShouldEchoToChat(TabLogLevel level)
+        {
+            // --- Off disables chat entirely; otherwise echo this severity and higher.
+
+            TabLogLevel minimum = ClientLogConfig.Instance?.MinimumChatLogLevel ?? TabLogLevel.Off;
+            if (minimum == TabLogLevel.Off || level == TabLogLevel.Off)
+                return false;
+
+            return level >= minimum;
+        }
+
         /// <summary>
         /// Queues a debug message for the current frame batch.
         /// </summary>
@@ -145,7 +147,7 @@ namespace TheArchitectsBlueprintMod.Debug
                 message,
                 category,
                 TabLogLevel.Debug,
-                echoToChat: IsDebugChatEnabled,
+                echoToChat: ShouldEchoToChat(TabLogLevel.Debug),
                 chatColor: Color.LightGray,
                 ownerPlayer);
         }
@@ -154,7 +156,7 @@ namespace TheArchitectsBlueprintMod.Debug
         /// Queues an info message for the current frame batch.
         /// </summary>
         public static void Info(string message, string? category = null, Color? chatColor = null, int? ownerPlayer = null)
-            => Info(message, category, chatColor, ownerPlayer, echoToChat: IsInfoChatEnabled);
+            => Info(message, category, chatColor, ownerPlayer, echoToChat: ShouldEchoToChat(TabLogLevel.Info));
 
         /// <summary>
         /// Queues an info message for the current frame batch, optionally echoing to chat.
@@ -166,11 +168,12 @@ namespace TheArchitectsBlueprintMod.Debug
             int? ownerPlayer,
             bool echoToChat)
         {
+            // Explicit false (e.g. manifest paging) stays off; true still respects the chat floor.
             Enqueue(
                 message,
                 category,
                 TabLogLevel.Info,
-                echoToChat,
+                echoToChat: echoToChat && ShouldEchoToChat(TabLogLevel.Info),
                 chatColor: chatColor ?? Color.LightYellow,
                 ownerPlayer);
         }
@@ -181,7 +184,7 @@ namespace TheArchitectsBlueprintMod.Debug
         public static void Warn(string message, string? category = null)
         {
             Flush();
-            Log(message, category, TabLogLevel.Warn);
+            Log(message, category, TabLogLevel.Warn, chatColor: Color.Orange);
         }
 
         /// <summary>
@@ -190,7 +193,7 @@ namespace TheArchitectsBlueprintMod.Debug
         public static void Error(string message, string? category = null)
         {
             Flush();
-            Log(message, category, TabLogLevel.Error);
+            Log(message, category, TabLogLevel.Error, chatColor: Color.OrangeRed);
         }
 
         /// <summary>
@@ -206,6 +209,9 @@ namespace TheArchitectsBlueprintMod.Debug
 
             var full = FormatLine(message, category);
             mod.Logger.Error(full, ex);
+
+            if (ShouldEchoToChat(TabLogLevel.Error))
+                Chat(message, category, Color.OrangeRed);
         }
 
         /// <summary>
@@ -226,8 +232,12 @@ namespace TheArchitectsBlueprintMod.Debug
         /// </summary>
         private static bool MeetsThreshold(TabLogLevel level)
         {
-            // --- Prefer the live client config; fall back to Info when no client config is loaded.
+            // --- Off silences every severity; otherwise require level >= configured floor.
+
             TabLogLevel minimum = ClientLogConfig.Instance?.MinimumLogLevel ?? TabLogLevel.Info;
+            if (minimum == TabLogLevel.Off || level == TabLogLevel.Off)
+                return false;
+
             return level >= minimum;
         }
 
@@ -311,9 +321,9 @@ namespace TheArchitectsBlueprintMod.Debug
         }
 
         /// <summary>
-        /// Writes a warn/error line immediately to the matching native logger sink.
+        /// Writes a warn/error line immediately to the matching native logger sink, then optionally chat.
         /// </summary>
-        private static void Log(string message, string? category, TabLogLevel level)
+        private static void Log(string message, string? category, TabLogLevel level, Color? chatColor = null)
         {
             var mod = _mod;
             if (mod is null || !MeetsThreshold(level) || !ShouldEmitCategory(category))
@@ -329,6 +339,10 @@ namespace TheArchitectsBlueprintMod.Debug
                 case TabLogLevel.Error: mod.Logger.Error(full); break;
                 default: mod.Logger.Info(full); break;
             }
+
+            // Dedicated server: forward owner-unscoped warn/error only when chat floor allows (local Chat is a no-op on server).
+            if (ShouldEchoToChat(level))
+                Chat(message, category, chatColor);
         }
 
         private static string FormatLine(string message, string? category) =>

@@ -120,7 +120,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
 
                 // TODO(entity-arrows): when RequireItems && !IsSweep, fire paste arrows that
                 // consume inventory items and insert them into the entity instead of LoadData override.
-                if (!WorldEntityOps.TryPlaceEntity(tile.World, in entity, in context))
+                if (!WorldEntityOps.TryPasteEntity(tile.World, in entity, in context))
                     remaining.Add(tile);
             }
 

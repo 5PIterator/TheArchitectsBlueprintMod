@@ -52,8 +52,10 @@ namespace TheArchitectsBlueprintMod.Core
             if (!TryBuildLocalExecution(projection, out PasteExecutionContext execution, out rejectReason))
                 return false;
 
-            var policy = EffectivePastePolicy.Resolve(config, PasteClientHints.FromClientConfig());
-            return ExecutePaste(execution, policy, out rejectReason);
+            var hints = PasteClientHints.FromClientConfig();
+            var policy = EffectivePastePolicy.Resolve(config, hints);
+            var safeguards = EffectiveSafeguardPolicy.Resolve(config, hints);
+            return ExecutePaste(execution, policy, safeguards, out rejectReason);
         }
 
         /// <summary>
@@ -79,12 +81,16 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>
         /// Validates and starts a paste operation on the authoritative execution side.
         /// </summary>
-        internal bool ExecutePaste(PasteExecutionContext execution, EffectivePastePolicy policy, out PasteRejectReason rejectReason)
+        internal bool ExecutePaste(
+            PasteExecutionContext execution,
+            EffectivePastePolicy policy,
+            EffectiveSafeguardPolicy safeguards,
+            out PasteRejectReason rejectReason)
         {
             rejectReason = PasteRejectReason.None;
             ArgumentNullException.ThrowIfNull(execution);
 
-            if (!ValidateForPasteExecution(execution, out rejectReason))
+            if (!ValidateForPasteExecution(execution, in safeguards, out rejectReason))
                 return false;
 
             var config = ModContent.GetInstance<PastingConfig>();
@@ -268,7 +274,7 @@ namespace TheArchitectsBlueprintMod.Core
         /// <summary>Removes an active operation and optionally notifies the owning multiplayer client that paste finished.</summary>
         private void RemoveOperationAt(int index, bool sendFinishedAck = true)
         {
-            // --- Capture correlation before Teardown clears client id; Finished ACK only on natural completion.
+            // --- Snapshot correlation before Teardown clears client id; Finished ACK only on natural completion.
 
             PastingOperation op = _operations[index];
             int owner = op.Execution.Owner;
@@ -361,7 +367,10 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>Authoritative validation before creating a paste operation.</summary>
-        private bool ValidateForPasteExecution(PasteExecutionContext execution, out PasteRejectReason rejectReason)
+        private bool ValidateForPasteExecution(
+            PasteExecutionContext execution,
+            in EffectiveSafeguardPolicy safeguards,
+            out PasteRejectReason rejectReason)
         {
             rejectReason = PasteRejectReason.None;
             ArgumentNullException.ThrowIfNull(execution);
@@ -373,7 +382,7 @@ namespace TheArchitectsBlueprintMod.Core
             }
 
             Player owner = Main.player[execution.Owner];
-            if (!BlueprintGuard.TryValidateIncludedTiles(owner, execution, out BlueprintGuardFailure guardFailure))
+            if (!BlueprintGuard.TryValidateIncludedTiles(owner, execution, in safeguards, out BlueprintGuardFailure guardFailure))
             {
                 rejectReason = BlueprintGuard.ToPasteRejectReason(guardFailure);
                 return false;

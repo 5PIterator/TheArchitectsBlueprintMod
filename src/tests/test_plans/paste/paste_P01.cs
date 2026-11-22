@@ -12,7 +12,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases.PasteTests
     internal sealed class paste_P01 : ITestCase
     {
         public string Id => "paste_P01";
-        public string Description => "1x1 stone capture, give required items, paste onto air, cell diff";
+        public string Description => "1x1 stone copy, give required items, paste onto air, cell diff";
 
         public TestCaseType Type => TestCaseType.Positive;
 
@@ -73,7 +73,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases.PasteTests
                 expected,
                 Id,
                 reporter,
-                "1x1 stone paste matched the captured cell.");
+                "1x1 stone paste matched the copied cell.");
             while (paste.MoveNext())
                 yield return paste.Current;
 

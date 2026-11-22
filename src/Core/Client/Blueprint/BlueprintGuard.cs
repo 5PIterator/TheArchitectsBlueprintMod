@@ -5,7 +5,6 @@ using Terraria;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
-using TheArchitectsBlueprintMod.Config;
 using TheArchitectsBlueprintMod.UI;
 
 using TheArchitectsBlueprintMod.Core.Architect;
@@ -13,7 +12,7 @@ using TheArchitectsBlueprintMod.Core.Architect;
 namespace TheArchitectsBlueprintMod.Core
 {
     /// <summary>
-    /// Classifies included blueprint cells for capture/paste safeguards and writes <see cref="Blueprint.BlueprintCell.Protected"/>.
+    /// Classifies included blueprint cells for copy/paste safeguards and writes <see cref="Blueprint.BlueprintCell.Protected"/>.
     /// </summary>
     internal static class BlueprintGuard
     {
@@ -51,32 +50,39 @@ namespace TheArchitectsBlueprintMod.Core
         public static BlueprintGuardFailure ClassifyIncludedCell(Player player, Blueprint.BlueprintCell cell) =>
             ClassifyWorldTile(player, cell.World.X, cell.World.Y);
 
-        /// <summary>Classifies a world tile coordinate for guard policy.</summary>
+        /// <summary>Classifies a world tile coordinate for the local resolved guard policy.</summary>
         public static BlueprintGuardFailure ClassifyWorldTile(Player player, int worldX, int worldY)
         {
-            // --- Apply OOW, then optional reveal/reach checks with one config read.
+            // --- Apply OOW, then optional reveal/reach checks with one local policy resolve.
 
             if (!WorldGen.InWorld(worldX, worldY))
                 return BlueprintGuardFailure.OutOfWorld;
 
-            ArchitectBlueprintConfig config = ModContent.GetInstance<ArchitectBlueprintConfig>();
-            return ClassifyWorldTile(player, worldX, worldY, config, player.Center.ToTileCoordinates());
+            EffectiveSafeguardPolicy policy = EffectiveSafeguardPolicy.ResolveLocal();
+            return ClassifyWorldTile(player, worldX, worldY, in policy, player.Center.ToTileCoordinates());
         }
 
         /// <summary>Recomputes <see cref="Blueprint.BlueprintCell.Protected"/> on included cells; returns the first guard failure found.</summary>
         public static BlueprintGuardFailure RefreshProtection(Player player, Blueprint blueprint) =>
-            RefreshProtection(player, blueprint, out _);
+            RefreshProtection(player, blueprint, EffectiveSafeguardPolicy.ResolveLocal(), out _);
 
-        /// <summary>Synchronously recomputes protection flags for every included cell.</summary>
-        public static BlueprintGuardFailure RefreshProtection(Player player, Blueprint blueprint, out bool anyChanged)
+        /// <summary>Synchronously recomputes protection flags for every included cell using the local policy.</summary>
+        public static BlueprintGuardFailure RefreshProtection(Player player, Blueprint blueprint, out bool anyChanged) =>
+            RefreshProtection(player, blueprint, EffectiveSafeguardPolicy.ResolveLocal(), out anyChanged);
+
+        /// <summary>Synchronously recomputes protection flags for every included cell under an explicit policy.</summary>
+        public static BlueprintGuardFailure RefreshProtection(
+            Player player,
+            Blueprint blueprint,
+            in EffectiveSafeguardPolicy policy,
+            out bool anyChanged)
         {
-            // --- Full walk with cached config/anchor; used by capture/paste validation and forced overlay rebuilds.
+            // --- Full walk with cached policy/anchor; used by copy/paste validation and forced overlay rebuilds.
 
             anyChanged = false;
             if (player is null || blueprint is null || !blueprint.IsDefined || blueprint.Tiles is null)
                 return BlueprintGuardFailure.None;
 
-            ArchitectBlueprintConfig config = ModContent.GetInstance<ArchitectBlueprintConfig>();
             Point playerTile = player.Center.ToTileCoordinates();
             BlueprintGuardFailure firstFailure = BlueprintGuardFailure.None;
 
@@ -85,7 +91,7 @@ namespace TheArchitectsBlueprintMod.Core
                 if (!cell.Included)
                     continue;
 
-                BlueprintGuardFailure failure = ClassifyWorldTile(player, cell.World.X, cell.World.Y, config, playerTile);
+                BlueprintGuardFailure failure = ClassifyWorldTile(player, cell.World.X, cell.World.Y, in policy, playerTile);
                 bool protectedNow = failure != BlueprintGuardFailure.None;
                 if (cell.Protected != protectedNow)
                 {
@@ -100,26 +106,41 @@ namespace TheArchitectsBlueprintMod.Core
             return firstFailure;
         }
 
-        /// <summary>Refreshes protection and returns whether capture/paste is allowed.</summary>
-        public static bool TryValidateIncludedTiles(Player player, Blueprint blueprint, out BlueprintGuardFailure failure)
+        /// <summary>Refreshes protection with the local policy and returns whether copy/paste is allowed.</summary>
+        public static bool TryValidateIncludedTiles(Player player, Blueprint blueprint, out BlueprintGuardFailure failure) =>
+            TryValidateIncludedTiles(player, blueprint, EffectiveSafeguardPolicy.ResolveLocal(), out failure);
+
+        /// <summary>Refreshes protection under an explicit policy and returns whether copy/paste is allowed.</summary>
+        public static bool TryValidateIncludedTiles(
+            Player player,
+            Blueprint blueprint,
+            in EffectiveSafeguardPolicy policy,
+            out BlueprintGuardFailure failure)
         {
             // Validation must be complete and current; abandon any budgeted scan first.
             CancelClientGuardScan();
-            failure = RefreshProtection(player, blueprint);
+            failure = RefreshProtection(player, blueprint, in policy, out _);
             return failure == BlueprintGuardFailure.None;
         }
 
-        /// <summary>Validates included cells on a server paste execution snapshot.</summary>
-        public static bool TryValidateIncludedTiles(Player player, PasteExecutionContext execution, out BlueprintGuardFailure failure)
+        /// <summary>Validates included cells on a server paste execution snapshot with the local policy.</summary>
+        public static bool TryValidateIncludedTiles(Player player, PasteExecutionContext execution, out BlueprintGuardFailure failure) =>
+            TryValidateIncludedTiles(player, execution, EffectiveSafeguardPolicy.ResolveLocal(), out failure);
+
+        /// <summary>Validates included cells on a server paste execution snapshot under an explicit policy.</summary>
+        public static bool TryValidateIncludedTiles(
+            Player player,
+            PasteExecutionContext execution,
+            in EffectiveSafeguardPolicy policy,
+            out BlueprintGuardFailure failure)
         {
             failure = BlueprintGuardFailure.None;
             if (player is null || execution is null || !execution.IsDefined)
                 return true;
 
             if (execution.ClientProjection is Projection projection)
-                return TryValidateIncludedTiles(player, projection, out failure);
+                return TryValidateIncludedTiles(player, projection, in policy, out failure);
 
-            ArchitectBlueprintConfig config = ModContent.GetInstance<ArchitectBlueprintConfig>();
             Point playerTile = player.Center.ToTileCoordinates();
 
             for (int x = 0; x < execution.GridWidth; x++)
@@ -131,7 +152,7 @@ namespace TheArchitectsBlueprintMod.Core
 
                     int wx = execution.TargetArea.X + x;
                     int wy = execution.TargetArea.Y + y;
-                    BlueprintGuardFailure cellFailure = ClassifyWorldTile(player, wx, wy, config, playerTile);
+                    BlueprintGuardFailure cellFailure = ClassifyWorldTile(player, wx, wy, in policy, playerTile);
                     if (cellFailure == BlueprintGuardFailure.None)
                         continue;
 
@@ -172,8 +193,9 @@ namespace TheArchitectsBlueprintMod.Core
 
             // Structural overlay rebuild needs a finished classification for this blueprint.
             CancelClientGuardScan();
-            RefreshProtection(player, blueprint);
-            ApplyGuardOverlay(player, blueprint, id, family);
+            EffectiveSafeguardPolicy policy = EffectiveSafeguardPolicy.ResolveLocal();
+            RefreshProtection(player, blueprint, in policy, out _);
+            ApplyGuardOverlay(player, blueprint, id, family, in policy);
         }
 
         /// <summary>
@@ -194,9 +216,10 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
             }
 
-            if (!NeedsDynamicGuardRefresh())
+            EffectiveSafeguardPolicy policy = EffectiveSafeguardPolicy.ResolveLocal();
+            if (!policy.NeedsDynamicRefresh)
             {
-                CancelClientGuardScan();
+                ClearClientGuardState(player);
                 return;
             }
 
@@ -223,15 +246,57 @@ namespace TheArchitectsBlueprintMod.Core
                 return;
 
             // Instant coarse reach veil while the budgeted cell walk catches up.
-            ArchitectBlueprintConfig config = ModContent.GetInstance<ArchitectBlueprintConfig>();
-            if (config.LimitCaptureAndPasteToPlayerReach)
+            if (policy.LimitToPlayerReach)
             {
                 Point playerTile = player.Center.ToTileCoordinates();
                 foreach (GuardScanTarget target in targets)
-                    ApplyReachOnlyOverlay(target, playerTile, config.MaxReachDistanceTiles);
+                    ApplyReachOnlyOverlay(target, playerTile, policy.MaxReachDistanceTiles);
             }
 
             _activeScan = new GuardScanBatch(player.whoAmI, targets);
+        }
+
+        /// <summary>Refreshes guard masks when safeguards are on, otherwise clears overlays and Protected flags.</summary>
+        public static void RefreshOrClearForLocalPlayer(Player player)
+        {
+            // --- Config OnChanged entry: rebuild when dynamic, tear down when both toggles are off.
+
+            if (Main.dedServ || player is null || Main.gameMenu)
+                return;
+
+            if (EffectiveSafeguardPolicy.ResolveLocal().NeedsDynamicRefresh)
+                RefreshClientGuardMasks(player, skipWhenPasteActive: false);
+            else
+                ClearClientGuardState(player);
+        }
+
+        /// <summary>Unregisters guarded overlays and clears Protected flags on owned blueprints.</summary>
+        public static void ClearClientGuardState(Player player)
+        {
+            // --- Cancel mid-scan work, drop mask overlays, then wipe Protected on every owned cell.
+
+            if (Main.dedServ || player is null)
+                return;
+
+            CancelClientGuardScan();
+
+            BlueprintSystem blueprintSystem = ModContent.GetInstance<BlueprintSystem>();
+            Selection? selection = blueprintSystem.GetTopmostSelection();
+            if (selection is { IsDefined: true } && selection.Owner == player.whoAmI)
+            {
+                OverlaySystem.Unregister("guarded", $"selection:{player.whoAmI}");
+                ClearProtectedFlags(selection);
+            }
+
+            foreach (Projection projection in blueprintSystem.GetProjections())
+            {
+                if (projection is not { IsDefined: true } || projection.Owner != player.whoAmI)
+                    continue;
+
+                string key = projection.OverlayInstanceKey.ToString();
+                OverlaySystem.Unregister($"{key}:guarded", $"projection:{player.whoAmI}");
+                ClearProtectedFlags(projection);
+            }
         }
 
         /// <summary>Continues the active budgeted guard scan using a fresh per-frame cell budget.</summary>
@@ -278,25 +343,16 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>True when reach or reveal policy can change without blueprint geometry changing.</summary>
-        public static bool NeedsDynamicGuardRefresh()
-        {
-            ArchitectBlueprintConfig config = ModContent.GetInstance<ArchitectBlueprintConfig>();
-            return config.LimitCaptureAndPasteToPlayerReach || config.RestrictCaptureAndPasteToRevealedTiles;
-        }
+        public static bool NeedsDynamicGuardRefresh() =>
+            EffectiveSafeguardPolicy.ResolveLocal().NeedsDynamicRefresh;
 
         /// <summary>True when player-tile moves should trigger an immediate guard refresh.</summary>
-        public static bool NeedsMoveDrivenGuardRefresh()
-        {
-            ArchitectBlueprintConfig config = ModContent.GetInstance<ArchitectBlueprintConfig>();
-            return config.LimitCaptureAndPasteToPlayerReach;
-        }
+        public static bool NeedsMoveDrivenGuardRefresh() =>
+            EffectiveSafeguardPolicy.ResolveLocal().LimitToPlayerReach;
 
         /// <summary>True when map exploration can change guard visuals without the player moving.</summary>
-        public static bool NeedsRevealDrivenGuardRefresh()
-        {
-            ArchitectBlueprintConfig config = ModContent.GetInstance<ArchitectBlueprintConfig>();
-            return config.RestrictCaptureAndPasteToRevealedTiles;
-        }
+        public static bool NeedsRevealDrivenGuardRefresh() =>
+            EffectiveSafeguardPolicy.ResolveLocal().RestrictToRevealedTiles;
 
         /// <summary>Returns true when <paramref name="player"/> has an in-flight paste operation.</summary>
         public static bool HasActivePasteFor(Player player)
@@ -307,14 +363,14 @@ namespace TheArchitectsBlueprintMod.Core
             return ModContent.GetInstance<PastingSystem>().GetActiveOperationCountForPlayer(player.whoAmI) > 0;
         }
 
-        /// <summary>Maps a guard failure to a localized capture-block chat key.</summary>
-        public static string GetCaptureBlockLocalizationKey(BlueprintGuardFailure failure) =>
+        /// <summary>Maps a guard failure to a localized copy-block chat key.</summary>
+        public static string GetCopyBlockLocalizationKey(BlueprintGuardFailure failure) =>
             failure switch
             {
-                BlueprintGuardFailure.OutOfWorld => "Mods.TheArchitectsBlueprintMod.UI.Capture.BlockedOutOfWorld",
-                BlueprintGuardFailure.Unrevealed => "Mods.TheArchitectsBlueprintMod.UI.Capture.BlockedUnrevealed",
-                BlueprintGuardFailure.OutOfRange => "Mods.TheArchitectsBlueprintMod.UI.Capture.BlockedOutOfRange",
-                _ => "Mods.TheArchitectsBlueprintMod.UI.Capture.BlockedOutOfWorld",
+                BlueprintGuardFailure.OutOfWorld => "Mods.TheArchitectsBlueprintMod.UI.Copy.BlockedOutOfWorld",
+                BlueprintGuardFailure.Unrevealed => "Mods.TheArchitectsBlueprintMod.UI.Copy.BlockedUnrevealed",
+                BlueprintGuardFailure.OutOfRange => "Mods.TheArchitectsBlueprintMod.UI.Copy.BlockedOutOfRange",
+                _ => "Mods.TheArchitectsBlueprintMod.UI.Copy.BlockedOutOfWorld",
             };
 
         /// <summary>Maps a guard failure to a paste reject reason.</summary>
@@ -327,13 +383,13 @@ namespace TheArchitectsBlueprintMod.Core
                 _ => PasteRejectReason.InvalidProjection,
             };
 
-        /// <summary>Prints a localized capture-block chat line on the local client.</summary>
-        public static void NotifyCaptureBlocked(BlueprintGuardFailure failure)
+        /// <summary>Prints a localized copy-block chat line on the local client.</summary>
+        public static void NotifyCopyBlocked(BlueprintGuardFailure failure)
         {
             if (Main.netMode == NetmodeID.Server || failure == BlueprintGuardFailure.None)
                 return;
 
-            Main.NewText(Language.GetTextValue(GetCaptureBlockLocalizationKey(failure)), Color.OrangeRed);
+            Main.NewText(Language.GetTextValue(GetCopyBlockLocalizationKey(failure)), Color.OrangeRed);
         }
 
         /// <summary>Spends this frame's cell budget advancing the active scan batch.</summary>
@@ -345,7 +401,7 @@ namespace TheArchitectsBlueprintMod.Core
             if (batch is null)
                 return;
 
-            ArchitectBlueprintConfig config = ModContent.GetInstance<ArchitectBlueprintConfig>();
+            EffectiveSafeguardPolicy policy = EffectiveSafeguardPolicy.ResolveLocal();
             Point playerTile = player.Center.ToTileCoordinates();
             int budget = GuardScanCellsPerFrame;
 
@@ -376,7 +432,7 @@ namespace TheArchitectsBlueprintMod.Core
                             player,
                             cell.World.X,
                             cell.World.Y,
-                            config,
+                            in policy,
                             playerTile);
                         cell.Protected = failure != BlueprintGuardFailure.None;
                     }
@@ -394,7 +450,7 @@ namespace TheArchitectsBlueprintMod.Core
                 if (batch.CellY < height)
                     break;
 
-                ApplyGuardOverlay(player, blueprint, target.Id, target.Family);
+                ApplyGuardOverlay(player, blueprint, target.Id, target.Family, in policy);
                 batch.TargetIndex++;
                 batch.CellX = 0;
                 batch.CellY = 0;
@@ -405,7 +461,12 @@ namespace TheArchitectsBlueprintMod.Core
         }
 
         /// <summary>Registers the precise or coarse guard overlay for a fully scanned blueprint.</summary>
-        private static void ApplyGuardOverlay(Player player, Blueprint blueprint, string id, string? family)
+        private static void ApplyGuardOverlay(
+            Player player,
+            Blueprint blueprint,
+            string id,
+            string? family,
+            in EffectiveSafeguardPolicy policy)
         {
             // --- Large areas use rect fills; small areas use view-clipped protected points.
 
@@ -416,15 +477,14 @@ namespace TheArchitectsBlueprintMod.Core
 
             if (IsLargeArea(blueprint.Area))
             {
-                ArchitectBlueprintConfig config = ModContent.GetInstance<ArchitectBlueprintConfig>();
                 ScratchReachRects.Clear();
 
-                if (config.LimitCaptureAndPasteToPlayerReach)
+                if (policy.LimitToPlayerReach)
                 {
                     AppendOutOfReachRects(
                         blueprint.Area,
                         player.Center.ToTileCoordinates(),
-                        config.MaxReachDistanceTiles,
+                        policy.MaxReachDistanceTiles,
                         ScratchReachRects);
                 }
 
@@ -535,20 +595,32 @@ namespace TheArchitectsBlueprintMod.Core
             return false;
         }
 
+        /// <summary>Clears Protected on every cell of a blueprint grid.</summary>
+        private static void ClearProtectedFlags(Blueprint blueprint)
+        {
+            // --- Full wipe so stale black masks cannot reappear from leftover flags.
+
+            if (blueprint.Tiles is null)
+                return;
+
+            foreach (Blueprint.BlueprintCell cell in blueprint.Tiles)
+                cell.Protected = false;
+        }
+
         private static BlueprintGuardFailure ClassifyWorldTile(
             Player player,
             int worldX,
             int worldY,
-            ArchitectBlueprintConfig config,
+            in EffectiveSafeguardPolicy policy,
             Point playerTile)
         {
             if (!WorldGen.InWorld(worldX, worldY))
                 return BlueprintGuardFailure.OutOfWorld;
 
-            if (config.RestrictCaptureAndPasteToRevealedTiles && !IsRevealed(worldX, worldY))
+            if (policy.RestrictToRevealedTiles && !IsRevealed(worldX, worldY))
                 return BlueprintGuardFailure.Unrevealed;
 
-            if (config.LimitCaptureAndPasteToPlayerReach && !IsWithinReach(playerTile, worldX, worldY, config.MaxReachDistanceTiles))
+            if (policy.LimitToPlayerReach && !IsWithinReach(playerTile, worldX, worldY, policy.MaxReachDistanceTiles))
                 return BlueprintGuardFailure.OutOfRange;
 
             return BlueprintGuardFailure.None;

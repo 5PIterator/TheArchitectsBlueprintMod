@@ -14,14 +14,14 @@ namespace TheArchitectsBlueprintMod.Core.TestCases.ProjectionTests
     internal sealed class projection_P01 : ITestCase
     {
         public string Id => "projection_P01";
-        public string Description => "NewProjection captures a selection into a matching payload size";
+        public string Description => "NewProjection copies a selection into a matching payload size";
 
         public TestCaseType Type => TestCaseType.Positive;
 
 
         public IEnumerator Run(Player player, ITestCaseReporter reporter)
         {
-            // --- Build a 2x2 selection, NewProjection with capture, assert payload size, then remove.
+            // --- Build a 2x2 selection, NewProjection with copy, assert payload size, then remove.
 
             SelectionSystem selectionSystem = ModContent.GetInstance<SelectionSystem>();
             ProjectionSystem projectionSystem = ModContent.GetInstance<ProjectionSystem>();
@@ -36,7 +36,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases.ProjectionTests
                 yield break;
             }
 
-            Core.Projection? projection = projectionSystem.NewProjection(player, selection, captureWorldPayload: true);
+            Core.Projection? projection = projectionSystem.NewProjection(player, selection, copyWorldPayload: true);
             if (projection is null || !projection.IsDefined)
             {
                 reporter.Fail(Id, "NewProjection failed.");
@@ -56,7 +56,7 @@ namespace TheArchitectsBlueprintMod.Core.TestCases.ProjectionTests
 
             projectionSystem.RemoveProjection(projection);
             selectionSystem.ClearSelection(player);
-            reporter.Pass(Id, "NewProjection captured a 2x2 payload.");
+            reporter.Pass(Id, "NewProjection copied a 2x2 payload.");
             yield break;
         }
     }

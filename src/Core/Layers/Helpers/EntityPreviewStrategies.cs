@@ -130,7 +130,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             return true;
         }
 
-        /// <summary>Draws a mannequin or hat-rack dummy player from FrameX and captured inventories.</summary>
+        /// <summary>Draws a mannequin or hat-rack dummy player from FrameX and copied inventories.</summary>
         public static bool TryDrawPlayerDoll(in PreviewEntityDrawArgs args)
         {
             // --- Load items/dyes when present, then draw a cached dummy player like TEDisplayDoll.Draw.
@@ -182,12 +182,16 @@ namespace TheArchitectsBlueprintMod.Core.Layers
             TagCompound? data = args.Entity.Data;
             if (data is { Count: > 0 })
             {
+                NbtTagValues.PrepareForLoader(data);
                 try
                 {
                     te.LoadData(data);
                 }
-                catch
+                catch (Exception ex)
                 {
+                    WarnPreviewLoadOnce(
+                        $"{args.Entity.FullName}|{ex.Message}",
+                        $"EntityPreview NBT load failed {args.Entity.FullName}: {ex.Message}");
                     return false;
                 }
             }
@@ -273,7 +277,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 ctx.SpriteBatch.Draw(texture, pos, frame, item.GetColor(ctx.Tint), 0f, origin, scale * ctx.Scale, effects, 0f);
         }
 
-        /// <summary>Draws the two hat-rack dummy heads using captured hat and dye slots.</summary>
+        /// <summary>Draws the two hat-rack dummy heads using copied hat and dye slots.</summary>
         private static bool TryDrawHatRack(in PreviewEntityDrawArgs args)
         {
             // --- Two invisible doll passes, matching TEHatRack.Draw offsets and facing.
@@ -475,7 +479,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
         }
 
         /// <summary>Logs one EntityPreview warn per distinct key to avoid per-frame spam.</summary>
-        private static void WarnPreviewLoadOnce(string key)
+        private static void WarnPreviewLoadOnce(string key, string? message = null)
         {
             // --- Cap the set so long sessions cannot grow without bound.
 
@@ -486,7 +490,7 @@ namespace TheArchitectsBlueprintMod.Core.Layers
                 return;
 
             TABLog.Warn(
-                $"EntityPreview item load miss {key}",
+                message ?? $"EntityPreview item load miss {key}",
                 PreviewLogCategory);
         }
 
